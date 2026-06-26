@@ -212,15 +212,17 @@ def test_rarity_carries_through():
     pass through the merge untouched."""
     import tempfile
     d = tempfile.mkdtemp()
-    legendary = {"tier": "legendary", "rank": 4, "color_name": "yellow",
+    # building a: very_rare, with all openings stamped (DC now stamps every
+    # opening kind, since door/window/breach are all valid entry attempts)
+    legendary = {"tier": "legendary", "rank": 4, "color_name": "gold",
                  "hex": "#FFD700", "rgb": [1.0, 0.8431, 0.0]}
-    # building a: legendary, with a stamped door + an unstamped window
-    json.dump({"level": "a", "mode": "assault",
+    json.dump({"level": "a", "mode": "assault", "building_id": "a",
                "rarity": "legendary", "rarity_color": legendary,
                "openings": [
-                   {"kind": "door", "x": 0, "y": -6, "z": 1.1,
+                   {"kind": "door", "x": 0, "y": -6, "z": 1.1, "building": "a",
                     "rarity": "legendary", "rarity_color": legendary},
-                   {"kind": "window", "x": 6, "y": 0, "z": 1.5}]},
+                   {"kind": "window", "x": 6, "y": 0, "z": 1.5, "building": "a",
+                    "rarity": "legendary", "rarity_color": legendary}]},
               open(os.path.join(d, "a.gameplay.json"), "w"))
     # building b: no rarity declared
     json.dump({"level": "b", "mode": "assault", "rarity": None,
@@ -235,14 +237,17 @@ def test_rarity_carries_through():
     assert by_id["a"].get("rarity") == "legendary", by_id["a"]
     assert by_id["a"]["rarity_color"]["hex"] == "#FFD700"
     assert "rarity" not in by_id["b"], "no-rarity building must stay clean"
-    # the stamped door opening survives the merge; the window stays unstamped
+    # the stamped door opening survives the merge; the window now ALSO carries
+    # the rarity (a window breach is a valid entry attempt -> must resolve to the
+    # building's rarity). Both keep their building tag for is_revealed grouping.
     a_door = [o for o in merged["openings"]
               if o["building"] == "a" and o["kind"] == "door"][0]
     a_win = [o for o in merged["openings"]
              if o["building"] == "a" and o["kind"] == "window"][0]
     assert a_door["rarity_color"]["hex"] == "#FFD700", a_door
-    assert "rarity" not in a_win, "window is not an entry reveal"
-    print("  rarity carry-through (record + stamped openings): OK")
+    assert a_win["rarity_color"]["hex"] == "#FFD700", a_win
+    assert a_win["building"] == "a"
+    print("  rarity carry-through (record + all entries incl window): OK")
 
 
 if __name__ == "__main__":

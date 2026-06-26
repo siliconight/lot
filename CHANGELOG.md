@@ -1,3 +1,14 @@
+## [0.5.1] - Rarity multi-entry follow-through
+- Tracks Deli Counter 0.33.0: every opening (door/window/breach) now carries the
+  building's rarity + a `building` id, so a building's multiple entry points all
+  resolve to the same building + rarity through the merge. Lot already namespaced
+  and building-tagged openings + markers, so this needed no core change — the
+  newly-stamped windows simply flow through.
+- Test updated: the window in the carry-through fixture is now stamped (a window
+  breach is a valid entry attempt), and asserts its `building` tag survives.
+- Tier name in test fixture aligned to `very_rare` / `legendary` (gold). 16 tests
+  pass.
+
 ## [0.5.0] - Carry building rarity through the site merge
 - A building's optional `rarity` (from Deli Counter) now lands on its record in
   the merged `<site>.site.gameplay.json`: each `buildings[]` entry gains
