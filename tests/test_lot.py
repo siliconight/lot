@@ -250,6 +250,67 @@ def test_rarity_carries_through():
     print("  rarity carry-through (record + all entries incl window): OK")
 
 
+def _merged_with(buildings, openings):
+    """Minimal merged-site dict for site_enterability tests."""
+    return {"buildings": buildings, "openings": openings}
+
+
+def test_enterability_walled_in_gates():
+    """A building whose only entry's approach sits inside a neighbour's
+    footprint is walled in -> hard gate."""
+    import site_enterability as SE
+    # B at origin with a door on its S wall; A parked right below it.
+    bldgs = [{"id": "B", "at": [0, 0], "rot": 0, "footprint": [10, 10]},
+             {"id": "A", "at": [0, -10], "rot": 0, "footprint": [10, 10]}]
+    ops = [{"building": "B", "wall": "S", "kind": "door",
+            "width": 1.2, "height": 2.2, "sill": 0.0, "x": 0, "y": -5}]
+    site = {"name": "t", "buildings": bldgs}
+    merged = _merged_with(bldgs, ops)
+    rep = SE.analyze(site, merged)
+    assert any("walled in" in e for e in rep["errors"]), rep["errors"]
+    try:
+        SE.gate(site, merged)
+        assert False, "gate should have raised"
+    except SE.SiteEnterabilityError:
+        pass
+    # move the blocker away -> clear approach, gate passes
+    bldgs[1]["at"] = [30, 0]
+    merged2 = _merged_with(bldgs, ops)
+    rep2 = SE.analyze(site, merged2)
+    assert not rep2["errors"], rep2["errors"]
+    assert rep2["buildings"][0]["clear_entries"] == 1
+    print("  enterability walled-in gate + clear pass: OK")
+
+
+def test_enterability_outside_perimeter_gates():
+    """An entry whose approach falls outside the perimeter wall is blocked."""
+    import site_enterability as SE
+    # building at the south edge, door facing further south = outside perimeter
+    bldgs = [{"id": "B", "at": [0, -9], "rot": 0, "footprint": [4, 4]}]
+    ops = [{"building": "B", "wall": "S", "kind": "door",
+            "width": 1.2, "height": 2.2, "sill": 0.0, "x": 0, "y": -2}]
+    site = {"name": "t", "buildings": bldgs,
+            "ground": {"size_x": 20, "size_y": 20}, "perimeter": {"height": 3}}
+    rep = SE.analyze(site, _merged_with(bldgs, ops))
+    assert any("walled in" in e for e in rep["errors"]), rep["errors"]
+    print("  enterability outside-perimeter gate: OK")
+
+
+def test_enterability_no_route_warns_not_gates():
+    """Reachable but no authored path to the entry -> warning, never a gate."""
+    import site_enterability as SE
+    bldgs = [{"id": "B", "at": [0, 0], "rot": 0, "footprint": [6, 6]}]
+    ops = [{"building": "B", "wall": "N", "kind": "door",
+            "width": 1.2, "height": 2.2, "sill": 0.0, "x": 0, "y": 3}]
+    # paths declared, but none near building B's north entry (approach ~ (0,4.5))
+    site = {"name": "t", "buildings": bldgs,
+            "paths": [{"a": [40, 40], "b": [60, 40], "width": 3}]}
+    rep = SE.analyze(site, _merged_with(bldgs, ops))
+    assert not rep["errors"], rep["errors"]
+    assert any("no authored path" in w for w in rep["warnings"]), rep["warnings"]
+    print("  enterability no-route warning (not a gate): OK")
+
+
 if __name__ == "__main__":
     n = 0
     for name, fn in sorted(globals().items()):

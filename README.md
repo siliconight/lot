@@ -115,6 +115,21 @@ The `objective` / `spawn` / `extraction` / `safe` fields are building-id
 designations. With no `mode`, you get pure intel and no gates. These designations
 also answer "which building's objective is *the* site objective."
 
+## Enterability (can you REACH the doors?)
+
+Deli Counter guarantees each building is enterable on its own. Lot checks the
+thing only it can see: once placed, can you actually get *to* a building's
+entries? It's the approach-side sibling of the tactical gate, same rule — **gate
+the clear-cut case, warn the rest**. A building whose every entrance is blocked
+by a neighbour's footprint or the perimeter wall is *walled in*, and `assemble`
+refuses it (with a message telling you to move it, rotate it so an entry faces
+open ground, or clear the approach). Softer cases — reachable but with no
+authored path/courtyard leading to a clear entry — warn. It never moves your
+buildings or reroutes paths, and a clean pass means "the spec doesn't wall it
+in," not "certified walkable" (swing/vault clearance is a walk-test fact). The
+per-building approach report attaches to the site gameplay.json under
+`enterability`.
+
 ## Pacing estimate & encounter intel
 
 Two structural analyses that help you judge **how long** a compound plays and

@@ -1,3 +1,23 @@
+## [0.6.0] - Site enterability gate (can you REACH the doors?)
+- New site_enterability.py + a gate in assemble(): the approach-side sibling of
+  site_tactical's connectivity gate. A building that's enterable on its own can
+  be unenterable in a compound — its only door faces the perimeter, or a
+  neighbour is parked against that face, or no path leads to it. Only Lot can see
+  this, because only Lot knows the placements.
+- GATE THE CLEAR-CUT CASE, WARN THE REST: HARD GATE (assemble refuses) when a
+  building has real entries but EVERY one's approach is blocked by a neighbour's
+  footprint or the perimeter — walled in. WARN when it's reachable but no
+  authored path/courtyard leads to a clear entry, or when a building's own
+  gameplay.json has no usable entry (a Deli Counter problem to fix there).
+- Never auto-fixes (doesn't move buildings or reroute paths) and doesn't claim a
+  clean pass means walkable — swing/vault clearance stays a walk-test fact. The
+  per-building approach report attaches to the site gameplay.json under
+  "enterability".
+- Building records now carry `footprint` (from Deli Counter's gameplay.json) so
+  the neighbour-overlap test works. Body-fit thresholds mirror Deli Counter's
+  enterability.py.
+- 3 new tests (walled-in gate, outside-perimeter, no-route warning); 19 pass.
+
 ## [0.5.1] - Rarity multi-entry follow-through
 - Tracks Deli Counter 0.33.0: every opening (door/window/breach) now carries the
   building's rarity + a `building` id, so a building's multiple entry points all

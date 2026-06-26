@@ -106,6 +106,8 @@ def merge_gameplay(site_spec, base_dir):
         if gp.get("rarity") is not None:
             record["rarity"] = gp.get("rarity")
             record["rarity_color"] = gp.get("rarity_color")
+        if gp.get("footprint") is not None:
+            record["footprint"] = gp.get("footprint")
         site["buildings"].append(record)
 
         def ns(name):
@@ -376,6 +378,13 @@ def assemble(site_spec_path, out_dir=None):
 
     merged = merge_gameplay(site_spec, base_dir)
     merged["tactical"] = tactical_report
+
+    # site enterability: can you actually REACH each building's entries once
+    # they're placed? Gate the clear-cut walled-in case (needs merged openings +
+    # footprints), then attach the per-building approach report.
+    import site_enterability
+    enter_report = site_enterability.gate(site_spec, merged)
+    merged["enterability"] = enter_report
 
     # pacing estimate + structural encounter intel (both offline, structural,
     # never a fun-score). Pacing needs the merged markers (objective/loot counts).
