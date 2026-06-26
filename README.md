@@ -21,7 +21,7 @@ spec produces byte-identical output every run — but it's a *placement +
 composition* of shells, not a new mega-building. Buildings are atoms; the site
 spec is the molecule.
 
-## Status: Phase 2
+## Status: Phase 2 + site tactical layer
 
 **Phase 1 (done):** deterministic placement + ground manifest + merged,
 world-offset, namespaced `gameplay.json` + a generated Godot `.tscn` that
@@ -65,6 +65,49 @@ All optional. Added alongside `buildings`:
 - `perimeter` — four walls around the ground footprint at the given `height`.
 - `cover` — 1m crates (or custom `size`) at positions. Reuses the crate
   vocabulary.
+
+## Tactical layer (pathing + the three modes, at site scale)
+
+Lot understands reachability and the three level modes the same way Deli Counter
+does — just one scale up:
+
+```
+Deli Counter:  reachability + modes  WITHIN a building   (rooms, doors)
+Lot:           reachability + modes  ACROSS the site      (buildings, paths)
+```
+
+It analyzes what you **declared** — the buildings and the `paths` between them,
+plus the merged markers — never a computed navmesh. This is intel plus light
+gates, deterministic and offline. The in-engine walk stays the real validator (an
+offline graph can't prove you can physically cross a courtyard; it can prove you
+never declared a route to a building at all).
+
+**Intel** (never fails the build), emitted into the site `gameplay.json` under
+`tactical`: the site connectivity graph, **isolated-building detection** (the
+site echo of Deli Counter's "no isolated rooms"), spawn→objective distance, and
+the count of distinct approaches to the objective.
+
+**Gates** (fail the build) — only when you declare a site `mode`:
+
+```json
+{
+  "mode": "heist",
+  "spawn": "bank",
+  "objective": "warehouse",
+  "extraction": "warehouse"
+}
+```
+
+- `assault` — the `objective` building must be reachable by **≥2 distinct
+  approaches** (multiple routes in — the site echo of an assault objective room
+  needing ≥2 access).
+- `heist` — `spawn → objective → extraction` must be path-connected.
+- `survival` — the `safe` building must be path-connected to the holdout
+  (`objective`).
+
+The `objective` / `spawn` / `extraction` / `safe` fields are building-id
+designations. With no `mode`, you get pure intel and no gates. These designations
+also answer "which building's objective is *the* site objective."
 
 ## Site spec
 

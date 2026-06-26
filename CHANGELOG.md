@@ -1,3 +1,22 @@
+## [0.3.0] - Site tactical layer (pathing + 3 modes, at site scale)
+- New site_tactical.py: the site-scale echo of Deli Counter's tactical layer.
+  Reasons about reachability and the three modes ACROSS the site (over buildings
+  and declared paths), as Deli Counter does WITHIN a building (over rooms and
+  doors). Intel + light gates, deterministic, offline - analyzes what you
+  DECLARED (building-to-building paths + merged markers), not a computed navmesh.
+- INTEL (never fails): site connectivity graph, isolated-building detection
+  ("no isolated buildings" - the site echo of "no isolated rooms"),
+  spawn->objective distance, count of distinct objective approaches. Emitted
+  into the site gameplay.json under "tactical".
+- GATES (fail the build) only when a site "mode" is declared:
+  assault = objective building reachable by >=2 distinct approaches;
+  heist = spawn -> objective -> extraction path-connected;
+  survival = safe building -> holdout path-connected.
+- New optional site-spec fields: mode, objective, spawn, extraction, safe
+  (building-id designations). No mode => pure intel, no gates. The designations
+  also resolve "which building's objective is THE site objective."
+- Tests: tactical intel + all three mode gates (11 tests total, all offline).
+
 # Changelog — Lot
 
 ## [0.2.0] — Phase 2: box-vocabulary outdoor

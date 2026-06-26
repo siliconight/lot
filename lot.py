@@ -40,7 +40,7 @@ import json
 import math
 import os
 
-LOT_VERSION = "0.2.0"
+LOT_VERSION = "0.3.0"
 
 
 # ---------------------------------------------------------------------------
@@ -357,7 +357,15 @@ def assemble(site_spec_path, out_dir=None):
     with open(site_spec_path, encoding="utf-8") as f:
         site_spec = json.load(f)
 
+    # site-level tactical: gate first (raises if a declared mode's hard needs
+    # aren't met — the site echo of Deli Counter's per-mode gates), then attach
+    # the intel report (connectivity / approaches / distances — never fails).
+    import site_tactical
+    site_tactical.gate(site_spec)
+    tactical_report = site_tactical.analyze(site_spec)
+
     merged = merge_gameplay(site_spec, base_dir)
+    merged["tactical"] = tactical_report
     gp_out = os.path.join(out_dir, f"{site_spec['name']}.site.gameplay.json")
     with open(gp_out, "w", encoding="utf-8") as f:
         json.dump(merged, f, indent=2)
@@ -370,6 +378,7 @@ def assemble(site_spec_path, out_dir=None):
         "buildings": len(site_spec["buildings"]),
         "markers": len(merged["markers"]),
         "rooms": len(merged["rooms"]),
+        "tactical": tactical_report,
     }
 
 
@@ -379,9 +388,22 @@ if __name__ == "__main__":
         print("usage: python lot.py <site_spec.json> [out_dir]")
         raise SystemExit(2)
     out = sys.argv[2] if len(sys.argv) > 2 else None
-    r = assemble(sys.argv[1], out)
+    try:
+        r = assemble(sys.argv[1], out)
+    except Exception as e:
+        # site_tactical.SiteTacticalError and friends: fail loudly, like a gate
+        print(f"[lot] BUILD FAILED: {e}")
+        raise SystemExit(1)
     print(f"[lot] assembled '{os.path.basename(sys.argv[1])}': "
           f"{r['buildings']} buildings, {r['markers']} markers, "
           f"{r['rooms']} rooms")
+    t = r["tactical"]
+    if t.get("mode"):
+        print(f"[lot]   mode: {t['mode']} (gates passed)")
+    iso = t["intel"].get("isolated_buildings")
+    if iso:
+        print(f"[lot]   WARNING: isolated buildings: {', '.join(iso)}")
+    if "objective_approaches" in t["intel"]:
+        print(f"[lot]   objective approaches: {t['intel']['objective_approaches']}")
     print(f"[lot]   -> {os.path.basename(r['gameplay'])}")
     print(f"[lot]   -> {os.path.basename(r['scene'])}")

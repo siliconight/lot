@@ -99,6 +99,62 @@ def test_load_steps():
     print("  load_steps: OK")
 
 
+def test_tactical_intel_isolated():
+    """Connectivity graph flags a building with no declared path-route."""
+    import site_tactical as st
+    spec = {"name": "t",
+            "buildings": [{"id": "a", "at": [0, 0]}, {"id": "b", "at": [40, 0]},
+                          {"id": "c", "at": [80, 0]}],
+            "paths": [{"from": "a", "to": "b"}]}
+    r = st.analyze(spec)
+    assert r["intel"]["isolated_buildings"] == ["c"], r["intel"]
+    print("  tactical intel (isolated buildings): OK")
+
+
+def test_tactical_assault_gate():
+    """Assault objective needs >=2 distinct approaches."""
+    import site_tactical as st
+    ok = {"name": "t", "mode": "assault", "objective": "obj", "spawn": "s",
+          "buildings": [{"id": "s", "at": [0, 0]}, {"id": "m", "at": [20, 20]},
+                        {"id": "obj", "at": [40, 0]}],
+          "paths": [{"from": "s", "to": "obj"}, {"from": "s", "to": "m"},
+                    {"from": "m", "to": "obj"}]}
+    st.gate(ok)  # should not raise
+    bad = {"name": "t", "mode": "assault", "objective": "obj", "spawn": "s",
+           "buildings": [{"id": "s", "at": [0, 0]}, {"id": "obj", "at": [40, 0]}],
+           "paths": [{"from": "s", "to": "obj"}]}
+    try:
+        st.gate(bad)
+        assert False, "1-approach assault should fail"
+    except st.SiteTacticalError:
+        pass
+    print("  tactical assault gate (>=2 approaches): OK")
+
+
+def test_tactical_heist_gate():
+    """Heist needs spawn -> objective -> extraction path-connected."""
+    import site_tactical as st
+    bad = {"name": "t", "mode": "heist", "spawn": "s", "objective": "o",
+           "extraction": "e",
+           "buildings": [{"id": "s", "at": [0, 0]}, {"id": "o", "at": [30, 0]},
+                         {"id": "e", "at": [60, 0]}],
+           "paths": [{"from": "s", "to": "o"}]}  # missing o->e
+    try:
+        st.gate(bad)
+        assert False, "disconnected extraction should fail"
+    except st.SiteTacticalError:
+        pass
+    print("  tactical heist gate (spawn->obj->extraction): OK")
+
+
+def test_tactical_no_mode_no_gate():
+    """No declared mode => pure intel, no gates raised."""
+    import site_tactical as st
+    spec = {"name": "t", "buildings": [{"id": "a", "at": [0, 0]}], "paths": []}
+    st.gate(spec)  # must not raise
+    print("  tactical no-mode (intel only): OK")
+
+
 if __name__ == "__main__":
     n = 0
     for name, fn in sorted(globals().items()):
