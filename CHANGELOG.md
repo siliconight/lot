@@ -1,3 +1,24 @@
+## [0.4.0] - Pacing estimate + structural encounter intel
+- New site_pacing.py. Two offline STRUCTURAL analyses over the declared site.
+  Neither predicts "fun" (fun is a feel property only a playthrough reveals);
+  both describe structure, with every number shown as an estimate from declared
+  inputs, never a verdict.
+- PACING: estimates time-to-complete for the mode's critical route as a
+  min/expected/max range, checked against a target window (default 7-15 min,
+  overridable). Heist = spawn->objective(+dwell)->extraction; assault =
+  spawn->objective + resolution; survival = reach holdout + waves x wave length.
+  Timings DERIVED from mode + distances (move_speed, objective_secs, wave_secs,
+  etc.), each overridable per-spec under "pacing". Emits a transparent phase
+  breakdown that sums to the estimate, into the site gameplay.json under
+  "pacing", and a one-line status (within / too short / too long / straddles).
+- ENCOUNTER INTEL: per-leg geometric FACTS about combat opportunity (route
+  length, distinct approaches, open-ground distance, nearby cover count) under
+  "encounters". Describes opportunity, NOT quality - explicitly never a score.
+- Not a simulation, not an AI, not a fun-meter. No agents move, no shots fire.
+  The in-engine walk remains the only thing that tells you if it's actually fun.
+- Tests: too-short detection, breakdown-sums-to-estimate, overrides, encounter-
+  facts-not-score (15 tests total, all offline).
+
 ## [0.3.0] - Site tactical layer (pathing + 3 modes, at site scale)
 - New site_tactical.py: the site-scale echo of Deli Counter's tactical layer.
   Reasons about reachability and the three modes ACROSS the site (over buildings

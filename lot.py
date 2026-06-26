@@ -40,7 +40,7 @@ import json
 import math
 import os
 
-LOT_VERSION = "0.3.0"
+LOT_VERSION = "0.4.0"
 
 
 # ---------------------------------------------------------------------------
@@ -366,6 +366,14 @@ def assemble(site_spec_path, out_dir=None):
 
     merged = merge_gameplay(site_spec, base_dir)
     merged["tactical"] = tactical_report
+
+    # pacing estimate + structural encounter intel (both offline, structural,
+    # never a fun-score). Pacing needs the merged markers (objective/loot counts).
+    import site_pacing
+    adj = site_tactical.build_graph(site_spec)
+    merged["pacing"] = site_pacing.estimate_pacing(site_spec, merged)
+    merged["encounters"] = site_pacing.encounter_intel(site_spec, adj)
+
     gp_out = os.path.join(out_dir, f"{site_spec['name']}.site.gameplay.json")
     with open(gp_out, "w", encoding="utf-8") as f:
         json.dump(merged, f, indent=2)
@@ -379,6 +387,7 @@ def assemble(site_spec_path, out_dir=None):
         "markers": len(merged["markers"]),
         "rooms": len(merged["rooms"]),
         "tactical": tactical_report,
+        "pacing": merged["pacing"],
     }
 
 
@@ -405,5 +414,10 @@ if __name__ == "__main__":
         print(f"[lot]   WARNING: isolated buildings: {', '.join(iso)}")
     if "objective_approaches" in t["intel"]:
         print(f"[lot]   objective approaches: {t['intel']['objective_approaches']}")
+    p = r.get("pacing", {})
+    if p.get("mode"):
+        print(f"[lot]   pacing: ~{p['estimate_expected_min']} min "
+              f"(range {p['range_min']}, target {p['target_min']}) "
+              f"-> {p['status']}")
     print(f"[lot]   -> {os.path.basename(r['gameplay'])}")
     print(f"[lot]   -> {os.path.basename(r['scene'])}")

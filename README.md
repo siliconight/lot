@@ -21,7 +21,7 @@ spec produces byte-identical output every run — but it's a *placement +
 composition* of shells, not a new mega-building. Buildings are atoms; the site
 spec is the molecule.
 
-## Status: Phase 2 + site tactical layer
+## Status: Phase 2 + site tactical + pacing layer
 
 **Phase 1 (done):** deterministic placement + ground manifest + merged,
 world-offset, namespaced `gameplay.json` + a generated Godot `.tscn` that
@@ -108,6 +108,44 @@ the count of distinct approaches to the objective.
 The `objective` / `spawn` / `extraction` / `safe` fields are building-id
 designations. With no `mode`, you get pure intel and no gates. These designations
 also answer "which building's objective is *the* site objective."
+
+## Pacing estimate & encounter intel
+
+Two structural analyses that help you judge **how long** a compound plays and
+**where** its combat opportunities are — without pretending to measure fun. Fun
+is a feel property only a playthrough reveals; these describe structure, and
+every number is shown as an estimate from declared inputs, never a verdict. This
+is not a simulation — no agents move, no shots fire.
+
+**Pacing** estimates time-to-complete for the mode's critical route as a
+min/expected/max range, checked against a target window (default **7–15 min**,
+overridable). It sums traversal (path lengths ÷ move speed), setup, objective
+work, loot trips, and survival holdout time — with a transparent breakdown that
+adds up to the estimate. Emitted under `pacing` in the site gameplay.json, plus a
+status line: *within target* / *too short* / *too long* / *straddles the window*.
+
+Timings are **derived from the mode + distances** and individually overridable:
+
+```json
+{
+  "pacing": {
+    "move_speed": 4.0,
+    "objective_secs": 120,
+    "wave_secs": 35,
+    "waves": 6,
+    "target_minutes": [7, 15]
+  }
+}
+```
+
+So you might see *"~2.7 min, likely TOO SHORT vs target — travel 12s, objective
+120s"* and respond by spreading the buildings out, adding objectives, or
+lengthening the holdout — in the same iterate-the-spec loop.
+
+**Encounter intel** reports per-leg geometric **facts** under `encounters`: route
+length, distinct approaches, open-ground distance, and nearby cover count. It
+describes *opportunity*, not quality — it never grades a firefight. Whether a leg
+plays well is for the walk to tell you.
 
 ## Site spec
 

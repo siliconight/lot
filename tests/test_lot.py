@@ -155,6 +155,58 @@ def test_tactical_no_mode_no_gate():
     print("  tactical no-mode (intel only): OK")
 
 
+def test_pacing_too_short():
+    """A tiny tight compound is flagged as too short vs the 7-15 min target."""
+    import site_pacing as sp
+    spec={"name":"t","mode":"heist","spawn":"a","objective":"b","extraction":"b",
+          "buildings":[{"id":"a","at":[0,0]},{"id":"b","at":[10,0]}],
+          "paths":[{"from":"a","to":"b"}]}
+    merged={"markers":[{"building":"b","type":"objective"}]}
+    p=sp.estimate_pacing(spec,merged)
+    assert "TOO SHORT" in p["status"], p["status"]
+    assert p["estimate_expected_s"] > 0
+    print("  pacing too-short detection: OK")
+
+
+def test_pacing_breakdown_sums():
+    """Breakdown phases sum to the expected estimate (arithmetic is transparent)."""
+    import site_pacing as sp
+    spec={"name":"t","mode":"heist","spawn":"a","objective":"b","extraction":"c",
+          "buildings":[{"id":"a","at":[0,0]},{"id":"b","at":[80,0]},{"id":"c","at":[160,0]}],
+          "paths":[{"from":"a","to":"b"},{"from":"b","to":"c"}]}
+    merged={"markers":[{"building":"b","type":"objective"}]}
+    p=sp.estimate_pacing(spec,merged)
+    s=sum(b["secs"] for b in p["breakdown"])
+    assert abs(s - p["estimate_expected_s"]) < 1.0, (s, p["estimate_expected_s"])
+    print("  pacing breakdown sums to estimate: OK")
+
+
+def test_pacing_overrides():
+    """Spec pacing overrides take effect (more waves -> longer survival)."""
+    import site_pacing as sp
+    base={"name":"t","mode":"survival","safe":"a","objective":"b",
+          "buildings":[{"id":"a","at":[0,0]},{"id":"b","at":[40,0]}],
+          "paths":[{"from":"a","to":"b"}]}
+    m={"markers":[{"building":"b","type":"objective"}]}
+    few=dict(base,pacing={"waves":3}); many=dict(base,pacing={"waves":12})
+    assert sp.estimate_pacing(many,m)["estimate_expected_s"] > sp.estimate_pacing(few,m)["estimate_expected_s"]
+    print("  pacing overrides: OK")
+
+
+def test_encounter_intel_facts():
+    """Encounter intel returns per-leg geometric facts, not a score."""
+    import site_pacing as sp, site_tactical as st
+    spec={"name":"t","mode":"heist","spawn":"a","objective":"b","extraction":"b",
+          "buildings":[{"id":"a","at":[0,0]},{"id":"b","at":[50,0]}],
+          "paths":[{"from":"a","to":"b"}],"cover":[{"at":[25,2]}]}
+    adj=st.build_graph(spec)
+    e=sp.encounter_intel(spec,adj)
+    leg=e["legs"][0]
+    assert leg["length_m"]==50.0 and leg["cover_near"]>=1, leg
+    assert "score" not in e and "quality" not in e  # never a verdict
+    print("  encounter intel (facts not score): OK")
+
+
 if __name__ == "__main__":
     n = 0
     for name, fn in sorted(globals().items()):
