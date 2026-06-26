@@ -1,0 +1,6 @@
+{"level":"warehouse","mode":"assault",
+ "markers":[{"name":"attacker_spawn","type":"attacker_spawn","x":0,"y":-12,"z":0},
+            {"name":"cover_0","type":"cover_low","x":4,"y":0,"z":0}],
+ "rooms":[{"id":"main_floor","story":0,"bounds":[-15,-10,15,10],"role":"entry"}],
+ "objectives":[],"loot":[],"zones":[],"vertical_links":[],"openings":[],
+ "surfaces":[],"surface_roles":{"slab_0":"floor"}}

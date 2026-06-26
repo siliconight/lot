@@ -1,0 +1,5 @@
+__pycache__/
+*.pyc
+*.site.gameplay.json
+# generated scenes from the example (regenerate with: python lot.py)
+specs/example_compound.tscn

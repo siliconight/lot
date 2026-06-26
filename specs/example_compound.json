@@ -1,0 +1,20 @@
+{
+  "name": "example_compound",
+  "ground": {"size_x": 120, "size_y": 80},
+  "buildings": [
+    {"id": "bank", "glb": "bank.glb", "gameplay": "bank.gameplay.json", "at": [0, 0], "rot": 0},
+    {"id": "warehouse", "glb": "warehouse.glb", "gameplay": "warehouse.gameplay.json", "at": [45, 10], "rot": 90}
+  ],
+  "paths": [
+    {"from": "bank", "to": "warehouse", "width": 4}
+  ],
+  "courtyards": [
+    {"at": [20, -15], "size_x": 16, "size_y": 12}
+  ],
+  "perimeter": {"height": 3},
+  "cover": [
+    {"at": [10, -5], "size": [1.2, 1.2, 1.2]},
+    {"at": [30, 5]}
+  ],
+  "site_markers": [{"type": "extraction", "at": [60, -30]}]
+}

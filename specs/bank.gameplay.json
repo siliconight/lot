@@ -1,0 +1,8 @@
+{"level":"bank","mode":"assault",
+ "markers":[{"name":"attacker_spawn","type":"attacker_spawn","x":0,"y":-10,"z":0},
+            {"name":"objective_0","type":"objective","x":5,"y":3,"z":0,"rot_z":90}],
+ "rooms":[{"id":"lobby","story":0,"bounds":[-8,-8,8,8],"role":"entry"}],
+ "objectives":[{"id":"vault","room":"vault_room"}],
+ "loot":[],"zones":[],"vertical_links":[],"openings":[],
+ "surfaces":[{"node":"slab_0","material":"Concrete"}],
+ "surface_roles":{"slab_0":"floor","ext_0_N":"wall"}}

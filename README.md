@@ -1,0 +1,124 @@
+# Lot — site assembler for Deli Counter buildings
+
+Lot composes several already-built [Deli Counter](https://github.com/siliconight/deli-counter)
+buildings into a single **site** — a PAYDAY-scale compound of multiple buildings
+with space between them — which a single Deli Counter spec cannot make (Deli
+Counter produces one monolithic building per spec).
+
+Lot places each building on a shared ground, merges their gameplay data into one
+site-level file, and emits a Godot scene that instances them. **It never
+re-generates or edits the buildings.** Each stays an untouched, independently
+re-buildable `.glb` — the disposable-`.glb` / iterate-the-spec loop keeps working
+per building. Lot is a composition layer *above* the buildings; it consumes their
+public contract (`.glb` + `.gameplay.json`), never their internals.
+
+## Why a separate tool (thesis alignment)
+
+This keeps Deli Counter's "we make models, not levels" line intact. Deli Counter
+makes buildings; Lot makes sites. Each building remains a deterministic,
+replication-free monolithic shell. The site is deterministic too — the same site
+spec produces byte-identical output every run — but it's a *placement +
+composition* of shells, not a new mega-building. Buildings are atoms; the site
+spec is the molecule.
+
+## Status: Phase 2
+
+**Phase 1 (done):** deterministic placement + ground manifest + merged,
+world-offset, namespaced `gameplay.json` + a generated Godot `.tscn` that
+instances each building at its placement. No geometry merging — buildings stay
+separate files, composed at load time.
+
+**Phase 2 (done):** box-vocabulary outdoor — a real ground slab, paths,
+courtyards, perimeter walls, and cover — generated as Godot primitive nodes
+(`BoxMesh` + `BoxShape3D` collision), NOT a baked `.glb`. This keeps Lot offline
+(no Blender needed) and blockout-honest: strictly axis-aligned boxes and flat
+regions (flat strips, rectangular regions, crates). No terrain.
+
+Real terrain / organic outdoor is explicitly **out of scope** — that would break
+the monolithic/deterministic thesis and belongs to a separate terrain tool your
+assembled site sits inside.
+
+## Outdoor (Phase 2) spec fields
+
+All optional. Added alongside `buildings`:
+
+```json
+{
+  "paths": [
+    {"from": "bank", "to": "warehouse", "width": 4}
+  ],
+  "courtyards": [
+    {"at": [20, -15], "size_x": 16, "size_y": 12}
+  ],
+  "perimeter": {"height": 3},
+  "cover": [
+    {"at": [10, -5]},
+    {"at": [30, 5], "size": [2, 1, 1]}
+  ]
+}
+```
+
+- `paths` — flat strips between two buildings (`from`/`to` building ids) or
+  explicit endpoints (`a`/`b` as `[x,y]`), with a `width`. Rendered as a yaw'd
+  box following the line between them.
+- `courtyards` — flat rectangular regions at `at` with `size_x`/`size_y`.
+- `perimeter` — four walls around the ground footprint at the given `height`.
+- `cover` — 1m crates (or custom `size`) at positions. Reuses the crate
+  vocabulary.
+
+## Site spec
+
+```json
+{
+  "name": "big_oil",
+  "ground": {"size_x": 120, "size_y": 80},
+  "buildings": [
+    {"id": "bank",      "glb": "bank.glb",      "gameplay": "bank.gameplay.json",
+     "at": [0, 0],   "rot": 0},
+    {"id": "warehouse", "glb": "warehouse.glb", "gameplay": "warehouse.gameplay.json",
+     "at": [45, 10], "rot": 90}
+  ],
+  "site_markers": [{"type": "extraction", "at": [60, -30]}]
+}
+```
+
+- `at` is the building's `[x, y]` position on the site ground (metres, same
+  convention as Deli Counter).
+- `rot` is yaw in degrees about the building's origin.
+- Each building references a `.glb` and its `.gameplay.json` (Deli Counter
+  output).
+
+## Usage
+
+```
+python lot.py specs/big_oil.json [out_dir]
+```
+
+Writes:
+- `<name>.site.gameplay.json` — every building's markers, rooms, objectives,
+  loot, zones, surfaces, and surface_roles, **offset to world space and
+  namespaced by building id** (so `bank/attacker_spawn` and
+  `warehouse/attacker_spawn` don't collide). This merge is the high-value core:
+  it's the genuinely fiddly-by-hand part, done deterministically.
+- `<name>.tscn` — a Godot scene instancing each building `.glb` at its placement,
+  with a ground body. Buildings stay separate assets referenced by path, so
+  rebuilding one building just updates its `.glb` in place.
+
+## How it fits the workflow
+
+1. Build each building with Deli Counter (`spec -> .glb + .gameplay.json`).
+2. Write a site spec placing them.
+3. `python lot.py site.json` -> assembled scene + merged gameplay.
+4. Open the `.tscn` in Godot; the compound is there, walkable.
+5. Iterate: change a building's spec, rebuild it, the site picks up the new
+   `.glb` at its placement. Change placement, re-run Lot.
+
+Per-building determinism and the fast iterate-the-spec loop are preserved; the
+site is just another deterministic layer on top.
+
+## Axis mapping
+
+Deli Counter is metres, Z-up; Godot is Y-up. Lot maps site ground XY -> Godot XZ
+and site height Z -> Godot Y, with yaw about site-Z becoming yaw about Godot-Y.
+The merged `gameplay.json` keeps Deli Counter's Z-up world convention (so it
+matches each building's own data); the `.tscn` transforms are in Godot's frame.
