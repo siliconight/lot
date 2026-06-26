@@ -38,6 +38,13 @@ Real terrain / organic outdoor is explicitly **out of scope** — that would bre
 the monolithic/deterministic thesis and belongs to a separate terrain tool your
 assembled site sits inside.
 
+**Building rarity (carried through):** if a building was built with a Deli
+Counter `rarity`, each `buildings[]` entry in the merged site `gameplay.json`
+gains `rarity` + `rarity_color`, and the stamped door/breach openings pass
+through untouched — so a compound carries a per-building rarity index and every
+networked door pops its building's colour. Lot doesn't assign rarities itself;
+each comes from its building's spec. (See Deli Counter's `docs/RARITY.md`.)
+
 ## Outdoor (Phase 2) spec fields
 
 All optional. Added alongside `buildings`:

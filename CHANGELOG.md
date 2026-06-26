@@ -1,3 +1,17 @@
+## [0.5.0] - Carry building rarity through the site merge
+- A building's optional `rarity` (from Deli Counter) now lands on its record in
+  the merged `<site>.site.gameplay.json`: each `buildings[]` entry gains
+  `rarity` + `rarity_color` when the building declares one (clean/absent when it
+  doesn't). So a compound carries a per-building rarity index — every door on the
+  block its own reveal.
+- The breachable door/breach openings Deli Counter already stamps with the
+  rarity colour pass through the openings merge untouched, so a networked door in
+  the assembled site pops the right colour with no extra work here.
+- Lot does not assign rarities across a run — each building's rarity comes from
+  its own spec. Deterministic per-run assignment from the site seed remains a
+  possible future feature.
+- New test: rarity carry-through (record + stamped openings). 16 tests pass.
+
 ## [0.4.0] - Pacing estimate + structural encounter intel
 - New site_pacing.py. Two offline STRUCTURAL analyses over the declared site.
   Neither predicts "fun" (fun is a feel property only a playthrough reveals);

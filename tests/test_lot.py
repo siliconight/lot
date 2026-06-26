@@ -207,6 +207,44 @@ def test_encounter_intel_facts():
     print("  encounter intel (facts not score): OK")
 
 
+def test_rarity_carries_through():
+    """A building's rarity lands on its site record, and stamped door openings
+    pass through the merge untouched."""
+    import tempfile
+    d = tempfile.mkdtemp()
+    legendary = {"tier": "legendary", "rank": 4, "color_name": "yellow",
+                 "hex": "#FFD700", "rgb": [1.0, 0.8431, 0.0]}
+    # building a: legendary, with a stamped door + an unstamped window
+    json.dump({"level": "a", "mode": "assault",
+               "rarity": "legendary", "rarity_color": legendary,
+               "openings": [
+                   {"kind": "door", "x": 0, "y": -6, "z": 1.1,
+                    "rarity": "legendary", "rarity_color": legendary},
+                   {"kind": "window", "x": 6, "y": 0, "z": 1.5}]},
+              open(os.path.join(d, "a.gameplay.json"), "w"))
+    # building b: no rarity declared
+    json.dump({"level": "b", "mode": "assault", "rarity": None,
+               "openings": [{"kind": "door", "x": 0, "y": 0, "z": 1.1}]},
+              open(os.path.join(d, "b.gameplay.json"), "w"))
+    # minimal glbs needn't exist for merge_gameplay; it reads gameplay only
+    spec = {"name": "t", "buildings": [
+        {"id": "a", "glb": "a.glb", "gameplay": "a.gameplay.json", "at": [0, 0]},
+        {"id": "b", "glb": "b.glb", "gameplay": "b.gameplay.json", "at": [40, 0]}]}
+    merged = lot.merge_gameplay(spec, d)
+    by_id = {b["id"]: b for b in merged["buildings"]}
+    assert by_id["a"].get("rarity") == "legendary", by_id["a"]
+    assert by_id["a"]["rarity_color"]["hex"] == "#FFD700"
+    assert "rarity" not in by_id["b"], "no-rarity building must stay clean"
+    # the stamped door opening survives the merge; the window stays unstamped
+    a_door = [o for o in merged["openings"]
+              if o["building"] == "a" and o["kind"] == "door"][0]
+    a_win = [o for o in merged["openings"]
+             if o["building"] == "a" and o["kind"] == "window"][0]
+    assert a_door["rarity_color"]["hex"] == "#FFD700", a_door
+    assert "rarity" not in a_win, "window is not an entry reveal"
+    print("  rarity carry-through (record + stamped openings): OK")
+
+
 if __name__ == "__main__":
     n = 0
     for name, fn in sorted(globals().items()):

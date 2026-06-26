@@ -87,16 +87,26 @@ def merge_gameplay(site_spec, base_dir):
     for b in site_spec["buildings"]:
         bid = b["id"]
         placement = {"at": b["at"], "rot": b.get("rot", 0)}
-        site["buildings"].append({
+        record = {
             "id": bid, "glb": b["glb"],
             "at": b["at"], "rot": b.get("rot", 0),
-        })
+        }
         gp_path = os.path.join(base_dir, b["gameplay"])
         if not os.path.exists(gp_path):
             # a building with no gameplay.json still places fine; skip its data
+            site["buildings"].append(record)
             continue
         with open(gp_path, encoding="utf-8") as f:
             gp = json.load(f)
+
+        # carry the building's rarity onto its site record so the compound has a
+        # clean per-building rarity index (every building has its own hidden
+        # rarity -- the door reveal reads it). Breachable openings already carry
+        # the same colour and pass through the openings merge below untouched.
+        if gp.get("rarity") is not None:
+            record["rarity"] = gp.get("rarity")
+            record["rarity_color"] = gp.get("rarity_color")
+        site["buildings"].append(record)
 
         def ns(name):
             return f"{bid}/{name}"
