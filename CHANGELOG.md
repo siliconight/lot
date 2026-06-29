@@ -1,3 +1,19 @@
+## [0.7.0] - Compose .tscn buildings (scene-referenced, not just baked .glb)
+- A building in the site spec may now be referenced by `scene` (a Godot `.tscn`
+  that instances shared modules) instead of `glb` (a baked file). `scene` wins
+  when both are given. Both are instanced the same way (a PackedScene
+  ExtResource), so the site .tscn composes either.
+- Why: Deli Counter's primary output is now the `.tscn` (greybox scene that
+  references shared `res://art/zoo/` modules). Composing those at the site level
+  means editing one shared module propagates across every building in the site,
+  and theming applies at compound scale — the .glb path stays for self-contained
+  shippable buildings.
+- Backward compatible: `glb`-only specs are unchanged and byte-identical. The
+  merged record now carries `source` (the resolved file) and preserves
+  `glb`/`scene` as given. A building with neither is a spec error.
+- gameplay.json merge, tactical, pacing, and enterability are untouched — they
+  read merged data + footprints, not the geometry file. +2 tests (21 total).
+
 ## [0.6.0] - Site enterability gate (can you REACH the doors?)
 - New site_enterability.py + a gate in assemble(): the approach-side sibling of
   site_tactical's connectivity gate. A building that's enterable on its own can

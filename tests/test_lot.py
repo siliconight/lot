@@ -311,6 +311,50 @@ def test_enterability_no_route_warns_not_gates():
     print("  enterability no-route warning (not a gate): OK")
 
 
+def test_scene_building_instances_tscn():
+    """A building referenced by `scene` (a .tscn) is instanced in the site
+    .tscn exactly like a `glb` building, and shared scenes dedup to one
+    ExtResource. Backward compat: `glb`-only buildings still work."""
+    site = {
+        "name": "scene_site",
+        "ground": {"size_x": 60, "size_y": 60},
+        "buildings": [
+            {"id": "a", "scene": "bank.tscn", "gameplay": "missing.json",
+             "at": [0, 0], "rot": 0},
+            {"id": "b", "scene": "bank.tscn", "gameplay": "missing.json",
+             "at": [20, 0], "rot": 90},
+            {"id": "c", "glb": "warehouse.glb", "gameplay": "missing.json",
+             "at": [0, 20], "rot": 0},
+        ],
+    }
+    merged = lot.merge_gameplay(site, "/tmp")
+    out = "/tmp/lot_scene/scene_site.tscn"
+    os.makedirs(os.path.dirname(out), exist_ok=True)
+    lot.write_godot_scene(site, merged, out)
+    txt = open(out).read()
+    assert 'path="res://bank.tscn"' in txt, "scene .tscn not referenced"
+    assert 'path="res://warehouse.glb"' in txt, "glb building broke"
+    assert txt.count("[ext_resource") == 2, "shared .tscn should dedup to one"
+    assert txt.count("instance=ExtResource") == 3, "three building instances"
+    # source resolved into the merged record; glb/scene preserved
+    recs = {r["id"]: r for r in merged["buildings"]}
+    assert recs["a"]["source"] == "bank.tscn" and recs["a"]["scene"] == "bank.tscn"
+    assert recs["c"]["source"] == "warehouse.glb" and recs["c"]["glb"] == "warehouse.glb"
+    print("  scene (.tscn) building instances + dedup + glb back-compat: OK")
+
+
+def test_building_needs_geometry():
+    """A building with neither scene nor glb is a spec error."""
+    site = {"name": "bad", "buildings": [
+        {"id": "x", "gameplay": "missing.json", "at": [0, 0]}]}
+    try:
+        lot.merge_gameplay(site, "/tmp")
+        assert False, "expected ValueError for missing geometry"
+    except ValueError as e:
+        assert "no geometry" in str(e)
+    print("  building with no geometry rejected: OK")
+
+
 if __name__ == "__main__":
     n = 0
     for name, fn in sorted(globals().items()):

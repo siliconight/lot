@@ -190,6 +190,24 @@ plays well is for the walk to tell you.
 - Each building references a `.glb` and its `.gameplay.json` (Deli Counter
   output).
 
+### Referencing a `.tscn` building (scene-composed)
+
+A building may instead be referenced by `scene` — a Godot `.tscn` Deli Counter
+emits with `--format tscn`, which instances shared modules from
+`res://art/zoo/`:
+
+```
+{"id": "bank", "scene": "bank.tscn", "gameplay": "bank.gameplay.json",
+ "at": [0, 0], "rot": 0}
+```
+
+`scene` takes precedence over `glb` when both are present; a building needs one
+of them. Both are instanced the same way in the site `.tscn`. Composing `.tscn`
+buildings means editing one shared module propagates across every building in the
+site, and theming applies at compound scale — the baked `.glb` stays the
+self-contained, single-file option. Everything else (the merged `gameplay.json`,
+tactical, pacing, enterability) is identical either way.
+
 ## Usage
 
 ```

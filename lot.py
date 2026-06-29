@@ -62,6 +62,32 @@ def _place_point(local_x, local_y, local_z, placement):
 
 
 # ---------------------------------------------------------------------------
+# building geometry source: .tscn (preferred) or .glb
+# ---------------------------------------------------------------------------
+def _building_source(b):
+    """Resolve a building record's geometry file. A building may reference a
+    Godot scene (`scene`: a .tscn that instances shared modules) or a baked
+    `glb` -- `scene` wins when both are present. Deli Counter's primary output
+    is the .tscn; the baked .glb is the self-contained special case. Both are
+    instanced the same way (a PackedScene ExtResource), so this is the only
+    place the distinction lives. Returns the file path string."""
+    scene = b.get("scene")
+    glb = b.get("glb")
+    if scene and glb:
+        print(f"[lot] building '{b.get('id', '?')}' has both scene and glb; "
+              f"using scene ({scene}), ignoring glb")
+    src = scene or glb
+    if not src:
+        raise ValueError(
+            f"building '{b.get('id', '?')}' has no geometry: set 'scene' "
+            f"(a .tscn) or 'glb' (a baked .glb)")
+    if not (src.endswith(".tscn") or src.endswith(".glb")):
+        print(f"[lot] building '{b.get('id', '?')}' geometry '{src}' is not a "
+              f".tscn or .glb -- instancing it anyway")
+    return src
+
+
+# ---------------------------------------------------------------------------
 # gameplay.json merge  (the high-value, fiddly-by-hand core of Phase 1)
 # ---------------------------------------------------------------------------
 def merge_gameplay(site_spec, base_dir):
@@ -88,9 +114,13 @@ def merge_gameplay(site_spec, base_dir):
         bid = b["id"]
         placement = {"at": b["at"], "rot": b.get("rot", 0)}
         record = {
-            "id": bid, "glb": b["glb"],
+            "id": bid, "source": _building_source(b),
             "at": b["at"], "rot": b.get("rot", 0),
         }
+        if "glb" in b:
+            record["glb"] = b["glb"]      # preserved for back-compat readers
+        if "scene" in b:
+            record["scene"] = b["scene"]
         gp_path = os.path.join(base_dir, b["gameplay"])
         if not os.path.exists(gp_path):
             # a building with no gameplay.json still places fine; skip its data
@@ -320,19 +350,21 @@ def _outdoor_nodes(site_spec):
 
 
 def write_godot_scene(site_spec, merged, out_path, glb_dir="."):
-    """Emit a .tscn that instances each building .glb at its placement, plus
-    Phase-2 outdoor geometry (ground, paths, courtyards, perimeter, cover) as
-    Godot primitive nodes. Buildings stay separate assets referenced by path."""
+    """Emit a .tscn that instances each building (a .tscn scene or a baked .glb)
+    at its placement, plus Phase-2 outdoor geometry (ground, paths, courtyards,
+    perimeter, cover) as Godot primitive nodes. Buildings stay separate assets
+    referenced by path -- instancing a building .tscn lets a shared module edit
+    propagate across every building in the site."""
     res_ids = {}
     res_lines = []
     next_id = 1
     for b in site_spec["buildings"]:
-        glb = b["glb"]
-        if glb not in res_ids:
+        src = _building_source(b)
+        if src not in res_ids:
             rid = f"b{next_id}"
-            res_ids[glb] = rid
+            res_ids[src] = rid
             next_id += 1
-            rel = os.path.join(glb_dir, glb).replace("\\", "/")
+            rel = os.path.join(glb_dir, src).replace("\\", "/")
             rel = rel[2:] if rel.startswith("./") else rel
             res_lines.append(
                 f'[ext_resource type="PackedScene" path="res://{rel}" id="{rid}"]')
@@ -347,7 +379,7 @@ def write_godot_scene(site_spec, merged, out_path, glb_dir="."):
     lines += ['[node name="Site" type="Node3D"]', '']
     lines += outdoor_body
     for b in site_spec["buildings"]:
-        rid = res_ids[b["glb"]]
+        rid = res_ids[_building_source(b)]
         xform = _godot_transform(b["at"], b.get("rot", 0))
         lines.append(
             f'[node name="{b["id"]}" parent="." '
