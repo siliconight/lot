@@ -1,3 +1,11 @@
+## [0.13.0] - lot_player step-up (curbs, ledges, steep stairs)
+- lot_player.gd now auto-steps short near-vertical obstacles after move_and_slide:
+  raised sidewalks/curbs (0.11 roads), ledges, and steep stair noses it used to
+  catch on. Raycast-probe step-up with a valid-direction check (only steps when
+  walking INTO a face, not along it) and a head-clearance check (won't climb under
+  low geometry). `max_step_height` export (default 0.45 m). Adapted from the
+  standard FPS step-climbing approach; the DC stair RAMP collider (DC 0.51) still
+  carries normal stairs, so this is for the curbs/ledges/steep cases.
 ## [0.12.0] - Blocker facade-shell hook (ready for the art pass; dormant now)
 - A `blocker` may now carry an optional `glb` or `scene` ref (a DC facade shell),
   exactly like a real building. When present it's instanced at the blocker's

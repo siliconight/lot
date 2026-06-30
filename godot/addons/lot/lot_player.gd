@@ -10,6 +10,12 @@ extends CharacterBody3D
 @export var sprint := 8.5
 @export var jump_velocity := 4.5
 @export var mouse_sensitivity := 0.0025
+## Max height the body auto-steps up in one move: curbs/sidewalks, ledges, and
+## steep stair noses the capsule would otherwise catch on. Keep under ~0.5 m so
+## you don't climb things you shouldn't. This is a raycast-probe step-up with a
+## valid-direction + head-clearance check (after move_and_slide), adapted from
+## the standard FPS step-climbing approach.
+@export var max_step_height := 0.45
 
 var _cam: Camera3D
 var _yaw := 0.0
@@ -60,4 +66,53 @@ func _physics_process(delta: float) -> void:
 	var dir := (transform.basis * Vector3(input_dir.x, 0, input_dir.y)).normalized()
 	velocity.x = dir.x * spd
 	velocity.z = dir.z * spd
+	_move_with_steps(delta)
+
+
+func _move_with_steps(delta: float) -> void:
+	# Normal move first. If grounded and walking into a short near-vertical
+	# obstacle (curb, ledge, steep stair nose), lift onto it and continue --
+	# CharacterBody3D has no built-in step handling.
 	move_and_slide()
+	if not is_on_floor():
+		return
+	var horiz := Vector3(velocity.x, 0.0, velocity.z)
+	if horiz.length() < 0.05:
+		return
+	var into := horiz.normalized()
+
+	# Only step if we're pushing INTO a near-vertical face, not sliding along it.
+	var blocked := false
+	for i in get_slide_collision_count():
+		var col := get_slide_collision(i)
+		if absf(col.get_normal().y) < 0.2 and into.dot(-col.get_normal()) > 0.3:
+			blocked = true
+			break
+	if not blocked:
+		return
+
+	# Probe straight down from step height, just ahead, for the surface top.
+	var space := get_world_3d().direct_space_state
+	var ahead := into * 0.4
+	var from := global_position + Vector3.UP * max_step_height + ahead
+	var q := PhysicsRayQueryParameters3D.create(from, from - Vector3.UP * (max_step_height + 0.05))
+	q.exclude = [get_rid()]
+	var hit := space.intersect_ray(q)
+	if hit.is_empty():
+		return
+	var step_top: float = hit["position"].y
+	var rise := step_top - global_position.y
+	if rise <= 0.02 or rise > max_step_height:
+		return
+
+	# Head clearance: don't climb into a low ceiling / under geometry.
+	var hp: Vector3 = hit["position"]
+	var head := PhysicsRayQueryParameters3D.create(
+		Vector3(hp.x, step_top + 0.05, hp.z), Vector3(hp.x, step_top + 1.7, hp.z))
+	head.exclude = [get_rid()]
+	if not space.intersect_ray(head).is_empty():
+		return
+
+	# Lift onto the step and nudge forward past its riser.
+	global_position.y = step_top + 0.02
+	global_position += into * (speed * delta * 0.6)
