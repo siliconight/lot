@@ -1,3 +1,18 @@
+## [0.12.0] - Blocker facade-shell hook (ready for the art pass; dormant now)
+- A `blocker` may now carry an optional `glb` or `scene` ref (a DC facade shell),
+  exactly like a real building. When present it's instanced at the blocker's
+  placement instead of drawing a plain box; when absent it falls back to the box
+  you have today, so every existing blocker is byte-identical.
+- In `--preview` the shell is ignored and the blocker boxes — preview stays
+  Blender-free and blockout-honest.
+- Nothing in the shipped `vault_job.json` uses this yet. It's the hook so that,
+  at art-pass time, DC can make a small family of cheap exterior-only facade
+  shells (rowhome / storefront / industrial wall — collision + walls + windows,
+  no interior, no gameplay markers, no nav) and the street's filler reuses them
+  by reference, themed to match the heist buildings. DC makes the shells; Lot
+  places them. Box-vocab stays Lot's; facade detail stays DC's.
+- Additive; 21 tests unchanged.
+
 ## [0.11.0] - City grain: `roads` + `blockers` (street walls that guide the player)
 - `roads`: flat asphalt strips with optional raised concrete `sidewalk`s, drawn
   between two points (`a`/`b` or `from`/`to` building ids). The street spine the

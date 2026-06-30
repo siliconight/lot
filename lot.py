@@ -321,7 +321,13 @@ def _mat_sub(name, color):
     return lines
 
 
-def _outdoor_nodes(site_spec):
+def _blocker_source(bk):
+    """Optional facade-shell geometry for a blocker (.tscn wins over .glb), or
+    None to fall back to a plain box."""
+    return bk.get("scene") or bk.get("glb")
+
+
+def _outdoor_nodes(site_spec, preview=False):
     """(body_lines, subres_lines) for all Phase-2 outdoor geometry."""
     body, sub = [], []
     bld = {b["id"]: b for b in site_spec["buildings"]}
@@ -411,6 +417,10 @@ def _outdoor_nodes(site_spec):
     # cannot enter. They wall the street and channel the player toward the real
     # (enterable) heist buildings. The opposite of the see-through preview boxes.
     for i, bk in enumerate(site_spec.get("blockers", [])):
+        # a blocker with a facade-shell ref is instanced in write_godot_scene
+        # (like a real building); in preview, ignore the shell and box it.
+        if _blocker_source(bk) and not preview:
+            continue
         ax, ay = bk["at"]
         sx = bk.get("size_x", 12.0)
         sy = bk.get("size_y", 12.0)
@@ -489,8 +499,19 @@ def write_godot_scene(site_spec, merged, out_path, glb_dir=".", preview=False):
                 rel = rel[2:] if rel.startswith("./") else rel
                 res_lines.append(
                     f'[ext_resource type="PackedScene" path="res://{rel}" id="{rid}"]')
+        # facade-shell blockers (optional .glb/.tscn) instance like buildings
+        for bk in site_spec.get("blockers", []):
+            src = _blocker_source(bk)
+            if src and src not in res_ids:
+                rid = f"b{next_id}"
+                res_ids[src] = rid
+                next_id += 1
+                rel = os.path.join(glb_dir, src).replace("\\", "/")
+                rel = rel[2:] if rel.startswith("./") else rel
+                res_lines.append(
+                    f'[ext_resource type="PackedScene" path="res://{rel}" id="{rid}"]')
 
-    outdoor_body, outdoor_sub = _outdoor_nodes(site_spec)
+    outdoor_body, outdoor_sub = _outdoor_nodes(site_spec, preview=preview)
 
     building_body, building_sub = [], []
     if preview:
@@ -514,6 +535,17 @@ def write_godot_scene(site_spec, merged, out_path, glb_dir=".", preview=False):
             xform = _godot_transform(b["at"], b.get("rot", 0))
             lines.append(
                 f'[node name="{b["id"]}" parent="." '
+                f'instance=ExtResource("{rid}")]')
+            lines.append(f'transform = Transform3D({xform})')
+            lines.append('')
+        for i, bk in enumerate(site_spec.get("blockers", [])):
+            src = _blocker_source(bk)
+            if not src:
+                continue
+            rid = res_ids[src]
+            xform = _godot_transform(bk["at"], bk.get("rot", 0))
+            lines.append(
+                f'[node name="blocker_{i}" parent="." '
                 f'instance=ExtResource("{rid}")]')
             lines.append(f'transform = Transform3D({xform})')
             lines.append('')
