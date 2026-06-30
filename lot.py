@@ -234,19 +234,30 @@ COURT_THICK = 0.12
 GROUND_THICK = 0.5
 WALL_THICK = 0.3
 COVER = (1.0, 1.0, 1.0)
+ROAD_THICK = 0.08
+ROAD_COLOR = (0.13, 0.13, 0.14)        # asphalt
+SIDEWALK_H = 0.16
+SIDEWALK_COLOR = (0.55, 0.55, 0.57)    # concrete, raised curb
+BLOCKER_COLOR = (0.38, 0.34, 0.30)     # warm massing -- reads as a building you can't enter
 
 
-def _box_node(name, size, at_xyz):
+def _box_node(name, size, at_xyz, color=None):
     """(body_lines, subres_lines) for an axis-aligned StaticBody3D box with a
-    BoxMesh + BoxShape3D, at Godot-frame (x, y_height, z)."""
+    BoxMesh + BoxShape3D, at Godot-frame (x, y_height, z). color: optional
+    (r,g,b[,a]) -> a StandardMaterial3D override."""
     sx, sy, sz = size
     x, yh, z = at_xyz
+    mat_line = f'material_override = SubResource("Mat_{name}")' if color else ''
     body = [
         f'[node name="{name}" type="StaticBody3D" parent="."]',
         f'transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, {x:g}, {yh:g}, {z:g})',
         '',
         f'[node name="mesh" type="MeshInstance3D" parent="./{name}"]',
         f'mesh = SubResource("BoxMesh_{name}")',
+    ]
+    if mat_line:
+        body.append(mat_line)
+    body += [
         '',
         f'[node name="col" type="CollisionShape3D" parent="./{name}"]',
         f'shape = SubResource("BoxShape_{name}")',
@@ -258,22 +269,29 @@ def _box_node(name, size, at_xyz):
         f'[sub_resource type="BoxShape3D" id="BoxShape_{name}"]',
         f'size = Vector3({sx:g}, {sy:g}, {sz:g})', '',
     ]
+    sub += _mat_sub(name, color)
     return body, sub
 
 
-def _yaw_box_node(name, size, center_godot, yaw_deg):
-    """Like _box_node but yaw'd about Godot-Y (for paths between buildings)."""
+def _yaw_box_node(name, size, center_godot, yaw_deg, color=None):
+    """Like _box_node but yaw'd about Godot-Y (for paths/roads between buildings).
+    color: optional (r,g,b[,a]) -> a StandardMaterial3D override."""
     sx, sy, sz = size
     x, yh, z = center_godot
     r = math.radians(yaw_deg)
     c, s = math.cos(r), math.sin(r)
     xform = (f"{c:g}, 0, {s:g}, 0, 1, 0, {-s:g}, 0, {c:g}, {x:g}, {yh:g}, {z:g}")
+    mat_line = f'material_override = SubResource("Mat_{name}")' if color else ''
     body = [
         f'[node name="{name}" type="StaticBody3D" parent="."]',
         f'transform = Transform3D({xform})',
         '',
         f'[node name="mesh" type="MeshInstance3D" parent="./{name}"]',
         f'mesh = SubResource("BoxMesh_{name}")',
+    ]
+    if mat_line:
+        body.append(mat_line)
+    body += [
         '',
         f'[node name="col" type="CollisionShape3D" parent="./{name}"]',
         f'shape = SubResource("BoxShape_{name}")',
@@ -285,7 +303,22 @@ def _yaw_box_node(name, size, center_godot, yaw_deg):
         f'[sub_resource type="BoxShape3D" id="BoxShape_{name}"]',
         f'size = Vector3({sx:g}, {sy:g}, {sz:g})', '',
     ]
+    sub += _mat_sub(name, color)
     return body, sub
+
+
+def _mat_sub(name, color):
+    if not color:
+        return []
+    if len(color) == 3:
+        color = color + (1.0,)
+    r, g, b, a = color
+    lines = [f'[sub_resource type="StandardMaterial3D" id="Mat_{name}"]']
+    if a < 1.0:
+        lines.append('transparency = 1')
+    lines.append(f'albedo_color = Color({r:g}, {g:g}, {b:g}, {a:g})')
+    lines.append('')
+    return lines
 
 
 def _outdoor_nodes(site_spec):
@@ -343,6 +376,52 @@ def _outdoor_nodes(site_spec):
         cx, cy = cv["at"]
         sx, sy, sz = cv.get("size", COVER)
         bl, sr = _box_node(f"cover_{i}", (sx, sy, sz), (cx, sy / 2, -cy))
+        body += bl
+        sub += sr
+
+    # roads: the street grid the block is built on (DELCO/Philly grain). A road
+    # is a flat asphalt strip between two points, optionally with raised concrete
+    # sidewalks running alongside. Buildings + blockers front onto it.
+    for i, rd in enumerate(site_spec.get("roads", [])):
+        ax, ay = bld[rd["from"]]["at"] if "from" in rd else rd["a"]
+        bx_, by_ = bld[rd["to"]]["at"] if "to" in rd else rd["b"]
+        w = rd.get("width", 9.0)
+        cx, cy = (ax + bx_) / 2, (ay + by_) / 2
+        dx, dy = bx_ - ax, by_ - ay
+        length = math.hypot(dx, dy) or 0.001
+        ang = math.degrees(math.atan2(dy, dx))
+        bl, sr = _yaw_box_node(f"road_{i}", (length, ROAD_THICK, w),
+                               (cx, ROAD_THICK / 2, -cy), -ang, ROAD_COLOR)
+        body += bl
+        sub += sr
+        sw = rd.get("sidewalk")
+        if sw:
+            ux, uy = dx / length, dy / length        # along
+            px, py = -uy, ux                          # perpendicular (left)
+            off = w / 2 + sw / 2
+            for side, sgn in (("L", 1), ("R", -1)):
+                scx, scy = cx + px * off * sgn, cy + py * off * sgn
+                bl, sr = _yaw_box_node(
+                    f"sidewalk_{i}{side}", (length, SIDEWALK_H, sw),
+                    (scx, SIDEWALK_H / 2, -scy), -ang, SIDEWALK_COLOR)
+                body += bl
+                sub += sr
+
+    # blockers: non-interactable filler buildings -- SOLID collision massing you
+    # cannot enter. They wall the street and channel the player toward the real
+    # (enterable) heist buildings. The opposite of the see-through preview boxes.
+    for i, bk in enumerate(site_spec.get("blockers", [])):
+        ax, ay = bk["at"]
+        sx = bk.get("size_x", 12.0)
+        sy = bk.get("size_y", 12.0)
+        h = bk.get("height", 8.0)
+        rot = bk.get("rot", 0)
+        col = tuple(bk.get("color", BLOCKER_COLOR))
+        if rot:
+            bl, sr = _yaw_box_node(f"blocker_{i}", (sx, h, sy),
+                                   (ax, h / 2, -ay), rot, col)
+        else:
+            bl, sr = _box_node(f"blocker_{i}", (sx, h, sy), (ax, h / 2, -ay), col)
         body += bl
         sub += sr
 

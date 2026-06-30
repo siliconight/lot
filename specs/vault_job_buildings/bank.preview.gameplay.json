@@ -1,0 +1,195 @@
+{
+  "level": "bank_preset",
+  "mode": "heist",
+  "footprint": [
+    30.0,
+    22.0
+  ],
+  "markers": [
+    {
+      "name": "CREW_SPAWN_A",
+      "type": "crew_spawn",
+      "x": -2,
+      "y": -14.0,
+      "z": 0,
+      "rot_z": 90,
+      "room": "lobby",
+      "meta": {
+        "phase": "stealth"
+      }
+    },
+    {
+      "name": "RESPONDER_SPAWN_1",
+      "type": "responder_spawn",
+      "x": 12.0,
+      "y": 8.0,
+      "z": 0,
+      "meta": {
+        "phase": "loud"
+      }
+    },
+    {
+      "name": "CAMERA_SOCKET_01",
+      "type": "camera_socket",
+      "x": 12.0,
+      "y": -9.0,
+      "z": 3.0,
+      "room": "lobby"
+    },
+    {
+      "name": "COVER_LOW_AUTO_TELLER_COUNTER",
+      "type": "cover_low",
+      "x": 0.0,
+      "y": -2.0,
+      "z": 0.0,
+      "room": "lobby",
+      "meta": {
+        "auto": "cover_from_volume",
+        "from": "teller_counter"
+      }
+    },
+    {
+      "name": "LANDMARK_LOBBY",
+      "type": "landmark",
+      "x": 0.0,
+      "y": -4.5,
+      "z": 1.0,
+      "room": "lobby",
+      "meta": {
+        "auto": "landmark",
+        "label": "lobby",
+        "role": "public_entry"
+      }
+    },
+    {
+      "name": "LANDMARK_VAULT_ROOM",
+      "type": "landmark",
+      "x": 0.0,
+      "y": 0.0,
+      "z": -2.6,
+      "room": "vault_room",
+      "meta": {
+        "auto": "landmark",
+        "label": "vault_room",
+        "role": "objective_room"
+      }
+    }
+  ],
+  "rooms": [
+    {
+      "id": "lobby",
+      "story": 0,
+      "bounds": [
+        -15.0,
+        -11.0,
+        15.0,
+        2.0
+      ],
+      "role": "public_entry"
+    },
+    {
+      "id": "manager_office",
+      "story": 0,
+      "bounds": [
+        -15.0,
+        2.0,
+        0.0,
+        11.0
+      ],
+      "role": "fortifiable"
+    },
+    {
+      "id": "security_room",
+      "story": 0,
+      "bounds": [
+        0.0,
+        2.0,
+        15.0,
+        11.0
+      ],
+      "role": "connector"
+    },
+    {
+      "id": "vault_room",
+      "story": -1,
+      "bounds": [
+        -15.0,
+        -11.0,
+        15.0,
+        11.0
+      ],
+      "role": "objective_room"
+    }
+  ],
+  "objectives": [
+    {
+      "id": "crack_vault",
+      "kind": "drill",
+      "x": 10.0,
+      "y": -6.0,
+      "z": -1.8,
+      "room": "vault_room",
+      "required": true,
+      "duration": 90
+    },
+    {
+      "id": "grab_drawers",
+      "kind": "grab",
+      "x": 0.0,
+      "y": -2.0,
+      "z": 0.5,
+      "room": "lobby",
+      "required": false
+    }
+  ],
+  "loot": [
+    {
+      "id": "vault_cash",
+      "kind": "cash",
+      "x": 10.0,
+      "y": -6.0,
+      "z": -1.8,
+      "value": 500000,
+      "bags": 4,
+      "room": "vault_room"
+    },
+    {
+      "id": "teller_cash",
+      "kind": "cash",
+      "x": -2.0,
+      "y": -2.0,
+      "z": 0.5,
+      "value": 80000,
+      "bags": 1,
+      "room": "lobby"
+    }
+  ],
+  "zones": [
+    {
+      "id": "main",
+      "kind": "extraction",
+      "story": 0,
+      "bounds": [
+        -15.0,
+        -11.0,
+        -7.0,
+        -5.0
+      ]
+    },
+    {
+      "id": "stage",
+      "kind": "secure",
+      "story": 0,
+      "bounds": [
+        -15.0,
+        5.0,
+        -9.0,
+        11.0
+      ]
+    }
+  ],
+  "vertical_links": [],
+  "openings": [],
+  "surfaces": [],
+  "surface_roles": {}
+}

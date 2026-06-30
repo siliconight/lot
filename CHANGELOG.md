@@ -1,3 +1,24 @@
+## [0.11.0] - City grain: `roads` + `blockers` (street walls that guide the player)
+- `roads`: flat asphalt strips with optional raised concrete `sidewalk`s, drawn
+  between two points (`a`/`b` or `from`/`to` building ids). The street spine the
+  block fronts onto -- DELCO/Philly grain instead of buildings floating in a
+  field. `{ "a": [-90,-28], "b": [90,-28], "width": 10, "sidewalk": 3 }`.
+- `blockers`: non-interactable filler buildings -- SOLID collision massing you
+  cannot enter (`{at, size_x, size_y, height, rot?, color?}`). They wall the
+  street and channel the player toward the real, enterable heist buildings. The
+  deliberate contrast does the guiding: solid block = context you route around,
+  see-through massing = a building you go into.
+- `_box_node` / `_yaw_box_node` gained an optional `color` (a StandardMaterial3D
+  override); roads/sidewalks/blockers are tinted, existing ground/path/cover are
+  byte-identical (color defaults off).
+- `specs/vault_job.json` rebuilt as a real city block: the three heist buildings
+  front a main street; a row of rowhome blockers walls the far side and the backs,
+  with alley gaps aligned to the building fronts so you're funneled down the
+  street and into the heist buildings. Zero footprint overlaps; gates pass; 2
+  objective approaches.
+- All additive: composition, `--walkable`, `--navqa`, `--preview`, and 21 tests
+  unchanged.
+
 ## [0.10.0] - `--preview`: walk the level with no Blender, one command
 - `python lot.py <site>.json <out> --preview` composes the site with each
   building as labeled greybox **massing** (a walkable footprint pad + a

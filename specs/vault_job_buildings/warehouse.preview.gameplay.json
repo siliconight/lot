@@ -1,0 +1,181 @@
+{
+  "level": "warehouse_preset",
+  "mode": "heist",
+  "footprint": [
+    48.0,
+    34.0
+  ],
+  "markers": [
+    {
+      "name": "COVER_HIGH_CRATE1",
+      "type": "cover_high",
+      "x": -8.0,
+      "y": -4.0,
+      "z": 0.0,
+      "room": "main_floor"
+    },
+    {
+      "name": "COVER_HIGH_CRATE2",
+      "type": "cover_high",
+      "x": 4.0,
+      "y": 3.0,
+      "z": 0.0,
+      "room": "main_floor"
+    },
+    {
+      "name": "COVER_LOW_FORKLIFT",
+      "type": "cover_low",
+      "x": 10.0,
+      "y": -8.0,
+      "z": 0.0,
+      "room": "main_floor"
+    },
+    {
+      "name": "CAMERA_SOCKET_01",
+      "type": "camera_socket",
+      "x": -20.0,
+      "y": -14.0,
+      "z": 5.0,
+      "rot_z": 45,
+      "room": "main_floor"
+    },
+    {
+      "name": "OBJECTIVE_SAFE",
+      "type": "objective",
+      "x": 15.0,
+      "y": 13.0,
+      "z": 0.2,
+      "room": "office"
+    },
+    {
+      "name": "LOOT_GOODS",
+      "type": "loot",
+      "x": -2.0,
+      "y": -10.0,
+      "z": 1.0,
+      "room": "main_floor"
+    },
+    {
+      "name": "EXTRACTION_DOCK",
+      "type": "extraction",
+      "x": -10.0,
+      "y": -15.0,
+      "z": 0.0,
+      "room": "main_floor"
+    },
+    {
+      "name": "COVER_HIGH_AUTO_CRATE_STACK_LOW",
+      "type": "cover_high",
+      "x": -14.0,
+      "y": 6.0,
+      "z": 0.0,
+      "room": "main_floor",
+      "meta": {
+        "auto": "cover_from_volume",
+        "from": "crate_stack_low"
+      }
+    },
+    {
+      "name": "LANDMARK_MAIN_FLOOR",
+      "type": "landmark",
+      "x": 0.0,
+      "y": -4.5,
+      "z": 1.0,
+      "room": "main_floor",
+      "meta": {
+        "auto": "landmark",
+        "label": "main_floor",
+        "role": "public_entry"
+      }
+    },
+    {
+      "name": "LANDMARK_OFFICE",
+      "type": "landmark",
+      "x": 17.5,
+      "y": 12.5,
+      "z": 1.0,
+      "room": "office",
+      "meta": {
+        "auto": "landmark",
+        "label": "office",
+        "role": "objective_room"
+      }
+    }
+  ],
+  "rooms": [
+    {
+      "id": "main_floor",
+      "story": 0,
+      "bounds": [
+        -24.0,
+        -17.0,
+        24.0,
+        8.0
+      ],
+      "role": "public_entry"
+    },
+    {
+      "id": "north_bay",
+      "story": 0,
+      "bounds": [
+        -24.0,
+        8.0,
+        11.0,
+        17.0
+      ],
+      "role": "connector"
+    },
+    {
+      "id": "office",
+      "story": 0,
+      "bounds": [
+        11.0,
+        8.0,
+        24.0,
+        17.0
+      ],
+      "role": "objective_room"
+    }
+  ],
+  "objectives": [
+    {
+      "id": "crack_office_safe",
+      "kind": "drill",
+      "x": 15.0,
+      "y": 13.0,
+      "z": 0.2,
+      "room": "office",
+      "required": true,
+      "duration": 30.0
+    }
+  ],
+  "loot": [
+    {
+      "id": "warehouse_goods",
+      "kind": "contraband",
+      "x": -2.0,
+      "y": -10.0,
+      "z": 1.0,
+      "value": 5000,
+      "bags": 3,
+      "room": "main_floor"
+    }
+  ],
+  "zones": [
+    {
+      "id": "dock_extract",
+      "kind": "extraction",
+      "story": 0,
+      "bounds": [
+        -24.0,
+        -17.0,
+        0.0,
+        -10.0
+      ]
+    }
+  ],
+  "vertical_links": [],
+  "openings": [],
+  "surfaces": [],
+  "surface_roles": {}
+}

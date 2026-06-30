@@ -1,125 +1,32 @@
 {
   "name": "vault_job",
-  "ground": {
-    "size_x": 160,
-    "size_y": 100
-  },
+  "ground": { "size_x": 200, "size_y": 120 },
   "buildings": [
-    {
-      "id": "gas_station",
-      "glb": "gas_station.glb",
-      "gameplay": "vault_job_buildings/gas_station.gameplay.json",
-      "at": [
-        -50,
-        -20
-      ],
-      "rot": 0,
-      "spec": "vault_job_buildings/gas_station.json"
-    },
-    {
-      "id": "bank",
-      "glb": "bank.glb",
-      "gameplay": "vault_job_buildings/bank.gameplay.json",
-      "at": [
-        0,
-        0
-      ],
-      "rot": 0,
-      "spec": "vault_job_buildings/bank.json"
-    },
-    {
-      "id": "warehouse",
-      "glb": "warehouse.glb",
-      "gameplay": "vault_job_buildings/warehouse.gameplay.json",
-      "at": [
-        44,
-        14
-      ],
-      "rot": 0,
-      "spec": "vault_job_buildings/warehouse.json"
-    }
+    { "id": "gas_station", "spec": "vault_job_buildings/gas_station.json", "gameplay": "vault_job_buildings/gas_station.gameplay.json", "glb": "gas_station.glb", "at": [-52, -9], "rot": 0 },
+    { "id": "bank",        "spec": "vault_job_buildings/bank.json",        "gameplay": "vault_job_buildings/bank.gameplay.json",        "glb": "bank.glb",        "at": [2, -9],   "rot": 0 },
+    { "id": "warehouse",   "spec": "vault_job_buildings/warehouse.json",   "gameplay": "vault_job_buildings/warehouse.gameplay.json",   "glb": "warehouse.glb",   "at": [55, -3],  "rot": 0 }
+  ],
+  "roads": [
+    { "a": [-90, -28], "b": [90, -28], "width": 10, "sidewalk": 3 }
   ],
   "paths": [
-    {
-      "from": "gas_station",
-      "to": "bank",
-      "width": 5
-    },
-    {
-      "from": "bank",
-      "to": "warehouse",
-      "width": 5
-    },
-    {
-      "from": "gas_station",
-      "to": "warehouse",
-      "width": 4
-    }
+    { "from": "gas_station", "to": "bank", "width": 4 },
+    { "from": "bank", "to": "warehouse", "width": 4 },
+    { "from": "gas_station", "to": "warehouse", "width": 3 }
   ],
-  "courtyards": [
-    {
-      "at": [
-        -24,
-        -12
-      ],
-      "size_x": 18,
-      "size_y": 14
-    },
-    {
-      "at": [
-        24,
-        8
-      ],
-      "size_x": 16,
-      "size_y": 12
-    }
+  "blockers": [
+    { "at": [-60, -45], "size_x": 26, "size_y": 18, "height": 8 },
+    { "at": [-30, -45], "size_x": 22, "size_y": 18, "height": 9 },
+    { "at": [2, -45],   "size_x": 22, "size_y": 18, "height": 7 },
+    { "at": [36, -45],  "size_x": 24, "size_y": 18, "height": 9 },
+    { "at": [66, -45],  "size_x": 22, "size_y": 18, "height": 8 },
+    { "at": [-52, 18],  "size_x": 30, "size_y": 12, "height": 8 },
+    { "at": [2, 18],    "size_x": 28, "size_y": 12, "height": 8 },
+    { "at": [-82, -20], "size_x": 8,  "size_y": 44, "height": 9 }
   ],
-  "perimeter": {
-    "height": 3.5
-  },
   "cover": [
-    {
-      "at": [
-        -26,
-        -6
-      ]
-    },
-    {
-      "at": [
-        -18,
-        -14
-      ]
-    },
-    {
-      "at": [
-        20,
-        2
-      ]
-    },
-    {
-      "at": [
-        28,
-        12
-      ]
-    },
-    {
-      "at": [
-        6,
-        -10
-      ]
-    }
+    { "at": [-30, -16] }, { "at": [-10, -14] }, { "at": [20, -15] }, { "at": [40, -12] }
   ],
-  "site_markers": [
-    {
-      "type": "extraction",
-      "at": [
-        60,
-        28
-      ]
-    }
-  ],
-  "mode": "heist",
-  "spawn": "gas_station",
-  "objective": "bank",
-  "extraction": "warehouse"
+  "site_markers": [ { "type": "extraction", "at": [80, -10] } ],
+  "mode": "heist", "spawn": "gas_station", "objective": "bank", "extraction": "warehouse"
 }
