@@ -391,9 +391,120 @@ def write_godot_scene(site_spec, merged, out_path, glb_dir="."):
 
 
 # ---------------------------------------------------------------------------
+# walkable scene (--walkable): a *_walk.tscn that drops a player at the crew
+# spawn, bakes site nav, and beacons the objective + extraction. Pairs with the
+# lot addon scripts (godot/addons/lot/). Buildings still come from the site.tscn.
+# ---------------------------------------------------------------------------
+def _building_at(site_spec, bid):
+    for b in site_spec.get("buildings", []):
+        if b.get("id") == bid:
+            return b.get("at", [0.0, 0.0])
+    return [0.0, 0.0]
+
+
+def _walk_positions(site_spec, merged):
+    """Resolve crew-spawn / objective / extraction world (site) coords for the
+    walk scene, robust to heist branches that emit only arrays (no objective
+    marker). Returns dict of (x, y, z) site-space tuples."""
+    markers = merged.get("markers", [])
+
+    def first_marker(types, building=None):
+        for m in markers:
+            if m.get("type") in types and (building is None or m.get("building") == building):
+                return (m.get("x", 0.0), m.get("y", 0.0), m.get("z", 0.0))
+        return None
+
+    spawn_b = site_spec.get("spawn")
+    obj_b = site_spec.get("objective")
+    extr_b = site_spec.get("extraction")
+
+    spawn = first_marker(("crew_spawn", "attacker_spawn"), spawn_b) \
+        or first_marker(("crew_spawn", "attacker_spawn"))
+    if spawn is None:
+        at = _building_at(site_spec, spawn_b) if spawn_b else [0.0, 0.0]
+        spawn = (at[0], at[1], 0.0)
+
+    objective = first_marker(("objective",), obj_b)
+    if objective is None and obj_b:
+        at = _building_at(site_spec, obj_b)
+        for o in merged.get("objectives", []):
+            if str(o.get("id", "")).startswith(obj_b + "/"):
+                objective = (o.get("x", 0.0) + at[0], o.get("y", 0.0) + at[1], o.get("z", 0.0))
+                break
+        if objective is None:
+            objective = (at[0], at[1], 0.0)
+    objective = objective or (0.0, 0.0, 0.0)
+
+    extraction = None
+    for sm in merged.get("site_markers", []):
+        if sm.get("type") == "extraction":
+            a = sm.get("at", [0.0, 0.0])
+            extraction = (a[0], a[1], 0.0)
+            break
+    if extraction is None:
+        extraction = first_marker(("extraction",), extr_b) or first_marker(("extraction",))
+    if extraction is None and extr_b:
+        at = _building_at(site_spec, extr_b)
+        extraction = (at[0], at[1], 0.0)
+    extraction = extraction or (0.0, 0.0, 0.0)
+
+    return {"spawn": tuple(spawn), "objective": tuple(objective),
+            "extraction": tuple(extraction)}
+
+
+def _v3(world_xyz, lift=0.0):
+    """Site (x, y, z) -> Godot Vector3 string (x, z+lift, -y)."""
+    x, y, z = world_xyz
+    return f"Vector3({x:g}, {z + lift:g}, {-y:g})"
+
+
+def write_walk_scene(site_spec, merged, walk_out, site_tscn_base, addon_dir="addons/lot"):
+    """Emit <name>_walk.tscn: instances the composed site under a baked
+    NavigationRegion3D, spawns a first-person player at the crew start, and
+    beacons the objective + extraction. Reuses godot/addons/lot scripts."""
+    pos = _walk_positions(site_spec, merged)
+    sx, sy, sz = pos["spawn"]
+    player_godot = f"{sx:g}, {sz + 1.0:g}, {-sy:g}"   # eye/capsule lift
+
+    lines = [
+        '[gd_scene load_steps=6 format=3]', '',
+        f'[ext_resource type="PackedScene" path="res://{site_tscn_base}.tscn" id="site"]',
+        f'[ext_resource type="Script" path="res://{addon_dir}/lot_site_walk.gd" id="walk"]',
+        f'[ext_resource type="Script" path="res://{addon_dir}/lot_player.gd" id="player"]', '',
+        '[sub_resource type="NavigationMesh" id="NavMesh"]',
+        'geometry_parsed_geometry_type = 2',
+        'cell_size = 0.25',
+        'agent_radius = 0.5',
+        'agent_height = 1.8', '',
+        '[sub_resource type="CapsuleShape3D" id="PlayerCol"]',
+        'radius = 0.4',
+        'height = 1.8', '',
+        f'[node name="{site_spec["name"]}_walk" type="Node3D"]',
+        'script = ExtResource("walk")',
+        f'spawn_pos = {_v3(pos["spawn"], 1.0)}',
+        f'objective_pos = {_v3(pos["objective"])}',
+        f'extraction_pos = {_v3(pos["extraction"])}', '',
+        '[node name="Nav" type="NavigationRegion3D" parent="."]',
+        'navigation_mesh = SubResource("NavMesh")', '',
+        '[node name="Site" parent="./Nav" instance=ExtResource("site")]', '',
+        '[node name="Player" type="CharacterBody3D" parent="."]',
+        f'transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, {player_godot})',
+        'script = ExtResource("player")', '',
+        '[node name="col" type="CollisionShape3D" parent="Player"]',
+        'transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)',
+        'shape = SubResource("PlayerCol")', '',
+        '[node name="Camera" type="Camera3D" parent="Player"]',
+        'transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, 0)', '',
+    ]
+    with open(walk_out, "w", encoding="utf-8") as f:
+        f.write("\n".join(lines))
+    return pos
+
+
+# ---------------------------------------------------------------------------
 # top-level assemble
 # ---------------------------------------------------------------------------
-def assemble(site_spec_path, out_dir=None):
+def assemble(site_spec_path, out_dir=None, walkable=False):
     """Read a site spec, write <name>.site.gameplay.json and <name>.tscn."""
     base_dir = os.path.dirname(os.path.abspath(site_spec_path))
     out_dir = out_dir or base_dir
@@ -432,7 +543,7 @@ def assemble(site_spec_path, out_dir=None):
     tscn_out = os.path.join(out_dir, f"{site_spec['name']}.tscn")
     write_godot_scene(site_spec, merged, tscn_out)
 
-    return {
+    result = {
         "gameplay": gp_out, "scene": tscn_out,
         "buildings": len(site_spec["buildings"]),
         "markers": len(merged["markers"]),
@@ -441,20 +552,30 @@ def assemble(site_spec_path, out_dir=None):
         "pacing": merged["pacing"],
     }
 
+    if walkable:
+        walk_out = os.path.join(out_dir, f"{site_spec['name']}_walk.tscn")
+        result["walk_positions"] = write_walk_scene(
+            site_spec, merged, walk_out, site_spec["name"])
+        result["walk_scene"] = walk_out
+
+    return result
+
 
 if __name__ == "__main__":
     import sys
-    if len(sys.argv) < 2:
-        print("usage: python lot.py <site_spec.json> [out_dir]")
+    args = [a for a in sys.argv[1:] if not a.startswith("--")]
+    walkable = "--walkable" in sys.argv
+    if not args:
+        print("usage: python lot.py <site_spec.json> [out_dir] [--walkable]")
         raise SystemExit(2)
-    out = sys.argv[2] if len(sys.argv) > 2 else None
+    out = args[1] if len(args) > 1 else None
     try:
-        r = assemble(sys.argv[1], out)
+        r = assemble(args[0], out, walkable=walkable)
     except Exception as e:
         # site_tactical.SiteTacticalError and friends: fail loudly, like a gate
         print(f"[lot] BUILD FAILED: {e}")
         raise SystemExit(1)
-    print(f"[lot] assembled '{os.path.basename(sys.argv[1])}': "
+    print(f"[lot] assembled '{os.path.basename(args[0])}': "
           f"{r['buildings']} buildings, {r['markers']} markers, "
           f"{r['rooms']} rooms")
     t = r["tactical"]
@@ -472,3 +593,9 @@ if __name__ == "__main__":
               f"-> {p['status']}")
     print(f"[lot]   -> {os.path.basename(r['gameplay'])}")
     print(f"[lot]   -> {os.path.basename(r['scene'])}")
+    if r.get("walk_scene"):
+        wp = r["walk_positions"]
+        print(f"[lot]   -> {os.path.basename(r['walk_scene'])}  (walkable: "
+              f"spawn {tuple(round(v,1) for v in wp['spawn'])} -> "
+              f"objective {tuple(round(v,1) for v in wp['objective'])} -> "
+              f"extraction {tuple(round(v,1) for v in wp['extraction'])})")

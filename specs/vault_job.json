@@ -1,0 +1,122 @@
+{
+  "name": "vault_job",
+  "ground": {
+    "size_x": 160,
+    "size_y": 100
+  },
+  "buildings": [
+    {
+      "id": "gas_station",
+      "glb": "gas_station.glb",
+      "gameplay": "gas_station.gameplay.json",
+      "at": [
+        -50,
+        -20
+      ],
+      "rot": 0
+    },
+    {
+      "id": "bank",
+      "glb": "bank.glb",
+      "gameplay": "bank.gameplay.json",
+      "at": [
+        0,
+        0
+      ],
+      "rot": 0
+    },
+    {
+      "id": "warehouse",
+      "glb": "warehouse.glb",
+      "gameplay": "warehouse.gameplay.json",
+      "at": [
+        44,
+        14
+      ],
+      "rot": 0
+    }
+  ],
+  "paths": [
+    {
+      "from": "gas_station",
+      "to": "bank",
+      "width": 5
+    },
+    {
+      "from": "bank",
+      "to": "warehouse",
+      "width": 5
+    },
+    {
+      "from": "gas_station",
+      "to": "warehouse",
+      "width": 4
+    }
+  ],
+  "courtyards": [
+    {
+      "at": [
+        -24,
+        -12
+      ],
+      "size_x": 18,
+      "size_y": 14
+    },
+    {
+      "at": [
+        24,
+        8
+      ],
+      "size_x": 16,
+      "size_y": 12
+    }
+  ],
+  "perimeter": {
+    "height": 3.5
+  },
+  "cover": [
+    {
+      "at": [
+        -26,
+        -6
+      ]
+    },
+    {
+      "at": [
+        -18,
+        -14
+      ]
+    },
+    {
+      "at": [
+        20,
+        2
+      ]
+    },
+    {
+      "at": [
+        28,
+        12
+      ]
+    },
+    {
+      "at": [
+        6,
+        -10
+      ]
+    }
+  ],
+  "site_markers": [
+    {
+      "type": "extraction",
+      "at": [
+        60,
+        28
+      ]
+    }
+  ],
+  "mode": "heist",
+  "spawn": "gas_station",
+  "objective": "bank",
+  "extraction": "warehouse"
+}

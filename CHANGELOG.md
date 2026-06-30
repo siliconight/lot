@@ -1,3 +1,32 @@
+## [0.8.0] - Walkable sites (`--walkable`): drop in and play the heist
+- `python lot.py <site>.json --walkable` now also emits `<name>_walk.tscn` — a
+  press-play scene that instances the composed site under a baked
+  `NavigationRegion3D`, spawns a first-person player at the crew start, and
+  beacons the objective + extraction. This is the missing in-engine piece between
+  "Lot composes a heist" and "walk the heist start to finish."
+- Ships `godot/addons/lot/lot_player.gd` (a self-contained FPS walker — WASD /
+  mouse / sprint / jump, no project input map needed) and
+  `godot/addons/lot/lot_site_walk.gd` (bakes site nav, drops waypoint beacons +
+  a HUD). Copy `addons/lot/` into your Godot project; the walk scene references
+  `res://addons/lot/`.
+- Crew-spawn / objective / extraction world positions are resolved at assemble
+  time from the merged site gameplay and baked into the walk scene, so it needs
+  no JSON parsing at runtime. Robust to heist branches that emit only
+  objective/loot *arrays* (no objective marker): falls back to the array entry
+  offset by the objective building's placement.
+- `specs/vault_job.json` — flagship 3-building heist example: gas_station
+  (approach/staging) -> bank (the vault) -> warehouse (escape), with a path
+  triangle giving the objective two approaches. Heist gates pass; pacing reads
+  short (intel only — the felt length is the vault-drill duration + AI pressure,
+  which arithmetic can't see).
+- The one thing only your in-engine walk confirms: navmesh quality across
+  instanced buildings + outdoor, and multi-floor linking (a single baked region
+  is ground-plane biased — upper floors need stairs bridged with nav-link
+  anchors, the known Deli Counter caveat). `lot_site_walk.gd` documents the bake
+  knobs to turn if AI nav looks wrong.
+- Base `<name>.tscn` (composition) is unchanged — `--walkable` is purely
+  additive.
+
 ## [0.7.0] - Compose .tscn buildings (scene-referenced, not just baked .glb)
 - A building in the site spec may now be referenced by `scene` (a Godot `.tscn`
   that instances shared modules) instead of `glb` (a baked file). `scene` wins
