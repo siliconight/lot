@@ -21,7 +21,35 @@ spec produces byte-identical output every run — but it's a *placement +
 composition* of shells, not a new mega-building. Buildings are atoms; the site
 spec is the molecule.
 
-## Status: Phase 2 + site tactical + pacing layer
+## Status: walkable site assembler (Phase 2 + tactical/pacing + city grain + traversal)
+
+Since the Phase 2 baseline below, Lot has grown the pieces that make a site
+actually *playable in one command*:
+
+- **Walk it (`--walkable`)** — emits `<name>_walk.tscn`: the whole site under a
+  baked `NavigationRegion3D`, a first-person player at the crew start, and
+  objective/extraction beacons + HUD. Open it and press F6 to walk the level.
+- **No Blender needed (`--preview`)** — buildings render as labeled greybox
+  *massing* (a walkable pad + a see-through box) with the real heist anchors
+  pulled from each building's Deli Counter **spec**, so you can lay out and walk
+  a whole level before any building is built in Blender. One command, zero
+  Blender.
+- **City grain (`roads` + `blockers`)** — flat asphalt `roads` with optional
+  raised sidewalks, and solid `blockers` (StaticBody3D massing you can't enter)
+  to wall streets and funnel the crew toward the heist fronts. A `blocker` can
+  also point at a Deli Counter **facade shell** (`glb`/`scene`) so a street wall
+  becomes themed facades instead of plain boxes (dormant until the art pass).
+- **Step-up player** — `lot_player.gd` now auto-steps curbs, sidewalks, ledges,
+  and steep stair noses (so the 0.11 raised sidewalks don't catch you).
+- **Nav-QA feed (`--navqa`)** — emits a scene wired to feed an in-engine nav-QA
+  bot harness (decoupled: opens and walks with or without that addon present).
+
+Deli Counter makes the buildings; Lot composes them into a PAYDAY-scale **site**
+and lets you walk it. A heist level = 1–4 Deli Counter buildings = one Lot site.
+
+---
+
+### Phase 2 baseline
 
 **Phase 1 (done):** deterministic placement + ground manifest + merged,
 world-offset, namespaced `gameplay.json` + a generated Godot `.tscn` that
@@ -212,6 +240,18 @@ tactical, pacing, enterability) is identical either way.
 
 ```
 python lot.py specs/big_oil.json [out_dir]
+```
+
+**Flags** (combine freely):
+
+```
+# walk the level in one command, no Blender — greybox massing + the real anchors:
+python lot.py specs/vault_job.json "C:\path\to\GodotProject" --walkable --preview
+# then open <name>_walk.tscn in Godot and press F6.
+
+  --walkable   also emit <name>_walk.tscn (navmesh + first-person player + beacons)
+  --preview    buildings as labeled greybox massing from their DC spec (no .glb / no Blender)
+  --navqa      also emit <name>_navqa.tscn (feeds an in-engine nav-QA bot harness)
 ```
 
 Writes:
