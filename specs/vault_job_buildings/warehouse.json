@@ -1,0 +1,416 @@
+{
+  "$schema": "../schema/level.schema.json",
+  "name": "warehouse_preset",
+  "mode": "heist",
+  "seed": 1986,
+  "grid": 0.5,
+  "footprint_x": 48.0,
+  "footprint_y": 34.0,
+  "story_height": 6.0,
+  "n_stories": 1,
+  "has_basement": false,
+  "wall_thick": 0.35,
+  "floor_thick": 0.3,
+  "collision": "convex",
+  "auto_exterior": true,
+  "scale_ref": false,
+  "default_material": "metal",
+  "materials": [
+    {
+      "id": "metal",
+      "acoustic": "Metal",
+      "absorption": 0.35,
+      "damping": 0.25
+    },
+    {
+      "id": "concrete",
+      "acoustic": "Concrete",
+      "absorption": 0.7,
+      "damping": 0.6
+    },
+    {
+      "id": "drywall",
+      "acoustic": "Drywall",
+      "absorption": 0.42,
+      "damping": 0.38
+    }
+  ],
+  "ext_walls": [
+    {
+      "wall": "S",
+      "story": 0,
+      "material": "metal",
+      "openings": [
+        {
+          "kind": "garage",
+          "pos": -0.3,
+          "width": 4.5,
+          "height": 4.5,
+          "tag": "loading_dock_1"
+        },
+        {
+          "kind": "garage",
+          "pos": 0.2,
+          "width": 4.5,
+          "height": 4.5,
+          "tag": "loading_dock_2"
+        },
+        {
+          "kind": "door",
+          "pos": 0.45,
+          "width": 1.2,
+          "tag": "south_mandoor"
+        }
+      ]
+    },
+    {
+      "wall": "N",
+      "story": 0,
+      "material": "metal",
+      "openings": [
+        {
+          "kind": "door",
+          "pos": -0.3,
+          "width": 1.2,
+          "tag": "north_mandoor"
+        },
+        {
+          "kind": "breach",
+          "pos": 0.25,
+          "width": 1.6,
+          "breach_class": "soft_wall",
+          "material": "drywall",
+          "tag": "north_breach"
+        }
+      ]
+    },
+    {
+      "wall": "W",
+      "story": 0,
+      "material": "metal",
+      "openings": [
+        {
+          "kind": "door",
+          "pos": 0.0,
+          "width": 1.2,
+          "tag": "west_mandoor"
+        }
+      ]
+    },
+    {
+      "wall": "E",
+      "story": 0,
+      "material": "metal",
+      "openings": [
+        {
+          "kind": "door",
+          "pos": 0.2,
+          "width": 1.2,
+          "tag": "east_office_door"
+        },
+        {
+          "kind": "window",
+          "pos": -0.2,
+          "width": 2.0,
+          "sill": 1.0,
+          "vaultable": true
+        }
+      ]
+    }
+  ],
+  "partitions": [
+    {
+      "story": 0,
+      "axis": "X",
+      "pos": 8.0,
+      "start": -24.0,
+      "end": 24.0,
+      "material": "drywall",
+      "openings": [
+        {
+          "kind": "door",
+          "pos": -0.35,
+          "width": 1.4,
+          "tag": "to_north_bay"
+        },
+        {
+          "kind": "door",
+          "pos": 0.0,
+          "width": 1.4
+        },
+        {
+          "kind": "door",
+          "pos": 0.35,
+          "width": 1.4,
+          "tag": "to_office_zone"
+        }
+      ]
+    },
+    {
+      "story": 0,
+      "axis": "Y",
+      "pos": 11.0,
+      "start": 8.0,
+      "end": 17.0,
+      "material": "drywall",
+      "openings": [
+        {
+          "kind": "door",
+          "pos": -0.4,
+          "width": 1.1,
+          "tag": "office_door_1"
+        },
+        {
+          "kind": "door",
+          "pos": 0.2,
+          "width": 1.1,
+          "tag": "office_door_2"
+        }
+      ]
+    }
+  ],
+  "stairs": [],
+  "vault_ledges": [],
+  "volumes": [
+    {
+      "name": "crate_stack_tall_1",
+      "x": -8.0,
+      "y": -4.0,
+      "z": 1.5,
+      "size_x": 3.0,
+      "size_y": 3.0,
+      "size_z": 3.0,
+      "collision": "convex",
+      "material": "concrete"
+    },
+    {
+      "name": "crate_stack_tall_2",
+      "x": 4.0,
+      "y": 3.0,
+      "z": 1.5,
+      "size_x": 3.0,
+      "size_y": 3.0,
+      "size_z": 3.0,
+      "collision": "convex",
+      "material": "concrete"
+    },
+    {
+      "name": "crate_stack_low",
+      "x": -14.0,
+      "y": 6.0,
+      "z": 0.75,
+      "size_x": 2.5,
+      "size_y": 2.5,
+      "size_z": 1.5,
+      "collision": "convex",
+      "material": "concrete"
+    },
+    {
+      "name": "rack_row_1",
+      "x": -2.0,
+      "y": -10.0,
+      "z": 1.5,
+      "size_x": 14.0,
+      "size_y": 1.2,
+      "size_z": 3.0,
+      "collision": "convex",
+      "material": "metal"
+    },
+    {
+      "name": "rack_row_2",
+      "x": -2.0,
+      "y": 4.0,
+      "z": 1.5,
+      "size_x": 14.0,
+      "size_y": 1.2,
+      "size_z": 3.0,
+      "collision": "convex",
+      "material": "metal"
+    },
+    {
+      "name": "forklift_cover",
+      "x": 10.0,
+      "y": -8.0,
+      "z": 0.9,
+      "size_x": 2.5,
+      "size_y": 1.4,
+      "size_z": 1.8,
+      "collision": "convex",
+      "material": "metal"
+    }
+  ],
+  "rooms": [
+    {
+      "id": "main_floor",
+      "story": 0,
+      "bounds": [
+        -24.0,
+        -17.0,
+        24.0,
+        8.0
+      ],
+      "role": "public_entry",
+      "combat_range": "long"
+    },
+    {
+      "id": "north_bay",
+      "story": 0,
+      "bounds": [
+        -24.0,
+        8.0,
+        11.0,
+        17.0
+      ],
+      "role": "connector",
+      "combat_range": "long"
+    },
+    {
+      "id": "office",
+      "story": 0,
+      "bounds": [
+        11.0,
+        8.0,
+        24.0,
+        17.0
+      ],
+      "role": "objective_room",
+      "objective": true,
+      "fortifiable": true,
+      "combat_range": "close"
+    }
+  ],
+  "objectives": [
+    {
+      "id": "crack_office_safe",
+      "kind": "drill",
+      "x": 15.0,
+      "y": 13.0,
+      "z": 0.2,
+      "room": "office",
+      "required": true,
+      "duration": 30.0
+    }
+  ],
+  "loot": [
+    {
+      "id": "warehouse_goods",
+      "kind": "contraband",
+      "x": -2.0,
+      "y": -10.0,
+      "z": 1.0,
+      "value": 5000,
+      "bags": 3,
+      "room": "main_floor"
+    }
+  ],
+  "zones": [
+    {
+      "id": "dock_extract",
+      "kind": "extraction",
+      "story": 0,
+      "bounds": [
+        -24.0,
+        -17.0,
+        0.0,
+        -10.0
+      ]
+    }
+  ],
+  "markers": [
+    {
+      "type": "cover_high",
+      "id": "CRATE1",
+      "x": -8.0,
+      "y": -4.0,
+      "z": 0.0,
+      "room": "main_floor"
+    },
+    {
+      "type": "cover_high",
+      "id": "CRATE2",
+      "x": 4.0,
+      "y": 3.0,
+      "z": 0.0,
+      "room": "main_floor"
+    },
+    {
+      "type": "cover_low",
+      "id": "FORKLIFT",
+      "x": 10.0,
+      "y": -8.0,
+      "z": 0.0,
+      "room": "main_floor"
+    },
+    {
+      "type": "camera_socket",
+      "id": "01",
+      "x": -20.0,
+      "y": -14.0,
+      "z": 5.0,
+      "room": "main_floor",
+      "rot_z": 45
+    },
+    {
+      "type": "objective",
+      "id": "SAFE",
+      "x": 15.0,
+      "y": 13.0,
+      "z": 0.2,
+      "room": "office"
+    },
+    {
+      "type": "loot",
+      "id": "GOODS",
+      "x": -2.0,
+      "y": -10.0,
+      "z": 1.0,
+      "room": "main_floor"
+    },
+    {
+      "type": "extraction",
+      "id": "DOCK",
+      "x": -10.0,
+      "y": -15.0,
+      "z": 0.0,
+      "room": "main_floor"
+    },
+    {
+      "type": "cover_high",
+      "id": "AUTO_CRATE_STACK_LOW",
+      "x": -14.0,
+      "y": 6.0,
+      "z": 0.0,
+      "room": "main_floor",
+      "meta": {
+        "auto": "cover_from_volume",
+        "from": "crate_stack_low"
+      }
+    },
+    {
+      "type": "landmark",
+      "id": "MAIN_FLOOR",
+      "x": 0.0,
+      "y": -4.5,
+      "z": 1.0,
+      "room": "main_floor",
+      "meta": {
+        "auto": "landmark",
+        "label": "main_floor",
+        "role": "public_entry"
+      }
+    },
+    {
+      "type": "landmark",
+      "id": "OFFICE",
+      "x": 17.5,
+      "y": 12.5,
+      "z": 1.0,
+      "room": "office",
+      "meta": {
+        "auto": "landmark",
+        "label": "office",
+        "role": "objective_room"
+      }
+    }
+  ]
+}

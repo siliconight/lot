@@ -1,3 +1,26 @@
+## [0.10.0] - `--preview`: walk the level with no Blender, one command
+- `python lot.py <site>.json <out> --preview` composes the site with each
+  building as labeled greybox **massing** (a walkable footprint pad + a
+  see-through box you walk through + a floating id label) instead of a real
+  `.glb`. The heist's real anchors (crew spawn / vault / extraction / cover /
+  cop spawns) come from each building's Deli Counter **spec** via a bpy-free
+  shim (`preview.py`), so `--walkable` and `--navqa` work fully — you walk the
+  *level* (placement, routes, scale, nav, the flow) before building any geometry.
+- Collapses the old five-step "build 3 buildings in Blender, shuffle 6 files,
+  assemble, copy addons, open" down to: copy the addon once, run one command,
+  open the scene. See `QUICKSTART.md`.
+- A building record may now carry `"spec": "<dc_spec>.json"` (the JSON
+  `new_level.py` writes without Blender). `--preview` reads it, synthesizes a
+  `<id>.preview.gameplay.json` next to it (never clobbers a real `.gameplay.json`
+  from a Blender build), and boxes the footprint. `specs/vault_job_buildings/`
+  ships the three 0.49 building blockouts for the flagship example.
+- `preview.py` is the one place Lot peeks at Deli Counter's authoring *spec*
+  rather than the public `gameplay.json` contract — preview-only, mirrors the
+  marker/room/objective shape, no acoustic surfaces, not authoritative. Swap in
+  the Blender builds (set `glb`/`scene`, drop `--preview`) for the real walk.
+- Non-preview composition, `--walkable`, `--navqa`, and all 21 tests are
+  unchanged; `--preview` is purely additive.
+
 ## [0.9.0] - Feed the Heist Nav QA addon (`--navqa`): bots stress-test the site
 - `python lot.py <site>.json --navqa` emits `<name>_navqa.tscn` — the composed
   site under a baked `NavigationRegion3D` plus a `NavQASetup` node that tags the

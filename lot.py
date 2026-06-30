@@ -349,43 +349,95 @@ def _outdoor_nodes(site_spec):
     return body, sub
 
 
-def write_godot_scene(site_spec, merged, out_path, glb_dir="."):
+def _preview_building_nodes(b, height):
+    """Greybox massing for a building with no .glb yet: a walkable footprint pad,
+    a see-through massing box you walk through (no collision), and a floating id
+    label. Lets you walk the LEVEL (placement / routes / scale) before any
+    Blender build. Returns (body_lines, sub_lines)."""
+    bid = b["id"]
+    fx, fy = b.get("footprint", [20.0, 20.0])
+    h = max(3.0, float(height or 6.0))
+    xform = _godot_transform(b["at"], b.get("rot", 0))
+    body = [
+        f'[node name="{bid}" type="Node3D" parent="."]',
+        f'transform = Transform3D({xform})', '',
+        f'[node name="pad" type="StaticBody3D" parent="./{bid}"]',
+        'transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.06, 0)', '',
+        f'[node name="mesh" type="MeshInstance3D" parent="./{bid}/pad"]',
+        f'mesh = SubResource("PadMesh_{bid}")', '',
+        f'[node name="col" type="CollisionShape3D" parent="./{bid}/pad"]',
+        f'shape = SubResource("PadShape_{bid}")', '',
+        f'[node name="massing" type="MeshInstance3D" parent="./{bid}"]',
+        f'transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, {h/2:g}, 0)',
+        f'mesh = SubResource("MassMesh_{bid}")',
+        f'material_override = SubResource("MassMat_{bid}")', '',
+        f'[node name="label" type="Label3D" parent="./{bid}"]',
+        f'transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, {h+1.0:g}, 0)',
+        f'text = "{bid}"',
+        'font_size = 200',
+        'billboard = 1', '',
+    ]
+    sub = [
+        f'[sub_resource type="BoxMesh" id="PadMesh_{bid}"]',
+        f'size = Vector3({fx:g}, 0.12, {fy:g})', '',
+        f'[sub_resource type="BoxShape3D" id="PadShape_{bid}"]',
+        f'size = Vector3({fx:g}, 0.12, {fy:g})', '',
+        f'[sub_resource type="BoxMesh" id="MassMesh_{bid}"]',
+        f'size = Vector3({fx:g}, {h:g}, {fy:g})', '',
+        f'[sub_resource type="StandardMaterial3D" id="MassMat_{bid}"]',
+        'transparency = 1',
+        'albedo_color = Color(0.45, 0.55, 0.7, 0.28)', '',
+    ]
+    return body, sub
+
+
+def write_godot_scene(site_spec, merged, out_path, glb_dir=".", preview=False):
     """Emit a .tscn that instances each building (a .tscn scene or a baked .glb)
-    at its placement, plus Phase-2 outdoor geometry (ground, paths, courtyards,
-    perimeter, cover) as Godot primitive nodes. Buildings stay separate assets
-    referenced by path -- instancing a building .tscn lets a shared module edit
-    propagate across every building in the site."""
+    at its placement, plus Phase-2 outdoor geometry. With preview=True, buildings
+    are emitted as greybox massing boxes instead (no .glb needed) so the level is
+    walkable before any Blender build."""
     res_ids = {}
     res_lines = []
     next_id = 1
-    for b in site_spec["buildings"]:
-        src = _building_source(b)
-        if src not in res_ids:
-            rid = f"b{next_id}"
-            res_ids[src] = rid
-            next_id += 1
-            rel = os.path.join(glb_dir, src).replace("\\", "/")
-            rel = rel[2:] if rel.startswith("./") else rel
-            res_lines.append(
-                f'[ext_resource type="PackedScene" path="res://{rel}" id="{rid}"]')
+    if not preview:
+        for b in site_spec["buildings"]:
+            src = _building_source(b)
+            if src not in res_ids:
+                rid = f"b{next_id}"
+                res_ids[src] = rid
+                next_id += 1
+                rel = os.path.join(glb_dir, src).replace("\\", "/")
+                rel = rel[2:] if rel.startswith("./") else rel
+                res_lines.append(
+                    f'[ext_resource type="PackedScene" path="res://{rel}" id="{rid}"]')
 
     outdoor_body, outdoor_sub = _outdoor_nodes(site_spec)
-    n_sub = sum(1 for ln in outdoor_sub if ln.startswith("[sub_resource"))
+
+    building_body, building_sub = [], []
+    if preview:
+        for b in site_spec["buildings"]:
+            bb, bs = _preview_building_nodes(b, b.get("_preview_height"))
+            building_body += bb
+            building_sub += bs
+
+    n_sub = sum(1 for ln in (outdoor_sub + building_sub) if ln.startswith("[sub_resource"))
     load_steps = len(res_lines) + n_sub + 1
 
     lines = [f'[gd_scene load_steps={load_steps} format=3]', '']
     lines += res_lines + ['']
-    lines += outdoor_sub
+    lines += outdoor_sub + building_sub
     lines += ['[node name="Site" type="Node3D"]', '']
     lines += outdoor_body
-    for b in site_spec["buildings"]:
-        rid = res_ids[_building_source(b)]
-        xform = _godot_transform(b["at"], b.get("rot", 0))
-        lines.append(
-            f'[node name="{b["id"]}" parent="." '
-            f'instance=ExtResource("{rid}")]')
-        lines.append(f'transform = Transform3D({xform})')
-        lines.append('')
+    lines += building_body
+    if not preview:
+        for b in site_spec["buildings"]:
+            rid = res_ids[_building_source(b)]
+            xform = _godot_transform(b["at"], b.get("rot", 0))
+            lines.append(
+                f'[node name="{b["id"]}" parent="." '
+                f'instance=ExtResource("{rid}")]')
+            lines.append(f'transform = Transform3D({xform})')
+            lines.append('')
     with open(out_path, "w", encoding="utf-8") as f:
         f.write("\n".join(lines))
 
@@ -570,13 +622,36 @@ def write_navqa_scene(site_spec, merged, navqa_out, site_tscn_base, addon_dir="a
 # ---------------------------------------------------------------------------
 # top-level assemble
 # ---------------------------------------------------------------------------
-def assemble(site_spec_path, out_dir=None, walkable=False, navqa=False):
+def assemble(site_spec_path, out_dir=None, walkable=False, navqa=False, preview=False):
     """Read a site spec, write <name>.site.gameplay.json and <name>.tscn."""
     base_dir = os.path.dirname(os.path.abspath(site_spec_path))
     out_dir = out_dir or base_dir
     os.makedirs(out_dir, exist_ok=True)
     with open(site_spec_path, encoding="utf-8") as f:
         site_spec = json.load(f)
+
+    # preview: no .glb / no Blender. For each building, synthesize its gameplay
+    # from its Deli Counter `spec` (the JSON new_level writes without Blender),
+    # write it next to the spec so the merge reads it normally, and record the
+    # footprint/height so the scene can box it.
+    if preview:
+        import preview as _preview
+        for b in site_spec["buildings"]:
+            spec_ref = b.get("spec")
+            if not spec_ref:
+                continue
+            with open(os.path.join(base_dir, spec_ref), encoding="utf-8") as sf:
+                bspec = json.load(sf)
+            gp = _preview.gameplay_from_spec(bspec)
+            # write a clearly-named preview file next to the spec; never clobber a
+            # real .gameplay.json from a Blender build
+            spec_dir = os.path.dirname(spec_ref)
+            gp_name = os.path.join(spec_dir, f"{b['id']}.preview.gameplay.json")
+            with open(os.path.join(base_dir, gp_name), "w", encoding="utf-8") as gf:
+                json.dump(gp, gf, indent=2)
+            b["gameplay"] = gp_name
+            b.setdefault("footprint", _preview.footprint_of(bspec))
+            b["_preview_height"] = _preview.height_of(bspec)
 
     # site-level tactical: gate first (raises if a declared mode's hard needs
     # aren't met — the site echo of Deli Counter's per-mode gates), then attach
@@ -607,7 +682,7 @@ def assemble(site_spec_path, out_dir=None, walkable=False, navqa=False):
         json.dump(merged, f, indent=2)
 
     tscn_out = os.path.join(out_dir, f"{site_spec['name']}.tscn")
-    write_godot_scene(site_spec, merged, tscn_out)
+    write_godot_scene(site_spec, merged, tscn_out, preview=preview)
 
     result = {
         "gameplay": gp_out, "scene": tscn_out,
@@ -638,12 +713,14 @@ if __name__ == "__main__":
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     walkable = "--walkable" in sys.argv
     navqa = "--navqa" in sys.argv
+    preview = "--preview" in sys.argv
     if not args:
-        print("usage: python lot.py <site_spec.json> [out_dir] [--walkable] [--navqa]")
+        print("usage: python lot.py <site_spec.json> [out_dir] "
+              "[--walkable] [--navqa] [--preview]")
         raise SystemExit(2)
     out = args[1] if len(args) > 1 else None
     try:
-        r = assemble(args[0], out, walkable=walkable, navqa=navqa)
+        r = assemble(args[0], out, walkable=walkable, navqa=navqa, preview=preview)
     except Exception as e:
         # site_tactical.SiteTacticalError and friends: fail loudly, like a gate
         print(f"[lot] BUILD FAILED: {e}")

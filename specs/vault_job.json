@@ -8,32 +8,35 @@
     {
       "id": "gas_station",
       "glb": "gas_station.glb",
-      "gameplay": "gas_station.gameplay.json",
+      "gameplay": "vault_job_buildings/gas_station.gameplay.json",
       "at": [
         -50,
         -20
       ],
-      "rot": 0
+      "rot": 0,
+      "spec": "vault_job_buildings/gas_station.json"
     },
     {
       "id": "bank",
       "glb": "bank.glb",
-      "gameplay": "bank.gameplay.json",
+      "gameplay": "vault_job_buildings/bank.gameplay.json",
       "at": [
         0,
         0
       ],
-      "rot": 0
+      "rot": 0,
+      "spec": "vault_job_buildings/bank.json"
     },
     {
       "id": "warehouse",
       "glb": "warehouse.glb",
-      "gameplay": "warehouse.gameplay.json",
+      "gameplay": "vault_job_buildings/warehouse.gameplay.json",
       "at": [
         44,
         14
       ],
-      "rot": 0
+      "rot": 0,
+      "spec": "vault_job_buildings/warehouse.json"
     }
   ],
   "paths": [
