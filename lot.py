@@ -502,9 +502,75 @@ def write_walk_scene(site_spec, merged, walk_out, site_tscn_base, addon_dir="add
 
 
 # ---------------------------------------------------------------------------
+# nav-QA scene (--navqa): feed the Heist Nav QA addon the heist's real anchors
+# (crew/objective/loot/extraction as player proxies, cover, cop spawns) on the
+# composed + nav-baked site, so 16 bots stress-test it with zero hand-placement.
+# ---------------------------------------------------------------------------
+_PROXY_TYPES = ("crew_spawn", "attacker_spawn", "objective", "loot", "extraction")
+_COVER_TYPES = ("cover_low", "cover_high")
+_BOT_TYPES = ("responder_spawn", "horde_spawn", "defender_spawn")
+
+
+def _pv3_array(world_pts, lift=0.0):
+    """PackedVector3Array literal from site-space (x,y,z) points -> Godot."""
+    nums = []
+    for (x, y, z) in world_pts:
+        nums += [f"{x:g}", f"{z + lift:g}", f"{-y:g}"]
+    return "PackedVector3Array(" + ", ".join(nums) + ")"
+
+
+def _navqa_anchors(site_spec, merged):
+    markers = merged.get("markers", [])
+
+    def pts(types):
+        return [(m.get("x", 0.0), m.get("y", 0.0), m.get("z", 0.0))
+                for m in markers if m.get("type") in types]
+
+    proxies = pts(_PROXY_TYPES)
+    for sm in merged.get("site_markers", []):
+        if sm.get("type") == "extraction":
+            a = sm.get("at", [0.0, 0.0])
+            proxies.append((a[0], a[1], 0.0))
+    return {"player_proxies": proxies, "cover": pts(_COVER_TYPES),
+            "bot_spawns": pts(_BOT_TYPES)}
+
+
+def write_navqa_scene(site_spec, merged, navqa_out, site_tscn_base, addon_dir="addons/lot"):
+    """Emit <name>_navqa.tscn: the composed site under a baked NavigationRegion3D
+    plus a NavQASetup node that tags the heist's anchors into the addon groups
+    and runs the bot QA (if the Heist Nav QA addon is installed)."""
+    anc = _navqa_anchors(site_spec, merged)
+    crew = _walk_positions(site_spec, merged)["spawn"]
+    lines = [
+        '[gd_scene load_steps=4 format=3]', '',
+        f'[ext_resource type="PackedScene" path="res://{site_tscn_base}.tscn" id="site"]',
+        f'[ext_resource type="Script" path="res://{addon_dir}/lot_navqa_setup.gd" id="setup"]', '',
+        '[sub_resource type="NavigationMesh" id="NavMesh"]',
+        'geometry_parsed_geometry_type = 2',
+        'cell_size = 0.25',
+        'agent_radius = 0.5',
+        'agent_height = 1.8', '',
+        f'[node name="{site_spec["name"]}_navqa" type="Node3D"]', '',
+        '[node name="Nav" type="NavigationRegion3D" parent="."]',
+        'navigation_mesh = SubResource("NavMesh")', '',
+        '[node name="Site" parent="./Nav" instance=ExtResource("site")]', '',
+        '[node name="NavQASetup" type="Node3D" parent="."]',
+        'script = ExtResource("setup")',
+        f'player_proxies = {_pv3_array(anc["player_proxies"], 1.0)}',
+        f'cover_points = {_pv3_array(anc["cover"])}',
+        f'bot_spawns = {_pv3_array(anc["bot_spawns"], 1.0)}',
+        f'crew_home = {_v3(crew, 1.0)}', '',
+    ]
+    with open(navqa_out, "w", encoding="utf-8") as f:
+        f.write("\n".join(lines))
+    return {"player_proxies": len(anc["player_proxies"]),
+            "cover": len(anc["cover"]), "bot_spawns": len(anc["bot_spawns"])}
+
+
+# ---------------------------------------------------------------------------
 # top-level assemble
 # ---------------------------------------------------------------------------
-def assemble(site_spec_path, out_dir=None, walkable=False):
+def assemble(site_spec_path, out_dir=None, walkable=False, navqa=False):
     """Read a site spec, write <name>.site.gameplay.json and <name>.tscn."""
     base_dir = os.path.dirname(os.path.abspath(site_spec_path))
     out_dir = out_dir or base_dir
@@ -558,6 +624,12 @@ def assemble(site_spec_path, out_dir=None, walkable=False):
             site_spec, merged, walk_out, site_spec["name"])
         result["walk_scene"] = walk_out
 
+    if navqa:
+        navqa_out = os.path.join(out_dir, f"{site_spec['name']}_navqa.tscn")
+        result["navqa_counts"] = write_navqa_scene(
+            site_spec, merged, navqa_out, site_spec["name"])
+        result["navqa_scene"] = navqa_out
+
     return result
 
 
@@ -565,12 +637,13 @@ if __name__ == "__main__":
     import sys
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     walkable = "--walkable" in sys.argv
+    navqa = "--navqa" in sys.argv
     if not args:
-        print("usage: python lot.py <site_spec.json> [out_dir] [--walkable]")
+        print("usage: python lot.py <site_spec.json> [out_dir] [--walkable] [--navqa]")
         raise SystemExit(2)
     out = args[1] if len(args) > 1 else None
     try:
-        r = assemble(args[0], out, walkable=walkable)
+        r = assemble(args[0], out, walkable=walkable, navqa=navqa)
     except Exception as e:
         # site_tactical.SiteTacticalError and friends: fail loudly, like a gate
         print(f"[lot] BUILD FAILED: {e}")
@@ -599,3 +672,8 @@ if __name__ == "__main__":
               f"spawn {tuple(round(v,1) for v in wp['spawn'])} -> "
               f"objective {tuple(round(v,1) for v in wp['objective'])} -> "
               f"extraction {tuple(round(v,1) for v in wp['extraction'])})")
+    if r.get("navqa_scene"):
+        nc = r["navqa_counts"]
+        print(f"[lot]   -> {os.path.basename(r['navqa_scene'])}  (nav-QA: "
+              f"{nc['player_proxies']} player proxies, {nc['cover']} cover, "
+              f"{nc['bot_spawns']} cop spawns -> needs the heist_nav_qa addon)")

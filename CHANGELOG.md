@@ -1,3 +1,26 @@
+## [0.9.0] - Feed the Heist Nav QA addon (`--navqa`): bots stress-test the site
+- `python lot.py <site>.json --navqa` emits `<name>_navqa.tscn` — the composed
+  site under a baked `NavigationRegion3D` plus a `NavQASetup` node that tags the
+  heist's real anchors into the [Heist Nav QA] addon's groups and runs the bot
+  pass: crew_spawn / objective / loot / extraction -> `navqa_player_proxy`,
+  cover_low / cover_high -> `navqa_cover`, responder/horde/defender spawns ->
+  `navqa_bot_spawn`. So 16 mock cops stress-test the actual heist (where the crew
+  stands, the real cover, the cop ingress) with zero hand-placement.
+- Ships `godot/addons/lot/lot_navqa_setup.gd` (bakes nav, spawns the grouped
+  anchor markers, then loads + runs the QA director). **Decoupled**: if the Heist
+  Nav QA addon isn't installed the scene still opens and walks — you get a
+  warning instead of a bot run. Lot never hard-depends on the third-party addon;
+  it just feeds it if present. The addon itself stays standalone (it QAs single
+  buildings too, so it isn't a Lot feature — it's the in-engine validator Lot's
+  offline intel defers to).
+- On the vault job (real 0.49 buildings) the feed resolves to 11 player proxies,
+  12 cover points, 1 cop spawn. Cop spawns are thin because Deli Counter heist
+  branches emit few responder/horde markers (the director rings the rest around
+  the crew start) — first-class cop-ingress markers on the DC side would sharpen
+  pressure-direction QA. Cover count reflects DC 0.49's cover enrichment.
+- Base `<name>.tscn` and the `--walkable` scene are unchanged; `--navqa` is a
+  separate additive scene.
+
 ## [0.8.0] - Walkable sites (`--walkable`): drop in and play the heist
 - `python lot.py <site>.json --walkable` now also emits `<name>_walk.tscn` — a
   press-play scene that instances the composed site under a baked
