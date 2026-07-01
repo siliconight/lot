@@ -1,3 +1,35 @@
+## [0.14.0] - Site-level heist staging + preview parity (rarity, openings) + `gs_heist`
+Where the crew stages, where the cops arrive, and how long the route takes are
+SITE concerns — a building's own spec shouldn't have to know street layout.
+Plus two preview gaps closed: preview now speaks the same gameplay contract a
+Blender build does, so the rarity index and the walled-in gate work in exactly
+the mode where you're shuffling placements.
+
+- `site_markers` gain `crew_spawn`: overrides building spawn markers for the
+  walk scene (symmetric with the existing site-level `extraction` marker) and
+  joins the nav-QA player proxies.
+- `site_markers` gain bot spawns (`responder_spawn` / `horde_spawn` /
+  `defender_spawn`): cop pressure arrives from the STREET — road ends, alleys —
+  and now feeds the nav-QA harness without touching any building spec.
+- `site_pacing` travel legs honor the site-level `crew_spawn` / `extraction`
+  markers as route endpoints (building `at`s remain the fallback, so sites
+  without the markers estimate byte-identically). Fixes the degenerate 0 m legs
+  when spawn/objective/extraction all name the same building.
+- `preview.gameplay_from_spec` stamps building `rarity` + `rarity_color`
+  (mirror of the published DC contract table, docs/RARITY.md) and synthesizes
+  exterior-wall `openings` from the spec (per-kind defaults mirror
+  `spec_types.Opening.resolved()`), each carrying the building rarity. The
+  site rarity index + `site_enterability`'s walled-in gate now work
+  pre-Blender.
+- New shipped site: `specs/gs_heist.json` — gas-station street-corner heist
+  (2 enterable buildings, 2 facade-shell blockers, road + sidewalks, extraction
+  pocket + spawn alcove in the south street wall, 10 cover pieces, 5 street bot
+  spawns). Assembles clean: gates pass, 10+12 valid entries all clear, rarity
+  `very_rare` on the auto shop end-to-end.
+- Tests: 21 -> 23 (site crew_spawn resolution + nav-QA proxies; preview rarity
+  contract).
+
+
 ## [0.13.0] - lot_player step-up (curbs, ledges, steep stairs)
 - lot_player.gd now auto-steps short near-vertical obstacles after move_and_slide:
   raised sidewalks/curbs (0.11 roads), ledges, and steep stair noses it used to

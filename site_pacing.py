@@ -132,14 +132,35 @@ def estimate_pacing(site_spec, merged):
     breakdown = []
     base = 0.0
 
-    # traversal along the critical legs
+    # traversal along the critical route. Site-level crew_spawn / extraction
+    # markers (where the crew actually stages / leaves — a site concern, see
+    # lot._walk_positions) refine the route endpoints; the building ids stay
+    # the fallback, so sites without the markers estimate exactly as before.
+    def _site_marker_at(typ):
+        for sm in site_spec.get("site_markers", []):
+            if sm.get("type") == typ and sm.get("at"):
+                return (sm["at"][0], sm["at"][1], typ)
+        return None
+
     travel = 0.0
-    for a, b in legs:
-        d = _dist(site_spec, a, b)
-        secs = d / c["move_speed"]
-        travel += secs
-        breakdown.append({"phase": f"travel {a}->{b}",
-                          "secs": round(secs, 1), "detail": f"{d:.1f} m"})
+    if legs:
+        ids = [legs[0][0]] + [b for _, b in legs]
+        pts = []
+        for i in ids:
+            p = _pos(site_spec, i)
+            pts.append((p[0], p[1], i) if p else (0.0, 0.0, i))
+        sp = _site_marker_at("crew_spawn")
+        if sp:
+            pts[0] = sp
+        ep = _site_marker_at("extraction")
+        if ep and mode == "heist":
+            pts[-1] = ep
+        for (ax, ay, la), (bx, by, lb) in zip(pts, pts[1:]):
+            d = math.hypot(bx - ax, by - ay)
+            secs = d / c["move_speed"]
+            travel += secs
+            breakdown.append({"phase": f"travel {la}->{lb}",
+                              "secs": round(secs, 1), "detail": f"{d:.1f} m"})
     base += travel
 
     # setup

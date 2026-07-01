@@ -1,0 +1,507 @@
+{
+  "$schema": "../schema/level.schema.json",
+  "name": "gs_auto_shop",
+  "mode": "heist",
+  "seed": 1971,
+  "grid": 0.5,
+  "footprint_x": 26.0,
+  "footprint_y": 18.0,
+  "story_height": 3.6,
+  "n_stories": 2,
+  "has_basement": false,
+  "wall_thick": 0.3,
+  "floor_thick": 0.3,
+  "collision": "convex",
+  "auto_exterior": true,
+  "scale_ref": false,
+  "default_material": "concrete",
+  "materials": [
+    {
+      "id": "concrete",
+      "acoustic": "Concrete",
+      "absorption": 0.7,
+      "damping": 0.6
+    },
+    {
+      "id": "metal",
+      "acoustic": "Metal",
+      "absorption": 0.35,
+      "damping": 0.25
+    },
+    {
+      "id": "drywall",
+      "acoustic": "Drywall",
+      "absorption": 0.42,
+      "damping": 0.38
+    },
+    {
+      "id": "glass",
+      "acoustic": "Glass",
+      "absorption": 0.1,
+      "damping": 0.05
+    }
+  ],
+  "ext_walls": [
+    {
+      "wall": "S",
+      "story": 0,
+      "material": "metal",
+      "openings": [
+        {
+          "kind": "garage",
+          "pos": -0.15,
+          "width": 4.0,
+          "height": 3.0,
+          "tag": "bay_door"
+        },
+        {
+          "kind": "door",
+          "pos": 0.35,
+          "width": 1.1,
+          "tag": "front_man_door"
+        }
+      ]
+    },
+    {
+      "wall": "N",
+      "story": 0,
+      "material": "concrete",
+      "openings": [
+        {
+          "kind": "door",
+          "pos": 0.3,
+          "width": 1.1,
+          "tag": "rear_door"
+        },
+        {
+          "kind": "breach",
+          "pos": -0.3,
+          "width": 1.3,
+          "breach_class": "soft_wall",
+          "material": "drywall"
+        }
+      ]
+    },
+    {
+      "wall": "W",
+      "story": 0,
+      "material": "concrete",
+      "openings": [
+        {
+          "kind": "window",
+          "pos": 0.25,
+          "width": 1.4,
+          "sill": 1.2,
+          "vaultable": true,
+          "material": "glass"
+        }
+      ]
+    },
+    {
+      "wall": "E",
+      "story": 0,
+      "material": "concrete",
+      "openings": [
+        {
+          "kind": "door",
+          "pos": -0.3,
+          "width": 1.1,
+          "tag": "side_door"
+        }
+      ]
+    },
+    {
+      "wall": "S",
+      "story": 1,
+      "material": "concrete",
+      "openings": [
+        {
+          "kind": "window",
+          "pos": -0.2,
+          "width": 1.3,
+          "sill": 1.0,
+          "vaultable": true,
+          "material": "glass"
+        },
+        {
+          "kind": "window",
+          "pos": 0.25,
+          "width": 1.3,
+          "sill": 1.0,
+          "vaultable": true,
+          "material": "glass"
+        }
+      ]
+    },
+    {
+      "wall": "N",
+      "story": 1,
+      "material": "concrete",
+      "openings": [
+        {
+          "kind": "window",
+          "pos": -0.3,
+          "width": 1.3,
+          "sill": 1.0,
+          "vaultable": true,
+          "material": "glass"
+        },
+        {
+          "kind": "breach",
+          "pos": 0.3,
+          "width": 1.2,
+          "breach_class": "soft_wall",
+          "material": "drywall"
+        }
+      ]
+    },
+    {
+      "wall": "W",
+      "story": 1,
+      "material": "concrete",
+      "openings": [
+        {
+          "kind": "window",
+          "pos": 0.0,
+          "width": 1.3,
+          "sill": 1.0,
+          "vaultable": true,
+          "material": "glass"
+        }
+      ]
+    },
+    {
+      "wall": "E",
+      "story": 1,
+      "material": "concrete",
+      "openings": [
+        {
+          "kind": "window",
+          "pos": 0.0,
+          "width": 1.3,
+          "sill": 1.0,
+          "vaultable": true,
+          "material": "glass"
+        }
+      ]
+    }
+  ],
+  "partitions": [
+    {
+      "story": 0,
+      "axis": "X",
+      "pos": 4.0,
+      "start": -13.0,
+      "end": 13.0,
+      "material": "concrete",
+      "openings": [
+        {
+          "kind": "door",
+          "pos": -0.25,
+          "width": 1.1
+        },
+        {
+          "kind": "door",
+          "pos": 0.3,
+          "width": 1.1
+        }
+      ]
+    },
+    {
+      "story": 1,
+      "axis": "Y",
+      "pos": 2.0,
+      "start": -9.0,
+      "end": 9.0,
+      "material": "drywall",
+      "openings": [
+        {
+          "kind": "door",
+          "pos": 0.2,
+          "width": 1.1
+        }
+      ]
+    }
+  ],
+  "stairs": [
+    {
+      "x": 9.0,
+      "y": 6.5,
+      "from_story": 0,
+      "to_story": 1,
+      "width": 1.2,
+      "run": 5.0,
+      "style": "switchback",
+      "cut_slabs": true
+    }
+  ],
+  "ladders": [
+    {
+      "x": -10.5,
+      "y": 6.5,
+      "from_story": 1,
+      "to_story": 2,
+      "width": 0.5,
+      "depth": 0.15,
+      "facing": "S",
+      "cut_slabs": true
+    }
+  ],
+  "vertical_links": [
+    {
+      "kind": "stair",
+      "from_story": 0,
+      "to_story": 1,
+      "role": "main_route"
+    },
+    {
+      "kind": "hatch",
+      "from_story": 1,
+      "to_story": 2,
+      "role": "roof_escape",
+      "x": -10.5,
+      "y": 6.5
+    }
+  ],
+  "volumes": [
+    {
+      "name": "lift_1",
+      "x": -6.0,
+      "y": -3.0,
+      "z": 0.1,
+      "size_x": 2.6,
+      "size_y": 1.2,
+      "size_z": 0.2,
+      "collision": "convex",
+      "material": "metal"
+    },
+    {
+      "name": "lift_2",
+      "x": 4.0,
+      "y": -3.0,
+      "z": 0.1,
+      "size_x": 2.6,
+      "size_y": 1.2,
+      "size_z": 0.2,
+      "collision": "convex",
+      "material": "metal"
+    },
+    {
+      "name": "parts_rack",
+      "x": -10.0,
+      "y": 6.5,
+      "z": 0.9,
+      "size_x": 1.0,
+      "size_y": 5.0,
+      "size_z": 1.8,
+      "collision": "convex",
+      "material": "metal"
+    },
+    {
+      "name": "tool_bench",
+      "x": 2.0,
+      "y": 6.5,
+      "z": 0.5,
+      "size_x": 3.0,
+      "size_y": 1.0,
+      "size_z": 1.0,
+      "collision": "convex",
+      "material": "metal"
+    },
+    {
+      "name": "office_desk",
+      "x": -7.0,
+      "y": 5.5,
+      "z": 4.0,
+      "size_x": 1.8,
+      "size_y": 0.9,
+      "size_z": 0.8,
+      "collision": "convex",
+      "material": "metal"
+    }
+  ],
+  "rooms": [
+    {
+      "id": "service_bay",
+      "story": 0,
+      "bounds": [
+        -13.0,
+        -9.0,
+        13.0,
+        4.0
+      ],
+      "role": "public_entry",
+      "combat_range": "medium"
+    },
+    {
+      "id": "parts_back",
+      "story": 0,
+      "bounds": [
+        -13.0,
+        4.0,
+        13.0,
+        9.0
+      ],
+      "role": "connector",
+      "combat_range": "close"
+    },
+    {
+      "id": "upper_office",
+      "story": 1,
+      "bounds": [
+        -13.0,
+        2.0,
+        13.0,
+        9.0
+      ],
+      "role": "objective_room",
+      "objective": true,
+      "fortifiable": true,
+      "combat_range": "close"
+    },
+    {
+      "id": "upper_storage",
+      "story": 1,
+      "bounds": [
+        -13.0,
+        -9.0,
+        13.0,
+        2.0
+      ],
+      "role": "fortifiable",
+      "fortifiable": true,
+      "combat_range": "close"
+    }
+  ],
+  "objectives": [
+    {
+      "id": "crack_office_safe",
+      "kind": "drill",
+      "x": -7.0,
+      "y": 6.0,
+      "z": 3.8000000000000003,
+      "room": "upper_office",
+      "required": false,
+      "duration": 30.0
+    }
+  ],
+  "loot": [
+    {
+      "id": "shop_take",
+      "kind": "cash",
+      "x": -7.0,
+      "y": 6.0,
+      "z": 3.8000000000000003,
+      "value": 6000,
+      "bags": 3,
+      "room": "upper_office"
+    }
+  ],
+  "zones": [
+    {
+      "id": "bay_extract",
+      "kind": "extraction",
+      "story": 0,
+      "bounds": [
+        -13.0,
+        -9.0,
+        13.0,
+        -4.0
+      ]
+    }
+  ],
+  "markers": [
+    {
+      "type": "cover_low",
+      "id": "LIFT1",
+      "x": -6.0,
+      "y": -3.0,
+      "z": 0.0,
+      "room": "service_bay"
+    },
+    {
+      "type": "cover_low",
+      "id": "LIFT2",
+      "x": 4.0,
+      "y": -3.0,
+      "z": 0.0,
+      "room": "service_bay"
+    },
+    {
+      "type": "cover_high",
+      "id": "RACK",
+      "x": -10.0,
+      "y": 6.5,
+      "z": 0.0,
+      "room": "parts_back"
+    },
+    {
+      "type": "objective",
+      "id": "SAFE",
+      "x": -7.0,
+      "y": 6.0,
+      "z": 3.8000000000000003,
+      "room": "upper_office"
+    },
+    {
+      "type": "extraction",
+      "id": "BAY",
+      "x": 0.0,
+      "y": -7.5,
+      "z": 0.0,
+      "room": "service_bay"
+    },
+    {
+      "type": "cover_low",
+      "id": "AUTO_TOOL_BENCH",
+      "x": 2.0,
+      "y": 6.5,
+      "z": 0.0,
+      "room": "parts_back",
+      "meta": {
+        "auto": "cover_from_volume",
+        "from": "tool_bench"
+      }
+    },
+    {
+      "type": "cover_low",
+      "id": "AUTO_OFFICE_DESK",
+      "x": -7.0,
+      "y": 5.5,
+      "z": 3.6,
+      "room": "upper_office",
+      "meta": {
+        "auto": "cover_from_volume",
+        "from": "office_desk"
+      }
+    },
+    {
+      "type": "landmark",
+      "id": "SERVICE_BAY",
+      "x": 0.0,
+      "y": -2.5,
+      "z": 1.0,
+      "room": "service_bay",
+      "meta": {
+        "auto": "landmark",
+        "label": "service_bay",
+        "role": "public_entry"
+      }
+    },
+    {
+      "type": "landmark",
+      "id": "UPPER_OFFICE",
+      "x": 0.0,
+      "y": 5.5,
+      "z": 4.6,
+      "room": "upper_office",
+      "meta": {
+        "auto": "landmark",
+        "label": "upper_office",
+        "role": "objective_room"
+      }
+    }
+  ],
+  "rarity": "very_rare",
+  "modular": true
+}

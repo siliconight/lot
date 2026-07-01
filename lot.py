@@ -40,7 +40,7 @@ import json
 import math
 import os
 
-LOT_VERSION = "0.4.0"
+LOT_VERSION = "0.14.0"
 
 
 # ---------------------------------------------------------------------------
@@ -581,8 +581,19 @@ def _walk_positions(site_spec, merged):
     obj_b = site_spec.get("objective")
     extr_b = site_spec.get("extraction")
 
-    spawn = first_marker(("crew_spawn", "attacker_spawn"), spawn_b) \
-        or first_marker(("crew_spawn", "attacker_spawn"))
+    # a site-level crew_spawn marker wins (symmetric with the site-level
+    # extraction marker below): where the crew stages is a SITE concern —
+    # across the street, down the block — not something a building's own
+    # spec should have to know about.
+    spawn = None
+    for sm in merged.get("site_markers", []):
+        if sm.get("type") == "crew_spawn":
+            a = sm.get("at", [0.0, 0.0])
+            spawn = (a[0], a[1], 0.0)
+            break
+    if spawn is None:
+        spawn = first_marker(("crew_spawn", "attacker_spawn"), spawn_b) \
+            or first_marker(("crew_spawn", "attacker_spawn"))
     if spawn is None:
         at = _building_at(site_spec, spawn_b) if spawn_b else [0.0, 0.0]
         spawn = (at[0], at[1], 0.0)
@@ -690,12 +701,18 @@ def _navqa_anchors(site_spec, merged):
                 for m in markers if m.get("type") in types]
 
     proxies = pts(_PROXY_TYPES)
+    bots = pts(_BOT_TYPES)
     for sm in merged.get("site_markers", []):
-        if sm.get("type") == "extraction":
-            a = sm.get("at", [0.0, 0.0])
+        t = sm.get("type")
+        a = sm.get("at", [0.0, 0.0])
+        if t in ("extraction", "crew_spawn"):
             proxies.append((a[0], a[1], 0.0))
+        elif t in _BOT_TYPES:
+            # cop pressure arrives from the STREET — road ends, alleys — which
+            # is site geography, not any one building's spec.
+            bots.append((a[0], a[1], 0.0))
     return {"player_proxies": proxies, "cover": pts(_COVER_TYPES),
-            "bot_spawns": pts(_BOT_TYPES)}
+            "bot_spawns": bots}
 
 
 def write_navqa_scene(site_spec, merged, navqa_out, site_tscn_base, addon_dir="addons/lot"):

@@ -343,6 +343,43 @@ def test_scene_building_instances_tscn():
     print("  scene (.tscn) building instances + dedup + glb back-compat: OK")
 
 
+def test_site_crew_spawn_marker():
+    """A site-level crew_spawn marker overrides building spawn markers (the
+    crew stages where the SITE says — across the street — not where a
+    building's own spec happens to put an attacker_spawn). Symmetric with the
+    site-level extraction marker."""
+    site = {"name": "t", "spawn": "b",
+            "buildings": [{"id": "b", "at": [10, 20]}],
+            "site_markers": [{"type": "crew_spawn", "at": [-5, -30]},
+                             {"type": "extraction", "at": [40, 0]}]}
+    merged = {"markers": [{"type": "attacker_spawn", "building": "b",
+                           "x": 10.0, "y": 20.0, "z": 0.0}],
+              "site_markers": site["site_markers"], "objectives": []}
+    pos = lot._walk_positions(site, merged)
+    assert pos["spawn"] == (-5, -30, 0.0), f"site crew_spawn ignored: {pos['spawn']}"
+    assert pos["extraction"] == (40, 0, 0.0)
+    # without the site marker, the building marker still wins (back-compat)
+    merged2 = dict(merged, site_markers=[{"type": "extraction", "at": [40, 0]}])
+    pos2 = lot._walk_positions(dict(site, site_markers=merged2["site_markers"]), merged2)
+    assert pos2["spawn"] == (10.0, 20.0, 0.0)
+    # nav-QA proxies include the site crew_spawn
+    anc = lot._navqa_anchors(site, merged)
+    assert (-5, -30, 0.0) in anc["player_proxies"]
+    print("  site-level crew_spawn marker (walk + nav-QA): OK")
+
+
+def test_preview_rarity_contract():
+    """Preview-synthesized gameplay carries the building's rarity + the
+    published contract colour, so the site rarity index works pre-Blender."""
+    import preview
+    gp = preview.gameplay_from_spec({"name": "p", "rarity": "very_rare"})
+    assert gp["rarity"] == "very_rare"
+    rc = gp["rarity_color"]
+    assert rc["hex"] == "#A335EE" and rc["color_name"] == "purple" and rc["rank"] == 3
+    assert "rarity" not in preview.gameplay_from_spec({"name": "p"})
+    print("  preview rarity contract stamped: OK")
+
+
 def test_building_needs_geometry():
     """A building with neither scene nor glb is a spec error."""
     site = {"name": "bad", "buildings": [
