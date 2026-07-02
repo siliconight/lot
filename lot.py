@@ -40,7 +40,7 @@ import json
 import math
 import os
 
-LOT_VERSION = "0.16.1"
+LOT_VERSION = "0.17.1"
 
 
 # ---------------------------------------------------------------------------
@@ -889,6 +889,11 @@ def assemble(site_spec_path, out_dir=None, walkable=False, navqa=False, preview=
     import site_pacing
     adj = site_tactical.build_graph(site_spec)
     merged["pacing"] = site_pacing.estimate_pacing(site_spec, merged)
+
+    # site-level design grammar (report-only, like DC's combat_audit):
+    # exfil shape, responder pressure, safe anchors, leg rhythm, crossings
+    import site_audit
+    print(site_audit.format_report(site_audit.audit(site_spec)))
     merged["encounters"] = site_pacing.encounter_intel(site_spec, adj)
 
     gp_out = os.path.join(out_dir, f"{site_spec['name']}.site.gameplay.json")

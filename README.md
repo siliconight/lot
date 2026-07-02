@@ -201,6 +201,36 @@ length, distinct approaches, open-ground distance, and nearby cover count. It
 describes *opportunity*, not quality — it never grades a firefight. Whether a leg
 plays well is for the walk to tell you.
 
+## Site grammar audit (the space BETWEEN buildings)
+
+`site_audit.py` is Deli Counter's `combat_audit --rules` continued at site
+scale -- the genre grammars that live on the run across open ground, not
+inside walls. Report-only; it prints at the end of every `lot.py` assembly
+and a walked site that plays well should sweep clean (gs_heist is the
+calibration site).
+
+- **Exfil shape** (PayDay 2): `S_BACKTRACK` -- extraction co-located with
+  the crew spawn AND on the entry bearing means the escape rewinds the
+  entry.
+- **Responder pressure** (PayDay 2): `S_RESPONDER_ARC` all waves from one
+  arc; `S_RESPONDER_CAMP` a wave spawn on top of an anchor.
+- **Safe anchors** (L4D2): `S_NAKED_ANCHOR` -- spawn/extraction with no
+  cover or building edge within 8 m is a shooting-gallery hold.
+- **Leg rhythm** (L4D2): `S_BARE_LEG` -- a 20 m+ critical leg with zero
+  cover in its corridor is a sprint, not a fight.
+- **Street crossings** (CQB at site scale): `S_STREET_CROSS` INFO per
+  road crossing on a critical leg -- exposure moments, reported so you
+  place cover or accept the dash.
+- Plus horde-arc spread and site-graph approach diversity where they apply.
+
+```
+python site_audit.py specs/gs_heist.json [--json]
+```
+
+Building-interior grammar (disjoint routes, holdouts, first-slice
+visibility, flow rhythm) lives in Deli Counter: `combat_audit --rules` and
+docs/DESIGN_RULES.md over there.
+
 ## Site spec
 
 ```json

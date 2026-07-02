@@ -1,3 +1,43 @@
+## [0.17.1] - Spec drift guard + the gs_auto_shop copy actually synced
+Found in the wild: the Lot copy of gs_auto_shop.json was still the
+pre-0.56.0 spec (swapped story-1 axis, 1.1 m door, no parapet) -- the DC
+fix never crossed the manual copy step, and the pipeline rebuilt and even
+PACKAGED the broken upper floor without a peep. Two fixes:
+
+- specs/gs_heist_buildings/gs_auto_shop.json is now the fixed DC spec
+  (axis X, 1.4 m upper door, roof parapet). Run cater with --force-build
+  so the auto_shop glb rebuilds from it.
+- cater now hash-compares every building/blocker spec in the site folder
+  against Deli Counter's spec of the same name and prints a loud SPEC
+  DRIFT warning with the exact copy command when they differ. Warning,
+  not a gate: freezing a level is a valid choice, but it should be a
+  choice, not an accident.
+
+## [0.17.0] - site_audit.py: the genre grammars between the buildings
+Deli Counter 0.58.0 gave buildings the PayDay 2 / Ready or Not / L4D2 rule
+packs; this is the same idea at site scale -- the run across open ground.
+Report-only, printed at the end of every lot.py assembly; the walked
+gs_heist sweeps 0 HIGH / 0 MED (calibration), with three fair INFOs (two
+road crossings, few horde spawns).
+
+- S_BACKTRACK (PayDay exfil shape): extraction within 18 m of the crew
+  spawn AND within 35 deg of the entry bearing = the escape rewinds the
+  entry. Same-side-different-corner passes (gs_heist does).
+- S_RESPONDER_ARC / S_RESPONDER_CAMP (PayDay pressure): all responder
+  spawns inside one arc = one-note waves; a responder spawn within 12 m of
+  an anchor = spawn camping by construction.
+- S_NAKED_ANCHOR (L4D2 safe anchors): spawn/extraction with no cover or
+  building/blocker edge within 8 m. Blockers use their real size_x/size_y
+  extents (the gs spawn alcove's south wall counts, as it should).
+- S_BARE_LEG (L4D2 rhythm): critical legs >= 20 m with zero cover in a
+  6 m corridor are sprints, not fights.
+- S_STREET_CROSS (CQB at site scale, INFO): every road crossing on a
+  critical leg is an exposure moment, reported per crossing.
+- S_HORDE_ARC / S_FEW_HORDE and S_ONE_APPROACH (site-graph route
+  diversity via site_tactical) where they apply.
+- Wired into lot.py after pacing; standalone CLI: python site_audit.py
+  specs/x.json [--json]. Tests: 30 -> 31.
+
 ## [0.16.1] - Ladders work in the site walk (Lot adopts its half of the contract)
 Stairs worked, ladders didn't -- and it was NOT the .glb. DC's ladder contract
 has three legs: DC bakes the LADDER_ anchor + climb metadata into the

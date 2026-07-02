@@ -584,6 +584,43 @@ def test_ladder_climb_volumes():
     print("  ladder climb volumes (preview parity + walk scene + player): OK")
 
 
+def test_site_audit_grammar():
+    """Site-level grammar: a rewound exfil flags, a responder on the exfil
+    flags, a naked anchor flags -- and a backstopped anchor does not."""
+    import site_audit
+    base = {"name": "t", "mode": "heist",
+            "buildings": [{"id": "b", "at": [0, 30]}],
+            "spawn": "b", "objective": "b", "extraction": "b",
+            "site_markers": [
+                {"type": "crew_spawn", "at": [0, -30]},
+                {"type": "extraction", "at": [4, -32]},      # 4.5 m away
+                {"type": "responder_spawn", "at": [2, -30]},  # on the spawn
+            ],
+            "cover": [], "roads": [], "blockers": []}
+    res = site_audit.audit(base)
+    codes = {c for _, c, _ in res["findings"]}
+    assert "S_BACKTRACK" in codes          # extraction rewinds the entry
+    assert "S_RESPONDER_CAMP" in codes     # wave spawns on the anchor
+    assert "S_NAKED_ANCHOR" in codes       # nothing to fight from
+    # backstop the spawn, move the exfil + responder: all three clear
+    good = dict(base)
+    good["site_markers"] = [
+        {"type": "crew_spawn", "at": [0, -30]},
+        {"type": "extraction", "at": [-45, 0]},
+        {"type": "responder_spawn", "at": [45, 0]},
+    ]
+    good["cover"] = [{"at": [0, -26], "size": [4, 1.5, 1.8]},
+                     {"at": [-40, -2], "size": [4, 1.5, 1.8]},
+                     {"at": [0, 0], "size": [3, 1.5, 1.8]},
+                     {"at": [-22, -12], "size": [3, 1.5, 1.8]}]
+    res2 = site_audit.audit(good)
+    codes2 = {c for _, c, _ in res2["findings"]}
+    for c in ("S_BACKTRACK", "S_RESPONDER_CAMP", "S_NAKED_ANCHOR",
+              "S_BARE_LEG"):
+        assert c not in codes2, (c, res2["findings"])
+    print("  site_audit grammar (backtrack/camp/anchor + clean pass): OK")
+
+
 def test_building_needs_geometry():
     """A building with neither scene nor glb is a spec error."""
     site = {"name": "bad", "buildings": [

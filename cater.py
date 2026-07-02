@@ -163,6 +163,59 @@ def run_lot(site_spec_path, project_dir, walkable=True, navqa=True,
 # ---------------------------------------------------------------------------
 # the pipeline
 # ---------------------------------------------------------------------------
+def spec_drift_check(site_spec, base_dir, dc_dir):
+    """Compare the site's building specs against Deli Counter's specs of the
+    same name (byte hash). The DC->Lot spec copy is a manual step, and a
+    stale copy builds stale geometry SILENTLY -- a DC-side fix (an axis
+    flip, a widened door) never reaches the level unless the copy happens.
+    This caught a real one: gs_auto_shop shipped a walk with a wall bug that
+    was already fixed in DC. Warning only; divergence can be deliberate
+    (a frozen level is a valid choice) -- but it should be a CHOICE."""
+    import hashlib
+    drifted = []
+    for b in site_spec.get("buildings", []) + site_spec.get("blockers", []):
+        spec_rel = b.get("spec")
+        if not spec_rel:
+            glb = b.get("glb") or (b.get("source") or "")
+            stem = os.path.splitext(os.path.basename(glb))[0]
+            spec_rel = None
+            for cand_dir in (os.path.join(base_dir,
+                                          site_spec.get("name", "") + "_buildings"),
+                             base_dir):
+                c = os.path.join(cand_dir, stem + ".json")
+                if os.path.exists(c):
+                    spec_rel = c
+                    break
+        else:
+            spec_rel = os.path.join(base_dir, spec_rel)
+        if not spec_rel or not os.path.exists(spec_rel):
+            continue
+        stem = os.path.splitext(os.path.basename(spec_rel))[0]
+        dc_spec = os.path.join(dc_dir, "specs", stem + ".json")
+        if not os.path.exists(dc_spec):
+            continue
+        h1 = hashlib.sha256(open(spec_rel, "rb").read()).hexdigest()
+        h2 = hashlib.sha256(open(dc_spec, "rb").read()).hexdigest()
+        if h1 != h2:
+            drifted.append(stem)
+    if drifted:
+        print("[cater] " + "!" * 62)
+        print(f"[cater] SPEC DRIFT: {', '.join(drifted)} differ(s) from the "
+              f"Deli Counter copy.")
+        print("[cater] A DC-side fix may not be in this level. If DC is "
+              "newer, copy it over:")
+        for s in drifted:
+            print(f"[cater]   copy {os.path.join(dc_dir, 'specs', s + '.json')}")
+            print(f"[cater]        -> the site's buildings folder, then "
+                  f"--force-build")
+        print("[cater] (If the divergence is deliberate, carry on -- this "
+              "is a warning, not a gate.)")
+        print("[cater] " + "!" * 62)
+    return drifted
+
+
+
+
 def cater(site_spec_path, project_dir, dc=None, blender=None, preview=False,
           skip_build=False, force_build=False, walkable=True, navqa=True,
           pack=False, pack_note=None):
@@ -175,6 +228,12 @@ def cater(site_spec_path, project_dir, dc=None, blender=None, preview=False,
 
     ensure_project(project_dir, site_name)
     sync_addon(project_dir)
+
+    try:
+        _dc_for_drift = find_dc(dc)
+        spec_drift_check(site_spec, base_dir, _dc_for_drift)
+    except Exception:
+        pass   # no DC found (pure-Lot workflows): drift can't be checked
 
     if preview:
         # no Blender, no copies: Lot boxes the buildings from their specs
