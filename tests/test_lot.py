@@ -416,6 +416,34 @@ def test_cater_facade_jobs():
     print("  cater facade shell job mapping: OK")
 
 
+def test_walk_and_navqa_scenes_are_lit():
+    """The generated walk + nav-QA scenes must carry a sun + sky/ambient rig
+    (mirroring DC's walk harness) — without it the runtime renders unlit and
+    the editor's preview sun hides the bug. Also: load_steps must stay in sync
+    with the resource count, and the walk HUD gets the site's own name."""
+    import re, tempfile
+    d = tempfile.mkdtemp()
+    site = {"name": "littest", "buildings": [
+        {"id": "a", "glb": "a.glb", "gameplay": "missing.json", "at": [0, 0]}]}
+    merged = {"markers": [], "site_markers": [], "objectives": [],
+              "buildings": [{"id": "a", "at": [0, 0], "rot": 0,
+                             "source": "a.glb", "glb": "a.glb"}]}
+    wp = os.path.join(d, "w.tscn")
+    lot.write_walk_scene(site, merged, wp, "littest")
+    nq = os.path.join(d, "n.tscn")
+    lot.write_navqa_scene(site, merged, nq, "littest")
+    for f in (wp, nq):
+        t = open(f).read()
+        for s in ("DirectionalLight3D", "WorldEnvironment",
+                  "ProceduralSkyMaterial", "shadow_enabled = true"):
+            assert s in t, f"{f} missing {s}"
+        steps = int(re.search(r"load_steps=(\d+)", t).group(1))
+        assert steps == t.count("[ext_resource") + t.count("[sub_resource") + 1, \
+            f"{f} load_steps out of sync"
+    assert 'site_title = "LITTEST"' in open(wp).read()
+    print("  walk + nav-QA scenes carry the lighting rig: OK")
+
+
 def test_building_needs_geometry():
     """A building with neither scene nor glb is a spec error."""
     site = {"name": "bad", "buildings": [

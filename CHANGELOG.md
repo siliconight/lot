@@ -1,3 +1,19 @@
+## [0.15.1] - Lit walk/nav-QA scenes (the runtime was rendering unlit)
+The generated `*_walk.tscn` / `*_navqa.tscn` carried no light and no
+environment — in the editor the preview sun hid it, but at F6 the whole site
+rendered as near-black flat mush (real .glb materials under zero light). DC's
+own walk harness has always carried a proper rig, which is why solo building
+walks looked right and site walks didn't.
+
+- Both generated scenes now embed the exact rig from DC's
+  `template/level_test.tscn`: shadowed `DirectionalLight3D` (same transform) +
+  `WorldEnvironment` (ProceduralSky, sky ambient 0.6, filmic tonemap) — a Lot
+  site walk lights identically to a DC building walk.
+- `lot_site_walk.gd` HUD title is no longer a hardcoded "VAULT JOB": new
+  `site_title` export, baked in by Lot from the site's name.
+- Tests: 25 -> 26 (rig present in both scenes; load_steps stays in sync with
+  the resource count; title baked).
+
 ## [0.15.0] - `cater.py`: site spec -> walkable Godot project, one command
 The whole gs_heist hand-flow, codified. `python cater.py specs\<site>.json
 "C:\path\to\GodotProject"` does everything the hands did: finds the Deli

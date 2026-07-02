@@ -12,6 +12,7 @@ extends Node3D
 @export var spawn_pos := Vector3.ZERO        # crew start (already where Player sits)
 @export var objective_pos := Vector3.ZERO    # the loot/objective
 @export var extraction_pos := Vector3.ZERO    # where the crew exits
+@export var site_title := "SITE WALK"        # baked in by Lot (the site name)
 
 
 func _ready() -> void:
@@ -79,8 +80,8 @@ func _hud() -> void:
 	var layer := CanvasLayer.new()
 	add_child(layer)
 	var lbl := Label.new()
-	lbl.text = ("VAULT JOB  —  you are the crew\n"
-		+ "objective: reach the orange beacon (the vault)\n"
+	lbl.text = (site_title + "  —  you are the crew\n"
+		+ "objective: reach the orange beacon\n"
 		+ "then extract: green beacon\n"
 		+ "WASD move · mouse look · Shift sprint · Space jump · Esc cursor")
 	lbl.position = Vector2(16, 12)

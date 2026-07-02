@@ -40,7 +40,7 @@ import json
 import math
 import os
 
-LOT_VERSION = "0.15.0"
+LOT_VERSION = "0.15.1"
 
 
 # ---------------------------------------------------------------------------
@@ -641,7 +641,7 @@ def write_walk_scene(site_spec, merged, walk_out, site_tscn_base, addon_dir="add
     player_godot = f"{sx:g}, {sz + 1.0:g}, {-sy:g}"   # eye/capsule lift
 
     lines = [
-        '[gd_scene load_steps=6 format=3]', '',
+        '[gd_scene load_steps=9 format=3]', '',
         f'[ext_resource type="PackedScene" path="res://{site_tscn_base}.tscn" id="site"]',
         f'[ext_resource type="Script" path="res://{addon_dir}/lot_site_walk.gd" id="walk"]',
         f'[ext_resource type="Script" path="res://{addon_dir}/lot_player.gd" id="player"]', '',
@@ -653,11 +653,32 @@ def write_walk_scene(site_spec, merged, walk_out, site_tscn_base, addon_dir="add
         '[sub_resource type="CapsuleShape3D" id="PlayerCol"]',
         'radius = 0.4',
         'height = 1.8', '',
+        # sun + sky + ambient: mirrors Deli Counter's walk harness
+        # (godot/addon/deli_counter/template/level_test.tscn) so a Lot site
+        # walk lights identically to a DC building walk. Without this the
+        # runtime scene renders unlit (the editor's preview sun hides it).
+        '[sub_resource type="ProceduralSkyMaterial" id="Sky_mat"]', '',
+        '[sub_resource type="Sky" id="Sky_res"]',
+        'sky_material = SubResource("Sky_mat")', '',
+        '[sub_resource type="Environment" id="Env_res"]',
+        'background_mode = 2',
+        'sky = SubResource("Sky_res")',
+        'ambient_light_source = 3',
+        'ambient_light_color = Color(0.6, 0.62, 0.68, 1)',
+        'ambient_light_energy = 0.6',
+        'tonemap_mode = 2', '',
         f'[node name="{site_spec["name"]}_walk" type="Node3D"]',
         'script = ExtResource("walk")',
         f'spawn_pos = {_v3(pos["spawn"], 1.0)}',
         f'objective_pos = {_v3(pos["objective"])}',
-        f'extraction_pos = {_v3(pos["extraction"])}', '',
+        f'extraction_pos = {_v3(pos["extraction"])}',
+        f'site_title = "{site_spec["name"].upper()}"', '',
+        '[node name="WorldEnvironment" type="WorldEnvironment" parent="."]',
+        'environment = SubResource("Env_res")', '',
+        '[node name="Sun" type="DirectionalLight3D" parent="."]',
+        'transform = Transform3D(0.707107, -0.5, 0.5, 0, 0.707107, 0.707107, '
+        '-0.707107, -0.5, 0.5, 0, 20, 0)',
+        'shadow_enabled = true', '',
         '[node name="Nav" type="NavigationRegion3D" parent="."]',
         'navigation_mesh = SubResource("NavMesh")', '',
         '[node name="Site" parent="./Nav" instance=ExtResource("site")]', '',
@@ -722,7 +743,7 @@ def write_navqa_scene(site_spec, merged, navqa_out, site_tscn_base, addon_dir="a
     anc = _navqa_anchors(site_spec, merged)
     crew = _walk_positions(site_spec, merged)["spawn"]
     lines = [
-        '[gd_scene load_steps=4 format=3]', '',
+        '[gd_scene load_steps=7 format=3]', '',
         f'[ext_resource type="PackedScene" path="res://{site_tscn_base}.tscn" id="site"]',
         f'[ext_resource type="Script" path="res://{addon_dir}/lot_navqa_setup.gd" id="setup"]', '',
         '[sub_resource type="NavigationMesh" id="NavMesh"]',
@@ -730,7 +751,23 @@ def write_navqa_scene(site_spec, merged, navqa_out, site_tscn_base, addon_dir="a
         'cell_size = 0.25',
         'agent_radius = 0.5',
         'agent_height = 1.8', '',
+        '[sub_resource type="ProceduralSkyMaterial" id="Sky_mat"]', '',
+        '[sub_resource type="Sky" id="Sky_res"]',
+        'sky_material = SubResource("Sky_mat")', '',
+        '[sub_resource type="Environment" id="Env_res"]',
+        'background_mode = 2',
+        'sky = SubResource("Sky_res")',
+        'ambient_light_source = 3',
+        'ambient_light_color = Color(0.6, 0.62, 0.68, 1)',
+        'ambient_light_energy = 0.6',
+        'tonemap_mode = 2', '',
         f'[node name="{site_spec["name"]}_navqa" type="Node3D"]', '',
+        '[node name="WorldEnvironment" type="WorldEnvironment" parent="."]',
+        'environment = SubResource("Env_res")', '',
+        '[node name="Sun" type="DirectionalLight3D" parent="."]',
+        'transform = Transform3D(0.707107, -0.5, 0.5, 0, 0.707107, 0.707107, '
+        '-0.707107, -0.5, 0.5, 0, 20, 0)',
+        'shadow_enabled = true', '',
         '[node name="Nav" type="NavigationRegion3D" parent="."]',
         'navigation_mesh = SubResource("NavMesh")', '',
         '[node name="Site" parent="./Nav" instance=ExtResource("site")]', '',
