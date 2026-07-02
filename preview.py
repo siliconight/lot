@@ -142,6 +142,19 @@ def gameplay_from_spec(spec):
                 entry["rarity"] = tier
                 entry["rarity_color"] = gp["rarity_color"]
             gp["openings"].append(entry)
+
+    # ladder markers, synthesized from the spec's ladders array (mirrors
+    # deli_counter.py _ladders): the climb-volume contract must exist in
+    # preview too, or ladders only work after a Blender build.
+    for li, ld in enumerate(spec.get("ladders", [])):
+        f0 = ld.get("from_story", 0)
+        gp["markers"].append({
+            "name": f"LADDER_{li}", "type": "ladder", "id": f"ladder_{li}",
+            "x": ld.get("x", 0.0), "y": ld.get("y", 0.0), "z": f0 * sh,
+            "climb_height": (ld.get("to_story", f0 + 1) - f0) * sh,
+            "width": ld.get("width", 0.5), "depth": ld.get("depth", 0.15),
+            "facing": ld.get("facing"),
+        })
     for m in spec.get("markers", []):
         t = m.get("type", "marker")
         pid = str(m.get("id", ""))

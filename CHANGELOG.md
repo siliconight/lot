@@ -1,3 +1,25 @@
+## [0.16.1] - Ladders work in the site walk (Lot adopts its half of the contract)
+Stairs worked, ladders didn't -- and it was NOT the .glb. DC's ladder contract
+has three legs: DC bakes the LADDER_ anchor + climb metadata into the
+glb/gameplay (working); a post-import turns the anchor into an Area3D climb
+volume (only runs in projects with the DC addon -- cater projects don't have
+it); the player implements climb mode (lot_player had none). Stairs are pure
+geometry (the DC 0.51 ramp collider rides inside the glb), which is exactly
+why they worked and ladders didn't.
+
+- The generated walk scene now emits an Area3D climb volume (group "ladder")
+  per gameplay ladder marker, placed through the building transform, sized
+  like deli_counter_postimport.gd (+1 m dismount lip, base-anchored,
+  generous square footprint so building rotation can't turn it edge-on).
+- lot_player.gd gains climb mode, ported from DC's reference player: climb
+  along where you LOOK (look up + W ascends, look down descends, look level
+  + W steps off at the top), no gravity on the ladder, Space drops.
+- Preview parity: preview.gameplay_from_spec synthesizes ladder markers from
+  the spec's ladders array (mirrors deli_counter.py _ladders), so ladders
+  work in --preview too, not just after a Blender build.
+- Tests: 29 -> 30 (preview synthesis, volume placement/sizing/load_steps,
+  player climb present).
+
 ## [0.16.0] - Site packs: the shareable deliverable for collaborators
 `package.py` cuts a drop-anywhere folder-of-source (zipped) that a
 collaborator can put at ANY path inside their own Godot project and instance

@@ -16,6 +16,10 @@ extends CharacterBody3D
 ## valid-direction + head-clearance check (after move_and_slide), adapted from
 ## the standard FPS step-climbing approach.
 @export var max_step_height := 0.45
+## Vertical climb speed on ladder volumes (m/s). The walk scene emits the
+## Area3D climb volumes (group "ladder") from the site's gameplay ladder
+## markers — same contract as Deli Counter's post-import.
+@export var climb_speed := 3.0
 
 var _cam: Camera3D
 var _yaw := 0.0
@@ -47,6 +51,14 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _physics_process(delta: float) -> void:
+	# On a ladder climb volume? Climb instead of walking. Ported from Deli
+	# Counter's reference player (template/player.gd): climb along where you
+	# LOOK — look up + W to ascend, look down to descend, look level + W to
+	# step off at the top. No input = cling (gravity off). Space drops.
+	if _current_ladder() != null and not Input.is_key_pressed(KEY_SPACE):
+		_climb(delta)
+		return
+
 	if not is_on_floor():
 		velocity.y -= 9.8 * delta
 	if Input.is_action_just_pressed("ui_accept") and is_on_floor():
@@ -116,3 +128,33 @@ func _move_with_steps(delta: float) -> void:
 	# Lift onto the step and nudge forward past its riser.
 	global_position.y = step_top + 0.02
 	global_position += into * (speed * delta * 0.6)
+
+
+func _current_ladder() -> Area3D:
+	# Climb volumes are Area3Ds in the "ladder" group (emitted by the walk
+	# scene from the site's gameplay ladder markers). We're "on" one if our
+	# body overlaps it.
+	for a in get_tree().get_nodes_in_group("ladder"):
+		if a is Area3D and self in (a as Area3D).get_overlapping_bodies():
+			return a
+	return null
+
+
+func _climb(_delta: float) -> void:
+	# Move along the camera's look direction: look up + forward to ascend,
+	# look down to descend, look level + forward to step off at the top.
+	# Gravity is off here, so no input clings in place instead of sliding.
+	var axis := Vector2.ZERO
+	if Input.is_key_pressed(KEY_A): axis.x -= 1.0
+	if Input.is_key_pressed(KEY_D): axis.x += 1.0
+	if Input.is_key_pressed(KEY_W): axis.y -= 1.0
+	if Input.is_key_pressed(KEY_S): axis.y += 1.0
+	axis.x += Input.get_axis("ui_left", "ui_right")
+	axis.y += Input.get_axis("ui_up", "ui_down")
+	axis = axis.limit_length(1.0)
+	var wish := -axis.y                # W / forward -> +1
+	var look := -_cam.global_transform.basis.z if _cam else -transform.basis.z
+	velocity = look * wish * climb_speed
+	# small strafe so you can line up with the dismount at the top
+	velocity += transform.basis.x * axis.x * (speed * 0.5)
+	move_and_slide()

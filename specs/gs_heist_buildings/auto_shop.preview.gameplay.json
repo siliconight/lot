@@ -7,6 +7,18 @@
   ],
   "markers": [
     {
+      "name": "LADDER_0",
+      "type": "ladder",
+      "id": "ladder_0",
+      "x": -10.5,
+      "y": 6.5,
+      "z": 3.6,
+      "climb_height": 3.6,
+      "width": 0.5,
+      "depth": 0.15,
+      "facing": "S"
+    },
+    {
       "name": "COVER_LOW_LIFT1",
       "type": "cover_low",
       "x": -6.0,

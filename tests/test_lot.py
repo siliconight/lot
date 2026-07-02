@@ -546,6 +546,44 @@ def test_package_reproducible_release():
     print("  package reproducible release (deterministic + provenance): OK")
 
 
+def test_ladder_climb_volumes():
+    """Lot's half of the DC ladder contract: preview synthesizes ladder
+    markers from the spec's ladders array (parity with the Blender build),
+    and the walk scene emits an Area3D climb volume (group "ladder") per
+    marker, placed through the building transform, sized like DC's
+    post-import (+1 m dismount lip, base-anchored)."""
+    import tempfile, preview
+    gp = preview.gameplay_from_spec({
+        "name": "lad", "story_height": 3.0,
+        "ladders": [{"x": 2.0, "y": -3.0, "from_story": 0, "to_story": 2,
+                     "width": 0.5, "depth": 0.15, "facing": "N"}]})
+    lm = [m for m in gp["markers"] if m["type"] == "ladder"]
+    assert len(lm) == 1 and lm[0]["climb_height"] == 6.0 and lm[0]["z"] == 0.0
+    merged = {"markers": [{"name": "b/LADDER_0", "type": "ladder",
+                           "x": 10.0, "y": 4.0, "z": 3.0,
+                           "climb_height": 3.6, "width": 0.5, "depth": 0.15,
+                           "building": "b"}],
+              "site_markers": [], "objectives": [],
+              "buildings": [{"id": "b", "at": [0, 0], "rot": 0,
+                             "source": "b.glb", "glb": "b.glb"}]}
+    site = {"name": "lad", "buildings": [
+        {"id": "b", "glb": "b.glb", "gameplay": "x.json", "at": [0, 0]}]}
+    d = tempfile.mkdtemp()
+    wp = os.path.join(d, "w.tscn")
+    lot.write_walk_scene(site, merged, wp, "lad")
+    t = open(wp).read()
+    assert 'type="Area3D" parent="." groups=["ladder"]' in t
+    assert "0, 0, 1, 10.0, 3.0, -4.0)" in t     # site (x,y,z) -> Godot (x,z,-y)
+    assert "size = Vector3(1.3, 4.6, 1.3)" in t  # w=max(.5+.8,1), h=3.6+1 lip
+    import re
+    steps = int(re.search(r"load_steps=(\d+)", t).group(1))
+    assert steps == t.count("[ext_resource") + t.count("[sub_resource") + 1
+    gd = open(os.path.join(os.path.dirname(__file__), "..", "godot",
+                           "addons", "lot", "lot_player.gd")).read()
+    assert "_current_ladder" in gd and "func _climb" in gd
+    print("  ladder climb volumes (preview parity + walk scene + player): OK")
+
+
 def test_building_needs_geometry():
     """A building with neither scene nor glb is a spec error."""
     site = {"name": "bad", "buildings": [

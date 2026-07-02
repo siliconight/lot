@@ -40,7 +40,7 @@ import json
 import math
 import os
 
-LOT_VERSION = "0.16.0"
+LOT_VERSION = "0.16.1"
 
 
 # ---------------------------------------------------------------------------
@@ -636,6 +636,42 @@ def _v3(world_xyz, lift=0.0):
     return f"Vector3({x:g}, {z + lift:g}, {-y:g})"
 
 
+
+def _ladder_volume_nodes(merged):
+    """Area3D climb volumes (group "ladder") from the site's gameplay ladder
+    markers -- Lot's half of the DC ladder contract. DC bakes the LADDER_
+    anchor + climb metadata into the glb/gameplay; something import- or
+    scene-side must build the volume (in a DC project the post-import plugin
+    does it; in a Lot walk scene, this does). Sizing mirrors
+    deli_counter_postimport.gd: +1 m dismount lip over the top, generous
+    square footprint so building rotation can't turn the volume edge-on."""
+    body, subs = [], []
+    for i, m in enumerate(merged.get("markers", [])):
+        if m.get("type") != "ladder":
+            continue
+        ch = float(m.get("climb_height", 3.0))
+        w = max(float(m.get("width", 0.5)) + 0.8, 1.0)
+        d = float(m.get("depth", 0.15)) + 1.0
+        fp = max(w, d)
+        gx, gy, gz = m["x"], m["z"], -m["y"]          # site -> Godot
+        sid = f"LadderBox_{i}"
+        subs += [f'[sub_resource type="BoxShape3D" id="{sid}"]',
+                 f'size = Vector3({fp}, {ch + 1.0}, {fp})', '']
+        nm = m.get("name", f"LADDER_{i}")
+        body += [
+            f'[node name="{nm}_climb" type="Area3D" parent="." groups=["ladder"]]',
+            f'transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, '
+            f'{gx}, {gy}, {gz})',
+            'monitoring = true',
+            'monitorable = true', '',
+            f'[node name="shape" type="CollisionShape3D" parent="{nm}_climb"]',
+            f'shape = SubResource("{sid}")',
+            f'transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, '
+            f'0, {ch * 0.5}, 0)', '',
+        ]
+    return body, subs
+
+
 def write_walk_scene(site_spec, merged, walk_out, site_tscn_base,
                      addon_dir="addons/lot", portable=False):
     """Emit <name>_walk.tscn: instances the composed site under a baked
@@ -644,11 +680,12 @@ def write_walk_scene(site_spec, merged, walk_out, site_tscn_base,
     pos = _walk_positions(site_spec, merged)
     _p = "" if portable else "res://"
     _a = "" if portable else addon_dir + "/"
+    ladder_body, ladder_subs = _ladder_volume_nodes(merged)
     sx, sy, sz = pos["spawn"]
     player_godot = f"{sx:g}, {sz + 1.0:g}, {-sy:g}"   # eye/capsule lift
 
     lines = [
-        '[gd_scene load_steps=9 format=3]', '',
+        f'[gd_scene load_steps={9 + sum(1 for l in ladder_subs if l.startswith("[sub_resource"))} format=3]', '',
         f'[ext_resource type="PackedScene" path="{_p}{site_tscn_base}.tscn" id="site"]',
         f'[ext_resource type="Script" path="{_p}{_a}lot_site_walk.gd" id="walk"]',
         f'[ext_resource type="Script" path="{_p}{_a}lot_player.gd" id="player"]', '',
@@ -674,6 +711,7 @@ def write_walk_scene(site_spec, merged, walk_out, site_tscn_base,
         'ambient_light_color = Color(0.6, 0.62, 0.68, 1)',
         'ambient_light_energy = 0.6',
         'tonemap_mode = 2', '',
+        *ladder_subs,
         f'[node name="{site_spec["name"]}_walk" type="Node3D"]',
         'script = ExtResource("walk")',
         f'spawn_pos = {_v3(pos["spawn"], 1.0)}',
@@ -686,6 +724,7 @@ def write_walk_scene(site_spec, merged, walk_out, site_tscn_base,
         'transform = Transform3D(0.707107, -0.5, 0.5, 0, 0.707107, 0.707107, '
         '-0.707107, -0.5, 0.5, 0, 20, 0)',
         'shadow_enabled = true', '',
+        *ladder_body,
         '[node name="Nav" type="NavigationRegion3D" parent="."]',
         'navigation_mesh = SubResource("NavMesh")', '',
         '[node name="Site" parent="./Nav" instance=ExtResource("site")]', '',
