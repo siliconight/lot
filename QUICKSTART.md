@@ -1,5 +1,18 @@
 # Quickstart — walk the vault job (no Blender)
 
+## The one command (0.15+)
+
+`cater.py` runs the whole pipeline — Blender builds (only what's stale),
+output copies, addon sync, a fresh `project.godot` if the folder is empty,
+and the Lot assemble:
+
+    python cater.py specs\gs_heist.json "C:\path\to\GodotProject" --blender "C:\blender\blender.exe"
+
+Add `--preview` on a machine with no Blender (buildings box from their specs).
+Then open `<site>_walk.tscn` in Godot, F6. Edit any spec, re-run the same
+command; only what changed rebuilds. The sections below are the manual steps
+cater automates, kept for when you want just one of them.
+
 You don't need to build anything in Blender to get into the level. `--preview`
 boxes each building as labeled greybox massing and pulls the real heist flow
 (crew spawn → vault → extraction, cover, cop pressure) straight from the Deli

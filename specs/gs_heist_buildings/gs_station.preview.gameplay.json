@@ -1,0 +1,475 @@
+{
+  "level": "gs_corner_station",
+  "mode": "heist",
+  "footprint": [
+    32.0,
+    22.0
+  ],
+  "markers": [
+    {
+      "name": "COVER_LOW_REG",
+      "type": "cover_low",
+      "x": -12.0,
+      "y": -7.0,
+      "z": 0.0,
+      "room": "sales_floor"
+    },
+    {
+      "name": "COVER_HIGH_AISLE1",
+      "type": "cover_high",
+      "x": -8.0,
+      "y": 0.0,
+      "z": 0.0,
+      "room": "sales_floor"
+    },
+    {
+      "name": "COVER_HIGH_AISLE2",
+      "type": "cover_high",
+      "x": -3.0,
+      "y": 0.0,
+      "z": 0.0,
+      "room": "sales_floor"
+    },
+    {
+      "name": "COVER_HIGH_RACK1",
+      "type": "cover_high",
+      "x": 11.0,
+      "y": -6.0,
+      "z": 0.0,
+      "room": "stockroom"
+    },
+    {
+      "name": "CAMERA_SOCKET_01",
+      "type": "camera_socket",
+      "x": -15.0,
+      "y": 10.0,
+      "z": 3.5,
+      "rot_z": -45,
+      "room": "sales_floor"
+    },
+    {
+      "name": "OBJECTIVE_REGISTER",
+      "type": "objective",
+      "x": -12.0,
+      "y": -7.0,
+      "z": 0.9,
+      "room": "sales_floor"
+    },
+    {
+      "name": "OBJECTIVE_SAFE",
+      "type": "objective",
+      "x": 14.5,
+      "y": 9.0,
+      "z": 0.5,
+      "room": "back_office"
+    },
+    {
+      "name": "LOOT_SAFECASH",
+      "type": "loot",
+      "x": 14.5,
+      "y": 9.0,
+      "z": 0.6,
+      "room": "back_office"
+    },
+    {
+      "name": "EXTRACTION_FORECOURT",
+      "type": "extraction",
+      "x": 0.0,
+      "y": -20.0,
+      "z": 0.0,
+      "room": "sales_floor"
+    },
+    {
+      "name": "ATTACKER_SPAWN_A",
+      "type": "attacker_spawn",
+      "x": -8.0,
+      "y": -22.0,
+      "z": 0.0,
+      "rot_z": 0,
+      "room": "sales_floor"
+    },
+    {
+      "name": "ATTACKER_SPAWN_B",
+      "type": "attacker_spawn",
+      "x": 8.0,
+      "y": -22.0,
+      "z": 0.0,
+      "rot_z": 0,
+      "room": "sales_floor"
+    },
+    {
+      "name": "COVER_LOW_AUTO_COFFEE_ISLAND",
+      "type": "cover_low",
+      "x": 2.0,
+      "y": -7.0,
+      "z": 0.0,
+      "room": "sales_floor",
+      "meta": {
+        "auto": "cover_from_volume",
+        "from": "coffee_island"
+      }
+    },
+    {
+      "name": "COVER_HIGH_AUTO_COOLER_RUN",
+      "type": "cover_high",
+      "x": 4.5,
+      "y": 6.0,
+      "z": 0.0,
+      "room": "sales_floor",
+      "meta": {
+        "auto": "cover_from_volume",
+        "from": "cooler_run"
+      }
+    },
+    {
+      "name": "COVER_LOW_AUTO_MANAGER_DESK",
+      "type": "cover_low",
+      "x": 12.0,
+      "y": 7.0,
+      "z": 0.0,
+      "room": "back_office",
+      "meta": {
+        "auto": "cover_from_volume",
+        "from": "manager_desk"
+      }
+    },
+    {
+      "name": "LANDMARK_FORECOURT",
+      "type": "landmark",
+      "x": 0.0,
+      "y": -17.5,
+      "z": 1.0,
+      "room": "forecourt",
+      "meta": {
+        "auto": "landmark",
+        "label": "forecourt",
+        "role": "staging"
+      }
+    },
+    {
+      "name": "LANDMARK_SALES_FLOOR",
+      "type": "landmark",
+      "x": -5.0,
+      "y": 0.0,
+      "z": 1.0,
+      "room": "sales_floor",
+      "meta": {
+        "auto": "landmark",
+        "label": "sales_floor",
+        "role": "public_entry"
+      }
+    },
+    {
+      "name": "LANDMARK_BACK_OFFICE",
+      "type": "landmark",
+      "x": 11.0,
+      "y": 6.5,
+      "z": 1.0,
+      "room": "back_office",
+      "meta": {
+        "auto": "landmark",
+        "label": "back_office",
+        "role": "objective_room"
+      }
+    }
+  ],
+  "rooms": [
+    {
+      "id": "forecourt",
+      "story": 0,
+      "bounds": [
+        -14.0,
+        -24.0,
+        14.0,
+        -11.0
+      ],
+      "role": "staging"
+    },
+    {
+      "id": "sales_floor",
+      "story": 0,
+      "bounds": [
+        -16.0,
+        -11.0,
+        6.0,
+        11.0
+      ],
+      "role": "public_entry"
+    },
+    {
+      "id": "restroom",
+      "story": 0,
+      "bounds": [
+        12.5,
+        -11.0,
+        16.0,
+        -8.0
+      ],
+      "role": "utility"
+    },
+    {
+      "id": "stockroom",
+      "story": 0,
+      "bounds": [
+        6.0,
+        -11.0,
+        16.0,
+        2.0
+      ],
+      "role": "connector"
+    },
+    {
+      "id": "back_office",
+      "story": 0,
+      "bounds": [
+        6.0,
+        2.0,
+        16.0,
+        11.0
+      ],
+      "role": "objective_room"
+    }
+  ],
+  "objectives": [
+    {
+      "id": "register_grab",
+      "kind": "bag_cash",
+      "x": -12.0,
+      "y": -7.0,
+      "z": 0.9,
+      "room": "sales_floor",
+      "required": true,
+      "duration": 8.0
+    },
+    {
+      "id": "office_safe",
+      "kind": "drill",
+      "x": 14.5,
+      "y": 9.0,
+      "z": 0.5,
+      "room": "back_office",
+      "required": true,
+      "duration": 30.0
+    }
+  ],
+  "loot": [
+    {
+      "id": "register_cash",
+      "kind": "cash",
+      "x": -12.0,
+      "y": -7.0,
+      "z": 0.9,
+      "value": 2500,
+      "bags": 1,
+      "room": "sales_floor"
+    },
+    {
+      "id": "safe_cash",
+      "kind": "cash",
+      "x": 14.5,
+      "y": 9.0,
+      "z": 0.6,
+      "value": 8000,
+      "bags": 2,
+      "room": "back_office"
+    },
+    {
+      "id": "stock_contraband",
+      "kind": "contraband",
+      "x": 11.0,
+      "y": -2.5,
+      "z": 1.0,
+      "value": 3000,
+      "bags": 1,
+      "room": "stockroom"
+    }
+  ],
+  "zones": [
+    {
+      "id": "forecourt_extract",
+      "kind": "extraction",
+      "story": 0,
+      "bounds": [
+        -12.0,
+        -24.0,
+        12.0,
+        -14.0
+      ]
+    }
+  ],
+  "vertical_links": [],
+  "openings": [
+    {
+      "wall": "S",
+      "kind": "door",
+      "story": 0,
+      "x": -5.12,
+      "y": -11.0,
+      "z": 1.1,
+      "width": 1.8,
+      "height": 2.2,
+      "sill": 0.0,
+      "tag": "front_entry_west",
+      "breach_class": null,
+      "material": null,
+      "vaultable": false,
+      "reinforceable": false,
+      "building": "gs_corner_station"
+    },
+    {
+      "wall": "S",
+      "kind": "door",
+      "story": 0,
+      "x": 5.12,
+      "y": -11.0,
+      "z": 1.1,
+      "width": 1.8,
+      "height": 2.2,
+      "sill": 0.0,
+      "tag": "front_entry_east",
+      "breach_class": null,
+      "material": null,
+      "vaultable": false,
+      "reinforceable": false,
+      "building": "gs_corner_station"
+    },
+    {
+      "wall": "S",
+      "kind": "window",
+      "story": 0,
+      "x": -12.8,
+      "y": -11.0,
+      "z": 2.2,
+      "width": 3.0,
+      "height": 2.4,
+      "sill": 1.0,
+      "tag": null,
+      "breach_class": null,
+      "material": "glass",
+      "vaultable": false,
+      "reinforceable": false,
+      "building": "gs_corner_station"
+    },
+    {
+      "wall": "S",
+      "kind": "window",
+      "story": 0,
+      "x": 12.8,
+      "y": -11.0,
+      "z": 2.2,
+      "width": 3.0,
+      "height": 2.4,
+      "sill": 1.0,
+      "tag": null,
+      "breach_class": null,
+      "material": "glass",
+      "vaultable": false,
+      "reinforceable": false,
+      "building": "gs_corner_station"
+    },
+    {
+      "wall": "N",
+      "kind": "garage",
+      "story": 0,
+      "x": 8.96,
+      "y": 11.0,
+      "z": 1.5,
+      "width": 3.0,
+      "height": 3.0,
+      "sill": 0.0,
+      "tag": "stock_roll_door",
+      "breach_class": null,
+      "material": null,
+      "vaultable": false,
+      "reinforceable": false,
+      "building": "gs_corner_station"
+    },
+    {
+      "wall": "N",
+      "kind": "door",
+      "story": 0,
+      "x": 14.72,
+      "y": 11.0,
+      "z": 1.1,
+      "width": 1.2,
+      "height": 2.2,
+      "sill": 0.0,
+      "tag": "office_back_door",
+      "breach_class": null,
+      "material": null,
+      "vaultable": false,
+      "reinforceable": false,
+      "building": "gs_corner_station"
+    },
+    {
+      "wall": "N",
+      "kind": "breach",
+      "story": 0,
+      "x": -9.6,
+      "y": 11.0,
+      "z": 1.1,
+      "width": 1.6,
+      "height": 2.2,
+      "sill": 0.0,
+      "tag": "north_breach",
+      "breach_class": "soft_wall",
+      "material": "drywall",
+      "vaultable": false,
+      "reinforceable": false,
+      "building": "gs_corner_station"
+    },
+    {
+      "wall": "W",
+      "kind": "door",
+      "story": 0,
+      "x": -16.0,
+      "y": -2.2,
+      "z": 1.1,
+      "width": 1.1,
+      "height": 2.2,
+      "sill": 0.0,
+      "tag": "west_service",
+      "breach_class": null,
+      "material": null,
+      "vaultable": false,
+      "reinforceable": false,
+      "building": "gs_corner_station"
+    },
+    {
+      "wall": "W",
+      "kind": "window",
+      "story": 0,
+      "x": -16.0,
+      "y": 6.6,
+      "z": 1.9,
+      "width": 1.6,
+      "height": 1.4,
+      "sill": 1.2,
+      "tag": null,
+      "breach_class": null,
+      "material": null,
+      "vaultable": true,
+      "reinforceable": false,
+      "building": "gs_corner_station"
+    },
+    {
+      "wall": "E",
+      "kind": "door",
+      "story": 0,
+      "x": 16.0,
+      "y": -4.4,
+      "z": 1.1,
+      "width": 1.1,
+      "height": 2.2,
+      "sill": 0.0,
+      "tag": "east_stock_service",
+      "breach_class": null,
+      "material": null,
+      "vaultable": false,
+      "reinforceable": false,
+      "building": "gs_corner_station"
+    }
+  ],
+  "surfaces": [],
+  "surface_roles": {}
+}

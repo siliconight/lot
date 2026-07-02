@@ -380,6 +380,42 @@ def test_preview_rarity_contract():
     print("  preview rarity contract stamped: OK")
 
 
+def test_cater_needs_build():
+    """Incremental decision: build if forced, missing, or spec newer than glb."""
+    import tempfile, time, cater
+    d = tempfile.mkdtemp()
+    spec = os.path.join(d, "b.json")
+    glb = os.path.join(d, "b.glb")
+    open(spec, "w").write("{}")
+    assert cater.needs_build(spec, glb) is True            # glb missing
+    open(glb, "wb").write(b"x")
+    os.utime(spec, (time.time() - 100, time.time() - 100))  # spec older
+    assert cater.needs_build(spec, glb) is False            # fresh
+    assert cater.needs_build(spec, glb, force=True) is True
+    os.utime(spec, None)                                    # spec newer
+    assert cater.needs_build(spec, glb) is True
+    print("  cater incremental build decision: OK")
+
+
+def test_cater_facade_jobs():
+    """Blocker glb refs map to same-stem DC specs; unknowns reported not fatal;
+    reused shells dedupe."""
+    import tempfile, cater
+    dc = tempfile.mkdtemp()
+    os.makedirs(os.path.join(dc, "specs"))
+    open(os.path.join(dc, "specs", "shell_a.json"), "w").write("{}")
+    site = {"blockers": [
+        {"at": [0, 0], "glb": "shell_a.glb"},
+        {"at": [9, 0], "glb": "shell_a.glb"},        # same shell reused
+        {"at": [5, 0], "glb": "hand_made.glb"},      # no DC spec
+        {"at": [7, 0]},                              # plain box
+    ]}
+    jobs, unknown = cater.facade_jobs(site, dc)
+    assert [s for _, s in jobs] == ["shell_a"], jobs
+    assert unknown == ["hand_made.glb"], unknown
+    print("  cater facade shell job mapping: OK")
+
+
 def test_building_needs_geometry():
     """A building with neither scene nor glb is a spec error."""
     site = {"name": "bad", "buildings": [

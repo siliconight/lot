@@ -26,6 +26,11 @@ spec is the molecule.
 Since the Phase 2 baseline below, Lot has grown the pieces that make a site
 actually *playable in one command*:
 
+- **The whole pipeline (`cater.py`)** — one command from site spec to walkable
+  Godot project: incremental headless Blender builds of stale buildings +
+  facade shells, output copies, addon sync, `project.godot` bootstrap, then
+  the assemble. See Usage.
+
 - **Walk it (`--walkable`)** — emits `<name>_walk.tscn`: the whole site under a
   baked `NavigationRegion3D`, a first-person player at the crew start, and
   objective/extraction beacons + HUD. Open it and press F6 to walk the level.
@@ -237,6 +242,33 @@ self-contained, single-file option. Everything else (the merged `gameplay.json`,
 tactical, pacing, enterability) is identical either way.
 
 ## Usage
+
+### The whole pipeline, one command (`cater.py`, 0.15+)
+
+`cater.py` sits above lot.py and runs the full spec→Godot flow: it finds the
+Deli Counter repo, headless-builds every **stale** building and every
+blocker-referenced facade shell (incremental — only when a `.glb` is missing
+or older than its spec), copies each `.glb` into the Godot project and each
+`.gameplay.json` next to the site spec, syncs `godot/addons/lot`, writes a
+minimal `project.godot` if the target folder is fresh, then runs lot.py:
+
+```
+python cater.py specs/gs_heist.json "C:\path\to\GodotProject"
+
+  --preview       no Blender: buildings box from their specs (same command,
+                  Blender-free machine)
+  --blender PATH  blender executable (else $BLENDER / PATH / DC's guesses)
+  --dc PATH       Deli Counter repo (else $DELI_COUNTER / ../deli_counter /
+                  C:\Projects\deli_counter)
+  --force-build   rebuild everything even if fresh
+  --skip-build    no Blender launch; copy existing DC outputs + assemble
+```
+
+Edit any spec, re-run the same command; only what changed rebuilds. Everything
+below is the underlying step cater automates — reach for lot.py directly when
+you want just the assemble.
+
+### The assemble step (`lot.py`)
 
 ```
 python lot.py specs/big_oil.json [out_dir]

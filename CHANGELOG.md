@@ -1,3 +1,25 @@
+## [0.15.0] - `cater.py`: site spec -> walkable Godot project, one command
+The whole gs_heist hand-flow, codified. `python cater.py specs\<site>.json
+"C:\path\to\GodotProject"` does everything the hands did: finds the Deli
+Counter repo (--dc / $DELI_COUNTER / sibling ../deli_counter /
+C:\Projects\deli_counter), builds every stale building AND every
+blocker-referenced facade shell in headless Blender (incremental: only when
+the .glb is missing or older than its spec; --force-build overrides), copies
+each .glb into the project and each .gameplay.json next to the site spec,
+syncs godot/addons/lot, writes a minimal Godot 4.7 project.godot into a fresh
+folder, and runs lot.py (--walkable --navqa).
+
+- `--preview` skips Blender + copies entirely — the same one command works on
+  a machine with no Blender at all.
+- `--skip-build` copies existing DC outputs + assembles (no Blender launch).
+- Blocker shells map by stem (gs_facade_storefront.glb -> DC
+  specs/gs_facade_storefront.json); a ref with no matching DC spec is assumed
+  hand-made and reported, not fatal. Reused shells dedupe to one build.
+- Missing outputs after the build phase fail loudly with the exact filenames;
+  a failed Blender build stops the pipeline without touching what's already
+  fresh.
+- Tests: 23 -> 25 (incremental build decision; facade shell job mapping).
+
 ## [0.14.0] - Site-level heist staging + preview parity (rarity, openings) + `gs_heist`
 Where the crew stages, where the cops arrive, and how long the route takes are
 SITE concerns — a building's own spec shouldn't have to know street layout.
