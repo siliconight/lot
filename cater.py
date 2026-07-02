@@ -164,7 +164,8 @@ def run_lot(site_spec_path, project_dir, walkable=True, navqa=True,
 # the pipeline
 # ---------------------------------------------------------------------------
 def cater(site_spec_path, project_dir, dc=None, blender=None, preview=False,
-          skip_build=False, force_build=False, walkable=True, navqa=True):
+          skip_build=False, force_build=False, walkable=True, navqa=True,
+          pack=False, pack_note=None):
     site_spec_path = os.path.abspath(site_spec_path)
     project_dir = os.path.abspath(project_dir)
     base_dir = os.path.dirname(site_spec_path)
@@ -254,6 +255,9 @@ def cater(site_spec_path, project_dir, dc=None, blender=None, preview=False,
 
     run_lot(site_spec_path, project_dir, walkable, navqa, preview=False)
     print(f"[cater] SERVED -> open {site_name}_walk.tscn in Godot, F6")
+    if pack:
+        import package
+        package.build_pack(site_spec_path, dc=dc_dir, note=pack_note)
 
 
 def main(argv=None):
@@ -270,6 +274,10 @@ def main(argv=None):
                     help="don't run Blender; copy existing outputs + assemble")
     ap.add_argument("--force-build", action="store_true",
                     help="rebuild every building even if fresh")
+    ap.add_argument("--package", action="store_true",
+                    help="after assembling, also cut the shareable site pack "
+                         "zip (dist/<site>_pack_v<site_version>.zip)")
+    ap.add_argument("--note", help="release note recorded in the pack manifest")
     ap.add_argument("--no-navqa", action="store_true")
     ap.add_argument("--no-walkable", action="store_true")
     a = ap.parse_args(argv)
@@ -277,7 +285,8 @@ def main(argv=None):
         cater(a.site_spec, a.project, dc=a.dc, blender=a.blender,
               preview=a.preview, skip_build=a.skip_build,
               force_build=a.force_build,
-              walkable=not a.no_walkable, navqa=not a.no_navqa)
+              walkable=not a.no_walkable, navqa=not a.no_navqa,
+              pack=a.package, pack_note=a.note)
     except (RuntimeError, OSError, json.JSONDecodeError) as e:
         print(f"[cater] FAILED: {e}")
         raise SystemExit(1)

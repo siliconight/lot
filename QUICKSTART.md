@@ -9,6 +9,8 @@ and the Lot assemble:
     python cater.py specs\gs_heist.json "C:\path\to\GodotProject" --blender "C:\blender\blender.exe"
 
 Add `--preview` on a machine with no Blender (buildings box from their specs).
+Add `--package` to also cut the shareable collaborator zip
+(`dist/<site>_pack_<ver>.zip` -- drop-anywhere folder, see README "Site packs").
 Then open `<site>_walk.tscn` in Godot, F6. Edit any spec, re-run the same
 command; only what changed rebuilds. The sections below are the manual steps
 cater automates, kept for when you want just one of them.

@@ -1,3 +1,39 @@
+## [0.16.0] - Site packs: the shareable deliverable for collaborators
+`package.py` cuts a drop-anywhere folder-of-source (zipped) that a
+collaborator can put at ANY path inside their own Godot project and instance
+-- deliberately NOT a .pck (that's Godot's opaque runtime-DLC container;
+teammates need inspectable, re-importable source).
+
+- `python package.py specs/<site>.json` -> `dist/<site>_pack_<ver>.zip`
+  containing: the composed `<site>.tscn` with RELATIVE ext_resource refs
+  (works at res://levels/, res://maps/x/, anywhere), every instanced .glb
+  (buildings + facade shells, resolved from next-to-spec then DC build/),
+  `<site>.site.gameplay.json` (the integration contract), a PACK_README.md
+  stating the contract (marker/opening/rarity semantics, axis mapping, the
+  once-per-building reveal rule), and a self-contained QA walk scene with
+  its two scripts copied in -- F6 with zero addon install.
+- New `portable=True` mode on `write_godot_scene` / `write_walk_scene` /
+  `write_navqa_scene`: relative refs instead of res://. Defaults unchanged.
+- Missing .glbs fail loudly with the cater command that produces them; no
+  --preview on purpose (a pack of massing boxes is not a deliverable).
+- `cater.py --package`: cut the pack in the same one command, after the
+  builds + assemble.
+- **Reproducible releases:** the site spec gains a per-LEVEL `"version"`
+  field -> pack named `<site>_pack_v<site_version>.zip` (bump it per walked
+  release; the tool nudges if unset). Every pack carries
+  `pack.manifest.json`: site spec sha256, per-file sha256 + sizes, each
+  .glb's Deli Counter build provenance chained through (kit_version, spec
+  hash, built_utc from the sibling DC manifest), the gate summary
+  (pacing status, entries clear), and an optional `--note` ("walked full
+  route ..."). The zip itself is DETERMINISTIC -- sorted entries, fixed
+  timestamps, no build-time stamp anywhere -- so identical inputs give a
+  byte-identical zip; a sidecar `.sha256` identifies the release.
+- `cater.py --package --note "..."` passes the release note through.
+- `gs_heist` site spec versioned `0.1.0` (first walked cut).
+- Tests: 26 -> 29 (portable ref emission; pack contents + relative refs +
+  missing-asset gate; deterministic release: byte-identical rebuilds,
+  manifest hash integrity, provenance chain, sidecar).
+
 ## [0.15.1] - Lit walk/nav-QA scenes (the runtime was rendering unlit)
 The generated `*_walk.tscn` / `*_navqa.tscn` carried no light and no
 environment — in the editor the preview sun hid it, but at F6 the whole site

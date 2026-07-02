@@ -268,6 +268,62 @@ Edit any spec, re-run the same command; only what changed rebuilds. Everything
 below is the underlying step cater automates — reach for lot.py directly when
 you want just the assemble.
 
+### Site packs: sharing a level with collaborators (`package.py`)
+
+The deliverable for someone integrating your level into THEIR game is a
+**site pack**: one self-contained folder they can drop at any path inside
+their Godot project and instance -- the composed `<site>.tscn` (all refs
+relative), every instanced `.glb`, the merged `site.gameplay.json` (the
+integration contract: spawns, rooms, objectives, loot, zones, per-door
+rarity anchors), a PACK_README stating that contract, and a self-contained
+QA walk scene (F6, no addon install). Deliberately a folder of source, not a
+`.pck` -- teammates need inspectable, re-importable assets.
+
+Packs are **reproducible releases**: the site spec's own `"version"` names
+the zip (`gs_heist_pack_v0.1.0.zip` -- bump it per walked release),
+`pack.manifest.json` records the spec hash, every file's sha256, and each
+.glb's Deli Counter build provenance, and the zip is deterministic (identical
+inputs -> byte-identical zip, sidecar `.sha256`).
+
+#### Cutting a release, start to finish
+
+1. **Build + walk.** Get the level into your own Godot project and validate
+   it on foot -- full route, every entry, extraction:
+
+   ```
+   python cater.py specs/gs_heist.json "C:\path\to\YourProject"
+   ```
+
+   (F6 `gs_heist_walk.tscn`. If anything snags, fix the DC building spec or
+   the site spec and re-run -- only what changed rebuilds.)
+
+2. **Version the cut.** In the site spec, set or bump the level's own
+   version -- this is the release number collaborators will see:
+
+   ```json
+   { "name": "gs_heist", "version": "0.2.0", ... }
+   ```
+
+3. **Cut the pack**, recording what you validated:
+
+   ```
+   python package.py specs/gs_heist.json --note "walked full route + all entries 2026-07-01"
+   ```
+
+   -> `dist/gs_heist_pack_v0.2.0.zip` + sidecar `.sha256`. (Or do steps 1
+   and 3 in one command: `cater ... --package --note "..."`. Missing .glbs
+   fail loudly with the command that builds them.)
+
+4. **Send the zip** (the `.sha256` too, if you want receipts). Their side:
+   unzip anywhere inside their Godot project (e.g. `res://levels/`), let the
+   import pass finish, instance `<site>.tscn`, bind game code to
+   `<site>.site.gameplay.json`. `PACK_README.md` inside the pack tells them
+   all of this; `<site>_walk.tscn` gives them an F6 tour with zero setup.
+
+Re-cutting with identical inputs reproduces the identical zip, so the
+`.sha256` alone identifies a release; any content change without a version
+bump shows up as a hash mismatch.
+
 ### The assemble step (`lot.py`)
 
 ```

@@ -444,6 +444,108 @@ def test_walk_and_navqa_scenes_are_lit():
     print("  walk + nav-QA scenes carry the lighting rig: OK")
 
 
+def test_portable_scene_refs():
+    """portable=True emits RELATIVE ext_resource paths (drop-anywhere pack);
+    default stays res:// (project-root assemble). Both walk-scene variants."""
+    import tempfile
+    d = tempfile.mkdtemp()
+    site = {"name": "port", "buildings": [
+        {"id": "a", "glb": "a.glb", "gameplay": "missing.json", "at": [0, 0]}]}
+    merged = lot.merge_gameplay(site, d)
+    p1 = os.path.join(d, "abs.tscn")
+    lot.write_godot_scene(site, merged, p1)
+    assert 'path="res://a.glb"' in open(p1).read()
+    p2 = os.path.join(d, "rel.tscn")
+    lot.write_godot_scene(site, merged, p2, portable=True)
+    t2 = open(p2).read()
+    assert 'path="a.glb"' in t2 and "res://" not in t2
+    p3 = os.path.join(d, "w.tscn")
+    lot.write_walk_scene(site, merged, p3, "port", portable=True)
+    t3 = open(p3).read()
+    assert 'path="port.tscn"' in t3 and 'path="lot_site_walk.gd"' in t3 \
+        and "res://" not in t3
+    print("  portable (relative-ref) scene emission: OK")
+
+
+def test_package_site_pack():
+    """package.py: builds a zip with scenes + assets + contract + README + QA
+    scripts, all refs relative; fails loudly when an asset is missing."""
+    import tempfile, zipfile, package
+    d = tempfile.mkdtemp()
+    spec = {"name": "packtest",
+            "buildings": [{"id": "a", "glb": "a.glb", "gameplay": "a.gameplay.json",
+                           "at": [0, 0]}],
+            "blockers": [{"at": [9, 9], "size_x": 4, "size_y": 4, "glb": "shell.glb"}]}
+    sp = os.path.join(d, "site.json")
+    json.dump(spec, open(sp, "w"))
+    # missing assets -> loud SystemExit naming them
+    try:
+        package.build_pack(sp, out_dir=os.path.join(d, "dist"))
+        assert False, "expected SystemExit for missing assets"
+    except SystemExit as e:
+        assert "a.glb" in str(e) and "shell.glb" in str(e)
+    # stage assets next to the spec and build for real
+    open(os.path.join(d, "a.glb"), "wb").write(b"G")
+    open(os.path.join(d, "shell.glb"), "wb").write(b"G")
+    json.dump({"markers": [], "rooms": [], "objectives": [], "loot": [],
+               "zones": [], "vertical_links": [], "openings": [],
+               "surfaces": [], "surface_roles": {}},
+              open(os.path.join(d, "a.gameplay.json"), "w"))
+    zp = package.build_pack(sp, out_dir=os.path.join(d, "dist"))
+    assert os.path.basename(zp) == "packtest_pack_v0.0.0.zip", zp
+    names = set(zipfile.ZipFile(zp).namelist())
+    need = {"packtest_pack/packtest.tscn", "packtest_pack/packtest_walk.tscn",
+            "packtest_pack/pack.manifest.json",
+            "packtest_pack/packtest.site.gameplay.json",
+            "packtest_pack/PACK_README.md", "packtest_pack/a.glb",
+            "packtest_pack/shell.glb", "packtest_pack/lot_site_walk.gd",
+            "packtest_pack/lot_player.gd"}
+    assert need <= names, need - names
+    tscn = zipfile.ZipFile(zp).read("packtest_pack/packtest.tscn").decode()
+    assert "res://" not in tscn
+    print("  package.py site pack (contents + relative refs + gate): OK")
+
+
+def test_package_reproducible_release():
+    """A pack is a traceable RELEASE: versioned by the site's own version,
+    byte-identical for identical inputs (deterministic zip, no timestamps),
+    every file hash recorded in pack.manifest.json, DC build provenance
+    chained per asset, sidecar .sha256 matching the zip."""
+    import tempfile, time, zipfile, hashlib, package
+    d = tempfile.mkdtemp()
+    spec = {"name": "repro", "version": "1.2.3",
+            "buildings": [{"id": "a", "glb": "a.glb",
+                           "gameplay": "a.gameplay.json", "at": [0, 0]}]}
+    sp = os.path.join(d, "site.json")
+    json.dump(spec, open(sp, "w"))
+    open(os.path.join(d, "a.glb"), "wb").write(b"GLBBYTES")
+    json.dump({"kit_name": "Deli Counter", "kit_version": "0.54.0",
+               "spec": "a.json", "spec_sha256_16": "abcd1234abcd1234",
+               "built_utc": "x"}, open(os.path.join(d, "a.manifest.json"), "w"))
+    json.dump({"markers": [], "rooms": [], "objectives": [], "loot": [],
+               "zones": [], "vertical_links": [], "openings": [],
+               "surfaces": [], "surface_roles": {}},
+              open(os.path.join(d, "a.gameplay.json"), "w"))
+    z1 = package.build_pack(sp, out_dir=os.path.join(d, "d1"), note="walked")
+    time.sleep(1.1)
+    z2 = package.build_pack(sp, out_dir=os.path.join(d, "d2"), note="walked")
+    b1 = open(z1, "rb").read()
+    assert b1 == open(z2, "rb").read(), "pack not byte-identical across runs"
+    assert os.path.basename(z1) == "repro_pack_v1.2.3.zip"
+    zf = zipfile.ZipFile(z1)
+    man = json.loads(zf.read("repro_pack/pack.manifest.json"))
+    assert man["assets"]["a.glb"]["deli_counter"]["kit_version"] == "0.54.0"
+    assert man["note"] == "walked"
+    for fn, rec in man["files"].items():
+        if fn == "pack.manifest.json":
+            continue
+        h = hashlib.sha256(zf.read(f"repro_pack/{fn}")).hexdigest()
+        assert h == rec["sha256"], f"hash mismatch: {fn}"
+    assert open(z1 + ".sha256").read().split()[0] \
+        == hashlib.sha256(b1).hexdigest()
+    print("  package reproducible release (deterministic + provenance): OK")
+
+
 def test_building_needs_geometry():
     """A building with neither scene nor glb is a spec error."""
     site = {"name": "bad", "buildings": [

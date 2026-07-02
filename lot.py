@@ -40,7 +40,7 @@ import json
 import math
 import os
 
-LOT_VERSION = "0.15.1"
+LOT_VERSION = "0.16.0"
 
 
 # ---------------------------------------------------------------------------
@@ -480,11 +480,15 @@ def _preview_building_nodes(b, height):
     return body, sub
 
 
-def write_godot_scene(site_spec, merged, out_path, glb_dir=".", preview=False):
+def write_godot_scene(site_spec, merged, out_path, glb_dir=".", preview=False,
+                      portable=False):
     """Emit a .tscn that instances each building (a .tscn scene or a baked .glb)
     at its placement, plus Phase-2 outdoor geometry. With preview=True, buildings
     are emitted as greybox massing boxes instead (no .glb needed) so the level is
-    walkable before any Blender build."""
+    walkable before any Blender build. With portable=True, ext_resource paths
+    are emitted RELATIVE to the scene file (no res:// prefix) so the scene +
+    its siblings form a drop-anywhere folder (a shareable site pack)."""
+    prefix = "" if portable else "res://"
     res_ids = {}
     res_lines = []
     next_id = 1
@@ -498,7 +502,7 @@ def write_godot_scene(site_spec, merged, out_path, glb_dir=".", preview=False):
                 rel = os.path.join(glb_dir, src).replace("\\", "/")
                 rel = rel[2:] if rel.startswith("./") else rel
                 res_lines.append(
-                    f'[ext_resource type="PackedScene" path="res://{rel}" id="{rid}"]')
+                    f'[ext_resource type="PackedScene" path="{prefix}{rel}" id="{rid}"]')
         # facade-shell blockers (optional .glb/.tscn) instance like buildings
         for bk in site_spec.get("blockers", []):
             src = _blocker_source(bk)
@@ -509,7 +513,7 @@ def write_godot_scene(site_spec, merged, out_path, glb_dir=".", preview=False):
                 rel = os.path.join(glb_dir, src).replace("\\", "/")
                 rel = rel[2:] if rel.startswith("./") else rel
                 res_lines.append(
-                    f'[ext_resource type="PackedScene" path="res://{rel}" id="{rid}"]')
+                    f'[ext_resource type="PackedScene" path="{prefix}{rel}" id="{rid}"]')
 
     outdoor_body, outdoor_sub = _outdoor_nodes(site_spec, preview=preview)
 
@@ -632,19 +636,22 @@ def _v3(world_xyz, lift=0.0):
     return f"Vector3({x:g}, {z + lift:g}, {-y:g})"
 
 
-def write_walk_scene(site_spec, merged, walk_out, site_tscn_base, addon_dir="addons/lot"):
+def write_walk_scene(site_spec, merged, walk_out, site_tscn_base,
+                     addon_dir="addons/lot", portable=False):
     """Emit <name>_walk.tscn: instances the composed site under a baked
     NavigationRegion3D, spawns a first-person player at the crew start, and
     beacons the objective + extraction. Reuses godot/addons/lot scripts."""
     pos = _walk_positions(site_spec, merged)
+    _p = "" if portable else "res://"
+    _a = "" if portable else addon_dir + "/"
     sx, sy, sz = pos["spawn"]
     player_godot = f"{sx:g}, {sz + 1.0:g}, {-sy:g}"   # eye/capsule lift
 
     lines = [
         '[gd_scene load_steps=9 format=3]', '',
-        f'[ext_resource type="PackedScene" path="res://{site_tscn_base}.tscn" id="site"]',
-        f'[ext_resource type="Script" path="res://{addon_dir}/lot_site_walk.gd" id="walk"]',
-        f'[ext_resource type="Script" path="res://{addon_dir}/lot_player.gd" id="player"]', '',
+        f'[ext_resource type="PackedScene" path="{_p}{site_tscn_base}.tscn" id="site"]',
+        f'[ext_resource type="Script" path="{_p}{_a}lot_site_walk.gd" id="walk"]',
+        f'[ext_resource type="Script" path="{_p}{_a}lot_player.gd" id="player"]', '',
         '[sub_resource type="NavigationMesh" id="NavMesh"]',
         'geometry_parsed_geometry_type = 2',
         'cell_size = 0.25',
@@ -736,16 +743,19 @@ def _navqa_anchors(site_spec, merged):
             "bot_spawns": bots}
 
 
-def write_navqa_scene(site_spec, merged, navqa_out, site_tscn_base, addon_dir="addons/lot"):
+def write_navqa_scene(site_spec, merged, navqa_out, site_tscn_base,
+                      addon_dir="addons/lot", portable=False):
     """Emit <name>_navqa.tscn: the composed site under a baked NavigationRegion3D
     plus a NavQASetup node that tags the heist's anchors into the addon groups
     and runs the bot QA (if the Heist Nav QA addon is installed)."""
     anc = _navqa_anchors(site_spec, merged)
+    _p = "" if portable else "res://"
+    _a = "" if portable else addon_dir + "/"
     crew = _walk_positions(site_spec, merged)["spawn"]
     lines = [
         '[gd_scene load_steps=7 format=3]', '',
-        f'[ext_resource type="PackedScene" path="res://{site_tscn_base}.tscn" id="site"]',
-        f'[ext_resource type="Script" path="res://{addon_dir}/lot_navqa_setup.gd" id="setup"]', '',
+        f'[ext_resource type="PackedScene" path="{_p}{site_tscn_base}.tscn" id="site"]',
+        f'[ext_resource type="Script" path="{_p}{_a}lot_navqa_setup.gd" id="setup"]', '',
         '[sub_resource type="NavigationMesh" id="NavMesh"]',
         'geometry_parsed_geometry_type = 2',
         'cell_size = 0.25',

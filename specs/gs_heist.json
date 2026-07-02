@@ -1,5 +1,6 @@
 {
   "name": "gs_heist",
+  "version": "0.1.0",
   "ground": {
     "size_x": 110,
     "size_y": 90
