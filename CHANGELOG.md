@@ -1,3 +1,15 @@
+## [0.17.2] - primos_demo: the showcase site (Deli Counter PoC staging)
+- specs/primos_demo.json + specs/primos_demo_buildings/: "Primo's Pizza &
+  Social Club" (DC 0.59.0's showcase spec) staged as a one-building demo
+  site. All green in preview end-to-end: site_audit 0 HIGH / 0 MED (three
+  responder waves at true thirds around the building, backstopped spawn
+  and exfil on opposite corners, parked-car cover along both legs), heist
+  gates passed, pacing within target, walk scene emits all three climb
+  volumes (cellar, dumbwaiter, roof), drift check clean vs DC.
+- DEMO_PRIMOS.md: the one-command recipe -- cater --package cuts the
+  shareable pack (dist/primos_demo_pack_v0.1.0.zip) on any machine with
+  Blender.
+
 ## [0.17.1] - Spec drift guard + the gs_auto_shop copy actually synced
 Found in the wild: the Lot copy of gs_auto_shop.json was still the
 pre-0.56.0 spec (swapped story-1 axis, 1.1 m door, no parapet) -- the DC

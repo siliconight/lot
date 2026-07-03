@@ -1,0 +1,768 @@
+{
+  "level": "primos_pizza",
+  "mode": "heist",
+  "footprint": [
+    20.0,
+    14.0
+  ],
+  "markers": [
+    {
+      "name": "LADDER_0",
+      "type": "ladder",
+      "id": "ladder_0",
+      "x": 8.8,
+      "y": -1.0,
+      "z": -3.2,
+      "climb_height": 3.2,
+      "width": 0.5,
+      "depth": 0.15,
+      "facing": "W"
+    },
+    {
+      "name": "LADDER_1",
+      "type": "ladder",
+      "id": "ladder_1",
+      "x": 3.0,
+      "y": -5.9,
+      "z": 0.0,
+      "climb_height": 3.2,
+      "width": 0.5,
+      "depth": 0.15,
+      "facing": "E"
+    },
+    {
+      "name": "LADDER_2",
+      "type": "ladder",
+      "id": "ladder_2",
+      "x": -8.0,
+      "y": 5.0,
+      "z": 3.2,
+      "climb_height": 3.2,
+      "width": 0.5,
+      "depth": 0.15,
+      "facing": "E"
+    },
+    {
+      "name": "OBJECTIVE_COUNT_SAFE",
+      "type": "objective",
+      "x": 7.0,
+      "y": -4.5,
+      "z": 4.1000000000000005,
+      "room": "count_room"
+    },
+    {
+      "name": "LOOT_TILL",
+      "type": "loot",
+      "x": 0.5,
+      "y": -3.0,
+      "z": 0.9,
+      "room": "dining_room"
+    },
+    {
+      "name": "LOOT_STASH",
+      "type": "loot",
+      "x": 5.0,
+      "y": -3.0,
+      "z": -2.3000000000000003,
+      "room": "stash_room"
+    },
+    {
+      "name": "EXTRACTION_ALLEY",
+      "type": "extraction",
+      "x": -1.0,
+      "y": 6.3,
+      "z": 0.9,
+      "room": "rear_hall"
+    },
+    {
+      "name": "ATTACKER_SPAWN_SPAWN_FRONT",
+      "type": "attacker_spawn",
+      "x": -6.0,
+      "y": -6.3,
+      "z": 0.9,
+      "room": "dining_room"
+    },
+    {
+      "name": "ATTACKER_SPAWN_SPAWN_SIDE",
+      "type": "attacker_spawn",
+      "x": 9.3,
+      "y": -5.0,
+      "z": 0.9,
+      "room": "kitchen"
+    },
+    {
+      "name": "CAMERA_SOCKET_CAM_DINING",
+      "type": "camera_socket",
+      "x": -9.2,
+      "y": 0.4,
+      "z": 2.6,
+      "room": "dining_room"
+    },
+    {
+      "name": "CAMERA_SOCKET_CAM_ALLEY",
+      "type": "camera_socket",
+      "x": 3.5,
+      "y": 6.4,
+      "z": 2.6,
+      "room": "rear_hall"
+    },
+    {
+      "name": "CAMERA_SOCKET_CAM_CLUB",
+      "type": "camera_socket",
+      "x": -9.2,
+      "y": 0.6,
+      "z": 5.800000000000001,
+      "room": "social_club"
+    },
+    {
+      "name": "PATROL_POINT_PAT_DINING",
+      "type": "patrol_point",
+      "x": -5.0,
+      "y": -3.0,
+      "z": 0.9,
+      "room": "dining_room"
+    },
+    {
+      "name": "PATROL_POINT_PAT_KITCHEN",
+      "type": "patrol_point",
+      "x": 4.5,
+      "y": -3.5,
+      "z": 0.9,
+      "room": "kitchen"
+    },
+    {
+      "name": "PATROL_POINT_PAT_HALL",
+      "type": "patrol_point",
+      "x": 0.0,
+      "y": 4.0,
+      "z": 0.9,
+      "room": "rear_hall"
+    },
+    {
+      "name": "PATROL_POINT_PAT_CLUB",
+      "type": "patrol_point",
+      "x": -5.0,
+      "y": -1.5,
+      "z": 4.1000000000000005,
+      "room": "social_club"
+    }
+  ],
+  "rooms": [
+    {
+      "id": "dining_room",
+      "story": 0,
+      "bounds": [
+        -10,
+        -7,
+        2,
+        1
+      ],
+      "role": "public_entry"
+    },
+    {
+      "id": "kitchen",
+      "story": 0,
+      "bounds": [
+        2,
+        -7,
+        10,
+        1
+      ],
+      "role": null
+    },
+    {
+      "id": "walkin_cooler",
+      "story": 0,
+      "bounds": [
+        -10,
+        1,
+        -5,
+        7
+      ],
+      "role": "utility"
+    },
+    {
+      "id": "rear_hall",
+      "story": 0,
+      "bounds": [
+        -5,
+        1,
+        4,
+        7
+      ],
+      "role": null
+    },
+    {
+      "id": "stair_room",
+      "story": 0,
+      "bounds": [
+        4,
+        1,
+        10,
+        7
+      ],
+      "role": null
+    },
+    {
+      "id": "social_club",
+      "story": 1,
+      "bounds": [
+        -10,
+        -7,
+        2,
+        1
+      ],
+      "role": "fortifiable"
+    },
+    {
+      "id": "count_room",
+      "story": 1,
+      "bounds": [
+        2,
+        -7,
+        10,
+        1
+      ],
+      "role": "objective_room"
+    },
+    {
+      "id": "upper_hall",
+      "story": 1,
+      "bounds": [
+        -10,
+        1,
+        10,
+        7
+      ],
+      "role": null
+    },
+    {
+      "id": "dough_cellar",
+      "story": -1,
+      "bounds": [
+        -10,
+        -7,
+        0,
+        7
+      ],
+      "role": null
+    },
+    {
+      "id": "stash_room",
+      "story": -1,
+      "bounds": [
+        0,
+        -7,
+        10,
+        7
+      ],
+      "role": null
+    }
+  ],
+  "objectives": [
+    {
+      "id": "crack_count_safe",
+      "kind": "drill",
+      "x": 7.0,
+      "y": -4.5,
+      "z": 4.1000000000000005,
+      "room": "count_room",
+      "required": true,
+      "duration": 35.0
+    }
+  ],
+  "loot": [
+    {
+      "id": "count_take",
+      "kind": "cash",
+      "x": 7.0,
+      "y": -4.5,
+      "z": 4.1000000000000005,
+      "value": 12000,
+      "bags": 4,
+      "room": "count_room"
+    },
+    {
+      "id": "register_till",
+      "kind": "cash",
+      "x": 0.5,
+      "y": -3.0,
+      "z": 0.9,
+      "value": 800,
+      "bags": 1,
+      "room": "dining_room"
+    },
+    {
+      "id": "cellar_stash",
+      "kind": "cash",
+      "x": 5.0,
+      "y": -3.0,
+      "z": -2.3000000000000003,
+      "value": 3500,
+      "bags": 2,
+      "room": "stash_room"
+    }
+  ],
+  "zones": [
+    {
+      "id": "the_count",
+      "kind": "secure",
+      "story": 1,
+      "bounds": [
+        2,
+        -7,
+        10,
+        1
+      ]
+    },
+    {
+      "id": "alley_extract",
+      "kind": "extraction",
+      "story": 0,
+      "bounds": [
+        -5,
+        1,
+        4,
+        7
+      ]
+    }
+  ],
+  "vertical_links": [
+    {
+      "kind": "stair",
+      "from_story": -1,
+      "to_story": 1,
+      "role": "main_route"
+    },
+    {
+      "kind": "hatch",
+      "from_story": 1,
+      "to_story": 2,
+      "role": "roof_drop",
+      "x": -5.0,
+      "y": 4.0
+    }
+  ],
+  "openings": [
+    {
+      "wall": "S",
+      "kind": "door",
+      "story": 0,
+      "x": -8.0,
+      "y": -7.0,
+      "z": 1.1,
+      "width": 1.4,
+      "height": 2.2,
+      "sill": 0.0,
+      "tag": "front_door",
+      "breach_class": null,
+      "material": null,
+      "vaultable": false,
+      "reinforceable": false,
+      "building": "primos_pizza",
+      "rarity": "rare",
+      "rarity_color": {
+        "tier": "rare",
+        "rank": 2,
+        "color_name": "blue",
+        "hex": "#0070DD",
+        "rgb": [
+          0.0,
+          0.4392,
+          0.8667
+        ]
+      }
+    },
+    {
+      "wall": "S",
+      "kind": "window",
+      "story": 0,
+      "x": -4.0,
+      "y": -7.0,
+      "z": 1.6,
+      "width": 2.2,
+      "height": 1.4,
+      "sill": 0.9,
+      "tag": null,
+      "breach_class": null,
+      "material": null,
+      "vaultable": true,
+      "reinforceable": false,
+      "building": "primos_pizza",
+      "rarity": "rare",
+      "rarity_color": {
+        "tier": "rare",
+        "rank": 2,
+        "color_name": "blue",
+        "hex": "#0070DD",
+        "rgb": [
+          0.0,
+          0.4392,
+          0.8667
+        ]
+      }
+    },
+    {
+      "wall": "S",
+      "kind": "window",
+      "story": 0,
+      "x": 0.6,
+      "y": -7.0,
+      "z": 1.6,
+      "width": 2.2,
+      "height": 1.4,
+      "sill": 0.9,
+      "tag": null,
+      "breach_class": null,
+      "material": null,
+      "vaultable": true,
+      "reinforceable": false,
+      "building": "primos_pizza",
+      "rarity": "rare",
+      "rarity_color": {
+        "tier": "rare",
+        "rank": 2,
+        "color_name": "blue",
+        "hex": "#0070DD",
+        "rgb": [
+          0.0,
+          0.4392,
+          0.8667
+        ]
+      }
+    },
+    {
+      "wall": "S",
+      "kind": "window",
+      "story": 0,
+      "x": 6.0,
+      "y": -7.0,
+      "z": 1.8,
+      "width": 1.4,
+      "height": 1.4,
+      "sill": 1.1,
+      "tag": null,
+      "breach_class": null,
+      "material": null,
+      "vaultable": false,
+      "reinforceable": false,
+      "building": "primos_pizza",
+      "rarity": "rare",
+      "rarity_color": {
+        "tier": "rare",
+        "rank": 2,
+        "color_name": "blue",
+        "hex": "#0070DD",
+        "rgb": [
+          0.0,
+          0.4392,
+          0.8667
+        ]
+      }
+    },
+    {
+      "wall": "W",
+      "kind": "window",
+      "story": 0,
+      "x": -10.0,
+      "y": -4.06,
+      "z": 1.6,
+      "width": 1.8,
+      "height": 1.4,
+      "sill": 0.9,
+      "tag": null,
+      "breach_class": null,
+      "material": null,
+      "vaultable": true,
+      "reinforceable": false,
+      "building": "primos_pizza",
+      "rarity": "rare",
+      "rarity_color": {
+        "tier": "rare",
+        "rank": 2,
+        "color_name": "blue",
+        "hex": "#0070DD",
+        "rgb": [
+          0.0,
+          0.4392,
+          0.8667
+        ]
+      }
+    },
+    {
+      "wall": "E",
+      "kind": "door",
+      "story": 0,
+      "x": 10.0,
+      "y": -2.94,
+      "z": 1.1,
+      "width": 1.2,
+      "height": 2.2,
+      "sill": 0.0,
+      "tag": "kitchen_service",
+      "breach_class": null,
+      "material": null,
+      "vaultable": false,
+      "reinforceable": false,
+      "building": "primos_pizza",
+      "rarity": "rare",
+      "rarity_color": {
+        "tier": "rare",
+        "rank": 2,
+        "color_name": "blue",
+        "hex": "#0070DD",
+        "rgb": [
+          0.0,
+          0.4392,
+          0.8667
+        ]
+      }
+    },
+    {
+      "wall": "N",
+      "kind": "garage",
+      "story": 0,
+      "x": -1.0,
+      "y": 7.0,
+      "z": 1.3,
+      "width": 2.6,
+      "height": 2.6,
+      "sill": 0.0,
+      "tag": "alley_roll",
+      "breach_class": null,
+      "material": null,
+      "vaultable": false,
+      "reinforceable": false,
+      "building": "primos_pizza",
+      "rarity": "rare",
+      "rarity_color": {
+        "tier": "rare",
+        "rank": 2,
+        "color_name": "blue",
+        "hex": "#0070DD",
+        "rgb": [
+          0.0,
+          0.4392,
+          0.8667
+        ]
+      }
+    },
+    {
+      "wall": "N",
+      "kind": "breach",
+      "story": 0,
+      "x": 7.0,
+      "y": 7.0,
+      "z": 1.1,
+      "width": 1.5,
+      "height": 2.2,
+      "sill": 0.0,
+      "tag": "rear_breach",
+      "breach_class": "soft_wall",
+      "material": "drywall",
+      "vaultable": false,
+      "reinforceable": false,
+      "building": "primos_pizza",
+      "rarity": "rare",
+      "rarity_color": {
+        "tier": "rare",
+        "rank": 2,
+        "color_name": "blue",
+        "hex": "#0070DD",
+        "rgb": [
+          0.0,
+          0.4392,
+          0.8667
+        ]
+      }
+    },
+    {
+      "wall": "S",
+      "kind": "window",
+      "story": 1,
+      "x": -6.0,
+      "y": -7.0,
+      "z": 4.8,
+      "width": 1.8,
+      "height": 1.4,
+      "sill": 0.9,
+      "tag": null,
+      "breach_class": null,
+      "material": null,
+      "vaultable": true,
+      "reinforceable": false,
+      "building": "primos_pizza",
+      "rarity": "rare",
+      "rarity_color": {
+        "tier": "rare",
+        "rank": 2,
+        "color_name": "blue",
+        "hex": "#0070DD",
+        "rgb": [
+          0.0,
+          0.4392,
+          0.8667
+        ]
+      }
+    },
+    {
+      "wall": "S",
+      "kind": "window",
+      "story": 1,
+      "x": -1.0,
+      "y": -7.0,
+      "z": 4.8,
+      "width": 1.8,
+      "height": 1.4,
+      "sill": 0.9,
+      "tag": null,
+      "breach_class": null,
+      "material": null,
+      "vaultable": true,
+      "reinforceable": false,
+      "building": "primos_pizza",
+      "rarity": "rare",
+      "rarity_color": {
+        "tier": "rare",
+        "rank": 2,
+        "color_name": "blue",
+        "hex": "#0070DD",
+        "rgb": [
+          0.0,
+          0.4392,
+          0.8667
+        ]
+      }
+    },
+    {
+      "wall": "S",
+      "kind": "window",
+      "story": 1,
+      "x": 6.0,
+      "y": -7.0,
+      "z": 5.0,
+      "width": 1.4,
+      "height": 1.4,
+      "sill": 1.1,
+      "tag": null,
+      "breach_class": null,
+      "material": null,
+      "vaultable": false,
+      "reinforceable": false,
+      "building": "primos_pizza",
+      "rarity": "rare",
+      "rarity_color": {
+        "tier": "rare",
+        "rank": 2,
+        "color_name": "blue",
+        "hex": "#0070DD",
+        "rgb": [
+          0.0,
+          0.4392,
+          0.8667
+        ]
+      }
+    },
+    {
+      "wall": "W",
+      "kind": "window",
+      "story": 1,
+      "x": -10.0,
+      "y": -2.94,
+      "z": 4.8,
+      "width": 1.4,
+      "height": 1.4,
+      "sill": 0.9,
+      "tag": null,
+      "breach_class": null,
+      "material": null,
+      "vaultable": true,
+      "reinforceable": false,
+      "building": "primos_pizza",
+      "rarity": "rare",
+      "rarity_color": {
+        "tier": "rare",
+        "rank": 2,
+        "color_name": "blue",
+        "hex": "#0070DD",
+        "rgb": [
+          0.0,
+          0.4392,
+          0.8667
+        ]
+      }
+    },
+    {
+      "wall": "E",
+      "kind": "window",
+      "story": 1,
+      "x": 10.0,
+      "y": -2.94,
+      "z": 5.0,
+      "width": 1.2,
+      "height": 1.4,
+      "sill": 1.1,
+      "tag": null,
+      "breach_class": null,
+      "material": null,
+      "vaultable": false,
+      "reinforceable": false,
+      "building": "primos_pizza",
+      "rarity": "rare",
+      "rarity_color": {
+        "tier": "rare",
+        "rank": 2,
+        "color_name": "blue",
+        "hex": "#0070DD",
+        "rgb": [
+          0.0,
+          0.4392,
+          0.8667
+        ]
+      }
+    },
+    {
+      "wall": "N",
+      "kind": "window",
+      "story": 1,
+      "x": 3.0,
+      "y": 7.0,
+      "z": 4.9,
+      "width": 1.6,
+      "height": 1.4,
+      "sill": 1.0,
+      "tag": null,
+      "breach_class": null,
+      "material": null,
+      "vaultable": false,
+      "reinforceable": false,
+      "building": "primos_pizza",
+      "rarity": "rare",
+      "rarity_color": {
+        "tier": "rare",
+        "rank": 2,
+        "color_name": "blue",
+        "hex": "#0070DD",
+        "rgb": [
+          0.0,
+          0.4392,
+          0.8667
+        ]
+      }
+    }
+  ],
+  "surfaces": [],
+  "surface_roles": {},
+  "rarity": "rare",
+  "rarity_color": {
+    "tier": "rare",
+    "rank": 2,
+    "color_name": "blue",
+    "hex": "#0070DD",
+    "rgb": [
+      0.0,
+      0.4392,
+      0.8667
+    ]
+  }
+}

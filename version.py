@@ -1,1 +1,1 @@
-LOT_VERSION = "0.17.1"
+LOT_VERSION = "0.17.2"

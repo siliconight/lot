@@ -1,0 +1,944 @@
+{
+  "$schema": "./schema/level.schema.json",
+  "name": "primos_pizza",
+  "mode": "heist",
+  "seed": 1997,
+  "rarity": "rare",
+  "footprint_x": 20.0,
+  "footprint_y": 14.0,
+  "n_stories": 2,
+  "has_basement": true,
+  "story_height": 3.2,
+  "default_material": "brick_ext",
+  "materials": [
+    {
+      "id": "brick_ext",
+      "acoustic": "Concrete",
+      "absorption": 0.72,
+      "damping": 0.62
+    },
+    {
+      "id": "drywall",
+      "acoustic": "Drywall",
+      "absorption": 0.42,
+      "damping": 0.38
+    },
+    {
+      "id": "glass",
+      "acoustic": "Glass",
+      "absorption": 0.08,
+      "damping": 0.05
+    },
+    {
+      "id": "metal",
+      "acoustic": "Metal",
+      "absorption": 0.18,
+      "damping": 0.16
+    },
+    {
+      "id": "wood",
+      "acoustic": "Wood",
+      "absorption": 0.35,
+      "damping": 0.3
+    }
+  ],
+  "auto_exterior": true,
+  "rooms": [
+    {
+      "id": "dining_room",
+      "story": 0,
+      "bounds": [
+        -10,
+        -7,
+        2,
+        1
+      ],
+      "role": "public_entry",
+      "combat_range": "medium"
+    },
+    {
+      "id": "kitchen",
+      "story": 0,
+      "bounds": [
+        2,
+        -7,
+        10,
+        1
+      ],
+      "combat_range": "close"
+    },
+    {
+      "id": "walkin_cooler",
+      "story": 0,
+      "bounds": [
+        -10,
+        1,
+        -5,
+        7
+      ],
+      "role": "utility"
+    },
+    {
+      "id": "rear_hall",
+      "story": 0,
+      "bounds": [
+        -5,
+        1,
+        4,
+        7
+      ],
+      "combat_range": "close"
+    },
+    {
+      "id": "stair_room",
+      "story": 0,
+      "bounds": [
+        4,
+        1,
+        10,
+        7
+      ],
+      "combat_range": "close"
+    },
+    {
+      "id": "social_club",
+      "story": 1,
+      "bounds": [
+        -10,
+        -7,
+        2,
+        1
+      ],
+      "role": "fortifiable",
+      "combat_range": "medium"
+    },
+    {
+      "id": "count_room",
+      "story": 1,
+      "bounds": [
+        2,
+        -7,
+        10,
+        1
+      ],
+      "role": "objective_room",
+      "objective": true,
+      "combat_range": "close"
+    },
+    {
+      "id": "upper_hall",
+      "story": 1,
+      "bounds": [
+        -10,
+        1,
+        10,
+        7
+      ],
+      "combat_range": "medium"
+    },
+    {
+      "id": "dough_cellar",
+      "story": -1,
+      "bounds": [
+        -10,
+        -7,
+        0,
+        7
+      ],
+      "combat_range": "close"
+    },
+    {
+      "id": "stash_room",
+      "story": -1,
+      "bounds": [
+        0,
+        -7,
+        10,
+        7
+      ],
+      "combat_range": "close"
+    }
+  ],
+  "ext_walls": [
+    {
+      "wall": "S",
+      "story": 0,
+      "openings": [
+        {
+          "kind": "door",
+          "pos": -0.4,
+          "width": 1.4,
+          "tag": "front_door"
+        },
+        {
+          "kind": "window",
+          "pos": -0.2,
+          "width": 2.2,
+          "sill": 0.9,
+          "vaultable": true
+        },
+        {
+          "kind": "window",
+          "pos": 0.03,
+          "width": 2.2,
+          "sill": 0.9,
+          "vaultable": true
+        },
+        {
+          "kind": "window",
+          "pos": 0.3,
+          "width": 1.4,
+          "sill": 1.1
+        }
+      ]
+    },
+    {
+      "wall": "W",
+      "story": 0,
+      "openings": [
+        {
+          "kind": "window",
+          "pos": -0.29,
+          "width": 1.8,
+          "sill": 0.9,
+          "vaultable": true
+        }
+      ]
+    },
+    {
+      "wall": "E",
+      "story": 0,
+      "openings": [
+        {
+          "kind": "door",
+          "pos": -0.21,
+          "width": 1.2,
+          "tag": "kitchen_service"
+        }
+      ]
+    },
+    {
+      "wall": "N",
+      "story": 0,
+      "openings": [
+        {
+          "kind": "garage",
+          "pos": -0.05,
+          "width": 2.6,
+          "height": 2.6,
+          "tag": "alley_roll"
+        },
+        {
+          "kind": "breach",
+          "pos": 0.35,
+          "width": 1.5,
+          "breach_class": "soft_wall",
+          "material": "drywall",
+          "tag": "rear_breach"
+        }
+      ]
+    },
+    {
+      "wall": "S",
+      "story": 1,
+      "openings": [
+        {
+          "kind": "window",
+          "pos": -0.3,
+          "width": 1.8,
+          "sill": 0.9,
+          "vaultable": true
+        },
+        {
+          "kind": "window",
+          "pos": -0.05,
+          "width": 1.8,
+          "sill": 0.9,
+          "vaultable": true
+        },
+        {
+          "kind": "window",
+          "pos": 0.3,
+          "width": 1.4,
+          "sill": 1.1
+        }
+      ]
+    },
+    {
+      "wall": "W",
+      "story": 1,
+      "openings": [
+        {
+          "kind": "window",
+          "pos": -0.21,
+          "width": 1.4,
+          "sill": 0.9,
+          "vaultable": true
+        }
+      ]
+    },
+    {
+      "wall": "E",
+      "story": 1,
+      "openings": [
+        {
+          "kind": "window",
+          "pos": -0.21,
+          "width": 1.2,
+          "sill": 1.1
+        }
+      ]
+    },
+    {
+      "wall": "N",
+      "story": 1,
+      "openings": [
+        {
+          "kind": "window",
+          "pos": 0.15,
+          "width": 1.6,
+          "sill": 1.0
+        }
+      ]
+    }
+  ],
+  "partitions": [
+    {
+      "story": 0,
+      "axis": "Y",
+      "pos": 2.0,
+      "start": -7.0,
+      "end": 1.0,
+      "material": "drywall",
+      "openings": [
+        {
+          "kind": "door",
+          "pos": 0.125,
+          "width": 1.1,
+          "tag": "kitchen_pass"
+        }
+      ]
+    },
+    {
+      "story": 0,
+      "axis": "X",
+      "pos": 1.0,
+      "start": -10.0,
+      "end": 10.0,
+      "material": "drywall",
+      "openings": [
+        {
+          "kind": "door",
+          "pos": -0.1,
+          "width": 1.2,
+          "tag": "dining_rear"
+        },
+        {
+          "kind": "door",
+          "pos": 0.35,
+          "width": 1.2,
+          "tag": "kitchen_stairs"
+        }
+      ]
+    },
+    {
+      "story": 0,
+      "axis": "Y",
+      "pos": -5.0,
+      "start": 1.0,
+      "end": 7.0,
+      "material": "metal",
+      "openings": [
+        {
+          "kind": "door",
+          "pos": -0.33,
+          "width": 1.1,
+          "tag": "cooler_door"
+        }
+      ]
+    },
+    {
+      "story": 0,
+      "axis": "Y",
+      "pos": 4.0,
+      "start": 1.0,
+      "end": 7.0,
+      "material": "drywall",
+      "openings": [
+        {
+          "kind": "door",
+          "pos": 0.0,
+          "width": 1.4,
+          "tag": "hall_stairs"
+        }
+      ]
+    },
+    {
+      "story": 1,
+      "axis": "X",
+      "pos": 1.0,
+      "start": -10.0,
+      "end": 10.0,
+      "material": "drywall",
+      "openings": [
+        {
+          "kind": "door",
+          "pos": -0.2,
+          "width": 1.2,
+          "tag": "club_hall"
+        },
+        {
+          "kind": "door",
+          "pos": 0.3,
+          "width": 1.4,
+          "tag": "count_door"
+        }
+      ]
+    },
+    {
+      "story": 1,
+      "axis": "Y",
+      "pos": 2.0,
+      "start": -7.0,
+      "end": 1.0,
+      "material": "drywall",
+      "openings": [
+        {
+          "kind": "breach",
+          "pos": 0.0,
+          "width": 1.4,
+          "breach_class": "soft_wall",
+          "material": "drywall",
+          "tag": "count_breach"
+        }
+      ]
+    },
+    {
+      "story": -1,
+      "axis": "Y",
+      "pos": 0.0,
+      "start": -7.0,
+      "end": 7.0,
+      "material": "brick_ext",
+      "openings": [
+        {
+          "kind": "door",
+          "pos": 0.0,
+          "width": 1.2,
+          "tag": "cellar_door"
+        }
+      ]
+    }
+  ],
+  "stairs": [
+    {
+      "x": 7.5,
+      "y": 4.5,
+      "from_story": -1,
+      "to_story": 1,
+      "style": "switchback",
+      "cut_slabs": true,
+      "run": 5.2
+    }
+  ],
+  "ladders": [
+    {
+      "x": 8.8,
+      "y": -1.0,
+      "from_story": -1,
+      "to_story": 0,
+      "facing": "W",
+      "cut_slabs": true
+    },
+    {
+      "x": 3.0,
+      "y": -5.9,
+      "from_story": 0,
+      "to_story": 1,
+      "facing": "E",
+      "cut_slabs": true
+    },
+    {
+      "x": -8.0,
+      "y": 5.0,
+      "from_story": 1,
+      "to_story": 2,
+      "facing": "E",
+      "cut_slabs": true
+    }
+  ],
+  "vertical_links": [
+    {
+      "kind": "stair",
+      "from_story": -1,
+      "to_story": 1,
+      "role": "main_route"
+    },
+    {
+      "kind": "hatch",
+      "from_story": 1,
+      "to_story": 2,
+      "role": "roof_drop",
+      "x": -5.0,
+      "y": 4.0
+    }
+  ],
+  "parapets": [
+    {
+      "story": 2,
+      "height": 1.0,
+      "thick": 0.3
+    }
+  ],
+  "volumes": [
+    {
+      "name": "the_deli_counter",
+      "x": 1.4,
+      "y": -3.0,
+      "z": 0.55,
+      "size_x": 0.8,
+      "size_y": 3.6,
+      "size_z": 1.1,
+      "collision": "convex",
+      "material": "wood"
+    },
+    {
+      "name": "booth_seating_a",
+      "x": -8.0,
+      "y": -5.5,
+      "z": 0.55,
+      "size_x": 2.0,
+      "size_y": 1.2,
+      "size_z": 1.1,
+      "collision": "convex",
+      "material": "wood"
+    },
+    {
+      "name": "booth_seating_b",
+      "x": -4.5,
+      "y": -6.0,
+      "z": 0.55,
+      "size_x": 2.0,
+      "size_y": 1.2,
+      "size_z": 1.1,
+      "collision": "convex",
+      "material": "wood"
+    },
+    {
+      "name": "arcade_cabinet",
+      "x": -9.0,
+      "y": -0.3,
+      "z": 0.9,
+      "size_x": 0.7,
+      "size_y": 0.8,
+      "size_z": 1.8,
+      "collision": "convex",
+      "material": "metal"
+    },
+    {
+      "name": "payphone",
+      "x": -8.1,
+      "y": 0.5,
+      "z": 0.8,
+      "size_x": 0.5,
+      "size_y": 0.5,
+      "size_z": 1.6,
+      "collision": "convex",
+      "material": "metal"
+    },
+    {
+      "name": "pizza_oven",
+      "x": 5.5,
+      "y": -5.5,
+      "z": 1.0,
+      "size_x": 2.4,
+      "size_y": 1.6,
+      "size_z": 2.0,
+      "collision": "convex",
+      "material": "brick_ext"
+    },
+    {
+      "name": "prep_island",
+      "x": 6.5,
+      "y": -2.0,
+      "z": 0.475,
+      "size_x": 2.6,
+      "size_y": 0.9,
+      "size_z": 0.95,
+      "collision": "convex",
+      "material": "metal"
+    },
+    {
+      "name": "cooler_shelf",
+      "x": -7.5,
+      "y": 4.0,
+      "z": 0.9,
+      "size_x": 1.8,
+      "size_y": 0.5,
+      "size_z": 1.8,
+      "collision": "convex",
+      "material": "metal"
+    },
+    {
+      "name": "keg_stack",
+      "x": -4.0,
+      "y": 6.2,
+      "z": 0.5,
+      "size_x": 1.2,
+      "size_y": 1.2,
+      "size_z": 1.0,
+      "collision": "convex",
+      "material": "metal"
+    },
+    {
+      "name": "supply_shelf",
+      "x": 9.2,
+      "y": 2.0,
+      "z": 0.8,
+      "size_x": 1.2,
+      "size_y": 0.5,
+      "size_z": 1.6,
+      "collision": "convex",
+      "material": "metal"
+    },
+    {
+      "name": "card_table_a",
+      "x": -7.0,
+      "y": -4.5,
+      "z": 3.6,
+      "size_x": 1.4,
+      "size_y": 1.4,
+      "size_z": 0.8,
+      "collision": "convex",
+      "material": "wood"
+    },
+    {
+      "name": "card_table_b",
+      "x": -3.5,
+      "y": -3.0,
+      "z": 3.6,
+      "size_x": 1.4,
+      "size_y": 1.4,
+      "size_z": 0.8,
+      "collision": "convex",
+      "material": "wood"
+    },
+    {
+      "name": "card_table_c",
+      "x": -7.5,
+      "y": 0.0,
+      "z": 3.6,
+      "size_x": 1.4,
+      "size_y": 1.4,
+      "size_z": 0.8,
+      "collision": "convex",
+      "material": "wood"
+    },
+    {
+      "name": "club_bar",
+      "x": -8.8,
+      "y": -5.5,
+      "z": 3.7750000000000004,
+      "size_x": 0.8,
+      "size_y": 2.8,
+      "size_z": 1.15,
+      "collision": "convex",
+      "material": "wood"
+    },
+    {
+      "name": "jukebox",
+      "x": 1.0,
+      "y": -6.0,
+      "z": 3.95,
+      "size_x": 0.9,
+      "size_y": 0.7,
+      "size_z": 1.5,
+      "collision": "convex",
+      "material": "metal"
+    },
+    {
+      "name": "count_safe",
+      "x": 8.5,
+      "y": -5.5,
+      "z": 3.95,
+      "size_x": 1.2,
+      "size_y": 1.0,
+      "size_z": 1.5,
+      "collision": "convex",
+      "material": "metal"
+    },
+    {
+      "name": "count_desk",
+      "x": 5.0,
+      "y": -5.8,
+      "z": 3.575,
+      "size_x": 1.6,
+      "size_y": 0.8,
+      "size_z": 0.75,
+      "collision": "convex",
+      "material": "wood"
+    },
+    {
+      "name": "money_rack",
+      "x": 8.9,
+      "y": -1.0,
+      "z": 4.1000000000000005,
+      "size_x": 0.5,
+      "size_y": 1.8,
+      "size_z": 1.8,
+      "collision": "convex",
+      "material": "metal"
+    },
+    {
+      "name": "box_stack",
+      "x": 0.0,
+      "y": 5.5,
+      "z": 3.7,
+      "size_x": 1.6,
+      "size_y": 1.2,
+      "size_z": 1.0,
+      "collision": "convex",
+      "material": "wood"
+    },
+    {
+      "name": "file_cabinet",
+      "x": 4.0,
+      "y": 6.3,
+      "z": 3.9000000000000004,
+      "size_x": 0.9,
+      "size_y": 0.5,
+      "size_z": 1.4,
+      "collision": "convex",
+      "material": "metal"
+    },
+    {
+      "name": "dough_mixer",
+      "x": -8.0,
+      "y": -5.5,
+      "z": -2.5,
+      "size_x": 1.0,
+      "size_y": 1.0,
+      "size_z": 1.4,
+      "collision": "convex",
+      "material": "metal"
+    },
+    {
+      "name": "cellar_shelf_a",
+      "x": -7.0,
+      "y": 3.0,
+      "z": -2.3000000000000003,
+      "size_x": 2.6,
+      "size_y": 0.6,
+      "size_z": 1.8,
+      "collision": "convex",
+      "material": "metal"
+    },
+    {
+      "name": "cellar_shelf_b",
+      "x": -4.0,
+      "y": -4.0,
+      "z": -2.3000000000000003,
+      "size_x": 2.6,
+      "size_y": 0.6,
+      "size_z": 1.8,
+      "collision": "convex",
+      "material": "metal"
+    },
+    {
+      "name": "stash_crates",
+      "x": 5.0,
+      "y": -4.0,
+      "z": -2.7,
+      "size_x": 1.4,
+      "size_y": 1.4,
+      "size_z": 1.0,
+      "collision": "convex",
+      "material": "wood"
+    },
+    {
+      "name": "boiler",
+      "x": 3.0,
+      "y": 5.5,
+      "z": -2.25,
+      "size_x": 1.2,
+      "size_y": 1.2,
+      "size_z": 1.9,
+      "collision": "convex",
+      "material": "metal"
+    }
+  ],
+  "markers": [
+    {
+      "type": "objective",
+      "id": "COUNT_SAFE",
+      "x": 7.0,
+      "y": -4.5,
+      "z": 4.1000000000000005,
+      "room": "count_room"
+    },
+    {
+      "type": "loot",
+      "id": "TILL",
+      "x": 0.5,
+      "y": -3.0,
+      "z": 0.9,
+      "room": "dining_room"
+    },
+    {
+      "type": "loot",
+      "id": "STASH",
+      "x": 5.0,
+      "y": -3.0,
+      "z": -2.3000000000000003,
+      "room": "stash_room"
+    },
+    {
+      "type": "extraction",
+      "id": "ALLEY",
+      "x": -1.0,
+      "y": 6.3,
+      "z": 0.9,
+      "room": "rear_hall"
+    },
+    {
+      "type": "attacker_spawn",
+      "id": "SPAWN_FRONT",
+      "x": -6.0,
+      "y": -6.3,
+      "z": 0.9,
+      "room": "dining_room"
+    },
+    {
+      "type": "attacker_spawn",
+      "id": "SPAWN_SIDE",
+      "x": 9.3,
+      "y": -5.0,
+      "z": 0.9,
+      "room": "kitchen"
+    },
+    {
+      "type": "camera_socket",
+      "id": "CAM_DINING",
+      "x": -9.2,
+      "y": 0.4,
+      "z": 2.6,
+      "room": "dining_room"
+    },
+    {
+      "type": "camera_socket",
+      "id": "CAM_ALLEY",
+      "x": 3.5,
+      "y": 6.4,
+      "z": 2.6,
+      "room": "rear_hall"
+    },
+    {
+      "type": "camera_socket",
+      "id": "CAM_CLUB",
+      "x": -9.2,
+      "y": 0.6,
+      "z": 5.800000000000001,
+      "room": "social_club"
+    },
+    {
+      "type": "patrol_point",
+      "id": "PAT_DINING",
+      "x": -5.0,
+      "y": -3.0,
+      "z": 0.9,
+      "room": "dining_room"
+    },
+    {
+      "type": "patrol_point",
+      "id": "PAT_KITCHEN",
+      "x": 4.5,
+      "y": -3.5,
+      "z": 0.9,
+      "room": "kitchen"
+    },
+    {
+      "type": "patrol_point",
+      "id": "PAT_HALL",
+      "x": 0.0,
+      "y": 4.0,
+      "z": 0.9,
+      "room": "rear_hall"
+    },
+    {
+      "type": "patrol_point",
+      "id": "PAT_CLUB",
+      "x": -5.0,
+      "y": -1.5,
+      "z": 4.1000000000000005,
+      "room": "social_club"
+    }
+  ],
+  "objectives": [
+    {
+      "id": "crack_count_safe",
+      "kind": "drill",
+      "x": 7.0,
+      "y": -4.5,
+      "z": 4.1000000000000005,
+      "room": "count_room",
+      "required": true,
+      "duration": 35.0
+    }
+  ],
+  "loot": [
+    {
+      "id": "count_take",
+      "kind": "cash",
+      "x": 7.0,
+      "y": -4.5,
+      "z": 4.1000000000000005,
+      "value": 12000,
+      "bags": 4,
+      "room": "count_room"
+    },
+    {
+      "id": "register_till",
+      "kind": "cash",
+      "x": 0.5,
+      "y": -3.0,
+      "z": 0.9,
+      "value": 800,
+      "bags": 1,
+      "room": "dining_room"
+    },
+    {
+      "id": "cellar_stash",
+      "kind": "cash",
+      "x": 5.0,
+      "y": -3.0,
+      "z": -2.3000000000000003,
+      "value": 3500,
+      "bags": 2,
+      "room": "stash_room"
+    }
+  ],
+  "zones": [
+    {
+      "id": "the_count",
+      "kind": "secure",
+      "story": 1,
+      "bounds": [
+        2,
+        -7,
+        10,
+        1
+      ]
+    },
+    {
+      "id": "alley_extract",
+      "kind": "extraction",
+      "story": 0,
+      "bounds": [
+        -5,
+        1,
+        4,
+        7
+      ]
+    }
+  ]
+}
