@@ -1,3 +1,19 @@
+## [0.18.0] - Site lighting: merge building lights + exterior streetlights
+
+- merge_lights(): merges every building's <name>.lights.json into one
+  <site>.site.lights.json -- each anchor offset to world space and id-namespaced
+  by building (mirrors merge_gameplay's offset+rotation+namespacing), plus the
+  exterior lights Lot owns. Deterministic; consumed by Lux's light-anchor loader
+  exactly like a single building's manifest. Written in assemble() next to
+  .site.gameplay.json and .tscn.
+- Exterior streetlights Lot derives (Deli Counter can't see outdoors): a
+  streetlight row down each path (angle + count from the road), and a ring
+  around the ground perimeter (one row per edge).
+- Building lights resolved via each building's 'gameplay'/'glb' ref
+  (<name>.lights.json), or an explicit 'lights' field; missing files skip
+  cleanly. specs/bank.lights.json + warehouse.lights.json added for the demo.
+- 4 new tests (35 total).
+
 ## [0.17.2] - primos_demo: the showcase site (Deli Counter PoC staging)
 - specs/primos_demo.json + specs/primos_demo_buildings/: "Primo's Pizza &
   Social Club" (DC 0.59.0's showcase spec) staged as a one-building demo

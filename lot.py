@@ -202,6 +202,112 @@ def merge_gameplay(site_spec, base_dir):
 
 
 # ---------------------------------------------------------------------------
+# lights.json merge  (compose each building's baked light anchors + exterior)
+# ---------------------------------------------------------------------------
+STREETLIGHT_H = 6.0        # pole-top height (Blender Z-up metres)
+
+
+def _lights_ref_for(b):
+    """The building's <name>.lights.json: an explicit 'lights' field, else
+    derived from its gameplay/glb reference."""
+    if b.get("lights"):
+        return b["lights"]
+    ref = b.get("gameplay") or b.get("glb") or ""
+    if ref.endswith(".gameplay.json"):
+        return ref[:-len(".gameplay.json")] + ".lights.json"
+    if ref.endswith(".glb"):
+        return ref[:-len(".glb")] + ".lights.json"
+    return None
+
+
+def _streetlight_anchors(site_spec):
+    """Exterior lights Lot owns (Deli Counter can't see the outdoors): a
+    streetlight row down each path, and a ring around the ground perimeter."""
+    anchors = []
+    bmap = {b["id"]: b for b in site_spec["buildings"]}
+
+    for i, p in enumerate(site_spec.get("paths", [])):
+        a = bmap[p["from"]]["at"] if "from" in p else p["a"]
+        b2 = bmap[p["to"]]["at"] if "to" in p else p["b"]
+        (ax, ay), (bx, by) = a, b2
+        length = math.hypot(bx - ax, by - ay)
+        if length < 1e-3:
+            continue
+        count = max(2, min(8, round(length / 10.0)))
+        anchors.append({
+            "id": "site/path_%d_lights" % i, "type": "streetlight",
+            "source": "derived", "building": None,
+            "pos": [round((ax + bx) / 2, 3), round((ay + by) / 2, 3), STREETLIGHT_H],
+            "rot_y": round(math.degrees(math.atan2(by - ay, bx - ax)) % 360, 3),
+            "row": {"count": count, "spacing": round(length / count, 3)},
+            "reacts_to_alarm": False,
+        })
+
+    g = site_spec.get("ground")
+    if g:
+        hx, hy = g["size_x"] / 2.0, g["size_y"] / 2.0
+        inset = 2.0
+        # (name, x, y, rot_y, span-along-the-edge)
+        edges = [
+            ("s", 0.0, -(hy - inset), 0.0, g["size_x"]),
+            ("n", 0.0, (hy - inset), 0.0, g["size_x"]),
+            ("w", -(hx - inset), 0.0, 90.0, g["size_y"]),
+            ("e", (hx - inset), 0.0, 90.0, g["size_y"]),
+        ]
+        for name, x, y, rot, span in edges:
+            count = max(2, min(10, round(span / 15.0)))
+            anchors.append({
+                "id": "site/perimeter_%s_lights" % name, "type": "streetlight",
+                "source": "derived", "building": None,
+                "pos": [round(x, 3), round(y, 3), STREETLIGHT_H], "rot_y": rot,
+                "row": {"count": count, "spacing": round(span / count, 3)},
+                "reacts_to_alarm": False,
+            })
+    return anchors
+
+
+def merge_lights(site_spec, base_dir):
+    """Merge every building's <name>.lights.json into one site-level lighting
+    manifest: each anchor offset to world space and id-namespaced by building
+    (mirrors merge_gameplay), plus the exterior streetlights Lot derives.
+    Deterministic. Consumed by Lux's light-anchor loader."""
+    site = {
+        "light_manifest_version": "1.0.0",
+        "site": site_spec["name"],
+        "space": ("Blender Z-up, meters; rot_y = degrees about up; "
+                  "pos is the fixture location"),
+        "rig_library": "lux",
+        "anchors": [],
+    }
+    for b in site_spec["buildings"]:
+        bid = b["id"]
+        placement = {"at": b["at"], "rot": b.get("rot", 0)}
+        ref = _lights_ref_for(b)
+        if not ref:
+            continue
+        lp = os.path.join(base_dir, ref)
+        if not os.path.exists(lp):
+            continue
+        with open(lp, encoding="utf-8") as f:
+            lm = json.load(f)
+        for a in lm.get("anchors", []):
+            wa = dict(a)
+            wa["id"] = f"{bid}/{a.get('id', 'light')}"
+            wa["building"] = bid
+            x, y, z = a.get("pos", [0.0, 0.0, 0.0])
+            wx, wy, wz = _place_point(x, y, z, placement)
+            wa["pos"] = [round(wx, 4), round(wy, 4), round(wz, 4)]
+            if "rot_y" in a:
+                wa["rot_y"] = (a["rot_y"] + placement["rot"]) % 360
+            if isinstance(a.get("room"), str):
+                wa["room"] = f"{bid}/{a['room']}"
+            site["anchors"].append(wa)
+
+    site["anchors"].extend(_streetlight_anchors(site_spec))
+    return site
+
+
+# ---------------------------------------------------------------------------
 # Godot scene generation
 # ---------------------------------------------------------------------------
 def _godot_transform(at, rot, z=0.0):
@@ -900,11 +1006,21 @@ def assemble(site_spec_path, out_dir=None, walkable=False, navqa=False, preview=
     with open(gp_out, "w", encoding="utf-8") as f:
         json.dump(merged, f, indent=2)
 
+    # site-level lighting contract: every building's baked light anchors merged
+    # to world space + namespaced, plus Lot's exterior streetlights. Lux's light
+    # loader bakes this the same way it bakes a single building's .lights.json.
+    lights_out = os.path.join(out_dir, f"{site_spec['name']}.site.lights.json")
+    merged_lights = merge_lights(site_spec, base_dir)
+    with open(lights_out, "w", encoding="utf-8") as f:
+        json.dump(merged_lights, f, indent=2)
+    print(f"[lot] site lights -> {lights_out} "
+          f"({len(merged_lights['anchors'])} anchors)")
+
     tscn_out = os.path.join(out_dir, f"{site_spec['name']}.tscn")
     write_godot_scene(site_spec, merged, tscn_out, preview=preview)
 
     result = {
-        "gameplay": gp_out, "scene": tscn_out,
+        "gameplay": gp_out, "scene": tscn_out, "lights": lights_out,
         "buildings": len(site_spec["buildings"]),
         "markers": len(merged["markers"]),
         "rooms": len(merged["rooms"]),

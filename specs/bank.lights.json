@@ -1,0 +1,26 @@
+{
+  "light_manifest_version": "1.0.0",
+  "building_id": "bank",
+  "theme": "greybox",
+  "space": "Blender Z-up, meters; rot_y = degrees about up; pos is the fixture location",
+  "rig_library": "lux",
+  "anchors": [
+    {
+      "id": "lobby_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        0.0,
+        0.0,
+        3.4
+      ],
+      "rot_y": 0.0,
+      "room": "lobby",
+      "row": {
+        "count": 5,
+        "spacing": 3.2
+      },
+      "reacts_to_alarm": true
+    }
+  ]
+}

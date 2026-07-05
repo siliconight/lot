@@ -639,3 +639,46 @@ if __name__ == "__main__":
         if name.startswith("test_") and callable(fn):
             fn(); n += 1
     print(f"\nAll {n} Lot tests passed.")
+
+
+def test_lights_merge_offset_namespace():
+    """Building light anchors are offset to world space and namespaced,
+    mirroring the gameplay merge."""
+    spec = json.load(open(os.path.join(SPECS, "example_compound.json")))
+    m = lot.merge_lights(spec, SPECS)
+    by_id = {a["id"]: a for a in m["anchors"]}
+    # bank at origin, rot 0 -> unchanged + namespaced
+    assert "bank/lobby_ceiling" in by_id
+    assert by_id["bank/lobby_ceiling"]["room"] == "bank/lobby"
+    # warehouse at (45,10) rot 90 -> anchor offset + rot_y composed
+    wh = by_id["warehouse/main_floor_ceiling"]
+    assert abs(wh["pos"][0] - 45.0) < 1e-3 and abs(wh["pos"][1] - 10.0) < 1e-3
+    assert wh["rot_y"] == 90
+    assert wh["building"] == "warehouse"
+
+
+def test_lights_streetlights_paths_and_perimeter():
+    """Lot derives exterior streetlights along paths and the ground perimeter."""
+    spec = json.load(open(os.path.join(SPECS, "example_compound.json")))
+    m = lot.merge_lights(spec, SPECS)
+    ids = [a["id"] for a in m["anchors"] if a["type"] == "streetlight"]
+    assert "site/path_0_lights" in ids                 # a row down the road
+    assert {"site/perimeter_s_lights", "site/perimeter_n_lights",
+            "site/perimeter_w_lights", "site/perimeter_e_lights"} <= set(ids)
+    # streetlights are exterior: not alarm-reactive, mounted high
+    sl = next(a for a in m["anchors"] if a["id"] == "site/path_0_lights")
+    assert sl["reacts_to_alarm"] is False and sl["pos"][2] == lot.STREETLIGHT_H
+
+
+def test_lights_manifest_shape():
+    spec = json.load(open(os.path.join(SPECS, "example_compound.json")))
+    m = lot.merge_lights(spec, SPECS)
+    assert m["light_manifest_version"] == "1.0.0"
+    assert m["rig_library"] == "lux" and m["site"] == "example_compound"
+
+
+def test_lights_deterministic():
+    spec = json.load(open(os.path.join(SPECS, "example_compound.json")))
+    a = json.dumps(lot.merge_lights(spec, SPECS), sort_keys=True)
+    b = json.dumps(lot.merge_lights(spec, SPECS), sort_keys=True)
+    assert a == b
