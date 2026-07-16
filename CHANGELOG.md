@@ -1,3 +1,39 @@
+## [0.18.3] - Run artifacts land in _runs\
+
+- `tools/night_strip.ps1` + `tools/night_strip_dress.ps1` (dress runner also discovers prior runs under `_runs\`, factory-root fallback) write run folders and results zips under the factory's `_runs\`
+  directory instead of the factory root — tool repos and the coordination
+  files stay alone at the top level. No behavior change.
+
+## [0.18.2] - Night strip art pass (the A/B against the reel)
+
+- tools/night_strip_dress.ps1: consumes a night_strip run's work dir and
+  applies the certified art chain per store — Patina procedural surfacing
+  (delco_1997_gas_station theme, dressing anchors emitted; validated against
+  the real strip shells: 37.5k/10.9k/14.2k tris, collision untouched) ->
+  Zoo kit modules from the DC slots + Zoo dressing from Patina's json (real
+  Blender; no --skins: that flag takes a Pixelcoat pack FOLDER and no pack
+  run exists yet — Patina carries the surfacing). Restages and re-shoots the
+  IDENTICAL seven framings for a pure graybox-vs-dressed A/B.
+- tools/visual_night_strip_dressed.gd: per-store asset stacks (patina shell
+  + kit + dressing) at the site transforms; fixtures + bake unchanged.
+
+## [0.18.1] - The DELCO night strip (streetlight coverage + reel-target look)
+
+- specs/night_strip.site.json: three DC storefront presets (corner_deli /
+  pawn_shop / auto_shop) along a lit street. Heist-routed (deli -> pawn ->
+  auto), 84x44 ground, one street path + two building links -> Lot derives
+  ~7 streetlight rows (26 poles) plus the perimeter ring. Spec structure
+  validated end-to-end against real lot.py (mode gates passed, walkable
+  scene emitted, merged manifest carried all five anchor types).
+- tools/night_strip.ps1: end-to-end runner - DC x3 (real Blender) -> Lot
+  assemble + lights merge -> Zoo fixture build (all species incl. the
+  streetlight leg, LuxEmit markers) -> Lux headless harness (bake + marker
+  gates, first hardware run of LuxStreetlightRig at site scale) -> windowed
+  night visual pass -> results zip.
+- tools/visual_night_strip.gd: reel-comparison shot list (down-street, pawn
+  storefront, streetlight row, wide, deli corner, the power-cut beat, and a
+  Gas Station Fluorescent contrast frame), Blue Hour grade.
+
 ## [0.18.0] - Site lighting: merge building lights + exterior streetlights
 
 - merge_lights(): merges every building's <name>.lights.json into one

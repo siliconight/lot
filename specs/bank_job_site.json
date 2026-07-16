@@ -1,0 +1,12 @@
+{
+  "name": "bank_job_site",
+  "mode": "heist",
+  "buildings": [
+    {"id": "bank", "glb": "bank_job.glb", "gameplay": "bank_job.gameplay.json", "spec": "bank_job.json", "at": [0, 0], "rot": 0}
+  ],
+  "spawn": "bank",
+  "extraction": "bank",
+  "objective": "bank",
+  "ground": {"size_x": 60, "size_y": 50},
+  "perimeter": {"height": 8}
+}

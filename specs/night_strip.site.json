@@ -1,0 +1,66 @@
+{
+ "name": "night_strip",
+ "mode": "heist",
+ "buildings": [
+  {
+   "id": "deli",
+   "glb": "night_deli.glb",
+   "gameplay": "night_deli.gameplay.json",
+   "at": [
+    -24,
+    9
+   ],
+   "rot": 0
+  },
+  {
+   "id": "pawn",
+   "glb": "night_pawn.glb",
+   "gameplay": "night_pawn.gameplay.json",
+   "at": [
+    0,
+    9
+   ],
+   "rot": 0
+  },
+  {
+   "id": "auto",
+   "glb": "night_auto.glb",
+   "gameplay": "night_auto.gameplay.json",
+   "at": [
+    24,
+    9
+   ],
+   "rot": 0
+  }
+ ],
+ "spawn": "deli",
+ "extraction": "auto",
+ "objective": "pawn",
+ "paths": [
+  {
+   "from": "deli",
+   "to": "pawn"
+  },
+  {
+   "from": "pawn",
+   "to": "auto"
+  },
+  {
+   "a": [
+    -36,
+    0
+   ],
+   "b": [
+    36,
+    0
+   ]
+  }
+ ],
+ "ground": {
+  "size_x": 84,
+  "size_y": 44
+ },
+ "perimeter": {
+  "height": 8
+ }
+}

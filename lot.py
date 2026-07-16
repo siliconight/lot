@@ -121,9 +121,10 @@ def merge_gameplay(site_spec, base_dir):
             record["glb"] = b["glb"]      # preserved for back-compat readers
         if "scene" in b:
             record["scene"] = b["scene"]
-        gp_path = os.path.join(base_dir, b["gameplay"])
-        if not os.path.exists(gp_path):
-            # a building with no gameplay.json still places fine; skip its data
+        gp_ref = b.get("gameplay")
+        gp_path = os.path.join(base_dir, gp_ref) if gp_ref else None
+        if not gp_path or not os.path.exists(gp_path):
+            # a building with no gameplay ref/file still places fine; skip its data
             site["buildings"].append(record)
             continue
         with open(gp_path, encoding="utf-8") as f:
