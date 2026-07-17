@@ -3,3 +3,7 @@ __pycache__/
 *.site.gameplay.json
 # generated scenes from the example (regenerate with: python lot.py)
 specs/example_compound.tscn
+# Reference pvp site consumes BUILT Deli Counter outputs — regenerable,
+# never committed (see specs/ref_pvp/README.md).
+specs/ref_pvp/buildings/
+*.preview.gameplay.json

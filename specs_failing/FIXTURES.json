@@ -1,0 +1,18 @@
+{
+ "fx_site_single_approach.json": {
+  "reason": "objective building has one approach route",
+  "expected_code": "approach"
+ },
+ "fx_site_no_extraction_route.json": {
+  "reason": "no route from objective to extraction",
+  "expected_code": "extraction"
+ },
+ "fx_site_no_staging.json": {
+  "reason": "no attacker staging marker at site level",
+  "expected_code": "staging"
+ },
+ "fx_site_missing_designation.json": {
+  "reason": "pvp_heist site without an extraction designation",
+  "expected_code": "extraction"
+ }
+}

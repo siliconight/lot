@@ -22,7 +22,7 @@ Two kinds of output, mirroring Deli Counter:
     structural needs aren't met — the site echo of the per-mode gates.
 
 Site spec additions (all optional; no `mode` => pure intel, no gates):
-  "mode": "assault" | "heist" | "survival",
+  "mode": "assault" | "heist" | "survival" | "pvp_heist",
   "objective": "<building id>",      # which building holds the site objective
   "spawn": "<building id>",          # where attackers/crew start
   "extraction": "<building id>",     # heist: where you exit
@@ -140,6 +140,13 @@ def analyze(site_spec):
             f"buildings with no declared path-route from '{root}': "
             f"{', '.join(isolated)}")
 
+    # pvp staging intel: attacker/defender site markers (never gates here)
+    sm = site_spec.get("site_markers", [])
+    report["intel"]["attacker_site_markers"] = sum(
+        1 for m in sm if m.get("type") in ("attacker_spawn", "crew_spawn"))
+    report["intel"]["defender_site_markers"] = sum(
+        1 for m in sm if m.get("type") == "defender_spawn")
+
     # route distances between consecutive designated points (intel)
     objv = site_spec.get("objective")
     if objv:
@@ -207,6 +214,127 @@ def gate(site_spec):
                 f"survival: no route from safe building '{safe}' to holdout "
                 f"'{hold}'")
 
+    elif mode == "pvp_heist":
+        # attacker-vs-defender production profile: attackers stage outside,
+        # push a defended objective building, then extract. The site must
+        # declare all three legs AND give attackers >= 2 distinct approaches.
+        spawn = need("spawn", "the attacker staging building")
+        obj = need("objective", "the defended objective building")
+        extr = need("extraction", "where attackers exit with the objective")
+        if not _route_exists(adj, spawn, obj):
+            raise SiteTacticalError(
+                f"pvp_heist: no declared path-route from attacker staging "
+                f"'{spawn}' to objective '{obj}'")
+        if not _route_exists(adj, obj, extr):
+            raise SiteTacticalError(
+                f"pvp_heist: no declared path-route from objective '{obj}' "
+                f"to extraction '{extr}'")
+        n = _distinct_routes_to(adj, obj, spawn)
+        if n < 2:
+            raise SiteTacticalError(
+                f"pvp_heist: objective building '{obj}' has {n} approach "
+                f"route(s); pvp_heist requires >= 2 distinct attacker "
+                f"approaches (declare another path to it)")
+        stag = [m for m in site_spec.get("site_markers", [])
+                if m.get("type") in ("attacker_spawn", "crew_spawn")]
+        if not stag:
+            raise SiteTacticalError(
+                "pvp_heist: no attacker staging site_marker "
+                "(type attacker_spawn/crew_spawn); attackers need a "
+                "site-level spawn outside the defended building")
+
     else:
         raise SiteTacticalError(
-            f"unknown site mode '{mode}' (expected assault/heist/survival)")
+            f"unknown site mode '{mode}' "
+            f"(expected assault/heist/survival/pvp_heist)")
+
+
+# ---------------------------------------------------------------------------
+# pvp_heist post-merge gates (need the merged, world-space gameplay data)
+# ---------------------------------------------------------------------------
+
+# Opposing spawns closer than this (world meters) fail the site. Tune per
+# project via site_spec["pvp"]["min_spawn_separation"].
+DEFAULT_MIN_SPAWN_SEPARATION = 25.0
+
+
+def gate_merged(site_spec, merged):
+    """pvp_heist gates that only exist after merge_gameplay: defender spawns
+    (they live inside building gameplay.json files, not the site spec),
+    opposing-spawn separation, and the defenders' protected hold. Raises
+    SiteTacticalError; returns a report dict for the merged contract."""
+    if site_spec.get("mode") != "pvp_heist":
+        return None
+
+    markers = merged.get("markers", [])
+    defenders = [m for m in markers if m.get("type") == "defender_spawn"]
+    attackers = [m for m in markers
+                 if m.get("type") in ("attacker_spawn", "crew_spawn")]
+    site_stage = [m for m in site_spec.get("site_markers", [])
+                  if m.get("type") in ("attacker_spawn", "crew_spawn")]
+
+    if not defenders:
+        raise SiteTacticalError(
+            "pvp_heist: no defender_spawn marker anywhere in the merged site "
+            "-- the objective building's gameplay.json must place defenders")
+
+    obj = site_spec.get("objective")
+    def_buildings = sorted({m.get("building") for m in defenders
+                            if m.get("building")})
+    report = {
+        "defender_spawns": len(defenders),
+        "defender_buildings": def_buildings,
+        "attacker_building_markers": len(attackers),
+        "attacker_site_markers": len(site_stage),
+        "min_spawn_separation": None,
+        "protected_hold": None,
+    }
+
+    # opposing-spawn separation: every attacker staging point (site marker
+    # world position) vs every defender spawn (merged world position)
+    pvp_cfg = site_spec.get("pvp", {})
+    min_sep = float(pvp_cfg.get("min_spawn_separation",
+                                DEFAULT_MIN_SPAWN_SEPARATION))
+    worst = None
+    for a in site_stage:
+        ax, ay = a.get("at", [a.get("x", 0.0), a.get("y", 0.0)])[:2] \
+            if isinstance(a.get("at"), (list, tuple)) \
+            else (a.get("x", 0.0), a.get("y", 0.0))
+        for d in defenders:
+            dist = math.hypot(d.get("x", 0.0) - ax, d.get("y", 0.0) - ay)
+            if worst is None or dist < worst:
+                worst = dist
+    if worst is not None:
+        report["min_spawn_separation"] = round(worst, 2)
+        if worst < min_sep:
+            raise SiteTacticalError(
+                f"pvp_heist: opposing spawns are {worst:.1f} m apart "
+                f"(minimum {min_sep:.0f} m) -- attackers would start on top "
+                f"of the defense")
+
+    # protected hold: defenders spawn in the objective building itself, or in
+    # a building with a declared route to it that avoids the attacker staging
+    # building (they must be able to reach their post without crossing the
+    # attacker approach).
+    if obj:
+        adj = build_graph(site_spec)
+        spawn_b = site_spec.get("spawn")
+        ok = False
+        for db in def_buildings or ([] if not defenders else [None]):
+            if db == obj:
+                ok = True
+                break
+            if db and db in adj:
+                sub = {k: (v - {spawn_b}) for k, v in adj.items()
+                       if k != spawn_b}
+                if obj in _reachable_from(sub, db):
+                    ok = True
+                    break
+        report["protected_hold"] = ok
+        if not ok:
+            raise SiteTacticalError(
+                "pvp_heist: defenders spawn neither in the objective building "
+                "nor in one with a protected route to it (every rotation "
+                "crosses the attacker staging building)")
+
+    return report

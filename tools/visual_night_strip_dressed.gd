@@ -12,19 +12,19 @@ const SETTLE: int = 10
 
 # Blender (x, y) at -> Godot (x, 0, -y). Sync with night_strip.site.json.
 const STORES: Array = [
-	{"glbs": ["night_deli.patina.glb", "night_deli_kit.glb", "night_deli_dressing.glb"], "pos": Vector3(-24, 0, -9)},
+	{"glbs": ["night_deli.patina.glb", "night_deli_kit.glb", "night_deli_dressing.glb"], "pos": Vector3(-34, 0, -21)},
 	{"glbs": ["night_pawn.patina.glb", "night_pawn_kit.glb", "night_pawn_dressing.glb"], "pos": Vector3(0, 0, -9)},
-	{"glbs": ["night_auto.patina.glb", "night_auto_kit.glb", "night_auto_dressing.glb"], "pos": Vector3(24, 0, -9)},
+	{"glbs": ["night_auto.patina.glb", "night_auto_kit.glb", "night_auto_dressing.glb"], "pos": Vector3(28, 0, -11)},
 ]
 
 const SHOT_LIST: Array = [
-	{"name": "01_down_street",     "pos": Vector3(-34, 2.2, 0),  "look": Vector3(30, 4, -2),   "preset": &"Blue Hour",                "powered": true},
-	{"name": "02_storefront_pawn", "pos": Vector3(0, 1.8, 4.5),  "look": Vector3(0, 2.8, -7),  "preset": &"Blue Hour",                "powered": true},
-	{"name": "03_streetlight_row", "pos": Vector3(10, 1.8, 2.0), "look": Vector3(-16, 5.5, 0), "preset": &"Blue Hour",                "powered": true},
-	{"name": "04_strip_wide",      "pos": Vector3(0, 12, 26),    "look": Vector3(0, 2, -8),    "preset": &"Blue Hour",                "powered": true},
-	{"name": "05_deli_corner",     "pos": Vector3(-30, 1.9, 3),  "look": Vector3(-22, 2.8, -8),"preset": &"Blue Hour",                "powered": true},
-	{"name": "06_power_cut",       "pos": Vector3(-34, 2.2, 0),  "look": Vector3(30, 4, -2),   "preset": &"Blue Hour",                "powered": false},
-	{"name": "07_fluoro_contrast", "pos": Vector3(0, 1.8, 4.5),  "look": Vector3(0, 2.8, -7),  "preset": &"Gas Station Fluorescent",  "powered": true},
+	{"name": "01_down_street",     "pos": Vector3(-58, 2.2, 0),  "look": Vector3(45, 4, -2),    "preset": &"Blue Hour",                "powered": true},
+	{"name": "02_storefront_pawn", "pos": Vector3(0, 1.8, 6),    "look": Vector3(0, 3.0, -2),   "preset": &"Blue Hour",                "powered": true},
+	{"name": "03_streetlight_row", "pos": Vector3(12, 1.8, 2.0), "look": Vector3(-20, 5.5, 0),  "preset": &"Blue Hour",                "powered": true},
+	{"name": "04_strip_wide",      "pos": Vector3(0, 16, 46),    "look": Vector3(-3, 2, -12),   "preset": &"Blue Hour",                "powered": true},
+	{"name": "05_deli_corner",     "pos": Vector3(-50, 2.0, 6),  "look": Vector3(-38, 3.5, -8), "preset": &"Blue Hour",                "powered": true},
+	{"name": "06_power_cut",       "pos": Vector3(-58, 2.2, 0),  "look": Vector3(45, 4, -2),    "preset": &"Blue Hour",                "powered": false},
+	{"name": "07_fluoro_contrast", "pos": Vector3(0, 1.8, 6),    "look": Vector3(0, 3.0, -2),   "preset": &"Gas Station Fluorescent",  "powered": true},
 ]
 
 func _initialize() -> void:

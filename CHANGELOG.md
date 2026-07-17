@@ -1,3 +1,66 @@
+## [0.19.0] - The pvp_heist site profile
+
+### Added
+- **`mode: "pvp_heist"`** in site_tactical: pre-merge gates (spawn/
+  objective/extraction designations, spawn->objective->extraction routes,
+  >= 2 distinct approaches, attacker staging site_marker required) and
+  post-merge `gate_merged()` (defender spawns must exist in the merged
+  site, opposing-spawn separation >= 25 m -- tunable via
+  `pvp.min_spawn_separation` -- and the protected defender hold). The
+  merged site.gameplay.json carries a `pvp_heist` report block.
+- **specs/ref_pvp/**: the reference pvp mission site (3 placements, road,
+  courtyard, cover, perimeter, staging + extraction markers); buildings/
+  is generated, see its README.
+- **specs_failing/** (4 site fixtures + FIXTURES.json) +
+  tests/test_failing_fixtures.py: each fails its gate for the documented
+  reason.
+- COORDINATE_CONTRACT.md (shared, ratified).
+- 17 new tests (48 total).
+
+## [0.18.6] - Footprint-true site layout (the "floating bars" fix)
+
+### Fixed
+- **night_strip.site.json spacing**: the v0.18.1 spec placed stores 24 m
+  apart assuming ~20 m storefronts; the real presets measure deli 38x38
+  (corner-lot L), pawn 16x14, auto 26x18 — buildings interpenetrated by
+  ~14 m and crossed the street line. The "floating bars" seen in the walk
+  were the NEIGHBORING building's DC roof furniture (parapet_N/S/E/W, roof
+  slab rim, ladder_rung, stair treads) poking through shared volume. New
+  layout derives from MEASURED bounds: fronts aligned on the sidewalk line,
+  6.7 m real alleys, nothing crossing the street; validated against the
+  real shells with real lot.py (gates pass, 43 streetlight poles, pawn sign
+  on the line; the deli sign sits 4.8 m back — its corner wing is proud of
+  the storefront wing, honest corner-lot urbanism).
+- STORES transforms + shot list resynced across walk_night_strip.gd,
+  visual_night_strip.gd, visual_night_strip_dressed.gd; walk spawn moved to
+  the west street end.
+
+### Notes
+- Positions changed -> the full chain must re-run: night_strip.ps1 (Lot
+  re-assemble + fixture rebuild), then night_strip_dress.ps1, then walk.
+- Backlog: Lot should GATE building-AABB overlap (it currently trusts the
+  spec author, and shouldn't).
+
+## [0.18.5] - Walk the strip
+
+- tools/walk_night_strip.gd + tools/walk_night_strip.ps1: first-person walk
+  of the staged night strip inside the lux project — patina shells +
+  dressing + (branded) fixtures at site transforms, merged manifest baked
+  through LuxRoot, Blue Hour grade, source-built player controller
+  (keycode-only, no input map): WASD/SHIFT/SPACE, F cuts and restores
+  building power live, G cycles the grade, ESC/F8. Runner completes any
+  missing staging from the newest _runs artifacts (prefers zoo_skinned
+  branded fixtures). Selftested against real Godot: 3/3 shells, 58 rigs
+  baked, player compiled, clean exit.
+
+## [0.18.4] - Dress runner wires the signage packs
+
+- tools/night_strip_dress.ps1: when the Pixelcoat signage library exists at
+  `_runs\skins\delco_signage` (or via -Skins), fixtures are rebuilt with
+  `zoo --skins` before staging — sign cabinets come out BRANDED (Zoo v0.31
+  sign-pack resolver: deterministic per anchor, glowing letterforms, power
+  cut still kills them). No library -> prior behavior untouched.
+
 ## [0.18.3] - Run artifacts land in _runs\
 
 - `tools/night_strip.ps1` + `tools/night_strip_dress.ps1` (dress runner also discovers prior runs under `_runs\`, factory-root fallback) write run folders and results zips under the factory's `_runs\`

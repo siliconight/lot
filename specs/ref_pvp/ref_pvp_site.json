@@ -1,0 +1,142 @@
+{
+ "name": "ref_pvp_site",
+ "version": "0.1.0",
+ "mode": "pvp_heist",
+ "spawn": "stage_bank",
+ "objective": "station",
+ "extraction": "getaway_bank",
+ "ground": {
+  "size_x": 160,
+  "size_y": 120
+ },
+ "buildings": [
+  {
+   "id": "stage_bank",
+   "glb": "buildings/bank_job.glb",
+   "gameplay": "buildings/bank_job.gameplay.json",
+   "at": [
+    -45,
+    -20
+   ],
+   "rot": 0
+  },
+  {
+   "id": "station",
+   "glb": "buildings/pvp_station_ref.glb",
+   "gameplay": "buildings/pvp_station_ref.gameplay.json",
+   "at": [
+    25,
+    5
+   ],
+   "rot": 0
+  },
+  {
+   "id": "getaway_bank",
+   "glb": "buildings/bank_job.glb",
+   "gameplay": "buildings/bank_job.gameplay.json",
+   "at": [
+    -5,
+    42
+   ],
+   "rot": 90
+  }
+ ],
+ "paths": [
+  {
+   "from": "stage_bank",
+   "to": "station",
+   "width": 6
+  },
+  {
+   "from": "stage_bank",
+   "to": "getaway_bank",
+   "width": 4
+  },
+  {
+   "from": "getaway_bank",
+   "to": "station",
+   "width": 4
+  }
+ ],
+ "roads": [
+  {
+   "a": [
+    -70,
+    -8
+   ],
+   "b": [
+    70,
+    -8
+   ],
+   "width": 8,
+   "sidewalk": true
+  }
+ ],
+ "courtyards": [
+  {
+   "at": [
+    -10,
+    8
+   ],
+   "size_x": 18,
+   "size_y": 12
+  }
+ ],
+ "cover": [
+  {
+   "at": [
+    -8,
+    -2
+   ],
+   "size": [
+    2.5,
+    1.2,
+    1.1
+   ]
+  },
+  {
+   "at": [
+    4,
+    12
+   ],
+   "size": [
+    1.8,
+    1.8,
+    1.4
+   ]
+  },
+  {
+   "at": [
+    12,
+    -4
+   ],
+   "size": [
+    3.0,
+    1.0,
+    1.2
+   ]
+  }
+ ],
+ "perimeter": {
+  "height": 3.0
+ },
+ "site_markers": [
+  {
+   "type": "attacker_spawn",
+   "at": [
+    -62,
+    -20
+   ]
+  },
+  {
+   "type": "extraction",
+   "at": [
+    -18,
+    46
+   ]
+  }
+ ],
+ "pvp": {
+  "min_spawn_separation": 25.0
+ }
+}

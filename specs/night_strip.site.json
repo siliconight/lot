@@ -7,8 +7,8 @@
    "glb": "night_deli.glb",
    "gameplay": "night_deli.gameplay.json",
    "at": [
-    -24,
-    9
+    -34,
+    21
    ],
    "rot": 0
   },
@@ -27,8 +27,8 @@
    "glb": "night_auto.glb",
    "gameplay": "night_auto.gameplay.json",
    "at": [
-    24,
-    9
+    28,
+    11
    ],
    "rot": 0
   }
@@ -47,18 +47,18 @@
   },
   {
    "a": [
-    -36,
+    -50,
     0
    ],
    "b": [
-    36,
+    45,
     0
    ]
   }
  ],
  "ground": {
-  "size_x": 84,
-  "size_y": 44
+  "size_x": 120,
+  "size_y": 88
  },
  "perimeter": {
   "height": 8

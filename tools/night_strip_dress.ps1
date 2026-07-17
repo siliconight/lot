@@ -10,7 +10,7 @@
 #  Run:
 #  powershell -ExecutionPolicy Bypass -File C:\Projects\gabagool_studios\gabagool_factory\lot\tools\night_strip_dress.ps1
 # ============================================================
-param([string]$Work = "")
+param([string]$Work = "", [string]$Skins = "")
 
 $ErrorActionPreference = "Continue"
 $LotRepo = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
@@ -57,6 +57,25 @@ if (-not $FixGlb) { W "MISSING : fixtures glb (run night_strip.ps1 first)"; exit
 W ("work    : " + $Work)
 
 $stores = @("night_deli", "night_pawn", "night_auto")
+
+if (-not $Skins) {
+    $cand = Join-Path $Factory "_runs\skins\delco_signage"
+    if (Test-Path (Join-Path $cand "signs_delco")) { $Skins = $cand }
+}
+
+if ($Skins) {
+    Section "0.5 FIXTURE REBUILD WITH SIGN PACKS (zoo --skins, real Blender)"
+    W ("  skins   : " + $Skins)
+    Push-Location $ZooRepo
+    & $Blender --background --python tools\zoo_cli.py -- --fixtures $SiteLights --theme delco --skins $Skins --out (Join-Path $Work "zoo_skinned") 2>&1 | Out-File (Join-Path $Work "zoo_skinned.log") -Encoding utf8
+    W ("  exit=" + $LASTEXITCODE + " (zoo_skinned.log)")
+    Pop-Location
+    $NewFix = Get-ChildItem (Join-Path $Work "zoo_skinned") -Filter "*_fixtures.glb" -ErrorAction SilentlyContinue | Select-Object -First 1
+    if ($NewFix) { $FixGlb = $NewFix; W ("  fixtures: " + $FixGlb.Name + " (sign faces branded)") }
+    else { W "  WARN: skinned rebuild produced no GLB - keeping the prior fixtures" }
+} else {
+    W "  (no signage library at _runs\skins\delco_signage - run pixelcoat\tools\make_delco_signage.ps1 for branded signs)"
+}
 
 Section "1. PATINA ART PASS x3 (procedural, delco theme, dressing anchors)"
 Push-Location $PatinaRepo

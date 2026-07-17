@@ -984,6 +984,12 @@ def assemble(site_spec_path, out_dir=None, walkable=False, navqa=False, preview=
     merged = merge_gameplay(site_spec, base_dir)
     merged["tactical"] = tactical_report
 
+    # pvp_heist post-merge gates: defender spawns live inside the buildings'
+    # gameplay.json files, so they can only be validated after the merge.
+    pvp_report = site_tactical.gate_merged(site_spec, merged)
+    if pvp_report is not None:
+        merged["pvp_heist"] = pvp_report
+
     # site enterability: can you actually REACH each building's entries once
     # they're placed? Gate the clear-cut walled-in case (needs merged openings +
     # footprints), then attach the per-building approach report.

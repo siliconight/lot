@@ -1,0 +1,60 @@
+{
+ "name": "fx_site_no_extraction_route",
+ "mode": "pvp_heist",
+ "spawn": "stage",
+ "objective": "bank",
+ "extraction": "garage",
+ "buildings": [
+  {
+   "id": "stage",
+   "at": [
+    0,
+    0
+   ]
+  },
+  {
+   "id": "bank",
+   "at": [
+    60,
+    0
+   ]
+  },
+  {
+   "id": "alley",
+   "at": [
+    30,
+    30
+   ]
+  },
+  {
+   "id": "garage",
+   "at": [
+    90,
+    30
+   ]
+  }
+ ],
+ "paths": [
+  {
+   "from": "stage",
+   "to": "bank"
+  },
+  {
+   "from": "stage",
+   "to": "alley"
+  },
+  {
+   "from": "alley",
+   "to": "bank"
+  }
+ ],
+ "site_markers": [
+  {
+   "type": "attacker_spawn",
+   "at": [
+    -10,
+    0
+   ]
+  }
+ ]
+}
