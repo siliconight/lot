@@ -77,14 +77,13 @@ def main(argv=None):
     name, spawn, objective = _positions(args.site_spec, args.project)
     scene_res = f"res://{name}.tscn"
     out_json = os.path.join(args.project, f"{name}.mp_smoke.json")
-    script_res = "addons/lot/mp_smoke.gd"
+    script_res = "res://addons/lot/mp_smoke.gd"
 
-    # make sure the addon (incl. mp_smoke.gd) is present in the project
-    src = os.path.join(HERE, "godot", "addons", "lot", "mp_smoke.gd")
-    dst_dir = os.path.join(args.project, "addons", "lot")
-    os.makedirs(dst_dir, exist_ok=True)
-    import shutil
-    shutil.copy2(src, os.path.join(dst_dir, "mp_smoke.gd"))
+    # sync the full addon set + run the asset import pass (GLBs must be
+    # imported before a scene can instance them headlessly)
+    from walktest import sync_addon, import_pass
+    sync_addon(args.project)
+    import_pass(godot, args.project)
 
     n_clients = max(1, args.players - 1)
     base = [godot, "--headless", "--path", args.project, "--script", script_res, "--"]
@@ -121,9 +120,16 @@ def main(argv=None):
             out, _ = p.communicate()
             print(f"[mp-smoke] {label}: KILLED (timeout)")
         codes[label] = p.returncode
-        for line in (out or "").splitlines():
-            if "[mp-smoke]" in line:
-                print(f"  {label}: {line.strip()}")
+        lines = (out or "").splitlines()
+        tagged = [l for l in lines if "[mp-smoke]" in l]
+        for line in tagged:
+            print(f"  {label}: {line.strip()}")
+        if p.returncode != 0 and len(tagged) < 2:
+            # the process died/hung without telling its story -- show the
+            # raw tail so the real Godot error is never invisible
+            print(f"  {label}: --- raw output tail ---")
+            for line in lines[-15:]:
+                print(f"  {label}: {line.rstrip()}")
 
     ok = codes.get("host") == 0 and \
         all(codes[k] == 0 for k in codes if k.startswith("client"))

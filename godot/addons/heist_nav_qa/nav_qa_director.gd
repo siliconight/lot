@@ -157,6 +157,18 @@ func _finish(ok: bool) -> void:
 # helpers
 # ---------------------------------------------------------------------------
 
+func _nearest(points: Array, to: Vector3) -> Vector3:
+	var best := to
+	var best_d := INF
+	for pt in points:
+		var v: Vector3 = pt
+		var d := to.distance_to(v)
+		if d < best_d:
+			best_d = d
+			best = v
+	return best
+
+
 func _group_points(group: String) -> Array:
 	var pts: Array = []
 	for n in get_tree().get_nodes_in_group(group):

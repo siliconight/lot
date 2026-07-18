@@ -1,3 +1,20 @@
+## [0.19.1] - Engine-leg shakedown fixes (Godot 4.7 live runs)
+
+### Fixed
+- **heist_nav_qa director**: missing `_nearest` helper (parse error that
+  hung the walktest scene silently); strict-typing clean.
+- **mp_smoke**: ALL setup deferred to the first process frame --
+  `root.multiplayer` is a null instance during `_initialize` in 4.7
+  --script mode; RPC node moved to its own script file
+  (mp_smoke_node.gd) for reliable rpc config resolution.
+- **walktest.py / mp_smoke.py runners**: explicit `--import` pass before
+  scene runs (headless Godot cannot instance un-imported GLBs), stderr
+  merged into stdout so Godot parse errors are never invisible, raw output
+  tails on timeout/failure, project.godot auto-bootstrap, full addon sync.
+- **navqa bake**: 0.15 m cells / 0.4 m agent (was 0.25/0.5) -- per-cell
+  voxel erosion ate legal 1.25 m doorways and fragmented building
+  interiors into disjoint navmesh islands.
+
 ## [0.19.0] - The pvp_heist site profile
 
 ### Added

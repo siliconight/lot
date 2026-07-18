@@ -82,18 +82,45 @@ def sync_addon(project_dir):
                 shutil.copy2(os.path.join(src, f), os.path.join(dst, f))
 
 
+def import_pass(godot, project_dir, timeout=600):
+    """Godot must IMPORT .glb assets before a scene can instance them.
+    The editor does this on open; headless CI does it explicitly. Safe to
+    re-run — already-imported assets are skipped."""
+    print("[walktest] import pass (first run can take a minute)...")
+    try:
+        proc = subprocess.run([godot, "--headless", "--path", project_dir,
+                               "--import"], capture_output=True, text=True,
+                              timeout=timeout)
+        tail = (proc.stdout or "").strip().splitlines()[-3:]
+        for line in tail:
+            print(f"  {line}")
+    except subprocess.TimeoutExpired:
+        print("[walktest] import pass TIMEOUT (continuing; scene run will "
+              "tell the truth)")
+
+
 def run_one(godot, project_dir, scene, timeout=300):
     name = os.path.basename(scene)
     rel = os.path.relpath(scene, project_dir).replace(os.sep, "/")
     cmd = [godot, "--headless", "--path", project_dir, f"res://{rel}"]
     print(f"[walktest] {name} ...")
     try:
-        proc = subprocess.run(cmd, capture_output=True, text=True,
+        # stderr merged into stdout: Godot script/parse errors go to stderr
+        # and MUST be visible in the timeout tail
+        proc = subprocess.run(cmd, stdout=subprocess.PIPE,
+                              stderr=subprocess.STDOUT, text=True,
                               timeout=timeout)
-    except subprocess.TimeoutExpired:
+    except subprocess.TimeoutExpired as ex:
         print(f"[walktest] {name}: TIMEOUT after {timeout}s")
+        partial = ex.stdout or ""
+        if isinstance(partial, bytes):
+            partial = partial.decode("utf-8", "replace")
+        if partial:
+            print("[walktest] --- child output before timeout ---")
+            for line in partial.splitlines()[-40:]:
+                print(f"  {line}")
         return False
-    sys.stdout.write(proc.stdout)
+    sys.stdout.write(proc.stdout or "")
     report_path = os.path.splitext(scene)[0] + ".walktest.json"
     if os.path.exists(report_path):
         try:
@@ -104,8 +131,6 @@ def run_one(godot, project_dir, scene, timeout=300):
         print(f"[walktest] {name}: {'PASS' if ok else 'FAIL'} -> {report_path}")
         return ok
     print(f"[walktest] {name}: no report written (exit {proc.returncode})")
-    if proc.stderr:
-        sys.stderr.write(proc.stderr[-2000:])
     return False
 
 
@@ -130,6 +155,7 @@ def main(argv=None):
         return 0
 
     sync_addon(args.project)
+    import_pass(godot, args.project)
 
     if args.all:
         targets = sorted(glob.glob(os.path.join(args.project, "**",
