@@ -43,7 +43,29 @@ func _bake_nav() -> void:
 	if nav == null:
 		nav = get_tree().get_first_node_in_group("navigation_region") as NavigationRegion3D
 	if nav and nav.navigation_mesh:
-		nav.bake_navigation_mesh()
+		# match the map's cell metrics to the mesh (mismatch causes edge
+		# rasterization errors -- Godot warns about exactly this), then bake
+		# SYNCHRONOUSLY: the QA run starts right after _ready, and an async
+		# bake leaves the map empty under the first queries.
+		var map: RID = get_world_3d().navigation_map
+		NavigationServer3D.map_set_cell_size(map, nav.navigation_mesh.cell_size)
+		NavigationServer3D.map_set_cell_height(map, nav.navigation_mesh.cell_height)
+		nav.bake_navigation_mesh(false)
+		# region updates are ASYNC on the NavigationServer -- the baked mesh
+		# exists but the map's polygon soup commits on its own schedule.
+		# Force the commit so the first queries see the real mesh.
+		NavigationServer3D.map_force_update(map)
+		print("[navqa-setup] bake done: %d polygons in navigation_mesh"
+			% nav.navigation_mesh.get_polygon_count())
+		var n_mesh := 0
+		var stack: Array = [get_parent()]
+		while not stack.is_empty():
+			var nd: Node = stack.pop_back()
+			if nd is MeshInstance3D:
+				n_mesh += 1
+			for c in nd.get_children():
+				stack.append(c)
+		print("[navqa-setup] scene has %d MeshInstance3D under root" % n_mesh)
 
 
 func _spawn_anchors(points: PackedVector3Array, group: String, tag: String) -> void:
@@ -70,7 +92,15 @@ func _run_qa() -> void:
 	director.set("cover_group", cover_group)
 	director.set("bot_spawn_group", bot_spawn_group)
 	director.set("run_on_ready", false)
-	get_parent().add_child(director)
+	# _run_qa executes during _ready, while the parent is still setting up
+	# its children -- a plain add_child() fails ("parent node is busy").
+	# Defer the add AND the start so both run after the tree settles, in
+	# order (deferred calls execute FIFO).
+	get_parent().add_child.call_deferred(director)
+	_start_director.call_deferred(director)
+
+
+func _start_director(director: Node3D) -> void:
 	# home the director at the crew start so its fallbacks (bot ring / default
 	# proxies) land in the right place if any group came up empty
 	director.global_position = crew_home

@@ -82,6 +82,29 @@ def sync_addon(project_dir):
                 shutil.copy2(os.path.join(src, f), os.path.join(dst, f))
 
 
+def check_buildings(project_dir):
+    """Every res://buildings/*.glb a site tscn references must exist --
+    Godot's own error for a missing one is a cryptic 'node vanished'.
+    Returns the list of missing files (empty = good)."""
+    import re
+    missing = []
+    for tscn in glob.glob(os.path.join(project_dir, "*.tscn")):
+        with open(tscn, "r", encoding="utf-8") as f:
+            text = f.read()
+        for ref in set(re.findall(r'res://(buildings/[^"\s]+\.glb)', text)):
+            path = os.path.join(project_dir, *ref.split("/"))
+            if not os.path.exists(path) and ref not in missing:
+                missing.append(ref)
+    if missing:
+        print("[preflight] MISSING building file(s) referenced by scenes:")
+        for m in missing:
+            print(f"  - res://{m}")
+        print("[preflight] copy the built outputs into the project's "
+              "buildings folder (files, not the folder: "
+              r"Copy-Item specs\ref_pvp\buildings\* <project>\buildings\ -Force)")
+    return missing
+
+
 def import_pass(godot, project_dir, timeout=600):
     """Godot must IMPORT .glb assets before a scene can instance them.
     The editor does this on open; headless CI does it explicitly. Safe to
@@ -103,13 +126,20 @@ def run_one(godot, project_dir, scene, timeout=300):
     name = os.path.basename(scene)
     rel = os.path.relpath(scene, project_dir).replace(os.sep, "/")
     cmd = [godot, "--headless", "--path", project_dir, f"res://{rel}"]
+    env = dict(os.environ)
+    try:
+        sys.path.insert(0, os.path.join(os.path.dirname(HERE), "deli_counter"))
+        from agent_contract import nav_env
+        env = nav_env(env)
+    except Exception:                                  # noqa: BLE001
+        pass
     print(f"[walktest] {name} ...")
     try:
         # stderr merged into stdout: Godot script/parse errors go to stderr
         # and MUST be visible in the timeout tail
         proc = subprocess.run(cmd, stdout=subprocess.PIPE,
                               stderr=subprocess.STDOUT, text=True,
-                              timeout=timeout)
+                              timeout=timeout, env=env)
     except subprocess.TimeoutExpired as ex:
         print(f"[walktest] {name}: TIMEOUT after {timeout}s")
         partial = ex.stdout or ""
@@ -155,6 +185,8 @@ def main(argv=None):
         return 0
 
     sync_addon(args.project)
+    if check_buildings(args.project):
+        return 1
     import_pass(godot, args.project)
 
     if args.all:

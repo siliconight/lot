@@ -5,7 +5,9 @@ extends Node
 ## configs per script resource). See mp_smoke.gd for the launcher/orchestra.
 
 const MIN_MOVE_M := 5.0
-const CONNECT_TIMEOUT := 15.0
+# generous: clients cold-load the site scene AFTER connecting starts being
+# possible, staggered 3s apart -- 15s raced the last client's load and lost
+const CONNECT_TIMEOUT := 45.0
 const HEARTBEAT_SECS := 0.5
 
 var role := ""
@@ -51,11 +53,14 @@ func _on_conn_failed() -> void:
 
 
 func _on_server_gone() -> void:
-	# after our own run finished, a host teardown is expected
-	if reported_done:
-		_die(0, "server closed after we finished")
+	# The host quits the moment every client has moved >= MIN_MOVE_M -- an
+	# early PASS teardown, not a failure. A client that already did its part
+	# (finished its run OR crossed the movement bar) treats the disconnect
+	# as the expected end of the test.
+	if reported_done or travelled >= MIN_MOVE_M:
+		_die(0, "server closed after we did our part (%.1f m)" % travelled)
 	else:
-		_die(1, "server dropped us mid-run")
+		_die(1, "server dropped us mid-run at %.1f m" % travelled)
 
 
 func _on_peer(id: int) -> void:
@@ -85,6 +90,14 @@ func _on_connected() -> void:
 	set_physics_process(true)
 
 
+var _telemetry := false
+var _tel_t := 0.0
+
+
+func start_status_telemetry() -> void:
+	_telemetry = true
+
+
 func _process(delta: float) -> void:
 	if finished:
 		return
@@ -96,6 +109,14 @@ func _process(delta: float) -> void:
 		elif t > duration + CONNECT_TIMEOUT:
 			_host_verdict()
 	elif role == "client":
+		if _telemetry:
+			_tel_t += delta
+			if _tel_t >= 2.0:
+				_tel_t = 0.0
+				var mp := multiplayer.multiplayer_peer
+				if mp != null and body == null:
+					print("[mp-smoke] client status: %d (0=disc 1=connecting 2=connected)"
+						% mp.get_connection_status())
 		if t > duration + CONNECT_TIMEOUT:
 			_die(0, "client done (%.1f m)" % travelled)
 

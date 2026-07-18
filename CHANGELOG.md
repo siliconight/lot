@@ -1,38 +1,39 @@
-## [0.19.1] - Engine-leg shakedown fixes (Godot 4.7 live runs)
+## [0.19.0] - Walktest + mp_smoke prove the site (engine leg green)
 
-### Fixed
-- **heist_nav_qa director**: missing `_nearest` helper (parse error that
-  hung the walktest scene silently); strict-typing clean.
-- **mp_smoke**: ALL setup deferred to the first process frame --
-  `root.multiplayer` is a null instance during `_initialize` in 4.7
-  --script mode; RPC node moved to its own script file
-  (mp_smoke_node.gd) for reliable rpc config resolution.
-- **walktest.py / mp_smoke.py runners**: explicit `--import` pass before
-  scene runs (headless Godot cannot instance un-imported GLBs), stderr
-  merged into stdout so Godot parse errors are never invisible, raw output
-  tails on timeout/failure, project.godot auto-bootstrap, full addon sync.
-- **navqa bake**: 0.15 m cells / 0.4 m agent (was 0.25/0.5) -- per-cell
-  voxel erosion ate legal 1.25 m doorways and fragmented building
-  interiors into disjoint navmesh islands.
+Both site-level engine gates now PASS on Godot 4.7 stable (reference pvp
+site: 15/15 path proofs, 4 players x 8/8 targets + 12 bots physically
+walking; 4-peer multiplayer smoke connect/move/verdict PASS).
 
-## [0.19.0] - The pvp_heist site profile
-
-### Added
-- **`mode: "pvp_heist"`** in site_tactical: pre-merge gates (spawn/
-  objective/extraction designations, spawn->objective->extraction routes,
-  >= 2 distinct approaches, attacker staging site_marker required) and
-  post-merge `gate_merged()` (defender spawns must exist in the merged
-  site, opposing-spawn separation >= 25 m -- tunable via
-  `pvp.min_spawn_separation` -- and the protected defender hold). The
-  merged site.gameplay.json carries a `pvp_heist` report block.
-- **specs/ref_pvp/**: the reference pvp mission site (3 placements, road,
-  courtyard, cover, perimeter, staging + extraction markers); buildings/
-  is generated, see its README.
-- **specs_failing/** (4 site fixtures + FIXTURES.json) +
-  tests/test_failing_fixtures.py: each fails its gate for the documented
-  reason.
-- COORDINATE_CONTRACT.md (shared, ratified).
-- 17 new tests (48 total).
+- **walktest.py + heist_nav_qa/nav_qa_director.gd.** Path proofs with
+  VERTICAL-access classification (ladder/drop gaps are intel for game code,
+  not navmesh failures) and coordinate diagnostics. Physical walkers:
+  waypoint paths via map_get_path (NavigationAgent3D does not path
+  headless), waypoint-PROGRESS stall detection (raw movement lies --
+  wall-sliding registers as motion), repath-on-stall with bounded
+  navmesh reseat, kinematic step-up from the agent contract's max_step_up
+  (replaces the blind hop that wedged walkers under stair flights), 3D
+  path-following on climbing segments, spawn snap-to-mesh, walkers collide
+  with world only. Verdict accepts every ok-flavored status; timeout
+  walkers report their position.
+- **lot_navqa_setup.gd:** synchronous bake, NavigationServer cell-size
+  match + map_force_update (async region commits leave the map empty),
+  deferred director add (add_child during _ready).
+- **mp_smoke.py / mp_smoke.gd / mp_smoke_node.gd.** Host + N-1 clients on
+  loopback: per-process LOG FILES (an undrained stdout pipe fills its 64KB
+  buffer and blocks the host mid-scene-load -- the beacon then appears
+  minutes late), readiness beacon, host PID print + netstat/tasklist socket
+  forensics on failure (the Windows *_console.exe is a WRAPPER; the engine
+  child owns the socket, and the firewall allow rule must name the child),
+  45 s connect window, clients treat the host's early-PASS teardown as
+  success, deferred _setup (root.multiplayer is null during _initialize),
+  scene load before peer creation, report-required verdict.
+- **Agent-contract bridge:** lot.py bakes walk/navqa NavigationMesh params
+  from deli_counter/agent_contract.json ($DC_AGENT_CONTRACT overrides);
+  walktest.py/mp_smoke.py pass the env through to GDScript.
+- **specs/ref_pvp:** 3-building reference pvp site (site gates pass, two
+  approaches, defender spawns, protected hold).
+- site_tactical.py: pvp_heist gate() branch + gate_merged() post-merge
+  checks (defender spawns, 25 m spawn separation, protected rotation).
 
 ## [0.18.6] - Footprint-true site layout (the "floating bars" fix)
 

@@ -81,8 +81,10 @@ def main(argv=None):
 
     # sync the full addon set + run the asset import pass (GLBs must be
     # imported before a scene can instance them headlessly)
-    from walktest import sync_addon, import_pass
+    from walktest import sync_addon, import_pass, check_buildings
     sync_addon(args.project)
+    if check_buildings(args.project):
+        return 1
     import_pass(godot, args.project)
 
     n_clients = max(1, args.players - 1)
@@ -93,34 +95,66 @@ def main(argv=None):
                        f"res://{name}.mp_smoke.json"]
     print(f"[mp-smoke] host: {name} @ :{args.port}, {args.players} players, "
           f"{args.secs:.0f}s")
-    host = subprocess.Popen(host_cmd, stdout=subprocess.PIPE,
-                            stderr=subprocess.STDOUT, text=True)
-    time.sleep(2.0)
+    ready_flag = os.path.join(args.project, "mp_host_ready")
+    if os.path.exists(ready_flag):
+        os.remove(ready_flag)
+    # Each process writes to its OWN LOG FILE, never a pipe. A pipe nobody
+    # drains fills its ~64KB buffer and BLOCKS the host mid-scene-load --
+    # which is exactly what made the beacon appear 90+ seconds late while
+    # the clients handshook against an unbound port and died.
+    log_dir = os.path.join(args.project, "_mp_logs")
+    os.makedirs(log_dir, exist_ok=True)
 
-    clients = []
+    def _launch(label, cmd):
+        lp = os.path.join(log_dir, f"{label}.log")
+        lf = open(lp, "w", encoding="utf-8", errors="replace")
+        p = subprocess.Popen(cmd, stdout=lf, stderr=subprocess.STDOUT)
+        return label, p, lf, lp
+
+    procs = [_launch("host", host_cmd)]
+    host = procs[0][1]
+    # Wait on the BEACON FILE only. host.poll() lies on Windows: the
+    # *_console.exe is a wrapper that spawns the real engine as a child and
+    # can exit early, while the engine keeps running.
+    t0 = time.time()
+    while not os.path.exists(ready_flag) and time.time() - t0 < 90:
+        time.sleep(0.5)
+    if os.path.exists(ready_flag):
+        print(f"[mp-smoke] host ready after {time.time() - t0:.1f}s")
+        if sys.platform == "win32":
+            _socket_forensics(args.port)   # host alive NOW: who owns the port?
+    else:
+        print("[mp-smoke] WARNING: host never signalled ready in 90s; "
+              "launching clients anyway")
+
     for i in range(n_clients):
+        if i:
+            time.sleep(3.0)   # stagger boots: concurrent instances race the
+                              # import cache on first touch
         sp = (spawn[0] + i * 1.2, spawn[1], spawn[2])
-        c = subprocess.Popen(
+        procs.append(_launch(
+            f"client{i}",
             base + ["client", str(args.port), scene_res,
                     ",".join(f"{v:.3f}" for v in sp),
                     ",".join(f"{v:.3f}" for v in objective),
-                    str(args.secs)],
-            stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
-        clients.append(c)
+                    str(args.secs)]))
 
-    deadline = time.time() + args.secs + 60
-    procs = [("host", host)] + [(f"client{i}", c) for i, c in enumerate(clients)]
+    deadline = time.time() + args.secs + 75
     codes = {}
-    for label, p in procs:
+    outputs = {}
+    for label, p, lf, lp in procs:
         remain = max(5, deadline - time.time())
         try:
-            out, _ = p.communicate(timeout=remain)
+            p.wait(timeout=remain)
         except subprocess.TimeoutExpired:
             p.kill()
-            out, _ = p.communicate()
+            p.wait()
             print(f"[mp-smoke] {label}: KILLED (timeout)")
+        lf.close()
         codes[label] = p.returncode
-        lines = (out or "").splitlines()
+        with open(lp, "r", encoding="utf-8", errors="replace") as f:
+            lines = f.read().splitlines()
+        outputs[label] = lines
         tagged = [l for l in lines if "[mp-smoke]" in l]
         for line in tagged:
             print(f"  {label}: {line.strip()}")
@@ -138,9 +172,43 @@ def main(argv=None):
             rep = json.load(f)
         ok = ok and bool(rep.get("ok"))
         print(f"[mp-smoke] host report: {json.dumps(rep.get('clients', {}))}")
+    else:
+        # no host report = no proof. Exit codes alone can't carry a PASS:
+        # on Windows they are the console WRAPPER's codes, not the engine's.
+        ok = False
+        print("[mp-smoke] no host report written -- failing")
     print(f"[mp-smoke] {name}: {'PASS' if ok else 'FAIL'} "
           f"(exit codes {codes}) -> {out_json}")
+    if not ok and sys.platform == "win32":
+        _socket_forensics(args.port)
     return 0 if ok else 1
+
+
+def _socket_forensics(port):
+    """On failure, show who (if anyone) owns UDP :port -- settles whether the
+    firewall rule targets the right binary. Best-effort, Windows only."""
+    try:
+        out = subprocess.run(["netstat", "-ano", "-p", "UDP"],
+                             capture_output=True, text=True, timeout=15).stdout
+        rows = [l.strip() for l in out.splitlines() if f":{port}" in l]
+        if not rows:
+            print(f"[mp-smoke] forensics: NOTHING bound to UDP :{port} at "
+                  f"teardown (host already gone -- timing, not firewall)")
+            return
+        for row in rows:
+            print(f"[mp-smoke] forensics: {row}")
+            pid = row.split()[-1]
+            if pid.isdigit():
+                tl = subprocess.run(
+                    ["tasklist", "/FI", f"PID eq {pid}", "/FO", "LIST"],
+                    capture_output=True, text=True, timeout=15).stdout
+                for tl_line in tl.splitlines():
+                    if "Image Name" in tl_line or "Nom d" in tl_line:
+                        print(f"[mp-smoke] forensics: pid {pid} = "
+                              f"{tl_line.split(':', 1)[-1].strip()} "
+                              f"<- firewall allow rule must name THIS exe")
+    except Exception as e:  # noqa: BLE001 -- diagnostics must never crash the run
+        print(f"[mp-smoke] forensics unavailable: {e}")
 
 
 if __name__ == "__main__":

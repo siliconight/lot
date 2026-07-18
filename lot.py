@@ -40,6 +40,45 @@ import json
 import math
 import os
 
+
+_AGENT_DEFAULTS = {"nav_bake": {"agent_radius_m": 0.4, "agent_height_m": 1.8,
+                                "agent_max_climb_m": 0.5,
+                                "agent_max_slope_deg": 55.0,
+                                "cell_size_m": 0.15, "cell_height_m": 0.15},
+                   "qa": {"arrive_dist_m": 1.5, "stuck_seconds": 4.0,
+                          "snap_max_m": 2.0}}
+_agent_cache = None
+
+
+def _agent():
+    """The shared agent contract (deli_counter/agent_contract.json -- ONE
+    source of truth for character metrics and derived clearances; the
+    body-metrics sibling of COORDINATE_CONTRACT.md). Search order:
+    $DC_AGENT_CONTRACT, then the deli_counter sibling repo. Fallbacks equal
+    the ratified values, so a missing file degrades gracefully."""
+    global _agent_cache
+    if _agent_cache is not None:
+        return _agent_cache
+    here = os.path.dirname(os.path.abspath(__file__))
+    candidates = []
+    if os.environ.get("DC_AGENT_CONTRACT"):
+        candidates.append(os.environ["DC_AGENT_CONTRACT"])
+    candidates.append(os.path.join(os.path.dirname(here), "deli_counter",
+                                   "agent_contract.json"))
+    merged = {k: dict(v) for k, v in _AGENT_DEFAULTS.items()}
+    for c in candidates:
+        try:
+            with open(c, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            for sec in merged:
+                merged[sec].update(data.get(sec, {}))
+            break
+        except (OSError, json.JSONDecodeError):
+            continue
+    _agent_cache = merged
+    return merged
+
+
 LOT_VERSION = "0.17.2"
 
 
@@ -800,10 +839,14 @@ def write_walk_scene(site_spec, merged, walk_out, site_tscn_base,
         'geometry_parsed_geometry_type = 2',
         # 0.15 m cells + 0.4 m agent: voxel erosion is per-cell, so coarser
         # bakes eat legal doorways and fragment interiors into islands
-        'cell_size = 0.15',
-        'cell_height = 0.15',
-        'agent_radius = 0.4',
-        'agent_height = 1.8', '',
+        f'cell_size = {_agent()["nav_bake"]["cell_size_m"]}',
+        f'cell_height = {_agent()["nav_bake"]["cell_height_m"]}',
+        f'agent_radius = {_agent()["nav_bake"]["agent_radius_m"]}',
+        f'agent_height = {_agent()["nav_bake"]["agent_height_m"]}',
+        # stairs bake as ~42 deg collision ramps; the default 45 deg slope
+        # limit quantizes them into disjoint islands (same fix as nav_gate)
+        f'agent_max_slope = {_agent()["nav_bake"]["agent_max_slope_deg"]}',
+        f'agent_max_climb = {_agent()["nav_bake"]["agent_max_climb_m"]}', '',
         '[sub_resource type="CapsuleShape3D" id="PlayerCol"]',
         'radius = 0.4',
         'height = 1.8', '',
@@ -909,10 +952,14 @@ def write_navqa_scene(site_spec, merged, navqa_out, site_tscn_base,
         'geometry_parsed_geometry_type = 2',
         # 0.15 m cells + 0.4 m agent: voxel erosion is per-cell, so coarser
         # bakes eat legal doorways and fragment interiors into islands
-        'cell_size = 0.15',
-        'cell_height = 0.15',
-        'agent_radius = 0.4',
-        'agent_height = 1.8', '',
+        f'cell_size = {_agent()["nav_bake"]["cell_size_m"]}',
+        f'cell_height = {_agent()["nav_bake"]["cell_height_m"]}',
+        f'agent_radius = {_agent()["nav_bake"]["agent_radius_m"]}',
+        f'agent_height = {_agent()["nav_bake"]["agent_height_m"]}',
+        # stairs bake as ~42 deg collision ramps; the default 45 deg slope
+        # limit quantizes them into disjoint islands (same fix as nav_gate)
+        f'agent_max_slope = {_agent()["nav_bake"]["agent_max_slope_deg"]}',
+        f'agent_max_climb = {_agent()["nav_bake"]["agent_max_climb_m"]}', '',
         '[sub_resource type="ProceduralSkyMaterial" id="Sky_mat"]', '',
         '[sub_resource type="Sky" id="Sky_res"]',
         'sky_material = SubResource("Sky_mat")', '',

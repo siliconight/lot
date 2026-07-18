@@ -55,7 +55,21 @@ func _setup() -> void:
 	smoke.name = "Smoke"
 	root.add_child(smoke)
 
+	# load the site FIRST: scene load blocks the main thread for seconds,
+	# and an ENet handshake started before it times out unanswered.
+	var packed: PackedScene = load(scene_path)
+	if packed == null:
+		printerr("[mp-smoke] cannot load %s (did the import pass run?)" % scene_path)
+		quit(1)
+		return
+	var site: Node = packed.instantiate()
+	root.add_child(site)
+	print("[mp-smoke] %s loaded %s" % [role, scene_path])
+
 	var peer := ENetMultiplayerPeer.new()
+	# bind loopback explicitly: Windows Firewall filters unsolicited inbound
+	# UDP for unapproved binaries, but loopback-bound sockets pass
+	peer.set_bind_ip("127.0.0.1")
 	if role == "host":
 		var players := int(a[3]) if a.size() > 3 else 2
 		var secs := float(a[4]) if a.size() > 4 else 20.0
@@ -67,7 +81,18 @@ func _setup() -> void:
 			return
 		root.multiplayer.multiplayer_peer = peer
 		smoke.setup_host(players - 1, secs, outp)
-		print("[mp-smoke] host up on %d, expecting %d client(s)" % [port, players - 1])
+		print("[mp-smoke] host up on %d (pid %d), expecting %d client(s)"
+			% [port, OS.get_process_id(), players - 1])
+		# readiness beacon: the runner holds clients until this file exists,
+		# so no client ever handshakes against an unbound port
+		var rf := FileAccess.open("res://mp_host_ready", FileAccess.WRITE)
+		if rf:
+			rf.store_string("up")
+			rf.close()
+			print("[mp-smoke] ready beacon written")
+		else:
+			printerr("[mp-smoke] beacon write FAILED (%d)"
+				% FileAccess.get_open_error())
 	elif role == "client":
 		var spawn := _v3(a[3]) if a.size() > 3 else Vector3.ZERO
 		var tgt := _v3(a[4]) if a.size() > 4 else Vector3(10, 0, 0)
@@ -77,22 +102,15 @@ func _setup() -> void:
 			printerr("[mp-smoke] cannot create client (%d)" % err)
 			quit(2)
 			return
+		print("[mp-smoke] client pid %d connecting to 127.0.0.1:%d"
+			% [OS.get_process_id(), port])
 		root.multiplayer.multiplayer_peer = peer
 		smoke.setup_client(spawn, tgt, secs)
+		smoke.call("start_status_telemetry")
 	else:
 		printerr("[mp-smoke] role must be host|client")
 		quit(2)
 		return
-
-	# both sides load the site scene -- a load failure fails the smoke
-	var packed: PackedScene = load(scene_path)
-	if packed == null:
-		printerr("[mp-smoke] cannot load %s (did the import pass run?)" % scene_path)
-		quit(1)
-		return
-	var site: Node = packed.instantiate()
-	root.add_child(site)
-	print("[mp-smoke] %s loaded %s" % [role, scene_path])
 
 
 static func _v3(s: String) -> Vector3:
