@@ -1,0 +1,4938 @@
+{
+  "level": "bank_branch_a04",
+  "mode": "pvp_heist",
+  "building_id": "bank_branch_a04",
+  "footprint": [
+    40.0,
+    30.0
+  ],
+  "rarity": null,
+  "rarity_color": null,
+  "markers": [
+    {
+      "name": "LADDER_0",
+      "type": "ladder",
+      "id": "ladder_0",
+      "x": 16.0,
+      "y": 12.0,
+      "z": 4.2,
+      "climb_height": 4.2,
+      "width": 0.5,
+      "depth": 0.15,
+      "facing": "S"
+    },
+    {
+      "name": "HATCH_16_12",
+      "type": "hatch",
+      "x": 16.0,
+      "y": 12.0,
+      "z": 8.4,
+      "breachable": false
+    },
+    {
+      "name": "ATTACKER_SPAWN_A",
+      "type": "attacker_spawn",
+      "id": "A",
+      "x": -3.0,
+      "y": -16.5,
+      "z": 0,
+      "rot_z": 90,
+      "room": "grand_lobby"
+    },
+    {
+      "name": "ATTACKER_SPAWN_B",
+      "type": "attacker_spawn",
+      "id": "B",
+      "x": 21.0,
+      "y": 8.0,
+      "z": 0,
+      "rot_z": 180,
+      "room": "security_office"
+    },
+    {
+      "name": "ATTACKER_SPAWN_ROOF",
+      "type": "attacker_spawn",
+      "id": "ROOF",
+      "x": 16.0,
+      "y": 12.0,
+      "z": 8.4,
+      "rot_z": 0,
+      "room": "boardroom"
+    },
+    {
+      "name": "DEFENDER_SPAWN",
+      "type": "defender_spawn",
+      "id": null,
+      "x": -12.0,
+      "y": 8.0,
+      "z": -3.9000000000000004,
+      "rot_z": 270,
+      "room": "vault_room"
+    },
+    {
+      "name": "OBJECTIVE_A",
+      "type": "objective",
+      "id": "A",
+      "x": 8.0,
+      "y": 8.0,
+      "z": -3.9000000000000004,
+      "rot_z": 0.0,
+      "room": "vault_room",
+      "meta": {
+        "kind": "secure"
+      }
+    },
+    {
+      "name": "EXTRACTION_STREET",
+      "type": "extraction",
+      "id": "STREET",
+      "x": 6.0,
+      "y": -16.0,
+      "z": 0,
+      "rot_z": 0.0,
+      "room": null
+    },
+    {
+      "name": "COVER_HIGH",
+      "type": "cover_high",
+      "id": null,
+      "x": -6.0,
+      "y": -5.0,
+      "z": 0,
+      "rot_z": 0.0,
+      "room": "grand_lobby"
+    },
+    {
+      "name": "COVER_LOW",
+      "type": "cover_low",
+      "id": null,
+      "x": 4.0,
+      "y": -8.0,
+      "z": 0,
+      "rot_z": 0.0,
+      "room": "grand_lobby"
+    },
+    {
+      "name": "CAMERA_SOCKET_01",
+      "type": "camera_socket",
+      "id": "01",
+      "x": 17.0,
+      "y": -12.0,
+      "z": 3.4,
+      "rot_z": 0.0,
+      "room": "grand_lobby"
+    },
+    {
+      "name": "CAMERA_SOCKET_02",
+      "type": "camera_socket",
+      "id": "02",
+      "x": -17.0,
+      "y": 12.0,
+      "z": -0.6,
+      "rot_z": 0.0,
+      "room": "vault_antechamber"
+    }
+  ],
+  "rooms": [
+    {
+      "id": "grand_lobby",
+      "story": 0,
+      "bounds": [
+        -20.0,
+        -15.0,
+        20.0,
+        3.0
+      ],
+      "role": "public_entry",
+      "combat_range": "long",
+      "fortifiable": false,
+      "objective": false,
+      "center": [
+        0.0,
+        -6.0,
+        0.0
+      ]
+    },
+    {
+      "id": "teller_line",
+      "story": 0,
+      "bounds": [
+        -20.0,
+        3.0,
+        6.0,
+        15.0
+      ],
+      "role": "connector",
+      "combat_range": "medium",
+      "fortifiable": false,
+      "objective": false,
+      "center": [
+        -7.0,
+        9.0,
+        0.0
+      ]
+    },
+    {
+      "id": "security_office",
+      "story": 0,
+      "bounds": [
+        6.0,
+        3.0,
+        20.0,
+        15.0
+      ],
+      "role": "fortifiable",
+      "combat_range": "close",
+      "fortifiable": true,
+      "objective": false,
+      "center": [
+        13.0,
+        9.0,
+        0.0
+      ]
+    },
+    {
+      "id": "mezzanine",
+      "story": 1,
+      "bounds": [
+        -20.0,
+        -15.0,
+        20.0,
+        0.0
+      ],
+      "role": "connector",
+      "combat_range": "medium",
+      "fortifiable": false,
+      "objective": false,
+      "center": [
+        0.0,
+        -7.5,
+        4.2
+      ]
+    },
+    {
+      "id": "boardroom",
+      "story": 1,
+      "bounds": [
+        -20.0,
+        0.0,
+        20.0,
+        15.0
+      ],
+      "role": "fortifiable",
+      "combat_range": "close",
+      "fortifiable": true,
+      "objective": false,
+      "center": [
+        0.0,
+        7.5,
+        4.2
+      ]
+    },
+    {
+      "id": "vault_antechamber",
+      "story": -1,
+      "bounds": [
+        -20.0,
+        -15.0,
+        20.0,
+        2.0
+      ],
+      "role": "connector",
+      "combat_range": "medium",
+      "fortifiable": false,
+      "objective": false,
+      "center": [
+        0.0,
+        -6.5,
+        -4.2
+      ]
+    },
+    {
+      "id": "vault_room",
+      "story": -1,
+      "bounds": [
+        -20.0,
+        2.0,
+        20.0,
+        15.0
+      ],
+      "role": "objective_room",
+      "combat_range": "close",
+      "fortifiable": true,
+      "objective": true,
+      "center": [
+        0.0,
+        8.5,
+        -4.2
+      ]
+    }
+  ],
+  "vertical_links": [
+    {
+      "kind": "hatch",
+      "role": null,
+      "from_story": null,
+      "to_story": null,
+      "story": 2,
+      "x": 16.0,
+      "y": 12.0,
+      "breachable": null
+    }
+  ],
+  "openings": [
+    {
+      "wall": "ext_0_N",
+      "kind": "breach",
+      "story": 0,
+      "x": 6.0,
+      "y": 15.0,
+      "z": 1.25,
+      "width": 1.4,
+      "height": 2.2,
+      "sill": 0.0,
+      "tag": null,
+      "breach_class": "soft_wall",
+      "material": "drywall",
+      "vaultable": false,
+      "reinforceable": false,
+      "building": "bank_branch_a04"
+    },
+    {
+      "wall": "ext_0_S",
+      "kind": "door",
+      "story": 0,
+      "x": 0.0,
+      "y": -15.0,
+      "z": 1.25,
+      "width": 2.2,
+      "height": 2.2,
+      "sill": 0.0,
+      "tag": "main_entry",
+      "breach_class": null,
+      "material": null,
+      "vaultable": false,
+      "reinforceable": false,
+      "building": "bank_branch_a04"
+    },
+    {
+      "wall": "ext_0_S",
+      "kind": "window",
+      "story": 0,
+      "x": -12.0,
+      "y": -15.0,
+      "z": 2.45,
+      "width": 1.8,
+      "height": 1.4,
+      "sill": 1.6,
+      "tag": null,
+      "breach_class": null,
+      "material": null,
+      "vaultable": false,
+      "reinforceable": false,
+      "building": "bank_branch_a04"
+    },
+    {
+      "wall": "ext_0_S",
+      "kind": "window",
+      "story": 0,
+      "x": 12.0,
+      "y": -15.0,
+      "z": 2.45,
+      "width": 1.8,
+      "height": 1.4,
+      "sill": 1.6,
+      "tag": null,
+      "breach_class": null,
+      "material": null,
+      "vaultable": false,
+      "reinforceable": false,
+      "building": "bank_branch_a04"
+    },
+    {
+      "wall": "ext_0_E",
+      "kind": "door",
+      "story": 0,
+      "x": 20.0,
+      "y": 7.5,
+      "z": 1.25,
+      "width": 1.25,
+      "height": 2.2,
+      "sill": 0.0,
+      "tag": "service_entry",
+      "breach_class": null,
+      "material": null,
+      "vaultable": false,
+      "reinforceable": false,
+      "building": "bank_branch_a04"
+    },
+    {
+      "wall": "ext_0_W",
+      "kind": "door",
+      "story": 0,
+      "x": -20.0,
+      "y": -6.0,
+      "z": 1.25,
+      "width": 1.25,
+      "height": 2.2,
+      "sill": 0.0,
+      "tag": "side_entry",
+      "breach_class": null,
+      "material": null,
+      "vaultable": false,
+      "reinforceable": false,
+      "building": "bank_branch_a04"
+    },
+    {
+      "wall": "ext_1_N",
+      "kind": "window",
+      "story": 1,
+      "x": -10.0,
+      "y": 15.0,
+      "z": 6.25,
+      "width": 1.6,
+      "height": 1.4,
+      "sill": 1.2,
+      "tag": null,
+      "breach_class": null,
+      "material": null,
+      "vaultable": false,
+      "reinforceable": false,
+      "building": "bank_branch_a04"
+    },
+    {
+      "wall": "ext_1_N",
+      "kind": "window",
+      "story": 1,
+      "x": 10.0,
+      "y": 15.0,
+      "z": 6.25,
+      "width": 1.6,
+      "height": 1.4,
+      "sill": 1.2,
+      "tag": null,
+      "breach_class": null,
+      "material": null,
+      "vaultable": false,
+      "reinforceable": false,
+      "building": "bank_branch_a04"
+    },
+    {
+      "wall": "ext_1_S",
+      "kind": "window",
+      "story": 1,
+      "x": -10.0,
+      "y": -15.0,
+      "z": 6.25,
+      "width": 1.6,
+      "height": 1.4,
+      "sill": 1.2,
+      "tag": null,
+      "breach_class": null,
+      "material": null,
+      "vaultable": false,
+      "reinforceable": false,
+      "building": "bank_branch_a04"
+    },
+    {
+      "wall": "ext_1_S",
+      "kind": "window",
+      "story": 1,
+      "x": 10.0,
+      "y": -15.0,
+      "z": 6.25,
+      "width": 1.6,
+      "height": 1.4,
+      "sill": 1.2,
+      "tag": null,
+      "breach_class": null,
+      "material": null,
+      "vaultable": false,
+      "reinforceable": false,
+      "building": "bank_branch_a04"
+    },
+    {
+      "wall": "int_0_0",
+      "kind": "door",
+      "story": 0,
+      "x": -12.0,
+      "y": 3.0,
+      "z": 1.25,
+      "width": 1.25,
+      "height": 2.2,
+      "sill": 0.0,
+      "tag": null,
+      "breach_class": null,
+      "material": null,
+      "vaultable": false,
+      "reinforceable": false,
+      "building": "bank_branch_a04"
+    },
+    {
+      "wall": "int_0_0",
+      "kind": "door",
+      "story": 0,
+      "x": 12.0,
+      "y": 3.0,
+      "z": 1.25,
+      "width": 1.25,
+      "height": 2.2,
+      "sill": 0.0,
+      "tag": null,
+      "breach_class": null,
+      "material": null,
+      "vaultable": false,
+      "reinforceable": false,
+      "building": "bank_branch_a04"
+    },
+    {
+      "wall": "int_0_1",
+      "kind": "door",
+      "story": 0,
+      "x": 6.0,
+      "y": 9.0,
+      "z": 1.25,
+      "width": 1.25,
+      "height": 2.2,
+      "sill": 0.0,
+      "tag": null,
+      "breach_class": null,
+      "material": null,
+      "vaultable": false,
+      "reinforceable": false,
+      "building": "bank_branch_a04"
+    },
+    {
+      "wall": "int_1_2",
+      "kind": "door",
+      "story": 1,
+      "x": -14.0,
+      "y": 0.0,
+      "z": 5.45,
+      "width": 1.25,
+      "height": 2.2,
+      "sill": 0.0,
+      "tag": null,
+      "breach_class": null,
+      "material": null,
+      "vaultable": false,
+      "reinforceable": false,
+      "building": "bank_branch_a04"
+    },
+    {
+      "wall": "int_1_2",
+      "kind": "door",
+      "story": 1,
+      "x": 14.0,
+      "y": 0.0,
+      "z": 5.45,
+      "width": 1.25,
+      "height": 2.2,
+      "sill": 0.0,
+      "tag": null,
+      "breach_class": null,
+      "material": null,
+      "vaultable": false,
+      "reinforceable": false,
+      "building": "bank_branch_a04"
+    },
+    {
+      "wall": "int_-1_3",
+      "kind": "door",
+      "story": -1,
+      "x": -10.0,
+      "y": 2.0,
+      "z": -2.95,
+      "width": 1.25,
+      "height": 2.2,
+      "sill": 0.0,
+      "tag": "vault_gate",
+      "breach_class": null,
+      "material": null,
+      "vaultable": false,
+      "reinforceable": true,
+      "building": "bank_branch_a04"
+    },
+    {
+      "wall": "int_-1_3",
+      "kind": "breach",
+      "story": -1,
+      "x": 12.0,
+      "y": 2.0,
+      "z": -2.95,
+      "width": 1.5,
+      "height": 2.2,
+      "sill": 0.0,
+      "tag": null,
+      "breach_class": "reinforced",
+      "material": "concrete",
+      "vaultable": false,
+      "reinforceable": false,
+      "building": "bank_branch_a04"
+    }
+  ],
+  "objectives": [],
+  "loot": [],
+  "zones": [],
+  "materials": [
+    {
+      "id": "concrete",
+      "acoustic": "Concrete",
+      "absorption": 0.7,
+      "damping": 0.6
+    },
+    {
+      "id": "drywall",
+      "acoustic": "Drywall",
+      "absorption": null,
+      "damping": null
+    },
+    {
+      "id": "glass",
+      "acoustic": "Glass",
+      "absorption": 0.1,
+      "damping": 0.05
+    },
+    {
+      "id": "metal",
+      "acoustic": "Metal",
+      "absorption": 0.5,
+      "damping": 0.3
+    },
+    {
+      "id": "wood",
+      "acoustic": "Wood",
+      "absorption": null,
+      "damping": null
+    }
+  ],
+  "surfaces": [
+    {
+      "node": "ext_col_-1_N_seg0",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_-1_N_seg1",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_-1_N_seg2",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_-1_N_seg3",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_-1_N_seg4",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_-1_N_seg5",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_-1_N_seg6",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_-1_N_seg7",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_-1_N_seg8",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_-1_N_seg9",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_-1_N_seg10",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_-1_N_seg11",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_-1_N_seg12",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_-1_N_seg13",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_-1_N_seg14",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_-1_N_seg15",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_-1_N_seg16",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_-1_N_seg17",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_-1_N_seg18",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_-1_N_seg19",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_-1_S_seg0",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_-1_S_seg1",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_-1_S_seg2",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_-1_S_seg3",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_-1_S_seg4",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_-1_S_seg5",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_-1_S_seg6",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_-1_S_seg7",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_-1_S_seg8",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_-1_S_seg9",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_-1_S_seg10",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_-1_S_seg11",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_-1_S_seg12",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_-1_S_seg13",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_-1_S_seg14",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_-1_S_seg15",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_-1_S_seg16",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_-1_S_seg17",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_-1_S_seg18",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_-1_S_seg19",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_-1_E_seg0",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_-1_E_seg1",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_-1_E_seg2",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_-1_E_seg3",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_-1_E_seg4",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_-1_E_seg5",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_-1_E_seg6",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_-1_E_seg7",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_-1_E_seg8",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_-1_E_seg9",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_-1_E_seg10",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_-1_E_seg11",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_-1_E_seg12",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_-1_E_seg13",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_-1_E_seg14",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_-1_W_seg0",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_-1_W_seg1",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_-1_W_seg2",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_-1_W_seg3",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_-1_W_seg4",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_-1_W_seg5",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_-1_W_seg6",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_-1_W_seg7",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_-1_W_seg8",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_-1_W_seg9",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_-1_W_seg10",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_-1_W_seg11",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_-1_W_seg12",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_-1_W_seg13",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_-1_W_seg14",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_N_seg0",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_N_seg1",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_N_seg2",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_N_seg3",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_N_seg4",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_N_seg5",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_N_seg6",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_N_seg7",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_N_seg8",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_N_seg9",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_N_seg10",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_N_seg11",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_N_seg12",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_N_open0_lintel",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_N_open0_BREACHPANEL",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_N_seg13",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_N_seg14",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_N_seg15",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_N_seg16",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_N_seg17",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_N_seg18",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_N_seg19",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_S_seg0",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_S_seg1",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_S_seg2",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_S_seg3",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_S_open0_lintel",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_S_open0_sill",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_S_open0_pane",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_S_seg4",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_S_seg5",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_S_seg6",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_S_seg7",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_S_seg8",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_S_open1_lintel",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_S_seg9",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_S_seg10",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_S_seg11",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_S_seg12",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_S_seg13",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_S_open2_lintel",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_S_open2_sill",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_S_open2_pane",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_S_seg14",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_S_seg15",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_S_seg16",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_S_seg17",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_E_seg0",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_E_seg1",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_E_seg2",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_E_seg3",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_E_seg4",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_E_seg5",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_E_seg6",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_E_seg7",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_E_seg8",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_E_seg9",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_E_seg10",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_E_open0_lintel",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_E_seg11",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_E_seg12",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_E_seg13",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_E_seg14",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_W_seg0",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_W_seg1",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_W_seg2",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_W_seg3",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_W_seg4",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_W_open0_lintel",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_W_seg5",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_W_seg6",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_W_seg7",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_W_seg8",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_W_seg9",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_W_seg10",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_W_seg11",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_W_seg12",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_W_seg13",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_W_seg14",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_W_seg15",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_N_seg0",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_N_seg1",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_N_seg2",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_N_seg3",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_N_seg4",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_N_open0_lintel",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_N_open0_sill",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_N_open0_pane",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_N_seg5",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_N_seg6",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_N_seg7",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_N_seg8",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_N_seg9",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_N_seg10",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_N_seg11",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_N_seg12",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_N_seg13",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_N_seg14",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_N_open1_lintel",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_N_open1_sill",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_N_open1_pane",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_N_seg15",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_N_seg16",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_N_seg17",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_N_seg18",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_N_seg19",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_S_seg0",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_S_seg1",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_S_seg2",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_S_seg3",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_S_seg4",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_S_open0_lintel",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_S_open0_sill",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_S_open0_pane",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_S_seg5",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_S_seg6",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_S_seg7",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_S_seg8",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_S_seg9",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_S_seg10",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_S_seg11",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_S_seg12",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_S_seg13",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_S_seg14",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_S_open1_lintel",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_S_open1_sill",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_S_open1_pane",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_S_seg15",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_S_seg16",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_S_seg17",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_S_seg18",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_S_seg19",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_E_seg0",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_E_seg1",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_E_seg2",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_E_seg3",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_E_seg4",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_E_seg5",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_E_seg6",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_E_seg7",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_E_seg8",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_E_seg9",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_E_seg10",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_E_seg11",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_E_seg12",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_E_seg13",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_E_seg14",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_W_seg0",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_W_seg1",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_W_seg2",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_W_seg3",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_W_seg4",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_W_seg5",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_W_seg6",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_W_seg7",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_W_seg8",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_W_seg9",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_W_seg10",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_W_seg11",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_W_seg12",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_W_seg13",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_W_seg14",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "int_col_0_0_seg0",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "int_col_0_0_seg1",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "int_col_0_0_seg2",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "int_col_0_0_seg3",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "int_col_0_0_open0_lintel",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "int_col_0_0_seg4",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "int_col_0_0_seg5",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "int_col_0_0_seg6",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "int_col_0_0_seg7",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "int_col_0_0_seg8",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "int_col_0_0_seg9",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "int_col_0_0_seg10",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "int_col_0_0_seg11",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "int_col_0_0_seg12",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "int_col_0_0_seg13",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "int_col_0_0_seg14",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "int_col_0_0_seg15",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "int_col_0_0_open1_lintel",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "int_col_0_0_seg16",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "int_col_0_0_seg17",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "int_col_0_0_seg18",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "int_col_0_0_seg19",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "int_col_0_1_seg0",
+      "material": {
+        "id": "drywall",
+        "acoustic": "Drywall",
+        "absorption": null,
+        "damping": null
+      }
+    },
+    {
+      "node": "int_col_0_1_seg1",
+      "material": {
+        "id": "drywall",
+        "acoustic": "Drywall",
+        "absorption": null,
+        "damping": null
+      }
+    },
+    {
+      "node": "int_col_0_1_seg2",
+      "material": {
+        "id": "drywall",
+        "acoustic": "Drywall",
+        "absorption": null,
+        "damping": null
+      }
+    },
+    {
+      "node": "int_col_0_1_open0_lintel",
+      "material": {
+        "id": "drywall",
+        "acoustic": "Drywall",
+        "absorption": null,
+        "damping": null
+      }
+    },
+    {
+      "node": "int_col_0_1_seg3",
+      "material": {
+        "id": "drywall",
+        "acoustic": "Drywall",
+        "absorption": null,
+        "damping": null
+      }
+    },
+    {
+      "node": "int_col_0_1_seg4",
+      "material": {
+        "id": "drywall",
+        "acoustic": "Drywall",
+        "absorption": null,
+        "damping": null
+      }
+    },
+    {
+      "node": "int_col_0_1_seg5",
+      "material": {
+        "id": "drywall",
+        "acoustic": "Drywall",
+        "absorption": null,
+        "damping": null
+      }
+    },
+    {
+      "node": "int_col_1_2_seg0",
+      "material": {
+        "id": "drywall",
+        "acoustic": "Drywall",
+        "absorption": null,
+        "damping": null
+      }
+    },
+    {
+      "node": "int_col_1_2_seg1",
+      "material": {
+        "id": "drywall",
+        "acoustic": "Drywall",
+        "absorption": null,
+        "damping": null
+      }
+    },
+    {
+      "node": "int_col_1_2_seg2",
+      "material": {
+        "id": "drywall",
+        "acoustic": "Drywall",
+        "absorption": null,
+        "damping": null
+      }
+    },
+    {
+      "node": "int_col_1_2_open0_lintel",
+      "material": {
+        "id": "drywall",
+        "acoustic": "Drywall",
+        "absorption": null,
+        "damping": null
+      }
+    },
+    {
+      "node": "int_col_1_2_seg3",
+      "material": {
+        "id": "drywall",
+        "acoustic": "Drywall",
+        "absorption": null,
+        "damping": null
+      }
+    },
+    {
+      "node": "int_col_1_2_seg4",
+      "material": {
+        "id": "drywall",
+        "acoustic": "Drywall",
+        "absorption": null,
+        "damping": null
+      }
+    },
+    {
+      "node": "int_col_1_2_seg5",
+      "material": {
+        "id": "drywall",
+        "acoustic": "Drywall",
+        "absorption": null,
+        "damping": null
+      }
+    },
+    {
+      "node": "int_col_1_2_seg6",
+      "material": {
+        "id": "drywall",
+        "acoustic": "Drywall",
+        "absorption": null,
+        "damping": null
+      }
+    },
+    {
+      "node": "int_col_1_2_seg7",
+      "material": {
+        "id": "drywall",
+        "acoustic": "Drywall",
+        "absorption": null,
+        "damping": null
+      }
+    },
+    {
+      "node": "int_col_1_2_seg8",
+      "material": {
+        "id": "drywall",
+        "acoustic": "Drywall",
+        "absorption": null,
+        "damping": null
+      }
+    },
+    {
+      "node": "int_col_1_2_seg9",
+      "material": {
+        "id": "drywall",
+        "acoustic": "Drywall",
+        "absorption": null,
+        "damping": null
+      }
+    },
+    {
+      "node": "int_col_1_2_seg10",
+      "material": {
+        "id": "drywall",
+        "acoustic": "Drywall",
+        "absorption": null,
+        "damping": null
+      }
+    },
+    {
+      "node": "int_col_1_2_seg11",
+      "material": {
+        "id": "drywall",
+        "acoustic": "Drywall",
+        "absorption": null,
+        "damping": null
+      }
+    },
+    {
+      "node": "int_col_1_2_seg12",
+      "material": {
+        "id": "drywall",
+        "acoustic": "Drywall",
+        "absorption": null,
+        "damping": null
+      }
+    },
+    {
+      "node": "int_col_1_2_seg13",
+      "material": {
+        "id": "drywall",
+        "acoustic": "Drywall",
+        "absorption": null,
+        "damping": null
+      }
+    },
+    {
+      "node": "int_col_1_2_seg14",
+      "material": {
+        "id": "drywall",
+        "acoustic": "Drywall",
+        "absorption": null,
+        "damping": null
+      }
+    },
+    {
+      "node": "int_col_1_2_seg15",
+      "material": {
+        "id": "drywall",
+        "acoustic": "Drywall",
+        "absorption": null,
+        "damping": null
+      }
+    },
+    {
+      "node": "int_col_1_2_seg16",
+      "material": {
+        "id": "drywall",
+        "acoustic": "Drywall",
+        "absorption": null,
+        "damping": null
+      }
+    },
+    {
+      "node": "int_col_1_2_open1_lintel",
+      "material": {
+        "id": "drywall",
+        "acoustic": "Drywall",
+        "absorption": null,
+        "damping": null
+      }
+    },
+    {
+      "node": "int_col_1_2_seg17",
+      "material": {
+        "id": "drywall",
+        "acoustic": "Drywall",
+        "absorption": null,
+        "damping": null
+      }
+    },
+    {
+      "node": "int_col_1_2_seg18",
+      "material": {
+        "id": "drywall",
+        "acoustic": "Drywall",
+        "absorption": null,
+        "damping": null
+      }
+    },
+    {
+      "node": "int_col_1_2_seg19",
+      "material": {
+        "id": "drywall",
+        "acoustic": "Drywall",
+        "absorption": null,
+        "damping": null
+      }
+    },
+    {
+      "node": "int_col_-1_3_seg0",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "int_col_-1_3_seg1",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "int_col_-1_3_seg2",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "int_col_-1_3_seg3",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "int_col_-1_3_seg4",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "int_col_-1_3_open0_lintel",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "int_col_-1_3_seg5",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "int_col_-1_3_seg6",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "int_col_-1_3_seg7",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "int_col_-1_3_seg8",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "int_col_-1_3_seg9",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "int_col_-1_3_seg10",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "int_col_-1_3_seg11",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "int_col_-1_3_seg12",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "int_col_-1_3_seg13",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "int_col_-1_3_seg14",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "int_col_-1_3_seg15",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "int_col_-1_3_open1_lintel",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "int_col_-1_3_open1_BREACHPANEL",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "int_col_-1_3_seg16",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "int_col_-1_3_seg17",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "int_col_-1_3_seg18",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "int_col_-1_3_seg19",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "VAULTLEDGE_0-convcolonly",
+      "material": {
+        "id": "wood",
+        "acoustic": "Wood",
+        "absorption": null,
+        "damping": null
+      }
+    },
+    {
+      "node": "teller_counter_col",
+      "material": {
+        "id": "wood",
+        "acoustic": "Wood",
+        "absorption": null,
+        "damping": null
+      }
+    },
+    {
+      "node": "column_w_col",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "column_e_col",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "VAULT_DOOR_col",
+      "material": {
+        "id": "metal",
+        "acoustic": "Metal",
+        "absorption": 0.5,
+        "damping": 0.3
+      }
+    }
+  ],
+  "interactives": [
+    {
+      "id": "bank_branch_a04:if:d489e68d",
+      "kind": "breach_wall",
+      "slot_ref": "ext_0_N_open0",
+      "transform": {
+        "translation": [
+          6.0,
+          15.0,
+          1.25
+        ],
+        "rot_y": 0
+      },
+      "states": [
+        "intact",
+        "breached"
+      ],
+      "default": "intact",
+      "transitions": [
+        {
+          "event": "breach",
+          "from": "intact",
+          "to": "breached"
+        }
+      ],
+      "source": "inferred",
+      "reversible": false,
+      "building": "bank_branch_a04"
+    },
+    {
+      "id": "bank_branch_a04:if:1219d57c",
+      "kind": "door",
+      "slot_ref": "ext_0_S_open1",
+      "transform": {
+        "translation": [
+          0.0,
+          -15.0,
+          1.25
+        ],
+        "rot_y": 180
+      },
+      "states": [
+        "closed",
+        "open"
+      ],
+      "default": "closed",
+      "transitions": [
+        {
+          "event": "toggle",
+          "from": "closed",
+          "to": "open"
+        },
+        {
+          "event": "toggle",
+          "from": "open",
+          "to": "closed"
+        }
+      ],
+      "source": "inferred",
+      "reversible": true,
+      "building": "bank_branch_a04"
+    },
+    {
+      "id": "bank_branch_a04:if:1cb3e803",
+      "kind": "door",
+      "slot_ref": "ext_0_E_open0",
+      "transform": {
+        "translation": [
+          20.0,
+          7.5,
+          1.25
+        ],
+        "rot_y": 90
+      },
+      "states": [
+        "closed",
+        "open"
+      ],
+      "default": "closed",
+      "transitions": [
+        {
+          "event": "toggle",
+          "from": "closed",
+          "to": "open"
+        },
+        {
+          "event": "toggle",
+          "from": "open",
+          "to": "closed"
+        }
+      ],
+      "source": "inferred",
+      "reversible": true,
+      "building": "bank_branch_a04"
+    },
+    {
+      "id": "bank_branch_a04:if:a1de7718",
+      "kind": "door",
+      "slot_ref": "ext_0_W_open0",
+      "transform": {
+        "translation": [
+          -20.0,
+          -6.0,
+          1.25
+        ],
+        "rot_y": 270
+      },
+      "states": [
+        "closed",
+        "open"
+      ],
+      "default": "closed",
+      "transitions": [
+        {
+          "event": "toggle",
+          "from": "closed",
+          "to": "open"
+        },
+        {
+          "event": "toggle",
+          "from": "open",
+          "to": "closed"
+        }
+      ],
+      "source": "inferred",
+      "reversible": true,
+      "building": "bank_branch_a04"
+    },
+    {
+      "id": "bank_branch_a04:if:89b61cf2",
+      "kind": "door",
+      "slot_ref": "int_0_0_open0",
+      "transform": {
+        "translation": [
+          -12.0,
+          3.0,
+          1.25
+        ],
+        "rot_y": 0
+      },
+      "states": [
+        "closed",
+        "open"
+      ],
+      "default": "closed",
+      "transitions": [
+        {
+          "event": "toggle",
+          "from": "closed",
+          "to": "open"
+        },
+        {
+          "event": "toggle",
+          "from": "open",
+          "to": "closed"
+        }
+      ],
+      "source": "inferred",
+      "reversible": true,
+      "building": "bank_branch_a04"
+    },
+    {
+      "id": "bank_branch_a04:if:12a9d585",
+      "kind": "door",
+      "slot_ref": "int_0_0_open1",
+      "transform": {
+        "translation": [
+          12.0,
+          3.0,
+          1.25
+        ],
+        "rot_y": 0
+      },
+      "states": [
+        "closed",
+        "open"
+      ],
+      "default": "closed",
+      "transitions": [
+        {
+          "event": "toggle",
+          "from": "closed",
+          "to": "open"
+        },
+        {
+          "event": "toggle",
+          "from": "open",
+          "to": "closed"
+        }
+      ],
+      "source": "inferred",
+      "reversible": true,
+      "building": "bank_branch_a04"
+    },
+    {
+      "id": "bank_branch_a04:if:9ba7f516",
+      "kind": "door",
+      "slot_ref": "int_0_1_open0",
+      "transform": {
+        "translation": [
+          6.0,
+          9.0,
+          1.25
+        ],
+        "rot_y": 90
+      },
+      "states": [
+        "closed",
+        "open"
+      ],
+      "default": "closed",
+      "transitions": [
+        {
+          "event": "toggle",
+          "from": "closed",
+          "to": "open"
+        },
+        {
+          "event": "toggle",
+          "from": "open",
+          "to": "closed"
+        }
+      ],
+      "source": "inferred",
+      "reversible": true,
+      "building": "bank_branch_a04"
+    },
+    {
+      "id": "bank_branch_a04:if:0c463ff3",
+      "kind": "door",
+      "slot_ref": "int_1_2_open0",
+      "transform": {
+        "translation": [
+          -14.0,
+          0.0,
+          5.45
+        ],
+        "rot_y": 0
+      },
+      "states": [
+        "closed",
+        "open"
+      ],
+      "default": "closed",
+      "transitions": [
+        {
+          "event": "toggle",
+          "from": "closed",
+          "to": "open"
+        },
+        {
+          "event": "toggle",
+          "from": "open",
+          "to": "closed"
+        }
+      ],
+      "source": "inferred",
+      "reversible": true,
+      "building": "bank_branch_a04"
+    },
+    {
+      "id": "bank_branch_a04:if:3daccc80",
+      "kind": "door",
+      "slot_ref": "int_1_2_open1",
+      "transform": {
+        "translation": [
+          14.0,
+          0.0,
+          5.45
+        ],
+        "rot_y": 0
+      },
+      "states": [
+        "closed",
+        "open"
+      ],
+      "default": "closed",
+      "transitions": [
+        {
+          "event": "toggle",
+          "from": "closed",
+          "to": "open"
+        },
+        {
+          "event": "toggle",
+          "from": "open",
+          "to": "closed"
+        }
+      ],
+      "source": "inferred",
+      "reversible": true,
+      "building": "bank_branch_a04"
+    },
+    {
+      "id": "bank_branch_a04:if:eb74b0cf",
+      "kind": "door",
+      "slot_ref": "int_-1_3_open0",
+      "transform": {
+        "translation": [
+          -10.0,
+          2.0,
+          -2.95
+        ],
+        "rot_y": 0
+      },
+      "states": [
+        "closed",
+        "open"
+      ],
+      "default": "closed",
+      "transitions": [
+        {
+          "event": "toggle",
+          "from": "closed",
+          "to": "open"
+        },
+        {
+          "event": "toggle",
+          "from": "open",
+          "to": "closed"
+        }
+      ],
+      "source": "inferred",
+      "reversible": true,
+      "building": "bank_branch_a04"
+    },
+    {
+      "id": "bank_branch_a04:if:84cedf2e",
+      "kind": "breach_wall",
+      "slot_ref": "int_-1_3_open1",
+      "transform": {
+        "translation": [
+          12.0,
+          2.0,
+          -2.95
+        ],
+        "rot_y": 0
+      },
+      "states": [
+        "intact",
+        "breached"
+      ],
+      "default": "intact",
+      "transitions": [
+        {
+          "event": "breach",
+          "from": "intact",
+          "to": "breached"
+        }
+      ],
+      "source": "inferred",
+      "reversible": false,
+      "building": "bank_branch_a04"
+    }
+  ],
+  "stair_systems": [
+    {
+      "id": "a03_stair_bw",
+      "stack_id": null,
+      "role": "service",
+      "shape": "straight",
+      "facing": "E",
+      "exterior": false,
+      "channels": 1,
+      "roof_access": false,
+      "transfer": false,
+      "floors_served": [
+        -1,
+        0
+      ],
+      "footprint_polygon": [
+        [
+          -16.0,
+          -8.8
+        ],
+        [
+          -12.0,
+          -8.8
+        ],
+        [
+          -12.0,
+          -7.2
+        ],
+        [
+          -16.0,
+          -7.2
+        ]
+      ],
+      "clear_width_m": 1.6,
+      "approach": [
+        {
+          "floor": -1,
+          "room": "vault_antechamber",
+          "room_role": "connector"
+        },
+        {
+          "floor": 0,
+          "room": "grand_lobby",
+          "room_role": "public_entry"
+        }
+      ],
+      "discharge": {
+        "floor": 0,
+        "type": "direct_exterior",
+        "room": "grand_lobby",
+        "via": [],
+        "destination": "grand_lobby",
+        "route_hops": 0
+      },
+      "egress": {
+        "counts_as_exit": false
+      },
+      "landings": [
+        {
+          "end": "lower",
+          "story": -1,
+          "rect": [
+            -17.2,
+            -8.8,
+            -16.0,
+            -7.2
+          ],
+          "point": [
+            -16.6,
+            -8.0,
+            -4.2
+          ],
+          "dir": [
+            -1,
+            0
+          ]
+        },
+        {
+          "end": "upper",
+          "story": 0,
+          "rect": [
+            -11.2,
+            -8.8,
+            -10.0,
+            -7.2
+          ],
+          "point": [
+            -10.6,
+            -8.0,
+            0.0
+          ],
+          "dir": [
+            1,
+            0
+          ]
+        }
+      ],
+      "nav_endpoints": {
+        "lower": [
+          -16.6,
+          -8.0,
+          -4.2
+        ],
+        "upper": [
+          -10.6,
+          -8.0,
+          0.0
+        ]
+      },
+      "enclosure": "open",
+      "door_nodes": [
+        {
+          "floor": -1,
+          "kind": "door",
+          "wall": "int_-1_3",
+          "pos": -0.25,
+          "interactive": "bank_branch_a04:if:eb74b0cf",
+          "default_state": "closed",
+          "connects_from": "vault_room",
+          "discharge_door": false
+        },
+        {
+          "floor": -1,
+          "kind": "breach",
+          "wall": "int_-1_3",
+          "pos": 0.3,
+          "interactive": "bank_branch_a04:if:84cedf2e",
+          "default_state": "intact",
+          "connects_from": "vault_room",
+          "discharge_door": false
+        },
+        {
+          "floor": 0,
+          "kind": "door",
+          "wall": "int_0_0",
+          "pos": -0.3,
+          "interactive": "bank_branch_a04:if:89b61cf2",
+          "default_state": "closed",
+          "connects_from": "teller_line",
+          "discharge_door": false
+        },
+        {
+          "floor": 0,
+          "kind": "door",
+          "wall": "int_0_0",
+          "pos": 0.3,
+          "interactive": "bank_branch_a04:if:12a9d585",
+          "default_state": "closed",
+          "connects_from": "security_office",
+          "discharge_door": false
+        },
+        {
+          "floor": 0,
+          "kind": "door",
+          "wall": "ext_0_S",
+          "pos": 0.0,
+          "interactive": "bank_branch_a04:if:1219d57c",
+          "default_state": "closed",
+          "connects_from": "exterior",
+          "discharge_door": true
+        },
+        {
+          "floor": 0,
+          "kind": "door",
+          "wall": "ext_0_W",
+          "pos": -0.2,
+          "interactive": "bank_branch_a04:if:a1de7718",
+          "default_state": "closed",
+          "connects_from": "exterior",
+          "discharge_door": true
+        }
+      ],
+      "gameplay": {
+        "network_authority": "server",
+        "replicate_door_state": true,
+        "allow_random_lock": true,
+        "egress_side_always_openable": false,
+        "fire_door": false,
+        "self_closing": false,
+        "ai_route_cost_multiplier": 1.0,
+        "congestion": {
+          "clear_width_m": 1.6,
+          "max_agents_abreast": 2,
+          "two_way_passable": true
+        }
+      }
+    },
+    {
+      "id": "a03_stair_be",
+      "stack_id": null,
+      "role": "service",
+      "shape": "straight",
+      "facing": "W",
+      "exterior": false,
+      "channels": 1,
+      "roof_access": false,
+      "transfer": false,
+      "floors_served": [
+        -1,
+        0
+      ],
+      "footprint_polygon": [
+        [
+          12.0,
+          -8.8
+        ],
+        [
+          16.0,
+          -8.8
+        ],
+        [
+          16.0,
+          -7.2
+        ],
+        [
+          12.0,
+          -7.2
+        ]
+      ],
+      "clear_width_m": 1.6,
+      "approach": [
+        {
+          "floor": -1,
+          "room": "vault_antechamber",
+          "room_role": "connector"
+        },
+        {
+          "floor": 0,
+          "room": "grand_lobby",
+          "room_role": "public_entry"
+        }
+      ],
+      "discharge": {
+        "floor": 0,
+        "type": "direct_exterior",
+        "room": "grand_lobby",
+        "via": [],
+        "destination": "grand_lobby",
+        "route_hops": 0
+      },
+      "egress": {
+        "counts_as_exit": false
+      },
+      "landings": [
+        {
+          "end": "lower",
+          "story": -1,
+          "rect": [
+            16.0,
+            -8.8,
+            17.2,
+            -7.2
+          ],
+          "point": [
+            16.6,
+            -8.0,
+            -4.2
+          ],
+          "dir": [
+            1,
+            0
+          ]
+        },
+        {
+          "end": "upper",
+          "story": 0,
+          "rect": [
+            10.0,
+            -8.8,
+            11.2,
+            -7.2
+          ],
+          "point": [
+            10.6,
+            -8.0,
+            0.0
+          ],
+          "dir": [
+            -1,
+            0
+          ]
+        }
+      ],
+      "nav_endpoints": {
+        "lower": [
+          16.6,
+          -8.0,
+          -4.2
+        ],
+        "upper": [
+          10.6,
+          -8.0,
+          0.0
+        ]
+      },
+      "enclosure": "open",
+      "door_nodes": [
+        {
+          "floor": -1,
+          "kind": "door",
+          "wall": "int_-1_3",
+          "pos": -0.25,
+          "interactive": "bank_branch_a04:if:eb74b0cf",
+          "default_state": "closed",
+          "connects_from": "vault_room",
+          "discharge_door": false
+        },
+        {
+          "floor": -1,
+          "kind": "breach",
+          "wall": "int_-1_3",
+          "pos": 0.3,
+          "interactive": "bank_branch_a04:if:84cedf2e",
+          "default_state": "intact",
+          "connects_from": "vault_room",
+          "discharge_door": false
+        },
+        {
+          "floor": 0,
+          "kind": "door",
+          "wall": "int_0_0",
+          "pos": -0.3,
+          "interactive": "bank_branch_a04:if:89b61cf2",
+          "default_state": "closed",
+          "connects_from": "teller_line",
+          "discharge_door": false
+        },
+        {
+          "floor": 0,
+          "kind": "door",
+          "wall": "int_0_0",
+          "pos": 0.3,
+          "interactive": "bank_branch_a04:if:12a9d585",
+          "default_state": "closed",
+          "connects_from": "security_office",
+          "discharge_door": false
+        },
+        {
+          "floor": 0,
+          "kind": "door",
+          "wall": "ext_0_S",
+          "pos": 0.0,
+          "interactive": "bank_branch_a04:if:1219d57c",
+          "default_state": "closed",
+          "connects_from": "exterior",
+          "discharge_door": true
+        },
+        {
+          "floor": 0,
+          "kind": "door",
+          "wall": "ext_0_W",
+          "pos": -0.2,
+          "interactive": "bank_branch_a04:if:a1de7718",
+          "default_state": "closed",
+          "connects_from": "exterior",
+          "discharge_door": true
+        }
+      ],
+      "gameplay": {
+        "network_authority": "server",
+        "replicate_door_state": true,
+        "allow_random_lock": true,
+        "egress_side_always_openable": false,
+        "fire_door": false,
+        "self_closing": false,
+        "ai_route_cost_multiplier": 1.0,
+        "congestion": {
+          "clear_width_m": 1.6,
+          "max_agents_abreast": 2,
+          "two_way_passable": true
+        }
+      }
+    },
+    {
+      "id": "a03_stair_main",
+      "stack_id": null,
+      "role": "public_convenience",
+      "shape": "switchback",
+      "facing": "E",
+      "exterior": false,
+      "channels": 1,
+      "roof_access": false,
+      "transfer": false,
+      "floors_served": [
+        0,
+        1
+      ],
+      "footprint_polygon": [
+        [
+          -16.0,
+          7.4
+        ],
+        [
+          -12.0,
+          7.4
+        ],
+        [
+          -12.0,
+          10.6
+        ],
+        [
+          -16.0,
+          10.6
+        ]
+      ],
+      "clear_width_m": 1.6,
+      "approach": [
+        {
+          "floor": 0,
+          "room": "teller_line",
+          "room_role": "connector"
+        },
+        {
+          "floor": 1,
+          "room": "boardroom",
+          "room_role": "fortifiable"
+        }
+      ],
+      "discharge": {
+        "floor": 0,
+        "type": "direct_exterior",
+        "room": "teller_line",
+        "via": [],
+        "destination": "teller_line",
+        "route_hops": 0
+      },
+      "egress": {
+        "counts_as_exit": false
+      },
+      "landings": [
+        {
+          "end": "lower",
+          "story": 0,
+          "rect": [
+            -17.2,
+            7.4,
+            -16.0,
+            9.0
+          ],
+          "point": [
+            -16.6,
+            8.2,
+            0.0
+          ],
+          "dir": [
+            -1,
+            0
+          ]
+        },
+        {
+          "end": "upper",
+          "story": 1,
+          "rect": [
+            -11.2,
+            7.4,
+            -10.0,
+            9.0
+          ],
+          "point": [
+            -10.6,
+            8.2,
+            4.2
+          ],
+          "dir": [
+            1,
+            0
+          ]
+        }
+      ],
+      "nav_endpoints": {
+        "lower": [
+          -16.6,
+          8.2,
+          0.0
+        ],
+        "upper": [
+          -10.6,
+          8.2,
+          4.2
+        ]
+      },
+      "enclosure": "open",
+      "door_nodes": [
+        {
+          "floor": 0,
+          "kind": "door",
+          "wall": "int_0_0",
+          "pos": -0.3,
+          "interactive": "bank_branch_a04:if:89b61cf2",
+          "default_state": "closed",
+          "connects_from": "grand_lobby",
+          "discharge_door": false
+        },
+        {
+          "floor": 0,
+          "kind": "door",
+          "wall": "int_0_1",
+          "pos": 0.0,
+          "interactive": "bank_branch_a04:if:9ba7f516",
+          "default_state": "closed",
+          "connects_from": "security_office",
+          "discharge_door": false
+        },
+        {
+          "floor": 0,
+          "kind": "breach",
+          "wall": "ext_0_N",
+          "pos": 0.15,
+          "interactive": "bank_branch_a04:if:d489e68d",
+          "default_state": "intact",
+          "connects_from": "exterior",
+          "discharge_door": true
+        },
+        {
+          "floor": 1,
+          "kind": "door",
+          "wall": "int_1_2",
+          "pos": -0.35,
+          "interactive": "bank_branch_a04:if:0c463ff3",
+          "default_state": "closed",
+          "connects_from": "mezzanine",
+          "discharge_door": false
+        },
+        {
+          "floor": 1,
+          "kind": "door",
+          "wall": "int_1_2",
+          "pos": 0.35,
+          "interactive": "bank_branch_a04:if:3daccc80",
+          "default_state": "closed",
+          "connects_from": "mezzanine",
+          "discharge_door": false
+        }
+      ],
+      "gameplay": {
+        "network_authority": "server",
+        "replicate_door_state": true,
+        "allow_random_lock": true,
+        "egress_side_always_openable": false,
+        "fire_door": false,
+        "self_closing": false,
+        "ai_route_cost_multiplier": 1.0,
+        "congestion": {
+          "clear_width_m": 1.6,
+          "max_agents_abreast": 2,
+          "two_way_passable": true
+        }
+      }
+    }
+  ],
+  "circulation_contract": {
+    "version": 1,
+    "checks": [
+      "STAIR_ENTRY_FACES_SOLID",
+      "STAIR_EXIT_FACES_SOLID",
+      "STAIR_LOWER_LANDING_BLOCKED",
+      "STAIR_UPPER_LANDING_BLOCKED"
+    ],
+    "landing_depth_m": 1.2,
+    "exit_step_off_m": 0.8,
+    "all_compliant": true,
+    "stairs": [
+      {
+        "id": "a03_stair_bw",
+        "role": "service",
+        "facing": "E",
+        "traversable": true,
+        "physical_findings": [],
+        "compliant": true
+      },
+      {
+        "id": "a03_stair_be",
+        "role": "service",
+        "facing": "W",
+        "traversable": true,
+        "physical_findings": [],
+        "compliant": true
+      },
+      {
+        "id": "a03_stair_main",
+        "role": "public_convenience",
+        "facing": "E",
+        "traversable": true,
+        "physical_findings": [],
+        "compliant": true
+      }
+    ]
+  },
+  "ladders": [
+    {
+      "id": "a03_ladder_0",
+      "role": "roof_access",
+      "ladder_type": "fixed_vertical",
+      "placement_mode": "interior",
+      "lower_surface": "story_1",
+      "upper_surface": "roof",
+      "lower_anchor": [
+        16.0,
+        12.0,
+        4.2
+      ],
+      "upper_anchor": [
+        16.0,
+        12.0,
+        8.4
+      ],
+      "climb_height_m": 4.2,
+      "direction": "bidirectional",
+      "access_class": "staff_restricted",
+      "egress_classification": "not_egress",
+      "counts_as_primary_egress": false,
+      "counts_as_secondary_escape": false,
+      "counts_as_public_circulation": false,
+      "transition": {
+        "type": "roof_hatch_exit"
+      },
+      "geometry": {
+        "clear_width_m": 0.5,
+        "rung_spacing_m": 0.3,
+        "rung_center_to_wall_m": 0.15,
+        "climb_rect": [
+          [
+            15.6,
+            10.8
+          ],
+          [
+            16.4,
+            10.8
+          ],
+          [
+            16.4,
+            12.0
+          ],
+          [
+            15.6,
+            12.0
+          ]
+        ]
+      },
+      "fall_protection": {
+        "required": false,
+        "type": "none"
+      },
+      "access_control": {
+        "type": "locked_hatch"
+      },
+      "route_nodes": {
+        "lower_approach": [
+          16.0,
+          12.0,
+          4.2
+        ],
+        "lower_mount": [
+          16.0,
+          12.0,
+          4.3
+        ],
+        "climb_start": [
+          16.0,
+          12.0,
+          4.5
+        ],
+        "climb_end": [
+          16.0,
+          12.0,
+          8.1
+        ],
+        "upper_dismount": [
+          16.0,
+          12.0,
+          8.4
+        ],
+        "upper_route": [
+          16.0,
+          12.0,
+          8.4
+        ]
+      },
+      "traversal_component": {
+        "component": "LadderTraversal",
+        "mount_trigger": "a03_ladder_0_mount",
+        "dismount_trigger": "a03_ladder_0_dismount",
+        "climb_axis": [
+          [
+            16.0,
+            12.0,
+            4.2
+          ],
+          [
+            16.0,
+            12.0,
+            8.4
+          ]
+        ],
+        "direction": "bidirectional",
+        "animation_profile": "fixed_vertical",
+        "occupancy_state": "reservation",
+        "replication_state": "server",
+        "interaction_permissions": "restricted"
+      },
+      "nav_link": {
+        "id": "a03_ladder_0_navlink",
+        "start_position": [
+          16.0,
+          12.0,
+          4.2
+        ],
+        "end_position": [
+          16.0,
+          12.0,
+          8.4
+        ],
+        "bidirectional": true,
+        "cost": 3.0,
+        "agent_types": [
+          "player",
+          "ai_humanoid"
+        ],
+        "required_capability": "climb",
+        "access_state": "locked",
+        "reservation_state": "free"
+      },
+      "authority": {
+        "server_owned": [
+          "enabled",
+          "locked",
+          "deployed",
+          "obstructed",
+          "ai_reservation",
+          "objective_gating",
+          "player_transition_acceptance"
+        ],
+        "client_owned": [
+          "animation_blend",
+          "camera_motion",
+          "sound_playback",
+          "rung_hand_effects",
+          "traversal_prediction"
+        ]
+      },
+      "ai": {
+        "can_use": true,
+        "one_at_a_time": true,
+        "may_attack_while_climbing": false,
+        "should_wait_for_agent": true,
+        "may_follow_to_roof": true,
+        "recover_if_blocked": "return_to_lower_mount"
+      },
+      "combat": {
+        "weapons_allowed_while_climbing": false,
+        "can_be_interrupted": true,
+        "can_fall": true,
+        "can_slide_down": true,
+        "can_be_destroyed": false,
+        "can_be_blocked": true,
+        "occupancy_limit": 1
+      },
+      "gameplay": {
+        "player_traversable": true,
+        "ai_traversable": true,
+        "server_authoritative_state": true,
+        "interaction_required": true,
+        "mount_anchor_id": "a03_ladder_0_mount",
+        "dismount_anchor_id": "a03_ladder_0_dismount",
+        "occupancy_limit": 1
+      }
+    }
+  ],
+  "platforms": [],
+  "fire_escapes": [],
+  "surface_roles": {
+    "slab_-1": "floor",
+    "slab_0": "floor",
+    "slab_1": "floor",
+    "slab_2": "ceiling",
+    "ext_-1_N_seg0": "wall",
+    "ext_-1_N_seg1": "wall",
+    "ext_-1_N_seg2": "wall",
+    "ext_-1_N_seg3": "wall",
+    "ext_-1_N_seg4": "wall",
+    "ext_-1_N_seg5": "wall",
+    "ext_-1_N_seg6": "wall",
+    "ext_-1_N_seg7": "wall",
+    "ext_-1_N_seg8": "wall",
+    "ext_-1_N_seg9": "wall",
+    "ext_-1_N_seg10": "wall",
+    "ext_-1_N_seg11": "wall",
+    "ext_-1_N_seg12": "wall",
+    "ext_-1_N_seg13": "wall",
+    "ext_-1_N_seg14": "wall",
+    "ext_-1_N_seg15": "wall",
+    "ext_-1_N_seg16": "wall",
+    "ext_-1_N_seg17": "wall",
+    "ext_-1_N_seg18": "wall",
+    "ext_-1_N_seg19": "wall",
+    "ext_-1_S_seg0": "wall",
+    "ext_-1_S_seg1": "wall",
+    "ext_-1_S_seg2": "wall",
+    "ext_-1_S_seg3": "wall",
+    "ext_-1_S_seg4": "wall",
+    "ext_-1_S_seg5": "wall",
+    "ext_-1_S_seg6": "wall",
+    "ext_-1_S_seg7": "wall",
+    "ext_-1_S_seg8": "wall",
+    "ext_-1_S_seg9": "wall",
+    "ext_-1_S_seg10": "wall",
+    "ext_-1_S_seg11": "wall",
+    "ext_-1_S_seg12": "wall",
+    "ext_-1_S_seg13": "wall",
+    "ext_-1_S_seg14": "wall",
+    "ext_-1_S_seg15": "wall",
+    "ext_-1_S_seg16": "wall",
+    "ext_-1_S_seg17": "wall",
+    "ext_-1_S_seg18": "wall",
+    "ext_-1_S_seg19": "wall",
+    "ext_-1_E_seg0": "wall",
+    "ext_-1_E_seg1": "wall",
+    "ext_-1_E_seg2": "wall",
+    "ext_-1_E_seg3": "wall",
+    "ext_-1_E_seg4": "wall",
+    "ext_-1_E_seg5": "wall",
+    "ext_-1_E_seg6": "wall",
+    "ext_-1_E_seg7": "wall",
+    "ext_-1_E_seg8": "wall",
+    "ext_-1_E_seg9": "wall",
+    "ext_-1_E_seg10": "wall",
+    "ext_-1_E_seg11": "wall",
+    "ext_-1_E_seg12": "wall",
+    "ext_-1_E_seg13": "wall",
+    "ext_-1_E_seg14": "wall",
+    "ext_-1_W_seg0": "wall",
+    "ext_-1_W_seg1": "wall",
+    "ext_-1_W_seg2": "wall",
+    "ext_-1_W_seg3": "wall",
+    "ext_-1_W_seg4": "wall",
+    "ext_-1_W_seg5": "wall",
+    "ext_-1_W_seg6": "wall",
+    "ext_-1_W_seg7": "wall",
+    "ext_-1_W_seg8": "wall",
+    "ext_-1_W_seg9": "wall",
+    "ext_-1_W_seg10": "wall",
+    "ext_-1_W_seg11": "wall",
+    "ext_-1_W_seg12": "wall",
+    "ext_-1_W_seg13": "wall",
+    "ext_-1_W_seg14": "wall",
+    "ext_0_N_seg0": "wall",
+    "ext_0_N_seg1": "wall",
+    "ext_0_N_seg2": "wall",
+    "ext_0_N_seg3": "wall",
+    "ext_0_N_seg4": "wall",
+    "ext_0_N_seg5": "wall",
+    "ext_0_N_seg6": "wall",
+    "ext_0_N_seg7": "wall",
+    "ext_0_N_seg8": "wall",
+    "ext_0_N_seg9": "wall",
+    "ext_0_N_seg10": "wall",
+    "ext_0_N_seg11": "wall",
+    "ext_0_N_seg12": "wall",
+    "ext_0_N_open0_lintel": "breach",
+    "ext_0_N_open0_BREACHPANEL": "breach",
+    "ext_0_N_seg13": "wall",
+    "ext_0_N_seg14": "wall",
+    "ext_0_N_seg15": "wall",
+    "ext_0_N_seg16": "wall",
+    "ext_0_N_seg17": "wall",
+    "ext_0_N_seg18": "wall",
+    "ext_0_N_seg19": "wall",
+    "ext_0_S_seg0": "wall",
+    "ext_0_S_seg1": "wall",
+    "ext_0_S_seg2": "wall",
+    "ext_0_S_seg3": "wall",
+    "ext_0_S_open0_lintel": "window",
+    "ext_0_S_open0_sill": "window",
+    "ext_0_S_open0_pane": "window",
+    "ext_0_S_seg4": "wall",
+    "ext_0_S_seg5": "wall",
+    "ext_0_S_seg6": "wall",
+    "ext_0_S_seg7": "wall",
+    "ext_0_S_seg8": "wall",
+    "ext_0_S_open1_lintel": "doorway",
+    "ext_0_S_seg9": "wall",
+    "ext_0_S_seg10": "wall",
+    "ext_0_S_seg11": "wall",
+    "ext_0_S_seg12": "wall",
+    "ext_0_S_seg13": "wall",
+    "ext_0_S_open2_lintel": "window",
+    "ext_0_S_open2_sill": "window",
+    "ext_0_S_open2_pane": "window",
+    "ext_0_S_seg14": "wall",
+    "ext_0_S_seg15": "wall",
+    "ext_0_S_seg16": "wall",
+    "ext_0_S_seg17": "wall",
+    "ext_0_E_seg0": "wall",
+    "ext_0_E_seg1": "wall",
+    "ext_0_E_seg2": "wall",
+    "ext_0_E_seg3": "wall",
+    "ext_0_E_seg4": "wall",
+    "ext_0_E_seg5": "wall",
+    "ext_0_E_seg6": "wall",
+    "ext_0_E_seg7": "wall",
+    "ext_0_E_seg8": "wall",
+    "ext_0_E_seg9": "wall",
+    "ext_0_E_seg10": "wall",
+    "ext_0_E_open0_lintel": "doorway",
+    "ext_0_E_seg11": "wall",
+    "ext_0_E_seg12": "wall",
+    "ext_0_E_seg13": "wall",
+    "ext_0_E_seg14": "wall",
+    "ext_0_W_seg0": "wall",
+    "ext_0_W_seg1": "wall",
+    "ext_0_W_seg2": "wall",
+    "ext_0_W_seg3": "wall",
+    "ext_0_W_seg4": "wall",
+    "ext_0_W_open0_lintel": "doorway",
+    "ext_0_W_seg5": "wall",
+    "ext_0_W_seg6": "wall",
+    "ext_0_W_seg7": "wall",
+    "ext_0_W_seg8": "wall",
+    "ext_0_W_seg9": "wall",
+    "ext_0_W_seg10": "wall",
+    "ext_0_W_seg11": "wall",
+    "ext_0_W_seg12": "wall",
+    "ext_0_W_seg13": "wall",
+    "ext_0_W_seg14": "wall",
+    "ext_0_W_seg15": "wall",
+    "ext_1_N_seg0": "wall",
+    "ext_1_N_seg1": "wall",
+    "ext_1_N_seg2": "wall",
+    "ext_1_N_seg3": "wall",
+    "ext_1_N_seg4": "wall",
+    "ext_1_N_open0_lintel": "window",
+    "ext_1_N_open0_sill": "window",
+    "ext_1_N_open0_pane": "window",
+    "ext_1_N_seg5": "wall",
+    "ext_1_N_seg6": "wall",
+    "ext_1_N_seg7": "wall",
+    "ext_1_N_seg8": "wall",
+    "ext_1_N_seg9": "wall",
+    "ext_1_N_seg10": "wall",
+    "ext_1_N_seg11": "wall",
+    "ext_1_N_seg12": "wall",
+    "ext_1_N_seg13": "wall",
+    "ext_1_N_seg14": "wall",
+    "ext_1_N_open1_lintel": "window",
+    "ext_1_N_open1_sill": "window",
+    "ext_1_N_open1_pane": "window",
+    "ext_1_N_seg15": "wall",
+    "ext_1_N_seg16": "wall",
+    "ext_1_N_seg17": "wall",
+    "ext_1_N_seg18": "wall",
+    "ext_1_N_seg19": "wall",
+    "ext_1_S_seg0": "wall",
+    "ext_1_S_seg1": "wall",
+    "ext_1_S_seg2": "wall",
+    "ext_1_S_seg3": "wall",
+    "ext_1_S_seg4": "wall",
+    "ext_1_S_open0_lintel": "window",
+    "ext_1_S_open0_sill": "window",
+    "ext_1_S_open0_pane": "window",
+    "ext_1_S_seg5": "wall",
+    "ext_1_S_seg6": "wall",
+    "ext_1_S_seg7": "wall",
+    "ext_1_S_seg8": "wall",
+    "ext_1_S_seg9": "wall",
+    "ext_1_S_seg10": "wall",
+    "ext_1_S_seg11": "wall",
+    "ext_1_S_seg12": "wall",
+    "ext_1_S_seg13": "wall",
+    "ext_1_S_seg14": "wall",
+    "ext_1_S_open1_lintel": "window",
+    "ext_1_S_open1_sill": "window",
+    "ext_1_S_open1_pane": "window",
+    "ext_1_S_seg15": "wall",
+    "ext_1_S_seg16": "wall",
+    "ext_1_S_seg17": "wall",
+    "ext_1_S_seg18": "wall",
+    "ext_1_S_seg19": "wall",
+    "ext_1_E_seg0": "wall",
+    "ext_1_E_seg1": "wall",
+    "ext_1_E_seg2": "wall",
+    "ext_1_E_seg3": "wall",
+    "ext_1_E_seg4": "wall",
+    "ext_1_E_seg5": "wall",
+    "ext_1_E_seg6": "wall",
+    "ext_1_E_seg7": "wall",
+    "ext_1_E_seg8": "wall",
+    "ext_1_E_seg9": "wall",
+    "ext_1_E_seg10": "wall",
+    "ext_1_E_seg11": "wall",
+    "ext_1_E_seg12": "wall",
+    "ext_1_E_seg13": "wall",
+    "ext_1_E_seg14": "wall",
+    "ext_1_W_seg0": "wall",
+    "ext_1_W_seg1": "wall",
+    "ext_1_W_seg2": "wall",
+    "ext_1_W_seg3": "wall",
+    "ext_1_W_seg4": "wall",
+    "ext_1_W_seg5": "wall",
+    "ext_1_W_seg6": "wall",
+    "ext_1_W_seg7": "wall",
+    "ext_1_W_seg8": "wall",
+    "ext_1_W_seg9": "wall",
+    "ext_1_W_seg10": "wall",
+    "ext_1_W_seg11": "wall",
+    "ext_1_W_seg12": "wall",
+    "ext_1_W_seg13": "wall",
+    "ext_1_W_seg14": "wall",
+    "int_0_0_seg0": "wall",
+    "int_0_0_seg1": "wall",
+    "int_0_0_seg2": "wall",
+    "int_0_0_seg3": "wall",
+    "int_0_0_open0_lintel": "doorway",
+    "int_0_0_seg4": "wall",
+    "int_0_0_seg5": "wall",
+    "int_0_0_seg6": "wall",
+    "int_0_0_seg7": "wall",
+    "int_0_0_seg8": "wall",
+    "int_0_0_seg9": "wall",
+    "int_0_0_seg10": "wall",
+    "int_0_0_seg11": "wall",
+    "int_0_0_seg12": "wall",
+    "int_0_0_seg13": "wall",
+    "int_0_0_seg14": "wall",
+    "int_0_0_seg15": "wall",
+    "int_0_0_open1_lintel": "doorway",
+    "int_0_0_seg16": "wall",
+    "int_0_0_seg17": "wall",
+    "int_0_0_seg18": "wall",
+    "int_0_0_seg19": "wall",
+    "int_0_1_seg0": "wall",
+    "int_0_1_seg1": "wall",
+    "int_0_1_seg2": "wall",
+    "int_0_1_open0_lintel": "doorway",
+    "int_0_1_seg3": "wall",
+    "int_0_1_seg4": "wall",
+    "int_0_1_seg5": "wall",
+    "int_1_2_seg0": "wall",
+    "int_1_2_seg1": "wall",
+    "int_1_2_seg2": "wall",
+    "int_1_2_open0_lintel": "doorway",
+    "int_1_2_seg3": "wall",
+    "int_1_2_seg4": "wall",
+    "int_1_2_seg5": "wall",
+    "int_1_2_seg6": "wall",
+    "int_1_2_seg7": "wall",
+    "int_1_2_seg8": "wall",
+    "int_1_2_seg9": "wall",
+    "int_1_2_seg10": "wall",
+    "int_1_2_seg11": "wall",
+    "int_1_2_seg12": "wall",
+    "int_1_2_seg13": "wall",
+    "int_1_2_seg14": "wall",
+    "int_1_2_seg15": "wall",
+    "int_1_2_seg16": "wall",
+    "int_1_2_open1_lintel": "doorway",
+    "int_1_2_seg17": "wall",
+    "int_1_2_seg18": "wall",
+    "int_1_2_seg19": "wall",
+    "int_-1_3_seg0": "wall",
+    "int_-1_3_seg1": "wall",
+    "int_-1_3_seg2": "wall",
+    "int_-1_3_seg3": "wall",
+    "int_-1_3_seg4": "wall",
+    "int_-1_3_open0_lintel": "doorway",
+    "int_-1_3_seg5": "wall",
+    "int_-1_3_seg6": "wall",
+    "int_-1_3_seg7": "wall",
+    "int_-1_3_seg8": "wall",
+    "int_-1_3_seg9": "wall",
+    "int_-1_3_seg10": "wall",
+    "int_-1_3_seg11": "wall",
+    "int_-1_3_seg12": "wall",
+    "int_-1_3_seg13": "wall",
+    "int_-1_3_seg14": "wall",
+    "int_-1_3_seg15": "wall",
+    "int_-1_3_open1_lintel": "breach",
+    "int_-1_3_open1_BREACHPANEL": "breach",
+    "int_-1_3_seg16": "wall",
+    "int_-1_3_seg17": "wall",
+    "int_-1_3_seg18": "wall",
+    "int_-1_3_seg19": "wall",
+    "stair0_-1_0": "stair",
+    "stair0_-1_1": "stair",
+    "stair0_-1_2": "stair",
+    "stair0_-1_3": "stair",
+    "stair0_-1_4": "stair",
+    "stair0_-1_5": "stair",
+    "stair0_-1_6": "stair",
+    "stair0_-1_7": "stair",
+    "stair0_-1_8": "stair",
+    "stair0_-1_9": "stair",
+    "stair0_-1_10": "stair",
+    "stair0_-1_11": "stair",
+    "stair0_-1_12": "stair",
+    "stair0_-1_13": "stair",
+    "stair0_-1_14": "stair",
+    "stair0_-1_15": "stair",
+    "stair0_-1_16": "stair",
+    "stair0_-1_17": "stair",
+    "stair0_-1_18": "stair",
+    "stair0_-1_19": "stair",
+    "stair0_-1_20": "stair",
+    "stair0_discharge_-1": "stair",
+    "stair1_-1_0": "stair",
+    "stair1_-1_1": "stair",
+    "stair1_-1_2": "stair",
+    "stair1_-1_3": "stair",
+    "stair1_-1_4": "stair",
+    "stair1_-1_5": "stair",
+    "stair1_-1_6": "stair",
+    "stair1_-1_7": "stair",
+    "stair1_-1_8": "stair",
+    "stair1_-1_9": "stair",
+    "stair1_-1_10": "stair",
+    "stair1_-1_11": "stair",
+    "stair1_-1_12": "stair",
+    "stair1_-1_13": "stair",
+    "stair1_-1_14": "stair",
+    "stair1_-1_15": "stair",
+    "stair1_-1_16": "stair",
+    "stair1_-1_17": "stair",
+    "stair1_-1_18": "stair",
+    "stair1_-1_19": "stair",
+    "stair1_-1_20": "stair",
+    "stair1_discharge_-1": "stair",
+    "stair2_0_0": "stair",
+    "stair2_0_1": "stair",
+    "stair2_0_2": "stair",
+    "stair2_0_3": "stair",
+    "stair2_0_4": "stair",
+    "stair2_0_5": "stair",
+    "stair2_0_6": "stair",
+    "stair2_0_7": "stair",
+    "stair2_0_8": "stair",
+    "stair2_0_9": "stair",
+    "stair2_0_10": "stair",
+    "stair2_0_11": "stair",
+    "stair2_0_12": "stair",
+    "stair2_0_13": "stair",
+    "stair2_0_14": "stair",
+    "stair2_0_15": "stair",
+    "stair2_0_16": "stair",
+    "stair2_0_17": "stair",
+    "stair2_0_18": "stair",
+    "stair2_0_19": "stair",
+    "stair2_0_20": "stair",
+    "stair2_discharge_0": "stair",
+    "ladder0_rail_1_-1": "ladder",
+    "ladder0_rail_1_1": "ladder",
+    "ladder0_rung_1_0": "ladder",
+    "ladder0_rung_1_1": "ladder",
+    "ladder0_rung_1_2": "ladder",
+    "ladder0_rung_1_3": "ladder",
+    "ladder0_rung_1_4": "ladder",
+    "ladder0_rung_1_5": "ladder",
+    "ladder0_rung_1_6": "ladder",
+    "ladder0_rung_1_7": "ladder",
+    "ladder0_rung_1_8": "ladder",
+    "ladder0_rung_1_9": "ladder",
+    "ladder0_rung_1_10": "ladder",
+    "ladder0_rung_1_11": "ladder",
+    "ladder0_rung_1_12": "ladder",
+    "ladder0_rung_1_13": "ladder",
+    "VAULTLEDGE_0": "floor",
+    "teller_counter": "prop",
+    "column_w": "prop",
+    "column_e": "prop",
+    "VAULT_DOOR": "prop",
+    "parapet_N": "wall",
+    "parapet_S": "wall",
+    "parapet_E": "wall",
+    "parapet_W": "wall"
+  }
+}

@@ -178,6 +178,11 @@ def merge_gameplay(site_spec, base_dir):
             record["rarity_color"] = gp.get("rarity_color")
         if gp.get("footprint") is not None:
             record["footprint"] = gp.get("footprint")
+            # annotate the SPEC's building entry too: the scene builder cuts
+            # the ground slab around footprints (a solid ground box through a
+            # building seals its basement stairwell -- Phase 1 site walktests
+            # proved basements bake as disjoint islands otherwise)
+            b["_footprint"] = gp.get("footprint")
         site["buildings"].append(record)
 
         def ns(name):
@@ -473,6 +478,34 @@ def _blocker_source(bk):
     return bk.get("scene") or bk.get("glb")
 
 
+def _ground_tiles(gx, gy, holes):
+    """Axis-aligned decomposition of the ground rect minus hole rects.
+
+    Band split on hole y-edges, then per-band x-interval subtraction.
+    Deterministic; returns (x0, y0, x1, y1) site-space tiles."""
+    x_min, y_min, x_max, y_max = -gx / 2, -gy / 2, gx / 2, gy / 2
+    holes = [(max(x_min, h[0]), max(y_min, h[1]),
+              min(x_max, h[2]), min(y_max, h[3])) for h in holes
+             if h[0] < x_max and h[2] > x_min and h[1] < y_max and h[3] > y_min]
+    if not holes:
+        return [(x_min, y_min, x_max, y_max)]
+    ys = sorted({y_min, y_max} | {v for h in holes for v in (h[1], h[3])
+                                  if y_min < v < y_max})
+    tiles = []
+    for y0, y1 in zip(ys, ys[1:]):
+        mid = (y0 + y1) / 2
+        cuts = sorted({x_min, x_max} | {v for h in holes
+                                        if h[1] < mid < h[3]
+                                        for v in (h[0], h[2])
+                                        if x_min < v < x_max})
+        for x0, x1 in zip(cuts, cuts[1:]):
+            cxm = (x0 + x1) / 2
+            if any(h[0] < cxm < h[2] and h[1] < mid < h[3] for h in holes):
+                continue
+            tiles.append((x0, y0, x1, y1))
+    return tiles
+
+
 def _outdoor_nodes(site_spec, preview=False):
     """(body_lines, subres_lines) for all Phase-2 outdoor geometry."""
     body, sub = [], []
@@ -481,9 +514,36 @@ def _outdoor_nodes(site_spec, preview=False):
     g = site_spec.get("ground")
     if g:
         gx, gy = g["size_x"], g["size_y"]
-        b, s = _box_node("Ground", (gx, GROUND_THICK, gy), (0, -GROUND_THICK / 2, 0))
-        body += b
-        sub += s
+        # NOT one solid box: a ground slab running through a building
+        # footprint seals its basement stairwell (Phase 1 site walktests:
+        # basements bake as disjoint islands). Cut an inset hole per
+        # footprint -- the inset keeps exterior walls seated on ground with
+        # no exterior gap; the building's own slabs floor the interior.
+        INSET = 0.45
+        holes = []
+        for bdef in site_spec["buildings"]:
+            fp = bdef.get("_footprint")
+            if not fp:
+                continue
+            fx, fy = fp
+            rot = (bdef.get("rot", 0) % 360 + 360) % 360
+            if rot % 180 == 90:
+                fx, fy = fy, fx
+            elif rot % 90 != 0:
+                th = math.radians(rot)
+                fx, fy = (abs(fx * math.cos(th)) + abs(fy * math.sin(th)),
+                          abs(fx * math.sin(th)) + abs(fy * math.cos(th)))
+            cx, cy = bdef["at"]
+            hx, hy = max(0.0, fx / 2 - INSET), max(0.0, fy / 2 - INSET)
+            if hx and hy:
+                holes.append((cx - hx, cy - hy, cx + hx, cy + hy))
+        for j, (x0, y0, x1, y1) in enumerate(_ground_tiles(gx, gy, holes)):
+            bl, sr = _box_node("Ground" if j == 0 else f"Ground_{j}",
+                               (x1 - x0, GROUND_THICK, y1 - y0),
+                               ((x0 + x1) / 2, -GROUND_THICK / 2,
+                                -(y0 + y1) / 2))
+            body += bl
+            sub += sr
 
     for i, p in enumerate(site_spec.get("paths", [])):
         w = p.get("width", 3.0)

@@ -1,0 +1,153 @@
+{
+ "name": "deli_block",
+ "version": "0.1.0",
+ "mode": "pvp_heist",
+ "spawn": "stage_warehouse",
+ "objective": "corner_deli",
+ "extraction": "getaway_garage",
+ "ground": {
+  "size_x": 200,
+  "size_y": 150
+ },
+ "buildings": [
+  {
+   "id": "stage_warehouse",
+   "glb": "buildings/warehouse_a01.glb",
+   "gameplay": "buildings/warehouse_a01.gameplay.json",
+   "at": [
+    -70,
+    -35
+   ],
+   "rot": 0
+  },
+  {
+   "id": "corner_deli",
+   "glb": "buildings/deli_a01.glb",
+   "gameplay": "buildings/deli_a01.gameplay.json",
+   "at": [
+    40,
+    10
+   ],
+   "rot": 0
+  },
+  {
+   "id": "getaway_garage",
+   "glb": "buildings/parking_garage_a01.glb",
+   "gameplay": "buildings/parking_garage_a01.gameplay.json",
+   "at": [
+    -20,
+    50
+   ],
+   "rot": 0
+  }
+ ],
+ "paths": [
+  {
+   "from": "stage_warehouse",
+   "to": "corner_deli",
+   "width": 6
+  },
+  {
+   "from": "corner_deli",
+   "to": "getaway_garage",
+   "width": 4
+  },
+  {
+   "from": "stage_warehouse",
+   "to": "getaway_garage",
+   "width": 4
+  }
+ ],
+ "roads": [
+  {
+   "a": [
+    -90,
+    -10
+   ],
+   "b": [
+    90,
+    -10
+   ],
+   "width": 8,
+   "sidewalk": true
+  }
+ ],
+ "courtyards": [
+  {
+   "at": [
+    0,
+    22
+   ],
+   "size_x": 20,
+   "size_y": 14
+  }
+ ],
+ "cover": [
+  {
+   "at": [
+    -15,
+    -12
+   ],
+   "size": [
+    2.5,
+    1.2,
+    1.1
+   ]
+  },
+  {
+   "at": [
+    8,
+    24
+   ],
+   "size": [
+    1.8,
+    1.8,
+    1.4
+   ]
+  },
+  {
+   "at": [
+    -40,
+    5
+   ],
+   "size": [
+    3.0,
+    1.0,
+    1.2
+   ]
+  },
+  {
+   "at": [
+    15,
+    -14
+   ],
+   "size": [
+    2.2,
+    1.2,
+    1.1
+   ]
+  }
+ ],
+ "perimeter": {
+  "height": 3.0
+ },
+ "site_markers": [
+  {
+   "type": "attacker_spawn",
+   "at": [
+    -98,
+    -72
+   ]
+  },
+  {
+   "type": "extraction",
+   "at": [
+    -34,
+    62
+   ]
+  }
+ ],
+ "pvp": {
+  "min_spawn_separation": 25.0
+ }
+}

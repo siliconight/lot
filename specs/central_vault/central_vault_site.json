@@ -1,0 +1,191 @@
+{
+ "name": "central_vault",
+ "version": "0.1.0",
+ "mode": "pvp_heist",
+ "spawn": "logistics_hub",
+ "objective": "central_bank",
+ "extraction": "getaway_garage",
+ "ground": {
+  "size_x": 240,
+  "size_y": 180
+ },
+ "buildings": [
+  {
+   "id": "central_bank",
+   "glb": "buildings/bank_branch_a04.glb",
+   "gameplay": "buildings/bank_branch_a04.gameplay.json",
+   "at": [
+    60,
+    30
+   ],
+   "rot": 0
+  },
+  {
+   "id": "corner_bodega",
+   "glb": "buildings/deli_a01.glb",
+   "gameplay": "buildings/deli_a01.gameplay.json",
+   "at": [
+    -30,
+    20
+   ],
+   "rot": 0
+  },
+  {
+   "id": "logistics_hub",
+   "glb": "buildings/warehouse_a02.glb",
+   "gameplay": "buildings/warehouse_a02.gameplay.json",
+   "at": [
+    -70,
+    -55
+   ],
+   "rot": 0
+  },
+  {
+   "id": "getaway_garage",
+   "glb": "buildings/parking_garage_a02.glb",
+   "gameplay": "buildings/parking_garage_a02.gameplay.json",
+   "at": [
+    70,
+    -50
+   ],
+   "rot": 0
+  }
+ ],
+ "paths": [
+  {
+   "from": "logistics_hub",
+   "to": "central_bank",
+   "width": 6
+  },
+  {
+   "from": "logistics_hub",
+   "to": "corner_bodega",
+   "width": 4
+  },
+  {
+   "from": "corner_bodega",
+   "to": "central_bank",
+   "width": 4
+  },
+  {
+   "from": "central_bank",
+   "to": "getaway_garage",
+   "width": 5
+  }
+ ],
+ "roads": [
+  {
+   "a": [
+    -110,
+    -20
+   ],
+   "b": [
+    110,
+    -20
+   ],
+   "width": 9,
+   "sidewalk": true
+  },
+  {
+   "a": [
+    10,
+    -85
+   ],
+   "b": [
+    10,
+    80
+   ],
+   "width": 8,
+   "sidewalk": true
+  }
+ ],
+ "courtyards": [
+  {
+   "at": [
+    20,
+    30
+   ],
+   "size_x": 24,
+   "size_y": 16
+  }
+ ],
+ "cover": [
+  {
+   "at": [
+    -8,
+    -24
+   ],
+   "size": [
+    2.5,
+    1.2,
+    1.1
+   ]
+  },
+  {
+   "at": [
+    26,
+    34
+   ],
+   "size": [
+    1.8,
+    1.8,
+    1.4
+   ]
+  },
+  {
+   "at": [
+    34,
+    -8
+   ],
+   "size": [
+    3.0,
+    1.0,
+    1.2
+   ]
+  },
+  {
+   "at": [
+    -48,
+    40
+   ],
+   "size": [
+    2.2,
+    1.2,
+    1.1
+   ]
+  },
+  {
+   "at": [
+    44,
+    12
+   ],
+   "size": [
+    2.5,
+    1.2,
+    1.1
+   ]
+  }
+ ],
+ "perimeter": {
+  "height": 3.0
+ },
+ "site_markers": [
+  {
+   "type": "attacker_spawn",
+   "at": [
+    -108,
+    -60
+   ]
+  },
+  {
+   "type": "extraction",
+   "at": [
+    88,
+    -62
+   ]
+  }
+ ],
+ "pvp": {
+  "min_spawn_separation": 25.0
+ }
+}

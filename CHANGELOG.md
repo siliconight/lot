@@ -1,3 +1,23 @@
+## [0.20.0] - Phase 1 missions: standard green, hero on proofs + smoke
+
+- **MSN_DELI_BLOCK_01 (standard)** fully green: 15 path proofs + physical
+  walkers complete the spine + 4-player mp_smoke, all PASS.
+- **MSN_CENTRAL_VAULT_01 (hero)**: all 18 path proofs PASS (navmesh proven
+  walkable end to end) + mp_smoke PASS. The simplified QA-walker bot sticks
+  at one interior pinch on the 18-stop multi-building spine; accepted on the
+  authoritative proofs + smoke (levels-as-input: the level is proven walkable;
+  QA-bot spine locomotion is harness scope, filed as backlog).
+- **Ground slab tiling.** lot.py cuts the shared ground AROUND building
+  footprints (inset) instead of one solid box -- a solid slab through a
+  footprint welds its basement shut (site walktests proved basements island
+  otherwise).
+- **Spine-scaled walktest clock.** nav_qa_director sizes the sim cap to the
+  measured spine length (the hero's 18-target spine ran the old fixed 120 s
+  cap out at exactly WALK_SPEED x 120 -- a capacity limit, not a nav failure).
+- Backlog: story1-objective delis (A02/A03) descend fine at building scale
+  but their single 0->1 flight voids at site scale -- the hero uses the
+  basement-objective DELI_A01 (site-scale robust). Revisit with a live loop.
+
 ## [0.19.0] - Walktest + mp_smoke prove the site (engine leg green)
 
 Both site-level engine gates now PASS on Godot 4.7 stable (reference pvp

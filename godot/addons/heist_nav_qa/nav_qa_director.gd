@@ -51,6 +51,7 @@ var ARRIVE_DIST := _envf("DC_QA_ARRIVE", 1.5)
 var _report := {}
 var _walkers: Array = []
 var _sim_time := 0.0
+var _time_limit := TIME_LIMIT     # scaled to the spine after the proofs run
 var _done := false
 
 
@@ -134,6 +135,17 @@ func _run() -> void:
 		print("[nav-qa] %s: %s -- %s" % [leg[0],
 			"ok" if rep["ok"] else "FAIL", rep["detail"]])
 
+	# players walk home -> p0 -> p1 -> ...: size the sim clock to that spine
+	# (the hero site's 18-target spine ran the fixed 120 s cap out at exactly
+	# WALK_SPEED x 120 travelled -- a capacity limit, not a nav failure)
+	var spine_m := 0.0
+	for rep2 in _report["path_proofs"]:
+		var lbl: String = rep2["leg"]
+		if lbl == "home->proxy_0" or (lbl.begins_with("proxy_") and "->" in lbl):
+			spine_m += float(rep2.get("length_m", 25.0))
+	_time_limit = clampf(spine_m / WALK_SPEED * 2.0 + 30.0, TIME_LIMIT, 600.0)
+	print("[nav-qa] spine ~%.0f m -> sim cap %.0f s" % [spine_m, _time_limit])
+
 	# ---- pass 2: simulated walkers ----------------------------------------
 	var spine: Array = [home]
 	for p in proxies:
@@ -167,7 +179,7 @@ func _physics_process(delta: float) -> void:
 		if not w["finished"]:
 			_drive(w, delta)
 			all_done = all_done and w["finished"]
-	if all_done or _sim_time > TIME_LIMIT:
+	if all_done or _sim_time > _time_limit:
 		_conclude()
 
 
@@ -286,7 +298,7 @@ func _prove_path(map: RID, label: String, a: Vector3, b: Vector3) -> Dictionary:
 	var length := 0.0
 	for i in range(path.size() - 1):
 		length += path[i].distance_to(path[i + 1])
-	return {"leg": label, "ok": true,
+	return {"leg": label, "ok": true, "length_m": length,
 			"detail": "path %.1f m, %d points" % [length, path.size()]}
 
 
