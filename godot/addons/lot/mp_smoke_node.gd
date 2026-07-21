@@ -123,18 +123,41 @@ func _process(delta: float) -> void:
 			_die(0, "client done (%.1f m)" % travelled)
 
 
+var _stall_t := 0.0
+var _detour_t := 0.0
+var _detour_sign := 1.0
+
+
 func _physics_process(delta: float) -> void:
 	if body == null or finished:
 		return
 	var dir := target - body.global_position
 	dir.y = 0.0
+	# STALL DETOUR: this walker has NO pathing (the smoke bar is "moved
+	# >= 5 m through real collision", not navigation) -- a straight beeline
+	# into a wall must not false-fail a good site (storage_row: client0
+	# walked 2.6 m into a corner and ground there for its whole run, while
+	# the pathing walktest PASSED the same site). When progress stalls,
+	# steer ~60 deg off-line for a beat, alternating sides.
+	if _detour_t > 0.0:
+		_detour_t -= delta
+		dir = dir.rotated(Vector3.UP, _detour_sign * 1.05)
 	var vel := Vector3.ZERO
 	if dir.length() > 1.0:
 		vel = dir.normalized() * 3.5
 	vel.y = body.velocity.y - 9.8 * delta
 	body.velocity = vel
 	body.move_and_slide()
-	travelled += body.global_position.distance_to(last)
+	var step := body.global_position.distance_to(last)
+	if step < 0.02 and vel.length() > 1.0:
+		_stall_t += delta
+		if _stall_t > 1.5:
+			_stall_t = 0.0
+			_detour_t = 1.5
+			_detour_sign = -_detour_sign
+	else:
+		_stall_t = maxf(0.0, _stall_t - delta)
+	travelled += step
 	last = body.global_position
 	hb_t += delta
 	if hb_t >= HEARTBEAT_SECS:

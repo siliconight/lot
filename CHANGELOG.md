@@ -1,3 +1,14 @@
+## [0.22.0] - Phase 3 missions: 6/6 full green, smoke walker detour
+
+- **6 missions all FULL green** (proofs + physical walkers + mp_smoke):
+  SEPTA Station hero, Main Line Mansion hero (Vinny rehearsal), Museum Row,
+  Port Row, Storage Row, Brewery Block. Library missions now 12/12 with 4/4
+  heroes -- every hero physically walked.
+- **Smoke-walker stall detour:** the smoke client has no pathing by design;
+  a straight beeline into a corner must not false-fail a good site (the
+  pathing walktest passed storage_row while the beeline ground on a wall).
+  On stall it steers ~60 deg off-line, alternating sides.
+
 ## [0.21.0] - Phase 2 missions + the walker slope fix
 
 - **Walker floor angle now matches the bake's agent_max_slope** (agent

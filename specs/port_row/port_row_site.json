@@ -1,0 +1,142 @@
+{
+ "name": "port_row",
+ "version": "0.1.0",
+ "mode": "pvp_heist",
+ "spawn": "chandlery",
+ "objective": "freight",
+ "extraction": "depot",
+ "ground": {
+  "size_x": 230,
+  "size_y": 160
+ },
+ "buildings": [
+  {
+   "id": "chandlery",
+   "glb": "buildings/marina_a03.glb",
+   "gameplay": "buildings/marina_a03.gameplay.json",
+   "at": [
+    -75,
+    -50
+   ],
+   "rot": 0
+  },
+  {
+   "id": "freight",
+   "glb": "buildings/freight_terminal_a03.glb",
+   "gameplay": "buildings/freight_terminal_a03.gameplay.json",
+   "at": [
+    45,
+    30
+   ],
+   "rot": 0
+  },
+  {
+   "id": "depot",
+   "glb": "buildings/depot_a02.glb",
+   "gameplay": "buildings/depot_a02.gameplay.json",
+   "at": [
+    -40,
+    48
+   ],
+   "rot": 0
+  }
+ ],
+ "paths": [
+  {
+   "from": "chandlery",
+   "to": "freight",
+   "width": 6
+  },
+  {
+   "from": "freight",
+   "to": "depot",
+   "width": 5
+  },
+  {
+   "from": "chandlery",
+   "to": "depot",
+   "width": 4
+  }
+ ],
+ "roads": [
+  {
+   "a": [
+    -110,
+    -10
+   ],
+   "b": [
+    110,
+    -10
+   ],
+   "width": 9,
+   "sidewalk": true
+  }
+ ],
+ "courtyards": [
+  {
+   "at": [
+    0,
+    8
+   ],
+   "size_x": 20,
+   "size_y": 12
+  }
+ ],
+ "cover": [
+  {
+   "at": [
+    -22,
+    -26
+   ],
+   "size": [
+    2.5,
+    1.2,
+    1.1
+   ]
+  },
+  {
+   "at": [
+    10,
+    12
+   ],
+   "size": [
+    1.8,
+    1.8,
+    1.4
+   ]
+  },
+  {
+   "at": [
+    24,
+    -30
+   ],
+   "size": [
+    3.0,
+    1.0,
+    1.2
+   ]
+  }
+ ],
+ "perimeter": {
+  "height": 3.0
+ },
+ "site_markers": [
+  {
+   "type": "attacker_spawn",
+   "at": [
+    -102,
+    -70
+   ]
+  },
+  {
+   "type": "extraction",
+   "at": [
+    -40,
+    66
+   ]
+  }
+ ],
+ "pvp": {
+  "min_spawn_separation": 25.0
+ }
+}

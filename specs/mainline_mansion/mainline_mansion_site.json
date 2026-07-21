@@ -1,0 +1,153 @@
+{
+ "name": "mainline_mansion",
+ "version": "0.1.0",
+ "mode": "pvp_heist",
+ "spawn": "funeral_home",
+ "objective": "mansion",
+ "extraction": "country_club",
+ "ground": {
+  "size_x": 240,
+  "size_y": 180
+ },
+ "buildings": [
+  {
+   "id": "funeral_home",
+   "glb": "buildings/funeral_home_a01.glb",
+   "gameplay": "buildings/funeral_home_a01.gameplay.json",
+   "at": [
+    -80,
+    -60
+   ],
+   "rot": 0
+  },
+  {
+   "id": "mansion",
+   "glb": "buildings/mansion_a03.glb",
+   "gameplay": "buildings/mansion_a03.gameplay.json",
+   "at": [
+    50,
+    35
+   ],
+   "rot": 0
+  },
+  {
+   "id": "country_club",
+   "glb": "buildings/country_club_a01.glb",
+   "gameplay": "buildings/country_club_a01.gameplay.json",
+   "at": [
+    55,
+    -55
+   ],
+   "rot": 0
+  }
+ ],
+ "paths": [
+  {
+   "from": "funeral_home",
+   "to": "mansion",
+   "width": 5
+  },
+  {
+   "from": "mansion",
+   "to": "country_club",
+   "width": 5
+  },
+  {
+   "from": "funeral_home",
+   "to": "country_club",
+   "width": 4
+  }
+ ],
+ "roads": [
+  {
+   "a": [
+    -115,
+    -15
+   ],
+   "b": [
+    115,
+    -15
+   ],
+   "width": 8,
+   "sidewalk": true
+  }
+ ],
+ "courtyards": [
+  {
+   "at": [
+    0,
+    25
+   ],
+   "size_x": 24,
+   "size_y": 16
+  }
+ ],
+ "cover": [
+  {
+   "at": [
+    -25,
+    -32
+   ],
+   "size": [
+    2.5,
+    1.2,
+    1.1
+   ]
+  },
+  {
+   "at": [
+    12,
+    28
+   ],
+   "size": [
+    1.8,
+    1.8,
+    1.4
+   ]
+  },
+  {
+   "at": [
+    28,
+    -12
+   ],
+   "size": [
+    2.2,
+    1.2,
+    1.1
+   ]
+  },
+  {
+   "at": [
+    -45,
+    15
+   ],
+   "size": [
+    2.5,
+    1.2,
+    1.1
+   ]
+  }
+ ],
+ "perimeter": {
+  "height": 3.0
+ },
+ "site_markers": [
+  {
+   "type": "attacker_spawn",
+   "at": [
+    -105,
+    -82
+   ]
+  },
+  {
+   "type": "extraction",
+   "at": [
+    90,
+    -70
+   ]
+  }
+ ],
+ "pvp": {
+  "min_spawn_separation": 25.0
+ }
+}

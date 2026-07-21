@@ -1,0 +1,142 @@
+{
+ "name": "museum_row",
+ "version": "0.1.0",
+ "mode": "pvp_heist",
+ "spawn": "tower_frame",
+ "objective": "museum",
+ "extraction": "courthouse",
+ "ground": {
+  "size_x": 220,
+  "size_y": 160
+ },
+ "buildings": [
+  {
+   "id": "tower_frame",
+   "glb": "buildings/construction_site_a01.glb",
+   "gameplay": "buildings/construction_site_a01.gameplay.json",
+   "at": [
+    -70,
+    -50
+   ],
+   "rot": 0
+  },
+  {
+   "id": "museum",
+   "glb": "buildings/museum_a02.glb",
+   "gameplay": "buildings/museum_a02.gameplay.json",
+   "at": [
+    45,
+    30
+   ],
+   "rot": 0
+  },
+  {
+   "id": "courthouse",
+   "glb": "buildings/courthouse_a03.glb",
+   "gameplay": "buildings/courthouse_a03.gameplay.json",
+   "at": [
+    -45,
+    45
+   ],
+   "rot": 0
+  }
+ ],
+ "paths": [
+  {
+   "from": "tower_frame",
+   "to": "museum",
+   "width": 6
+  },
+  {
+   "from": "museum",
+   "to": "courthouse",
+   "width": 5
+  },
+  {
+   "from": "tower_frame",
+   "to": "courthouse",
+   "width": 4
+  }
+ ],
+ "roads": [
+  {
+   "a": [
+    -105,
+    -12
+   ],
+   "b": [
+    105,
+    -12
+   ],
+   "width": 9,
+   "sidewalk": true
+  }
+ ],
+ "courtyards": [
+  {
+   "at": [
+    5,
+    12
+   ],
+   "size_x": 22,
+   "size_y": 14
+  }
+ ],
+ "cover": [
+  {
+   "at": [
+    -20,
+    -28
+   ],
+   "size": [
+    2.5,
+    1.2,
+    1.1
+   ]
+  },
+  {
+   "at": [
+    12,
+    15
+   ],
+   "size": [
+    1.8,
+    1.8,
+    1.4
+   ]
+  },
+  {
+   "at": [
+    25,
+    -2
+   ],
+   "size": [
+    3.0,
+    1.0,
+    1.2
+   ]
+  }
+ ],
+ "perimeter": {
+  "height": 3.0
+ },
+ "site_markers": [
+  {
+   "type": "attacker_spawn",
+   "at": [
+    -98,
+    -72
+   ]
+  },
+  {
+   "type": "extraction",
+   "at": [
+    -45,
+    70
+   ]
+  }
+ ],
+ "pvp": {
+  "min_spawn_separation": 25.0
+ }
+}

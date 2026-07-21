@@ -1,0 +1,142 @@
+{
+ "name": "brewery_block",
+ "version": "0.1.0",
+ "mode": "pvp_heist",
+ "spawn": "walkup",
+ "objective": "brewery",
+ "extraction": "pawn",
+ "ground": {
+  "size_x": 210,
+  "size_y": 150
+ },
+ "buildings": [
+  {
+   "id": "walkup",
+   "glb": "buildings/apartment_walkup_a02.glb",
+   "gameplay": "buildings/apartment_walkup_a02.gameplay.json",
+   "at": [
+    -65,
+    -45
+   ],
+   "rot": 0
+  },
+  {
+   "id": "brewery",
+   "glb": "buildings/brewery_a02.glb",
+   "gameplay": "buildings/brewery_a02.gameplay.json",
+   "at": [
+    45,
+    25
+   ],
+   "rot": 0
+  },
+  {
+   "id": "pawn",
+   "glb": "buildings/pawn_shop_a02.glb",
+   "gameplay": "buildings/pawn_shop_a02.gameplay.json",
+   "at": [
+    -35,
+    45
+   ],
+   "rot": 0
+  }
+ ],
+ "paths": [
+  {
+   "from": "walkup",
+   "to": "brewery",
+   "width": 5
+  },
+  {
+   "from": "brewery",
+   "to": "pawn",
+   "width": 4
+  },
+  {
+   "from": "walkup",
+   "to": "pawn",
+   "width": 4
+  }
+ ],
+ "roads": [
+  {
+   "a": [
+    -100,
+    -10
+   ],
+   "b": [
+    100,
+    -10
+   ],
+   "width": 8,
+   "sidewalk": true
+  }
+ ],
+ "courtyards": [
+  {
+   "at": [
+    2,
+    8
+   ],
+   "size_x": 16,
+   "size_y": 12
+  }
+ ],
+ "cover": [
+  {
+   "at": [
+    -18,
+    -22
+   ],
+   "size": [
+    2.5,
+    1.2,
+    1.1
+   ]
+  },
+  {
+   "at": [
+    10,
+    10
+   ],
+   "size": [
+    1.8,
+    1.8,
+    1.4
+   ]
+  },
+  {
+   "at": [
+    22,
+    -25
+   ],
+   "size": [
+    2.2,
+    1.2,
+    1.1
+   ]
+  }
+ ],
+ "perimeter": {
+  "height": 3.0
+ },
+ "site_markers": [
+  {
+   "type": "attacker_spawn",
+   "at": [
+    -92,
+    -65
+   ]
+  },
+  {
+   "type": "extraction",
+   "at": [
+    -35,
+    63
+   ]
+  }
+ ],
+ "pvp": {
+  "min_spawn_separation": 25.0
+ }
+}

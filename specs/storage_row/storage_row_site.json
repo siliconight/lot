@@ -1,0 +1,142 @@
+{
+ "name": "storage_row",
+ "version": "0.1.0",
+ "mode": "pvp_heist",
+ "spawn": "night_garage",
+ "objective": "storage",
+ "extraction": "roadhouse",
+ "ground": {
+  "size_x": 200,
+  "size_y": 150
+ },
+ "buildings": [
+  {
+   "id": "night_garage",
+   "glb": "buildings/auto_shop_a02.glb",
+   "gameplay": "buildings/auto_shop_a02.gameplay.json",
+   "at": [
+    -65,
+    -45
+   ],
+   "rot": 0
+  },
+  {
+   "id": "storage",
+   "glb": "buildings/self_storage_a01.glb",
+   "gameplay": "buildings/self_storage_a01.gameplay.json",
+   "at": [
+    40,
+    25
+   ],
+   "rot": 0
+  },
+  {
+   "id": "roadhouse",
+   "glb": "buildings/strip_club_a01.glb",
+   "gameplay": "buildings/strip_club_a01.gameplay.json",
+   "at": [
+    -35,
+    45
+   ],
+   "rot": 0
+  }
+ ],
+ "paths": [
+  {
+   "from": "night_garage",
+   "to": "storage",
+   "width": 5
+  },
+  {
+   "from": "storage",
+   "to": "roadhouse",
+   "width": 4
+  },
+  {
+   "from": "night_garage",
+   "to": "roadhouse",
+   "width": 4
+  }
+ ],
+ "roads": [
+  {
+   "a": [
+    -95,
+    -10
+   ],
+   "b": [
+    95,
+    -10
+   ],
+   "width": 8,
+   "sidewalk": true
+  }
+ ],
+ "courtyards": [
+  {
+   "at": [
+    0,
+    8
+   ],
+   "size_x": 16,
+   "size_y": 12
+  }
+ ],
+ "cover": [
+  {
+   "at": [
+    -18,
+    -24
+   ],
+   "size": [
+    2.5,
+    1.2,
+    1.1
+   ]
+  },
+  {
+   "at": [
+    8,
+    12
+   ],
+   "size": [
+    1.8,
+    1.8,
+    1.4
+   ]
+  },
+  {
+   "at": [
+    20,
+    -2
+   ],
+   "size": [
+    2.2,
+    1.2,
+    1.1
+   ]
+  }
+ ],
+ "perimeter": {
+  "height": 3.0
+ },
+ "site_markers": [
+  {
+   "type": "attacker_spawn",
+   "at": [
+    -88,
+    -65
+   ]
+  },
+  {
+   "type": "extraction",
+   "at": [
+    -35,
+    63
+   ]
+  }
+ ],
+ "pvp": {
+  "min_spawn_separation": 25.0
+ }
+}

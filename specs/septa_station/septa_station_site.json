@@ -1,0 +1,165 @@
+{
+ "name": "septa_station",
+ "version": "0.1.0",
+ "mode": "pvp_heist",
+ "spawn": "angelos",
+ "objective": "station",
+ "extraction": "corner_gas",
+ "ground": {
+  "size_x": 230,
+  "size_y": 170
+ },
+ "buildings": [
+  {
+   "id": "angelos",
+   "glb": "buildings/strip_retail_a01.glb",
+   "gameplay": "buildings/strip_retail_a01.gameplay.json",
+   "at": [
+    -75,
+    -55
+   ],
+   "rot": 0
+  },
+  {
+   "id": "station",
+   "glb": "buildings/rail_station_a02.glb",
+   "gameplay": "buildings/rail_station_a02.gameplay.json",
+   "at": [
+    45,
+    30
+   ],
+   "rot": 0
+  },
+  {
+   "id": "corner_gas",
+   "glb": "buildings/gas_station_a03.glb",
+   "gameplay": "buildings/gas_station_a03.gameplay.json",
+   "at": [
+    -40,
+    50
+   ],
+   "rot": 0
+  }
+ ],
+ "paths": [
+  {
+   "from": "angelos",
+   "to": "station",
+   "width": 6
+  },
+  {
+   "from": "station",
+   "to": "corner_gas",
+   "width": 4
+  },
+  {
+   "from": "angelos",
+   "to": "corner_gas",
+   "width": 4
+  }
+ ],
+ "roads": [
+  {
+   "a": [
+    -110,
+    -15
+   ],
+   "b": [
+    110,
+    -15
+   ],
+   "width": 9,
+   "sidewalk": true
+  },
+  {
+   "a": [
+    0,
+    -80
+   ],
+   "b": [
+    0,
+    78
+   ],
+   "width": 8,
+   "sidewalk": true
+  }
+ ],
+ "courtyards": [
+  {
+   "at": [
+    0,
+    15
+   ],
+   "size_x": 20,
+   "size_y": 14
+  }
+ ],
+ "cover": [
+  {
+   "at": [
+    -25,
+    -30
+   ],
+   "size": [
+    2.5,
+    1.2,
+    1.1
+   ]
+  },
+  {
+   "at": [
+    8,
+    20
+   ],
+   "size": [
+    1.8,
+    1.8,
+    1.4
+   ]
+  },
+  {
+   "at": [
+    22,
+    -5
+   ],
+   "size": [
+    3.0,
+    1.0,
+    1.2
+   ]
+  },
+  {
+   "at": [
+    -55,
+    10
+   ],
+   "size": [
+    2.2,
+    1.2,
+    1.1
+   ]
+  }
+ ],
+ "perimeter": {
+  "height": 3.0
+ },
+ "site_markers": [
+  {
+   "type": "attacker_spawn",
+   "at": [
+    -100,
+    -75
+   ]
+  },
+  {
+   "type": "extraction",
+   "at": [
+    -40,
+    68
+   ]
+  }
+ ],
+ "pvp": {
+  "min_spawn_separation": 25.0
+ }
+}
