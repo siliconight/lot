@@ -1,0 +1,142 @@
+{
+ "name": "reading_terminal",
+ "version": "0.1.0",
+ "mode": "pvp_heist",
+ "spawn": "street_clinic",
+ "objective": "market_floor",
+ "extraction": "cold_chain",
+ "ground": {
+  "size_x": 210,
+  "size_y": 155
+ },
+ "buildings": [
+  {
+   "id": "street_clinic",
+   "glb": "buildings/clinic_a01.glb",
+   "gameplay": "buildings/clinic_a01.gameplay.json",
+   "at": [
+    -62,
+    -45
+   ],
+   "rot": 0
+  },
+  {
+   "id": "market_floor",
+   "glb": "buildings/market_hall_a01.glb",
+   "gameplay": "buildings/market_hall_a01.gameplay.json",
+   "at": [
+    48,
+    32
+   ],
+   "rot": 0
+  },
+  {
+   "id": "cold_chain",
+   "glb": "buildings/market_hall_a02.glb",
+   "gameplay": "buildings/market_hall_a02.gameplay.json",
+   "at": [
+    -48,
+    44
+   ],
+   "rot": 0
+  }
+ ],
+ "paths": [
+  {
+   "from": "street_clinic",
+   "to": "market_floor",
+   "width": 6
+  },
+  {
+   "from": "street_clinic",
+   "to": "cold_chain",
+   "width": 6
+  },
+  {
+   "from": "market_floor",
+   "to": "cold_chain",
+   "width": 5
+  }
+ ],
+ "roads": [
+  {
+   "a": [
+    -93,
+    -8
+   ],
+   "b": [
+    93,
+    -8
+   ],
+   "width": 9,
+   "sidewalk": true
+  }
+ ],
+ "courtyards": [
+  {
+   "at": [
+    4,
+    10
+   ],
+   "size_x": 20,
+   "size_y": 14
+  }
+ ],
+ "cover": [
+  {
+   "at": [
+    -18,
+    -26
+   ],
+   "size": [
+    2.5,
+    1.2,
+    1.1
+   ]
+  },
+  {
+   "at": [
+    14,
+    12
+   ],
+   "size": [
+    1.8,
+    1.8,
+    1.4
+   ]
+  },
+  {
+   "at": [
+    26,
+    -4
+   ],
+   "size": [
+    3.0,
+    1.0,
+    1.2
+   ]
+  }
+ ],
+ "perimeter": {
+  "height": 3.0
+ },
+ "site_markers": [
+  {
+   "type": "attacker_spawn",
+   "at": [
+    -92,
+    -62
+   ]
+  },
+  {
+   "type": "extraction",
+   "at": [
+    -48,
+    68
+   ]
+  }
+ ],
+ "pvp": {
+  "min_spawn_separation": 25.0
+ }
+}

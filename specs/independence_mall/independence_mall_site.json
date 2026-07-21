@@ -1,0 +1,142 @@
+{
+ "name": "independence_mall",
+ "version": "0.1.0",
+ "mode": "pvp_heist",
+ "spawn": "undercroft",
+ "objective": "assembly_hall",
+ "extraction": "archive_wing",
+ "ground": {
+  "size_x": 180,
+  "size_y": 130
+ },
+ "buildings": [
+  {
+   "id": "undercroft",
+   "glb": "buildings/landmark_hall_a03.glb",
+   "gameplay": "buildings/landmark_hall_a03.gameplay.json",
+   "at": [
+    -48,
+    -36
+   ],
+   "rot": 0
+  },
+  {
+   "id": "assembly_hall",
+   "glb": "buildings/landmark_hall_a01.glb",
+   "gameplay": "buildings/landmark_hall_a01.gameplay.json",
+   "at": [
+    42,
+    30
+   ],
+   "rot": 0
+  },
+  {
+   "id": "archive_wing",
+   "glb": "buildings/landmark_hall_a02.glb",
+   "gameplay": "buildings/landmark_hall_a02.gameplay.json",
+   "at": [
+    -45,
+    40
+   ],
+   "rot": 0
+  }
+ ],
+ "paths": [
+  {
+   "from": "undercroft",
+   "to": "assembly_hall",
+   "width": 6
+  },
+  {
+   "from": "undercroft",
+   "to": "archive_wing",
+   "width": 6
+  },
+  {
+   "from": "assembly_hall",
+   "to": "archive_wing",
+   "width": 5
+  }
+ ],
+ "roads": [
+  {
+   "a": [
+    -78,
+    -8
+   ],
+   "b": [
+    78,
+    -8
+   ],
+   "width": 9,
+   "sidewalk": true
+  }
+ ],
+ "courtyards": [
+  {
+   "at": [
+    4,
+    10
+   ],
+   "size_x": 20,
+   "size_y": 14
+  }
+ ],
+ "cover": [
+  {
+   "at": [
+    -18,
+    -26
+   ],
+   "size": [
+    2.5,
+    1.2,
+    1.1
+   ]
+  },
+  {
+   "at": [
+    14,
+    12
+   ],
+   "size": [
+    1.8,
+    1.8,
+    1.4
+   ]
+  },
+  {
+   "at": [
+    26,
+    -4
+   ],
+   "size": [
+    3.0,
+    1.0,
+    1.2
+   ]
+  }
+ ],
+ "perimeter": {
+  "height": 3.0
+ },
+ "site_markers": [
+  {
+   "type": "attacker_spawn",
+   "at": [
+    -78,
+    -52
+   ]
+  },
+  {
+   "type": "extraction",
+   "at": [
+    -45,
+    62
+   ]
+  }
+ ],
+ "pvp": {
+  "min_spawn_separation": 25.0
+ }
+}

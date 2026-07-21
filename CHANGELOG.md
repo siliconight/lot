@@ -1,3 +1,14 @@
+## [0.23.0] - Phase 4 missions: 8/8 full green first pass -> 20/20 library
+
+- **8 new missions all FULL green on the first engine batch** (walktest
+  proofs + physical walkers + 4-player mp_smoke): Citizens Bank Park,
+  Rivers Casino, PHL Airport, Center City Bank Tower heroes (the LARGE
+  40-min slate tier) + Xfinity Center, Reading Terminal, Independence
+  Mall, SEPTA Yard standards. Library: 20 missions / 8 heroes.
+- Offline sandbox assembly caught all four authoring defects before the
+  engine leg (2x spawn-separation, 2x single-approach objective): the
+  pvp gates in lot.py are doing their job pre-hardware.
+
 ## [0.22.0] - Phase 3 missions: 6/6 full green, smoke walker detour
 
 - **6 missions all FULL green** (proofs + physical walkers + mp_smoke):

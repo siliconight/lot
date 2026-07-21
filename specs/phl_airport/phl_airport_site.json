@@ -1,0 +1,142 @@
+{
+ "name": "phl_airport",
+ "version": "0.1.0",
+ "mode": "pvp_heist",
+ "spawn": "cargo_shed",
+ "objective": "terminal_hall",
+ "extraction": "baggage_level",
+ "ground": {
+  "size_x": 250,
+  "size_y": 175
+ },
+ "buildings": [
+  {
+   "id": "cargo_shed",
+   "glb": "buildings/freight_terminal_a01.glb",
+   "gameplay": "buildings/freight_terminal_a01.gameplay.json",
+   "at": [
+    -75,
+    -52
+   ],
+   "rot": 0
+  },
+  {
+   "id": "terminal_hall",
+   "glb": "buildings/airport_terminal_a01.glb",
+   "gameplay": "buildings/airport_terminal_a01.gameplay.json",
+   "at": [
+    55,
+    35
+   ],
+   "rot": 0
+  },
+  {
+   "id": "baggage_level",
+   "glb": "buildings/airport_terminal_a02.glb",
+   "gameplay": "buildings/airport_terminal_a02.gameplay.json",
+   "at": [
+    -55,
+    48
+   ],
+   "rot": 0
+  }
+ ],
+ "paths": [
+  {
+   "from": "cargo_shed",
+   "to": "terminal_hall",
+   "width": 6
+  },
+  {
+   "from": "cargo_shed",
+   "to": "baggage_level",
+   "width": 6
+  },
+  {
+   "from": "terminal_hall",
+   "to": "baggage_level",
+   "width": 5
+  }
+ ],
+ "roads": [
+  {
+   "a": [
+    -113,
+    -8
+   ],
+   "b": [
+    113,
+    -8
+   ],
+   "width": 9,
+   "sidewalk": true
+  }
+ ],
+ "courtyards": [
+  {
+   "at": [
+    4,
+    10
+   ],
+   "size_x": 20,
+   "size_y": 14
+  }
+ ],
+ "cover": [
+  {
+   "at": [
+    -18,
+    -26
+   ],
+   "size": [
+    2.5,
+    1.2,
+    1.1
+   ]
+  },
+  {
+   "at": [
+    14,
+    12
+   ],
+   "size": [
+    1.8,
+    1.8,
+    1.4
+   ]
+  },
+  {
+   "at": [
+    26,
+    -4
+   ],
+   "size": [
+    3.0,
+    1.0,
+    1.2
+   ]
+  }
+ ],
+ "perimeter": {
+  "height": 3.0
+ },
+ "site_markers": [
+  {
+   "type": "attacker_spawn",
+   "at": [
+    0,
+    -80
+   ]
+  },
+  {
+   "type": "extraction",
+   "at": [
+    -55,
+    75
+   ]
+  }
+ ],
+ "pvp": {
+  "min_spawn_separation": 25.0
+ }
+}

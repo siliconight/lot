@@ -1,0 +1,142 @@
+{
+ "name": "rivers_casino",
+ "version": "0.1.0",
+ "mode": "pvp_heist",
+ "spawn": "garage",
+ "objective": "gaming_floor",
+ "extraction": "count_house",
+ "ground": {
+  "size_x": 220,
+  "size_y": 160
+ },
+ "buildings": [
+  {
+   "id": "garage",
+   "glb": "buildings/parking_garage_a02.glb",
+   "gameplay": "buildings/parking_garage_a02.gameplay.json",
+   "at": [
+    -70,
+    -50
+   ],
+   "rot": 0
+  },
+  {
+   "id": "gaming_floor",
+   "glb": "buildings/casino_a01.glb",
+   "gameplay": "buildings/casino_a01.gameplay.json",
+   "at": [
+    50,
+    32
+   ],
+   "rot": 0
+  },
+  {
+   "id": "count_house",
+   "glb": "buildings/casino_a02.glb",
+   "gameplay": "buildings/casino_a02.gameplay.json",
+   "at": [
+    -52,
+    45
+   ],
+   "rot": 0
+  }
+ ],
+ "paths": [
+  {
+   "from": "garage",
+   "to": "gaming_floor",
+   "width": 6
+  },
+  {
+   "from": "garage",
+   "to": "count_house",
+   "width": 6
+  },
+  {
+   "from": "gaming_floor",
+   "to": "count_house",
+   "width": 5
+  }
+ ],
+ "roads": [
+  {
+   "a": [
+    -98,
+    -8
+   ],
+   "b": [
+    98,
+    -8
+   ],
+   "width": 9,
+   "sidewalk": true
+  }
+ ],
+ "courtyards": [
+  {
+   "at": [
+    4,
+    10
+   ],
+   "size_x": 20,
+   "size_y": 14
+  }
+ ],
+ "cover": [
+  {
+   "at": [
+    -18,
+    -26
+   ],
+   "size": [
+    2.5,
+    1.2,
+    1.1
+   ]
+  },
+  {
+   "at": [
+    14,
+    12
+   ],
+   "size": [
+    1.8,
+    1.8,
+    1.4
+   ]
+  },
+  {
+   "at": [
+    26,
+    -4
+   ],
+   "size": [
+    3.0,
+    1.0,
+    1.2
+   ]
+  }
+ ],
+ "perimeter": {
+  "height": 3.0
+ },
+ "site_markers": [
+  {
+   "type": "attacker_spawn",
+   "at": [
+    0,
+    -74
+   ]
+  },
+  {
+   "type": "extraction",
+   "at": [
+    -52,
+    70
+   ]
+  }
+ ],
+ "pvp": {
+  "min_spawn_separation": 25.0
+ }
+}

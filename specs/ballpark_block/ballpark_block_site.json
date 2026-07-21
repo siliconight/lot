@@ -1,0 +1,142 @@
+{
+ "name": "ballpark_block",
+ "version": "0.1.0",
+ "mode": "pvp_heist",
+ "spawn": "ops_warehouse",
+ "objective": "ballpark_concourse",
+ "extraction": "premium_club",
+ "ground": {
+  "size_x": 240,
+  "size_y": 170
+ },
+ "buildings": [
+  {
+   "id": "ops_warehouse",
+   "glb": "buildings/warehouse_a02.glb",
+   "gameplay": "buildings/warehouse_a02.gameplay.json",
+   "at": [
+    -75,
+    -55
+   ],
+   "rot": 0
+  },
+  {
+   "id": "ballpark_concourse",
+   "glb": "buildings/stadium_a01.glb",
+   "gameplay": "buildings/stadium_a01.gameplay.json",
+   "at": [
+    55,
+    35
+   ],
+   "rot": 0
+  },
+  {
+   "id": "premium_club",
+   "glb": "buildings/stadium_a04.glb",
+   "gameplay": "buildings/stadium_a04.gameplay.json",
+   "at": [
+    -55,
+    45
+   ],
+   "rot": 0
+  }
+ ],
+ "paths": [
+  {
+   "from": "ops_warehouse",
+   "to": "ballpark_concourse",
+   "width": 6
+  },
+  {
+   "from": "ops_warehouse",
+   "to": "premium_club",
+   "width": 6
+  },
+  {
+   "from": "ballpark_concourse",
+   "to": "premium_club",
+   "width": 5
+  }
+ ],
+ "roads": [
+  {
+   "a": [
+    -108,
+    -8
+   ],
+   "b": [
+    108,
+    -8
+   ],
+   "width": 9,
+   "sidewalk": true
+  }
+ ],
+ "courtyards": [
+  {
+   "at": [
+    4,
+    10
+   ],
+   "size_x": 20,
+   "size_y": 14
+  }
+ ],
+ "cover": [
+  {
+   "at": [
+    -18,
+    -26
+   ],
+   "size": [
+    2.5,
+    1.2,
+    1.1
+   ]
+  },
+  {
+   "at": [
+    14,
+    12
+   ],
+   "size": [
+    1.8,
+    1.8,
+    1.4
+   ]
+  },
+  {
+   "at": [
+    26,
+    -4
+   ],
+   "size": [
+    3.0,
+    1.0,
+    1.2
+   ]
+  }
+ ],
+ "perimeter": {
+  "height": 3.0
+ },
+ "site_markers": [
+  {
+   "type": "attacker_spawn",
+   "at": [
+    -105,
+    -72
+   ]
+  },
+  {
+   "type": "extraction",
+   "at": [
+    -55,
+    72
+   ]
+  }
+ ],
+ "pvp": {
+  "min_spawn_separation": 25.0
+ }
+}

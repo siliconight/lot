@@ -1,0 +1,142 @@
+{
+ "name": "xfinity_center",
+ "version": "0.1.0",
+ "mode": "pvp_heist",
+ "spawn": "front_of_house",
+ "objective": "event_floor",
+ "extraction": "skybox_wing",
+ "ground": {
+  "size_x": 210,
+  "size_y": 155
+ },
+ "buildings": [
+  {
+   "id": "front_of_house",
+   "glb": "buildings/arena_a02.glb",
+   "gameplay": "buildings/arena_a02.gameplay.json",
+   "at": [
+    -52,
+    -38
+   ],
+   "rot": 0
+  },
+  {
+   "id": "event_floor",
+   "glb": "buildings/arena_a01.glb",
+   "gameplay": "buildings/arena_a01.gameplay.json",
+   "at": [
+    50,
+    34
+   ],
+   "rot": 0
+  },
+  {
+   "id": "skybox_wing",
+   "glb": "buildings/arena_a03.glb",
+   "gameplay": "buildings/arena_a03.gameplay.json",
+   "at": [
+    -50,
+    42
+   ],
+   "rot": 0
+  }
+ ],
+ "paths": [
+  {
+   "from": "front_of_house",
+   "to": "event_floor",
+   "width": 6
+  },
+  {
+   "from": "front_of_house",
+   "to": "skybox_wing",
+   "width": 6
+  },
+  {
+   "from": "event_floor",
+   "to": "skybox_wing",
+   "width": 5
+  }
+ ],
+ "roads": [
+  {
+   "a": [
+    -93,
+    -8
+   ],
+   "b": [
+    93,
+    -8
+   ],
+   "width": 9,
+   "sidewalk": true
+  }
+ ],
+ "courtyards": [
+  {
+   "at": [
+    4,
+    10
+   ],
+   "size_x": 20,
+   "size_y": 14
+  }
+ ],
+ "cover": [
+  {
+   "at": [
+    -18,
+    -26
+   ],
+   "size": [
+    2.5,
+    1.2,
+    1.1
+   ]
+  },
+  {
+   "at": [
+    14,
+    12
+   ],
+   "size": [
+    1.8,
+    1.8,
+    1.4
+   ]
+  },
+  {
+   "at": [
+    26,
+    -4
+   ],
+   "size": [
+    3.0,
+    1.0,
+    1.2
+   ]
+  }
+ ],
+ "perimeter": {
+  "height": 3.0
+ },
+ "site_markers": [
+  {
+   "type": "attacker_spawn",
+   "at": [
+    -90,
+    -62
+   ]
+  },
+  {
+   "type": "extraction",
+   "at": [
+    -50,
+    68
+   ]
+  }
+ ],
+ "pvp": {
+  "min_spawn_separation": 25.0
+ }
+}

@@ -1,0 +1,142 @@
+{
+ "name": "bank_tower_block",
+ "version": "0.1.0",
+ "mode": "pvp_heist",
+ "spawn": "credit_union",
+ "objective": "tower_vault",
+ "extraction": "branch_hall",
+ "ground": {
+  "size_x": 200,
+  "size_y": 150
+ },
+ "buildings": [
+  {
+   "id": "credit_union",
+   "glb": "buildings/credit_union_a01.glb",
+   "gameplay": "buildings/credit_union_a01.gameplay.json",
+   "at": [
+    -60,
+    -45
+   ],
+   "rot": 0
+  },
+  {
+   "id": "tower_vault",
+   "glb": "buildings/bank_tower_a01.glb",
+   "gameplay": "buildings/bank_tower_a01.gameplay.json",
+   "at": [
+    45,
+    30
+   ],
+   "rot": 0
+  },
+  {
+   "id": "branch_hall",
+   "glb": "buildings/bank_tower_a03.glb",
+   "gameplay": "buildings/bank_tower_a03.gameplay.json",
+   "at": [
+    -45,
+    42
+   ],
+   "rot": 0
+  }
+ ],
+ "paths": [
+  {
+   "from": "credit_union",
+   "to": "tower_vault",
+   "width": 6
+  },
+  {
+   "from": "credit_union",
+   "to": "branch_hall",
+   "width": 6
+  },
+  {
+   "from": "tower_vault",
+   "to": "branch_hall",
+   "width": 5
+  }
+ ],
+ "roads": [
+  {
+   "a": [
+    -88,
+    -8
+   ],
+   "b": [
+    88,
+    -8
+   ],
+   "width": 9,
+   "sidewalk": true
+  }
+ ],
+ "courtyards": [
+  {
+   "at": [
+    4,
+    10
+   ],
+   "size_x": 20,
+   "size_y": 14
+  }
+ ],
+ "cover": [
+  {
+   "at": [
+    -18,
+    -26
+   ],
+   "size": [
+    2.5,
+    1.2,
+    1.1
+   ]
+  },
+  {
+   "at": [
+    14,
+    12
+   ],
+   "size": [
+    1.8,
+    1.8,
+    1.4
+   ]
+  },
+  {
+   "at": [
+    26,
+    -4
+   ],
+   "size": [
+    3.0,
+    1.0,
+    1.2
+   ]
+  }
+ ],
+ "perimeter": {
+  "height": 3.0
+ },
+ "site_markers": [
+  {
+   "type": "attacker_spawn",
+   "at": [
+    -88,
+    -62
+   ]
+  },
+  {
+   "type": "extraction",
+   "at": [
+    -45,
+    66
+   ]
+  }
+ ],
+ "pvp": {
+  "min_spawn_separation": 25.0
+ }
+}
