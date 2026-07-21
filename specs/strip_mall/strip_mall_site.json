@@ -1,0 +1,142 @@
+{
+ "name": "strip_mall",
+ "version": "0.1.0",
+ "mode": "pvp_heist",
+ "spawn": "wawa",
+ "objective": "jeweler",
+ "extraction": "pharmacy",
+ "ground": {
+  "size_x": 180,
+  "size_y": 130
+ },
+ "buildings": [
+  {
+   "id": "wawa",
+   "glb": "buildings/gas_station_a01.glb",
+   "gameplay": "buildings/gas_station_a01.gameplay.json",
+   "at": [
+    -60,
+    -30
+   ],
+   "rot": 0
+  },
+  {
+   "id": "jeweler",
+   "glb": "buildings/strip_retail_a02.glb",
+   "gameplay": "buildings/strip_retail_a02.gameplay.json",
+   "at": [
+    35,
+    15
+   ],
+   "rot": 0
+  },
+  {
+   "id": "pharmacy",
+   "glb": "buildings/pharmacy_a01.glb",
+   "gameplay": "buildings/pharmacy_a01.gameplay.json",
+   "at": [
+    -15,
+    40
+   ],
+   "rot": 0
+  }
+ ],
+ "paths": [
+  {
+   "from": "wawa",
+   "to": "jeweler",
+   "width": 5
+  },
+  {
+   "from": "jeweler",
+   "to": "pharmacy",
+   "width": 4
+  },
+  {
+   "from": "wawa",
+   "to": "pharmacy",
+   "width": 4
+  }
+ ],
+ "roads": [
+  {
+   "a": [
+    -85,
+    -5
+   ],
+   "b": [
+    85,
+    -5
+   ],
+   "width": 8,
+   "sidewalk": true
+  }
+ ],
+ "courtyards": [
+  {
+   "at": [
+    8,
+    28
+   ],
+   "size_x": 16,
+   "size_y": 12
+  }
+ ],
+ "cover": [
+  {
+   "at": [
+    -20,
+    -14
+   ],
+   "size": [
+    2.5,
+    1.2,
+    1.1
+   ]
+  },
+  {
+   "at": [
+    12,
+    30
+   ],
+   "size": [
+    1.8,
+    1.8,
+    1.4
+   ]
+  },
+  {
+   "at": [
+    -38,
+    8
+   ],
+   "size": [
+    3.0,
+    1.0,
+    1.2
+   ]
+  }
+ ],
+ "perimeter": {
+  "height": 3.0
+ },
+ "site_markers": [
+  {
+   "type": "attacker_spawn",
+   "at": [
+    -84,
+    -55
+   ]
+  },
+  {
+   "type": "extraction",
+   "at": [
+    -15,
+    56
+   ]
+  }
+ ],
+ "pvp": {
+  "min_spawn_separation": 25.0
+ }
+}

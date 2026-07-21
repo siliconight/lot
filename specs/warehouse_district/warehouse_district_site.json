@@ -1,0 +1,176 @@
+{
+ "name": "warehouse_district",
+ "version": "0.1.0",
+ "mode": "pvp_heist",
+ "spawn": "market",
+ "objective": "bonded_freight",
+ "extraction": "parcel_depot",
+ "ground": {
+  "size_x": 260,
+  "size_y": 190
+ },
+ "buildings": [
+  {
+   "id": "market",
+   "glb": "buildings/supermarket_a03.glb",
+   "gameplay": "buildings/supermarket_a03.gameplay.json",
+   "at": [
+    -80,
+    -60
+   ],
+   "rot": 0
+  },
+  {
+   "id": "bonded_freight",
+   "glb": "buildings/large_warehouse_a03.glb",
+   "gameplay": "buildings/large_warehouse_a03.gameplay.json",
+   "at": [
+    55,
+    35
+   ],
+   "rot": 0
+  },
+  {
+   "id": "parcel_depot",
+   "glb": "buildings/depot_a01.glb",
+   "gameplay": "buildings/depot_a01.gameplay.json",
+   "at": [
+    60,
+    -55
+   ],
+   "rot": 0
+  }
+ ],
+ "paths": [
+  {
+   "from": "market",
+   "to": "bonded_freight",
+   "width": 6
+  },
+  {
+   "from": "market",
+   "to": "parcel_depot",
+   "width": 5
+  },
+  {
+   "from": "bonded_freight",
+   "to": "parcel_depot",
+   "width": 5
+  }
+ ],
+ "roads": [
+  {
+   "a": [
+    -120,
+    -15
+   ],
+   "b": [
+    120,
+    -15
+   ],
+   "width": 9,
+   "sidewalk": true
+  },
+  {
+   "a": [
+    5,
+    -90
+   ],
+   "b": [
+    5,
+    85
+   ],
+   "width": 8,
+   "sidewalk": true
+  }
+ ],
+ "courtyards": [
+  {
+   "at": [
+    15,
+    25
+   ],
+   "size_x": 22,
+   "size_y": 15
+  }
+ ],
+ "cover": [
+  {
+   "at": [
+    -20,
+    -30
+   ],
+   "size": [
+    2.5,
+    1.2,
+    1.1
+   ]
+  },
+  {
+   "at": [
+    24,
+    28
+   ],
+   "size": [
+    1.8,
+    1.8,
+    1.4
+   ]
+  },
+  {
+   "at": [
+    30,
+    -20
+   ],
+   "size": [
+    3.0,
+    1.0,
+    1.2
+   ]
+  },
+  {
+   "at": [
+    -45,
+    10
+   ],
+   "size": [
+    2.2,
+    1.2,
+    1.1
+   ]
+  },
+  {
+   "at": [
+    45,
+    0
+   ],
+   "size": [
+    2.5,
+    1.2,
+    1.1
+   ]
+  }
+ ],
+ "perimeter": {
+  "height": 3.0
+ },
+ "site_markers": [
+  {
+   "type": "attacker_spawn",
+   "at": [
+    -112,
+    -85
+   ]
+  },
+  {
+   "type": "extraction",
+   "at": [
+    95,
+    -70
+   ]
+  }
+ ],
+ "pvp": {
+  "min_spawn_separation": 25.0
+ }
+}

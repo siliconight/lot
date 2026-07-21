@@ -328,6 +328,11 @@ func _spawn_walker(walker_name: String, at: Vector3, targets: Array) -> void:
 	# spawned in a line grid-lock instantly otherwise
 	body.collision_layer = 0
 	body.collision_mask = 1
+	# floor slope must match the BAKE's agent_max_slope (agent contract):
+	# tall-story basement ramps run past the 45 deg default and the engine
+	# then treats the ramp as a WALL -- every walker jams at the stair mouth
+	# (warehouse_district: 4.2-4.5 m stories, ramp ~49-52 deg)
+	body.floor_max_angle = deg_to_rad(_envf("DC_NAV_SLOPE", 55.0) + 1.0)
 	add_child(body)
 	body.global_position = at
 	if targets.is_empty():

@@ -1,3 +1,16 @@
+## [0.21.0] - Phase 2 missions + the walker slope fix
+
+- **Walker floor angle now matches the bake's agent_max_slope** (agent
+  contract, DC_NAV_SLOPE + 1 deg) in BOTH harnesses (nav_qa_director,
+  mp_smoke_node). Tall-story basement ramps (4.2-4.5 m stories, ~49-52 deg)
+  exceeded the 45 deg default and the engine classified the ramp as a WALL:
+  every walker jammed at the stair mouth while all path proofs passed.
+- **3 Phase 2 missions, all FULL green** (proofs + physical walkers +
+  mp_smoke): MSN_STRIP_MALL_01, MSN_WALKUP_SIEGE_01, and the
+  MSN_WAREHOUSE_DISTRICT_01 hero -- 4 players x 14/14 targets, ~770 m each,
+  202 s spine-scaled sim, 12/12 bots. First hero to fully pass the physical
+  walktest.
+
 ## [0.20.0] - Phase 1 missions: standard green, hero on proofs + smoke
 
 - **MSN_DELI_BLOCK_01 (standard)** fully green: 15 path proofs + physical

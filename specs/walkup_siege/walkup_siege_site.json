@@ -1,0 +1,142 @@
+{
+ "name": "walkup_siege",
+ "version": "0.1.0",
+ "mode": "pvp_heist",
+ "spawn": "garage",
+ "objective": "walkup",
+ "extraction": "pawn",
+ "ground": {
+  "size_x": 170,
+  "size_y": 130
+ },
+ "buildings": [
+  {
+   "id": "garage",
+   "glb": "buildings/auto_shop_a01.glb",
+   "gameplay": "buildings/auto_shop_a01.gameplay.json",
+   "at": [
+    -55,
+    -35
+   ],
+   "rot": 0
+  },
+  {
+   "id": "walkup",
+   "glb": "buildings/apartment_walkup_a01.glb",
+   "gameplay": "buildings/apartment_walkup_a01.gameplay.json",
+   "at": [
+    40,
+    20
+   ],
+   "rot": 0
+  },
+  {
+   "id": "pawn",
+   "glb": "buildings/pawn_shop_a01.glb",
+   "gameplay": "buildings/pawn_shop_a01.gameplay.json",
+   "at": [
+    -20,
+    45
+   ],
+   "rot": 0
+  }
+ ],
+ "paths": [
+  {
+   "from": "garage",
+   "to": "walkup",
+   "width": 5
+  },
+  {
+   "from": "walkup",
+   "to": "pawn",
+   "width": 4
+  },
+  {
+   "from": "garage",
+   "to": "pawn",
+   "width": 4
+  }
+ ],
+ "roads": [
+  {
+   "a": [
+    -80,
+    -8
+   ],
+   "b": [
+    80,
+    -8
+   ],
+   "width": 8,
+   "sidewalk": true
+  }
+ ],
+ "courtyards": [
+  {
+   "at": [
+    5,
+    32
+   ],
+   "size_x": 14,
+   "size_y": 10
+  }
+ ],
+ "cover": [
+  {
+   "at": [
+    -15,
+    -16
+   ],
+   "size": [
+    2.5,
+    1.2,
+    1.1
+   ]
+  },
+  {
+   "at": [
+    10,
+    34
+   ],
+   "size": [
+    1.8,
+    1.8,
+    1.4
+   ]
+  },
+  {
+   "at": [
+    -35,
+    5
+   ],
+   "size": [
+    2.2,
+    1.2,
+    1.1
+   ]
+  }
+ ],
+ "perimeter": {
+  "height": 3.0
+ },
+ "site_markers": [
+  {
+   "type": "attacker_spawn",
+   "at": [
+    -80,
+    -58
+   ]
+  },
+  {
+   "type": "extraction",
+   "at": [
+    -20,
+    56
+   ]
+  }
+ ],
+ "pvp": {
+  "min_spawn_separation": 25.0
+ }
+}

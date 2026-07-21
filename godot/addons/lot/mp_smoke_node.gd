@@ -84,6 +84,8 @@ func _on_connected() -> void:
 	cap.height = 1.8
 	cs.shape = cap
 	body.add_child(cs)
+	var slope := OS.get_environment("DC_NAV_SLOPE")
+	body.floor_max_angle = deg_to_rad((float(slope) if slope != "" else 55.0) + 1.0)
 	get_tree().root.add_child(body)
 	body.global_position = start + Vector3(0, 1.0, 0)
 	last = body.global_position
