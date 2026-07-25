@@ -1,5 +1,5 @@
 """Offline tests for the Lot site assembler (Phase 1)."""
-import json, os, sys, hashlib
+import json, os, re, sys, hashlib
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import lot
 
@@ -682,3 +682,81 @@ def test_lights_deterministic():
     a = json.dumps(lot.merge_lights(spec, SPECS), sort_keys=True)
     b = json.dumps(lot.merge_lights(spec, SPECS), sort_keys=True)
     assert a == b
+
+
+# ---------------------------------------------------------------------------
+# The walk scene has to survive contact with Godot and with LaserTag.
+# ---------------------------------------------------------------------------
+def _walk_scene(tmp_name="ltw", ladder_name="b0/LADDER_0"):
+    import tempfile
+    merged = {"markers": [{"name": ladder_name, "type": "ladder",
+                           "x": 10.0, "y": 4.0, "z": 3.0, "climb_height": 3.6,
+                           "width": 0.5, "depth": 0.15, "building": "b0"}],
+              "site_markers": [], "objectives": [],
+              "buildings": [{"id": "b0", "at": [0, 0], "rot": 0,
+                             "source": "b0.glb", "glb": "b0.glb"}]}
+    site = {"name": tmp_name, "spawn": "b0", "objective": "b1",
+            "extraction": "b2", "buildings": [
+                {"id": "b0", "glb": "b0.glb", "gameplay": "x.json", "at": [0, 0]},
+                {"id": "b1", "glb": "b1.glb", "gameplay": "x.json", "at": [45, 0]},
+                {"id": "b2", "glb": "b2.glb", "gameplay": "x.json", "at": [90, 10]}]}
+    p = os.path.join(tempfile.mkdtemp(), "w.tscn")
+    lot.write_walk_scene(site, merged, p, tmp_name)
+    return open(p).read()
+
+
+def test_node_names_are_legal_in_godot():
+    """A '/' in a node name is not a name -- it is a path, and Godot drops the
+    children that reference it.
+
+    Ladder markers are building-namespaced ("b0/LADDER_0"), and Lot wrote that
+    straight into `[node name=...]` and into the CollisionShape3D's `parent=`.
+    Godot's set_name() rewrites the '/' to '_' on load, the parent string is
+    then resolved as the path b0 -> LADDER_0_climb, no such node exists, and
+    the shape is dropped: every ladder volume arrived with no collision and
+    nothing could climb it. Invisible in Lot's own output, which looked fine.
+    """
+    t = _walk_scene(ladder_name="b0/LADDER_0")
+    assert 'name="b0_LADDER_0_climb"' in t
+    assert 'parent="b0_LADDER_0_climb"' in t
+    assert "b0/LADDER_0" not in t, "an illegal name survived into the scene"
+    # And the volume still carries its shape, which is the whole point.
+    assert t.index('name="b0_LADDER_0_climb"') < t.index('parent="b0_LADDER_0_climb"')
+    for name in re.findall(r'\[node name="([^"]*)"', t):
+        assert not (set(name) & set(lot._GODOT_BAD_NAME_CHARS)), name
+    print("  walk scene node names are Godot-legal: OK")
+
+
+def test_walk_scene_meets_the_lasertag_map_contract():
+    """LaserTag finds spawns by node name; without them it never runs.
+
+    The harness walks the tree for LT_PlayerSpawn / LT_EnemySpawnPoints /
+    LT_ObjectivePoint. Lot emitted none of them, so validate_map() failed and
+    run_evaluation returned before a single firefight -- and the report came
+    back grade "BROKEN", runs 0, which every downstream reader treated as a
+    verdict on the level instead of on the handoff.
+    """
+    t = _walk_scene()
+    for hook in ("LT_PlayerSpawn", "LT_EnemySpawnPoints", "LT_ObjectivePoint",
+                 "LT_PlayerRoutePoints", "LT_CoverTestPoints"):
+        assert f'name="{hook}"' in t, f"missing {hook}"
+    # LT_EnemySpawnPoints contributes its CHILDREN, so the container alone is
+    # still "no enemy spawns found".
+    assert t.count('parent="LT_EnemySpawnPoints"') >= 2
+    assert t.count('parent="LT_PlayerRoutePoints"') >= 2
+    print("  walk scene meets the LaserTag map contract: OK")
+
+
+def test_enemy_spawns_spread_along_the_route():
+    """Enemy spawns stacked on one point are one encounter, not an evaluation."""
+    t = _walk_scene()
+    block = t[t.index('name="LT_EnemySpawnPoints"'):t.index('name="LT_ObjectivePoint"')]
+    xs = re.findall(r"Transform3D\(1, 0, 0, 0, 1, 0, 0, 0, 1, ([-\d.]+),", block)
+    assert len(set(xs)) > 1, "every enemy spawned in the same place"
+
+
+def test_walk_scene_load_steps_still_match():
+    """load_steps counts resources, and the hook nodes add none of them."""
+    t = _walk_scene()
+    steps = int(re.search(r"load_steps=(\d+)", t).group(1))
+    assert steps == t.count("[ext_resource") + t.count("[sub_resource") + 1

@@ -842,6 +842,74 @@ def _v3(world_xyz, lift=0.0):
     return f"Vector3({x:g}, {z + lift:g}, {-y:g})"
 
 
+# Godot 4: String::invalid_node_name_characters. set_name() rewrites each of
+# these to "_" when a scene loads, so a name written with one in it does not
+# survive -- and every `parent="..."` string still pointing at the original is
+# then parsed as a PATH, finds nothing, and the child node is dropped. Marker
+# names are building-namespaced ("b0/LADDER_0"), so every ladder volume Lot
+# emitted arrived in the engine with no CollisionShape3D and nothing could
+# climb it. Apply Godot's own rule at write time so name and parent agree.
+_GODOT_BAD_NAME_CHARS = '.:@/"%'
+
+
+def _node_name(raw):
+    return "".join("_" if c in _GODOT_BAD_NAME_CHARS else c for c in str(raw))
+
+
+def _lasertag_hook_nodes(pos, enemy_count=6, lateral=1.5):
+    """Lot's half of the LaserTag map contract (LaserTag TDD 8).
+
+    LaserTag's evaluator discovers its fixtures by node name -- LT_PlayerSpawn,
+    LT_EnemySpawnPoints, LT_ObjectivePoint, and the optional LT_PlayerRoutePoints
+    / LT_CoverTestPoints -- and short-circuits before a single run if the
+    required three are absent. A walk scene that carries spawn/objective/
+    extraction only as script properties reads to the evaluator as an empty map:
+    it reports a grade for a match it never played. Emit the nodes so the
+    positions Lot already knows are the positions LaserTag actually reads.
+
+    Enemies are sampled along the spawn -> objective -> extraction polyline and
+    kicked alternately to either side, so they are an engagement sequence rather
+    than one stacked encounter.
+    """
+    route = [pos["spawn"], pos["objective"], pos["extraction"]]
+    segs = list(zip(route, route[1:]))
+    lengths = [max(1e-6, math.dist(a[:2], b[:2])) for a, b in segs]
+    total = sum(lengths)
+    enemies = []
+    for i in range(max(1, int(enemy_count))):
+        target = total * (i + 1) / (int(enemy_count) + 1)
+        walked, pt, seg = 0.0, route[-1], segs[-1]
+        for (a, b), length in zip(segs, lengths):
+            if walked + length >= target:
+                t = (target - walked) / length
+                pt = tuple(a[k] + (b[k] - a[k]) * t for k in range(3))
+                seg = (a, b)
+                break
+            walked += length
+        dx, dy = seg[1][0] - seg[0][0], seg[1][1] - seg[0][1]
+        norm = math.hypot(dx, dy) or 1.0
+        side = lateral if i % 2 == 0 else -lateral
+        enemies.append((pt[0] - dy / norm * side, pt[1] + dx / norm * side, pt[2]))
+
+    def _hook(name, parent, world, lift=0.0):
+        return [f'[node name="{name}" type="Node3D" parent="{parent}"]',
+                f'transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, '
+                f'{_v3(world, lift)[8:-1]})', '']
+
+    body = _hook("LT_PlayerSpawn", ".", pos["spawn"], 1.0)
+    body += ['[node name="LT_EnemySpawnPoints" type="Node3D" parent="."]', '']
+    for i, e in enumerate(enemies):
+        body += _hook(f"Enemy_{i}", "LT_EnemySpawnPoints", e, 1.0)
+    body += _hook("LT_ObjectivePoint", ".", pos["objective"])
+    body += ['[node name="LT_PlayerRoutePoints" type="Node3D" parent="."]', '']
+    for i, r in enumerate(route):
+        body += _hook(f"Route_{i}", "LT_PlayerRoutePoints", r)
+    body += ['[node name="LT_CoverTestPoints" type="Node3D" parent="."]', '']
+    ox, oy, oz = pos["objective"]
+    for i, (cx, cy) in enumerate(((5.0, 0.0), (-5.0, 0.0), (0.0, 5.0), (0.0, -5.0))):
+        body += _hook(f"Cover_{i}", "LT_CoverTestPoints", (ox + cx, oy + cy, oz))
+    return body
+
 
 def _ladder_volume_nodes(merged):
     """Area3D climb volumes (group "ladder") from the site's gameplay ladder
@@ -863,7 +931,7 @@ def _ladder_volume_nodes(merged):
         sid = f"LadderBox_{i}"
         subs += [f'[sub_resource type="BoxShape3D" id="{sid}"]',
                  f'size = Vector3({fp}, {ch + 1.0}, {fp})', '']
-        nm = m.get("name", f"LADDER_{i}")
+        nm = _node_name(m.get("name", f"LADDER_{i}"))
         body += [
             f'[node name="{nm}_climb" type="Area3D" parent="." groups=["ladder"]]',
             f'transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, '
@@ -887,6 +955,7 @@ def write_walk_scene(site_spec, merged, walk_out, site_tscn_base,
     _p = "" if portable else "res://"
     _a = "" if portable else addon_dir + "/"
     ladder_body, ladder_subs = _ladder_volume_nodes(merged)
+    lt_body = _lasertag_hook_nodes(pos)
     sx, sy, sz = pos["spawn"]
     player_godot = f"{sx:g}, {sz + 1.0:g}, {-sy:g}"   # eye/capsule lift
 
@@ -938,6 +1007,7 @@ def write_walk_scene(site_spec, merged, walk_out, site_tscn_base,
         '-0.707107, -0.5, 0.5, 0, 20, 0)',
         'shadow_enabled = true', '',
         *ladder_body,
+        *lt_body,
         '[node name="Nav" type="NavigationRegion3D" parent="."]',
         'navigation_mesh = SubResource("NavMesh")', '',
         '[node name="Site" parent="./Nav" instance=ExtResource("site")]', '',

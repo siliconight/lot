@@ -1,3 +1,30 @@
+## [0.24.0] - Walk scenes are legal in Godot and playable by Laser Tag
+
+- **Node names are sanitized to Godot's own rule at write time.** Godot 4's
+  `String::invalid_node_name_characters` is `. : @ / " %`, and `set_name()`
+  silently rewrites each to `_` on load. Ladder volumes are named from
+  building-namespaced markers (`b0/LADDER_0`), so the node arrived in the
+  engine as `b0_LADDER_0_climb` while its child's `parent="b0/LADDER_0_climb"`
+  was parsed as a *path*, matched nothing, and the CollisionShape3D was
+  dropped. Every ladder Lot emitted was unclimbable, and nothing said so.
+  `_node_name()` now applies the rule before the name is written, so the name
+  and every reference to it agree. Test: `test_node_names_are_legal_in_godot`
+  asserts no emitted node name contains a character from the invalid set.
+- **Walk scenes now meet the LaserTag map contract** (LaserTag TDD 8).
+  LaserTag discovers its fixtures by node name -- `LT_PlayerSpawn`,
+  `LT_EnemySpawnPoints`, `LT_ObjectivePoint`, plus the optional
+  `LT_PlayerRoutePoints` / `LT_CoverTestPoints` -- and short-circuits before a
+  single run when the required three are absent. Lot carried spawn/objective/
+  extraction as script properties only, so the evaluator read the map as empty
+  and reported a grade for a match it never played (`runs: 0`, grade BROKEN).
+  `_lasertag_hook_nodes()` emits the nodes from the positions Lot already
+  computes; enemies are sampled along the spawn -> objective -> extraction
+  polyline and kicked alternately to either side, so they are an engagement
+  sequence rather than one stacked encounter. Tests:
+  `test_walk_scene_meets_the_lasertag_map_contract`,
+  `test_enemy_spawns_spread_along_the_route`, and
+  `test_walk_scene_load_steps_still_match` (the header count survives).
+
 ## [0.23.0] - Phase 4 missions: 8/8 full green first pass -> 20/20 library
 
 - **8 new missions all FULL green on the first engine batch** (walktest
