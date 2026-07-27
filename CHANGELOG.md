@@ -1,3 +1,32 @@
+## [0.33.0] - the report goes where the caller asked
+
+`walktest.py` gains `--report-dir`. The `heist_nav_qa` director names its report
+after the scene and writes it beside it, which is right for a hand-run in a site
+directory and wrong for a caller that stages a throwaway project somewhere else
+and needs the result in its own output directory. Level Factory is that caller:
+its walktest stage now runs this runner against a staged project and collects
+`site_navqa.walktest.json` from its own work dir.
+
+`copy_report()` copies a report that exists and returns None for one that does
+not. That second half is the point -- the director writes nothing when the scene
+never ran, and a copy step that invented a destination file would paper over
+exactly the failure the caller needs to see.
+
+`--require` is unchanged and now has a help string, because the default is a
+trap for an automated caller. Without it a missing Godot 4 binary is a SKIP that
+returns 0 and writes no report: a navigation check that never happened, reported
+as success. Level Factory passes `--require`.
+
+Seven tests in `tests/test_walktest_runner.py`, none of which launch Godot --
+the two things under test are what happens when Godot is absent and where a
+written report ends up.
+
+Note on versions: `VERSION` moves 0.24.0 -> 0.25.0 with this change. Lot's four
+version sources (`VERSION`, `lot.py`, `version.py`, this file) still disagree
+and are left alone deliberately -- build fingerprints read `VERSION`, so
+reconciling them is a cache-invalidating change that wants its own pass. See
+PIPELINE_ROADMAP.md, "Smaller, carried".
+
 ## [0.32.0] - the distance was the symptom, the empty ground was the defect
 
 0.31.0 fixed an unfair opening by moving the enemy. That is the cheapest

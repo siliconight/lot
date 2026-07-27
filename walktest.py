@@ -10,10 +10,17 @@ simulated walkers, writes `<site>_navqa.walktest.json`, and exits 0/1.
     python walktest.py <project_dir> <site>_navqa.tscn
     python walktest.py <project_dir> --all
     python walktest.py <project_dir> --all --require   # missing Godot = fail
+    python walktest.py <project_dir> <scene> --report-dir <dir>
 
 <project_dir> must contain project.godot (cater.py creates one). This runner
 syncs the heist_nav_qa addon into the project first, so the director is
 always the version shipped with this Lot checkout.
+
+--report-dir copies each report out of the project once it is written. The
+director names the report after the scene and writes it beside it, which is
+right for a hand-run in a site directory and wrong for a caller that stages a
+throwaway project somewhere else and needs the result in its own output
+directory. Level Factory is that caller.
 
 Godot discovery: $DC_GODOT / $LOT_GODOT, then godot4/godot on PATH.
 Exit code: 0 = all pass (or skipped without --require), 1 = failures.
@@ -122,7 +129,19 @@ def import_pass(godot, project_dir, timeout=600):
               "tell the truth)")
 
 
-def run_one(godot, project_dir, scene, timeout=300):
+def copy_report(report_path, report_dir):
+    """Place a written report where the caller asked for it. Returns the
+    destination, or None if there was nothing to copy."""
+    if not report_dir or not os.path.exists(report_path):
+        return None
+    os.makedirs(report_dir, exist_ok=True)
+    dst = os.path.join(report_dir, os.path.basename(report_path))
+    if os.path.abspath(dst) != os.path.abspath(report_path):
+        shutil.copy2(report_path, dst)
+    return dst
+
+
+def run_one(godot, project_dir, scene, timeout=300, report_dir=None):
     name = os.path.basename(scene)
     rel = os.path.relpath(scene, project_dir).replace(os.sep, "/")
     cmd = [godot, "--headless", "--path", project_dir, f"res://{rel}"]
@@ -158,6 +177,9 @@ def run_one(godot, project_dir, scene, timeout=300):
                 ok = bool(json.load(f).get("ok"))
         except Exception:
             ok = False
+        copied = copy_report(report_path, report_dir)
+        if copied:
+            print(f"[walktest] report -> {copied}")
         print(f"[walktest] {name}: {'PASS' if ok else 'FAIL'} -> {report_path}")
         return ok
     print(f"[walktest] {name}: no report written (exit {proc.returncode})")
@@ -170,7 +192,10 @@ def main(argv=None):
     ap.add_argument("scene", nargs="?", help="a *_navqa.tscn inside it")
     ap.add_argument("--all", action="store_true",
                     help="every *_navqa.tscn in the project")
-    ap.add_argument("--require", action="store_true")
+    ap.add_argument("--require", action="store_true",
+                    help="a missing Godot is a FAILURE, not a skip")
+    ap.add_argument("--report-dir", default=None,
+                    help="also copy each written report into this directory")
     args = ap.parse_args(argv)
 
     ensure_project(args.project)
@@ -204,7 +229,8 @@ def main(argv=None):
 
     rc = 0
     for scene in targets:
-        if not run_one(godot, args.project, scene):
+        if not run_one(godot, args.project, scene,
+                       report_dir=args.report_dir):
             rc = 1
     return rc
 
