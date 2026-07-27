@@ -435,7 +435,7 @@
       "breach_class": null,
       "material": null,
       "vaultable": false,
-      "reinforceable": false,
+      "reinforceable": true,
       "building": "parking_garage_a01"
     },
     {

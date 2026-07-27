@@ -1,3 +1,588 @@
+## [0.32.0] - the distance was the symptom, the empty ground was the defect
+
+0.31.0 fixed an unfair opening by moving the enemy. That is the cheapest
+available response to "these two can see each other" and it is almost never the
+right one: push a spawn far enough and the map still grades badly, now for a
+first contact past the ceiling and a crew that walks a minute before it meets
+anything. The site is no better than it was. What made the opening unfair was
+that two markers could see each other across ninety metres of empty ground, and
+the fix for empty ground is to put something in it.
+
+Which makes it Lot's job. A firefight evaluator can say a map plays badly and it
+cannot place a crate, because it does not own the geometry. Lot does. So the
+evaluator's finding is a **soft gate** here -- it never refuses a build, it
+changes what the build contains.
+
+### `site_cover.py`
+
+Measures which pairs of mission markers can see each other across more open
+ground than the engagement opens at -- the sniping question, asked of the floor
+rather than of the spawns -- and then decides where along each line a solid
+would break it.
+
+A sightline is two lines, not one. Each side sights from its own eye at the
+other's chest, so the crew's outgoing line descends and the enemy's incoming
+line climbs and they cross in the middle. A solid tall enough to break one can
+sit under the other, and half a broken sightline is not half a fix: first
+contact is stamped on the first shot by *either* side. `required_height(t)` is
+the taller of the two demands at each point along the line, and
+`break_interval()` is the span where a piece of a given height clears both.
+
+Placement refuses the positions that look fine on paper and are not: cover
+overlapping a building, cover standing on a marker, cover inside another piece
+(`COVER_SEPARATION`), cover off the walkable ground. Where nothing on open
+ground will do, that is reported rather than forced -- `LOT_SIGHTLINE_UNBREAKABLE`
+is a request for a building, and no amount of street furniture answers it.
+
+Pieces land in `site_spec["cover"]`, which already had an emitter, so they reach
+the `.tscn` as the same axis-aligned blockout geometry Deli Counter produces and
+the navmesh bake sees them as the collision they are. Nothing new to consume
+them; the geometry is real from the first run.
+
+### `OPENING_RANGE` is 45, and it says why in the file
+
+`SIGHT_RANGE = 35.0` was the enemy's number from
+`default_laser_tag_scenario.tres`, correctly read and only half the engagement.
+`LT_BotPlayerController` carries `@export var sight_range: float = 45.0`, ten
+metres past the enemy it is hunting, and nothing overrides it --
+`LT_MapEvalHarness` assigns `brain.sight_range` from the scenario and has no
+matching line for the crew's bot. So the crew sees first, fires first, and
+`LT_MetricsCollector.record_shot` stamps `time_to_first_contact` on that shot. An
+enemy 39 m out was outside every number Lot was checking and inside the only one
+that decided the clock.
+
+Worse than a mis-stamped clock: `_advance_route` lives in the `else` of "can I
+see an enemy". One visible enemy is 0% route completion by construction, on
+every seed, which is exactly what five seeds had been reporting.
+
+`OPENING_RANGE = 45.0` now, with the derivation written next to it. `SIGHT_RANGE`
+survives as an alias so a caller that reads it gets the number that decides the
+fight rather than the one that used to be there. It remains a stated assumption
+in the sense `DEFAULT_FOOTPRINT` is -- Lot cannot read a `.tres` -- and Level
+Factory's `lasertag_contract` now reads the real Laser Tag files and reports
+drift against what is written here, so this going stale is a finding rather than
+another five-seed run of wipes.
+
+### findings
+
+`LOT_COVER_PLACED` (minor), `LOT_SIGHTLINE_UNBREAKABLE` (moderate),
+`LOT_SIGHTLINE_OPEN` (minor). All advisory, all describing a level that exists.
+
+232 tests.
+
+## [0.31.0] - eight metres of standoff against thirty-five metres of sight
+
+Twenty-one of twenty-five matches ended in a team wipe inside ten seconds, on
+every seed, with first contact logged at 0.02 s. The map was not hard. The crew
+was being shot before it could take a step, and the number that allowed it had
+been sitting in this file since enemy spawns existed:
+
+    MIN_STANDOFF = 8.0
+
+Eight metres was chosen by eye. `enemy_sight_range = 35.0` in Laser Tag's
+`default_laser_tag_scenario.tres`, read at `LT_MapEvalHarness.gd:477` as
+`brain.sight_range = scenario.enemy_sight_range`. The two numbers live in
+different repos and had never been compared. Lot was placing enemies four times
+closer than the distance at which they open fire and then reporting the placement
+as correct, because by its own rule it was.
+
+### the rule the number was standing in for
+
+An opening engagement is fair iff the enemy is beyond sight range of the crew
+spawn **or** a building stands between the two. Distance was never the mechanism;
+it was one of two ways to get the same outcome, and the cheaper one on a dense
+street is usually the wall.
+
+`opening_engagement_is_fair()` states exactly that, and
+`has_line_of_sight()` answers the second half by Liang-Barsky slab clipping of
+the crew-to-enemy segment against the raw building footprints. A rect containing
+either endpoint is skipped: you are not hidden by the building you are standing
+in, and a crew that spawns indoors must not be scored as covered by its own
+walls.
+
+`MIN_STANDOFF` survives as a floor, no longer as the rule. `SIGHT_RANGE = 35.0`
+is a stated assumption in the sense `DEFAULT_FOOTPRINT` is -- Lot cannot import
+a `.tres`, so the number is written down with its source next to it rather than
+guessed at again in six months.
+
+### moving a spawn by the smallest change, not by loop order
+
+Where the designed position is unfair there are two ways out: push the spawn
+perpendicular off the route, or slide it further along the route. The first
+implementation tried every perpendicular offset up to `MAX_PUSH = 80` before it
+tried sliding, and that is not a tie-break, it is loop order deciding the answer
+-- a spawn walked thirty-two metres out into a field to escape a sightline the
+next block along would have broken for free.
+
+`_candidates()` now prices both in the same unit, metres of deviation
+(`slide + max(0, |offset| - lateral)`), and yields them cheapest first. The
+placer takes the first candidate that is outdoors, clear of the standoff floor,
+clear of its neighbours, and fair. On BAIE_DORE all six enemies place, none are
+dropped, and the two that sit inside 35 m of the crew are both behind buildings.
+
+`LOT_ENEMY_SPAWN_STANDOFF` (minor) reports the along-route slides separately from
+`LOT_ENEMY_SPAWN_PUSHED`, because they are different facts about the level: one
+says a spawn was inside a wall, the other says the opening was unwinnable.
+`LOT_ENEMY_SPAWN_UNPLACEABLE` now states the full rule it failed, so a dropped
+enemy says which of the two conditions no position on the route could satisfy.
+
+### a building the spawn placer could not see
+
+`site_spawns.footprint_rect` read `_footprint` only. `site_extent.rotated_footprint`
+reads `footprint` too, and applies rotation. Two implementations of "where does
+this building stand", diverged, in the same repo -- so a building described the
+second way was solid to the ground plate, solid to the layout linter, and
+invisible to enemy placement, which would happily drop a spawn inside it.
+
+`footprint_rect` now delegates to `site_extent` and keeps only the margin growth.
+This is not the producer/consumer double implementation the pipeline keeps on
+purpose across the Level Factory gate -- both of these were consumers, in one
+module, answering one question two ways.
+
+Twelve tests: nine new under `# the opening engagement`, three rewritten because
+they were asserting the old truth. `205 passed`.
+
+## [0.30.0] - the ground was the wrong size in six places at once
+
+The crew spawned on a floor with no site ground within twenty-two metres, and
+Laser Tag was right to refuse the map. What put them there was not the spawn
+placer.
+
+`category5_baie_dore_001` seed 5219 places four 44 m shells at x = -6, 39, 93
+and 138 and declares a ground plate of 232 x 100. Lot centred that plate on the
+origin, so it ran x -116..116 while the row it carries runs x -28..160. The last
+building overhung the east rim by 44 m. Everything downstream followed:
+
+  - `_ground_tiles` cut b3's floor hole against the plate rect, the hole fell
+    entirely outside it, and the intersection came back empty. An empty result
+    is what "the hole fitted" also looks like, so no tile was laid and nothing
+    was said. Silent emptiness, the same shape as every other bug in this file.
+  - b3's own interior slab was the only surface under the crew spawn, with the
+    plate's rim 22 m short of it. An island.
+  - the perimeter wall, the streetlight ring, the enemy-spawn street search, the
+    layout linter's bounds check and the enterability approach test all read the
+    plate the same way, so all five agreed the site was fine.
+
+Six call sites, one assumption, written out longhand in each of them:
+
+    hx, hy = g["size_x"] / 2, g["size_y"] / 2
+
+No module owned the answer, so there was nowhere for the fix to go and nowhere
+for a test to point. That is the actual defect; the mis-centred plate is what it
+let through.
+
+### site_extent.py (new)
+
+One reader for "how big is the ground and where does it sit". Takes a site spec,
+returns a `Ground` with a rect in site space, and every module that used to
+halve `size_x` now asks it. Pure: dicts in, rect and findings out, no bpy, no
+Godot, no imports outside the stdlib.
+
+The rect is derived rather than declared. `content()` collects what has to stand
+on ground -- buildings and blockers by rotated footprint, courtyards, cover,
+paths and roads swept by half their width, markers as points -- and
+`required_rect` grows that union by `CLEARANCE = 4.0` m. Four metres because
+Godot erodes the navmesh by the 0.4 m agent radius at every geometry edge
+including the plate rim, so 4 m of ground outside the outermost solid leaves
+~3.2 m of walkable surface rather than a ledge. When the declared plate does not
+contain that, the two are unioned and the result snapped outward to whole
+metres. Growth is one-directional on purpose: ground already laid is ground
+already walked on, and pulling a rim in can delete a surface someone stands on,
+while pushing one out can only add surface nobody has to use.
+
+Nothing grows in silence:
+
+  - `LOT_GROUND_EXTENDED` (moderate) names which content fell outside and by how
+    much each edge moved -- "extended to 280 x 100 m (+48 m east) so b3 stands
+    on ground".
+  - `LOT_GROUND_OFF_CENTRE` (minor), only when the declared plate was large
+    enough and merely in the wrong place. That is the producer-side bug stated as
+    a sentence: sized from the building count, then assumed centred on the
+    origin.
+  - `LOT_GROUND_EXTENT_UNKNOWN` (moderate) when a building carries no readable
+    footprint. An unmeasurable building is not a zero-sized one, and the plate
+    cannot be sized for what it cannot see.
+  - `LOT_GROUND_UNREASONABLE` (blocker) past a 2000 m span -- but the ground is
+    still built. A blocker stops the run; it should not also cost the artist the
+    scene that shows why.
+
+### the hole gate
+
+`hole_findings()` raises `LOT_GROUND_HOLE_OUTSIDE` (blocker) for any floor hole
+the plate does not contain, straddling the rim included. The clipping in
+`_ground_tiles` stays -- it is honest arithmetic once the rect is right -- but it
+can no longer be the last word. A hole that would vanish now stops the run and
+says which building's floor was about to be cut out of a plate that does not
+reach it. `lot.py` gained `ground_holes()` so the builder and the gate compute
+the same holes from the same policy instead of the gate approximating what the
+builder did.
+
+The report carries `ground_extent` with the resolved, declared and required
+rects, so a reader can see the plate that was built next to the plate that was
+asked for. The findings go through `tactical.findings`, which Level Factory's
+Lot adapter already maps to issues, so a blocking hole reaches the pipeline
+without a change on that side.
+
+### the overlap gate
+
+Being able to resolve the real extent of a row meant being able to look at the
+row, and the row was wrong in a second way. Measuring the shipped shell gives a
+44 m building; the spec spaces the origins 42 m apart. Every neighbouring pair in
+every candidate had two metres of one building standing inside the other.
+
+Nothing in Lot asked. `site_audit` compared markers against footprints,
+`site_layout_lint` compared markers against bounds, `site_spawns` pushed spawns
+out of footprints -- and no check anywhere compared two footprints to each other.
+A row whose spacing was narrower than the buildings standing in it assembled
+interpenetrating shells and reported a clean site, which is why this survived
+every run so far.
+
+`overlap_findings()` raises `LOT_BUILDINGS_OVERLAP` for each pair whose rotated
+footprints intersect. Depth is the shallower of the two axis overlaps -- how far
+one shell reaches into the other. Past `OVERLAP_TOLERANCE = 0.5` m it is a
+blocker naming the depth ("reaching 2.0 m into each other"), because Deli
+Counter's exterior walls are 0.25 m and half a metre is the width at which
+"cladding is kissing" becomes a wall standing in somebody's living room. Under
+the tolerance it is a minor: two shells sharing a face is a terrace, not a fault,
+and a row can be tightened deliberately. A building whose footprint cannot be
+read is skipped here and already reported by `LOT_GROUND_EXTENT_UNKNOWN` -- it is
+not reported as clear.
+
+### tests
+
+`tests/test_site_extent.py` is built on the seed that produced it, not on a
+synthetic square. It asserts the plate carries the row, that the crew spawn
+stands on ground, and -- guarding the guard -- that the *declared* plate did not:
+a fix whose fixture cannot express the old failure proves nothing. The end-to-end
+test flood-fills the tile set and requires that the strip of ground beside b3
+joins the ground at the far rim, because "there is a tile here" and "you can walk
+from here to the objective" are different claims and only the second one is the
+one Laser Tag failed. Area conservation (tiles + holes = plate) catches a strip
+going missing anywhere in the decomposition.
+
+Two existing tests had their premises dissolved by the fix and were rewritten
+rather than relaxed. `test_enterability_outside_perimeter_gates` proved its point
+with a building whose footprint hung 1 m off the declared rim; that plate now
+grows, and the door faces ground. It is now two tests: one that the door is *not*
+gated because the plate was extended and the extension was reported, and one that
+keeps the gate honest with a building Lot cannot measure, where the rim really is
+all there is. `test_an_enemy_that_cannot_be_placed_is_not_written` boxed a 98 m
+shell into a 100 m plate; the honest plate gives it a 4 m street and all six
+enemies place. The fact under test is "no clear cell within `MAX_PUSH`", so the
+shell is now 400 m and the nearest street is 200 m away.
+
+The overlap tests carry the same shape: the real row is asserted clear, a row
+spaced 42 m with 44 m shells is asserted to block with the depth in the message,
+shells that merely touch are asserted to report without gating, a quarter turn is
+shown to separate one pair and join another, and an unmeasurable building is
+asserted not to come back clean.
+
+What this does not fix: Level Factory still writes the spec that way.
+`site_variation.site_placements` anchors the row at the origin and marches +x
+while `ground_size` returns a symmetric span from the building count, and its own
+coverage test passes because of a `+ 90` fudge in the assertion. Lot now survives
+that spec and says so on every run, and Level Factory 0.13.17 stops writing it
+that way -- but the two halves stay independent on purpose. Lot's gate does not
+trust the producer to have been fixed, and never will.
+
+## [0.29.0] - the hook came down off the counter and stayed on it
+
+0.28.0 seated `LT_ObjectivePoint` on the floor and the run came back with the
+same blocker. The correction is recorded on that entry; this is what was
+actually wrong.
+
+Seating changed the marker's height. It could not change where the marker
+*stands*, and Laser Tag's navmesh does not read the number in the marker -- it
+reads the geometry under the point. The point was at the exact centre of a
+`cashier_cage` room, which is also the exact centre of the `cage_counter` prop
+Deli Counter bakes into that room: a 6.0 x 1.0 m box 1.1 m tall. So the cell
+kept reporting a standing surface 1.1 m above a room floor of flat 0, with no
+step between it and anything around it. Against a 0.5 m climb limit the cell is
+standable and is an island. The bot has no route to it, and the whole map is
+refused at 0% completion for a one-metre placement error.
+
+It is not seed-specific. The gameplay generator places the objective marker at
+its room's centre and Deli Counter places the counter at the same centre, on
+every building of this archetype -- four for four on the seed that produced it.
+
+Lot could not see any of this, because Lot could not see furniture. Its only
+model of solid geometry was `site_spawns.footprint_rect`, which treats a whole
+building as one block. That is right at the scale it was written for and blind
+one level down, and the mission nav hooks all live inside footprints.
+
+### site_collision.py (new)
+
+Reads the collision the shells Lot assembles actually bring, in site space.
+Godot's glTF importer generates a physics body for a node whose name ends in
+the `-col` family of suffixes, and the position and extent of that body are
+fully described by the file's JSON chunk -- the node hierarchy carries the
+transforms and each mesh primitive's POSITION accessor carries min/max. So the
+furniture inside a baked shell can be located without Blender, without Godot,
+and without decoding a vertex buffer. Follows `.tscn` instances too, with their
+`Transform3D`, because Deli Counter's primary output is a scene rather than a
+bake. Stdlib only.
+
+This is deliberately a *second* implementation of the contract Level Factory's
+`glb_collision.py` already reads on the other side of the gate. Sharing one
+reader would mean a bug in it blinds the producer and the check meant to catch
+the producer at the same moment, which is the whole reason the gate exists. The
+two agree because the contract is written down, not because they are the same
+code -- and they do agree: run against the shipped pack, Lot recovered the four
+cage counters at (-10, -22), (35, -17), (68, -17) and (151, 2), which is
+exactly what Level Factory's reader found.
+
+`Reading.complete` is the part that matters downstream. A site that parsed and
+holds no furniture is a confident "nothing is in the way"; a site with one
+unreadable shell is "cannot tell". Nothing here reports "clear" for geometry it
+could not read -- a truncated file, a binary `.scn`, a scene declaring collider
+shapes this reader does not model -- and a caller acting on a partial reading
+is required to say so. That is the same silent-emptiness failure the original
+ground-hole defect was made of, and it does not get to happen twice.
+
+Boxes are axis-aligned hulls. For the slabs, walls and counters Deli Counter
+bakes -- which are boxes -- the hull is the shape; for anything concave the
+hull is larger, so the reader errs towards "something is solid here". That
+moves a hook that did not need moving rather than leaving one stranded, and it
+says how far it moved anything.
+
+### site_spawns.seat_destinations(..., solids=...)
+
+After the height pass, each hook is moved sideways off whatever it stands in,
+the shortest distance to floor an agent can both stand on and reach. Bounded to
+the hook's own room when the caller knows it (`lot._destination_bounds`), and
+to 6 m regardless: a hook names a spot in a particular room, and walking it
+across the site to find open floor would trade a blocker for a mission that no
+longer happens where it was designed to. Boxed in with nowhere to go is
+`LOT_DESTINATION_ON_PROP` (major) and the hook is left where it was -- a move
+Lot cannot defend is worse than a move Lot did not make. A successful move is
+`LOT_DESTINATION_RESOLVED` (minor) naming the prop and the distance. A partial
+reading is `LOT_DESTINATION_COLLISION_UNREAD` (moderate) naming the sources.
+
+Without `solids` the lateral pass does not run and nothing pretends it did.
+
+The clearance is 0.75 m, not contact. Recast erodes the walkable surface by the
+agent radius from every obstacle during the bake (Lot authors 0.4 m) and
+quantises what is left onto a 0.15 m voxel grid, and Level Factory rasterises
+on a coarser 0.5 m grid still. A hook a quarter of a metre off a counter has
+clear air around it and no navmesh polygon beneath it -- the same refusal,
+reached more confusingly. The first working version of this fix moved the
+objective 0.75 m, landed inside that erosion band, and still failed.
+
+### The scene carried two answers for the same destination
+
+Found while wiring the above. `write_walk_scene` wrote the *unseated* positions
+into `spawn_pos` / `objective_pos` / `extraction_pos` and the player capsule,
+while the `LT_*` hook nodes got seated ones -- so the beacon the player walks
+to and the point the bot paths to were metres apart in a scene that looked
+internally consistent. Seating now happens once at the top of that function and
+the seated positions are written everywhere, including the return value.
+
+### Verified
+
+Level Factory's production `check_spawn_placement`, unmodified, against the
+byte-verified `site_walk.tscn` and `shell.glb` from the shipped pack:
+
+    --- as shipped
+      findings: 1
+       * 1 of 3 mission destination(s) cannot be walked to from the player
+         spawn: LT_ObjectivePoint is sealed off from the crew spawn ...
+    --- objective resolved 1.5 m
+      findings: 0
+
+Plus 60 tests in `tests/test_site_collision.py` covering the container walk,
+the suffix contract against `site_ground`'s independent copy of it, the Y-up to
+site conversion, node and instance transform composition, every way a source
+can come back incomplete, the clearance band, lattice determinism, and the
+whole chain through `assemble(..., walkable=True)`. Suite: 163 passing.
+
+### Still open on this site
+
+Unchanged from 0.28.0: the enemies reach the crew and the fight is bad.
+INSTANT_CONTACT at 0.0 s, average survival 4.6 s, OVEREXPOSED, blind across 68%
+of positions. `place_enemies` pushes each spawn to the *nearest* open ground,
+which on this site is the same stretch of street for all six. `MIN_STANDOFF` of
+8 m is too close for an open street, `MIN_SEPARATION` of 4 m is too tight to
+call six positions a sequence, and neither knows anything about cover or line
+of sight. `site_collision` is the capability that was missing to fix it: cover
+and line of sight are questions about where the solids are, and Lot can now
+answer those.
+
+## [0.28.0] - a nav hook is not a prop, and Route_1 was the objective all along
+
+The run from 0.27.0 came back blocked, and the blocker was the defect that
+entry had already named as still open: `LT_ObjectivePoint` standing 0.9 m up on
+a 1.1 m `cage_counter_col`, in a room whose floor is 0, with no step between.
+Against LaserTag's 0.5 m climb limit there is no route to it, so the bot
+completed 0% of runs.
+
+The reading that fixes it is that `LT_ObjectivePoint` is a *navigation* target,
+not the objective prop. A till, a safe, a case in a display cabinet is meant to
+be up on the counter; the point the bot walks to is not. Two of the three
+mission points were already read this way -- a site-level `crew_spawn` and
+`extraction` both resolve to `(x, y, 0.0)` no matter what height their marker
+carries -- and the objective was the one that took its marker z verbatim.
+
+`site_spawns.seat_destinations` makes the third consistent with its siblings:
+
+- at or below `AGENT_CLIMB` (0.5 m) the marker is standing on a kerb and is
+  left alone;
+- between there and `FURNITURE_MAX` (2.0 m) it is on a counter, a crate or a
+  desk, so the nav hook is seated on the floor beneath it and Lot reports
+  `LOT_DESTINATION_RESEATED`. The prop is unmoved;
+- above 2.0 m the drop is a storey, and Lot has no storey model. Seating a
+  second-floor objective to z = 0 would put the hook in the room below -- a
+  worse defect, and a silent one -- so Lot moves nothing and reports
+  `LOT_DESTINATION_ABOVE_FLOOR` (major): either the marker's z is wrong, or the
+  stair that reaches it is missing.
+
+Seating runs before the route is built, so the route points and the cover ring
+derived from the objective inherit the seated position rather than each needing
+their own fix.
+
+Verified on the seed that produced it: objective (35, -17, 0.9) -> (35, -17,
+0.0).
+
+**Correction (0.29.0).** This entry originally continued "and Level Factory's
+spawn-placement check goes from three findings to none on the rebuilt scene".
+That was measured against a Python reconstruction of the seed's geometry, not
+against the scene Lot shipped, and it was wrong. The next real run came back
+with the same blocker: `LT_ObjectivePoint is sealed off from the crew spawn`.
+The seating above is correct and necessary; it was not sufficient. Dropping the
+hook's z to the floor left its *footprint* on the counter, and the navmesh
+takes a cell's standing surface from the geometry under the point, not from the
+number in the marker. 0.29.0 is the half that was missing.
+
+### Still open on this site
+
+The enemies now reach the crew, and that turns out not to be the same thing as
+a good fight. The one candidate that completed a full 25-run evaluation came
+back INSTANT_CONTACT at 0.0 s, average survival 4.6 s, OVEREXPOSED, and blind
+across 68% of its positions. `place_enemies` pushes a spawn to the *nearest*
+open ground, which on this site is the same stretch of street for all six --
+clustered, in the open, with clean sight lines to a crew that has not moved
+yet. `MIN_STANDOFF` of 8 m is too close for an open street, `MIN_SEPARATION` of
+4 m is too tight to call six positions a sequence, and neither knows anything
+about cover or line of sight. Reachability was the right first thing to fix and
+it is not the last one.
+
+## [0.27.0] - the enemies were placed by arithmetic that had never heard of the buildings
+
+`_lasertag_hook_nodes` sampled the straight line crew-spawn -> objective ->
+extraction, kicked each sample 1.5 m to one side, and lifted it a metre above a
+height interpolated between the two ends of the segment it fell on. On an empty
+field that is a reasonable engagement sequence. This site has four 44 m shells
+strung along that exact line.
+
+All six enemies landed indoors. Every one of them had a slab beneath it, so
+nothing that asked "is this floored" objected. Laser Tag asked the question
+that decides the map -- can each enemy path to the crew -- refused it with
+`UNREACHABLE_SPAWN` x6, and reported `runs: 0, grade BROKEN` after the full
+900-second timeout. The interpolated heights left five of the six markers
+hanging 1.3 to 1.8 m in mid-air as well, because the objective they were blended
+toward sits on a 1.1 m counter.
+
+### site_spawns.py
+
+Placement now runs against the geometry Lot has already decided on. A spawn
+goes on the street: outside every building footprint by `WALL_MARGIN` (1.0 m,
+which is more than the 0.4 m the navmesh bake erodes from every solid), inside
+the ground rect, at least `MIN_STANDOFF` (8 m) from the crew, at least
+`MIN_SEPARATION` (4 m) from its neighbours, and at the ground plane rather than
+at a blended height. The engagement spread along the route is unchanged -- only
+the collisions with it are new, and a sample that lands in a building is pushed
+perpendicular, nearest side first, until it clears one.
+
+Where no such position exists the enemy is not written and Lot says which one
+and why (`LOT_ENEMY_SPAWN_UNPLACEABLE`). A spawn Lot cannot defend is worse
+than a spawn Lot does not write, because the first one costs a full evaluation
+to discover. Enemies that had to be moved off the route are reported too
+(`LOT_ENEMY_SPAWN_PUSHED`), as is a site that declares neither ground nor
+footprints and therefore could not be checked at all
+(`LOT_SPAWN_PLACEMENT_UNCHECKED`) -- an unchecked placement must not be able to
+pass as a checked one.
+
+The same call runs in `build_site` and in `write_walk_scene` -- same inputs,
+same answer -- because the walk scene is written after the tactical report
+closes, and a placement Lot could not honour has to travel with the site rather
+than sit silently in a `.tscn` nobody diffs.
+
+On the seed this was written for, all six spawns move from inside b1/b2 to the
+street south of them, and Level Factory's `check_spawn_placement` goes from
+three findings to none.
+
+### Still open on this site
+
+The objective marker stands on top of a `cage_counter_col` -- a 1.1 m counter in
+a room whose floor is at 0, with no step between. Neither a bot nor the player
+can climb 1.1 m against a 0.5 m limit, so the route to it does not exist. That
+is a marker-placement defect upstream of Lot, and Lot does not move a designed
+objective to hide it; Level Factory reports it as an unreachable mission
+destination.
+
+## [0.26.0] - the walkthrough bake raced the evaluator and both lost
+
+`lot_site_walk.gd::_ready()` called `nav.bake_navigation_mesh()` on every load.
+That bake is threaded and returns immediately, which is fine for the human
+walkthrough it was written for and wrong for every other caller.
+
+Laser Tag loads the same `level.tscn` headless and bakes navigation itself,
+against its own agent parameters. Both bakes targeted the same
+`NavigationMesh` resource, so the second one was refused --
+`ERROR: NavigationMesh is already baking. Wait for current bake to finish.` --
+and left the region with zero polygons. Downstream that is indistinguishable
+from a map with no collision at all: the harness reported `NAVIGATION_MISSING`
+on a fully walkable four-building site, fell back to direct movement, and spent
+900 seconds watching bots walk into walls before Level Factory's timeout killer
+ended it. Sixteen findings came back about pacing, cover, traversal and stuck
+enemies. All of them were artifacts of the refused bake.
+
+The bake now returns early when `DisplayServer.get_name() == "headless"`.
+Headless means nobody is walking this scene -- it was loaded by an evaluation
+runner or CI, and that caller owns navigation. When there is no walker, the
+right amount of baking is none.
+
+Pinned by `test_walk_scene_does_not_race_an_external_navmesh_bake`, which reads
+the shipped `.gd` and asserts the guard sits before the call and leaves without
+baking. Reading the source text rather than running Godot keeps the guard
+testable in the same suite as everything else, and this is a defect that lives
+in three lines of script that no Python test would otherwise ever look at.
+
+## [0.25.0] - A hole is cut in the ground only where a building floors itself
+
+- **The ground policy checked its own premise.** Lot cut an inset hole in the
+  site ground under every building, on the reasoning that a solid slab through
+  a footprint seals the basement stairwell and the building's own slabs floor
+  the interior. The second half of that is a premise, not a fact: Godot's glTF
+  importer generates collision only for nodes whose names carry the `-col`
+  family of suffixes (or when the `.import` file asks for physics), so a baked
+  `shell.glb` arrives as MeshInstance3D and brings nothing. A site of plain
+  shells cut a hole under each building and put nothing in it; four adjacent
+  footprints merged into one contiguous void with the spawn, the objective, the
+  extraction and every enemy standing over it. Nothing in Lot said so -- the
+  scene loaded, the street ring was there, and the first mention of the problem
+  was Laser Tag rejecting the map with `NO_WORLD_COLLISION` and completing zero
+  runs, four steps and fifteen minutes downstream.
+- **New `site_ground.py`** answers one question -- does this building's geometry
+  bring collision? -- from the bytes on disk: glTF node names (including
+  Blender's `.001` duplicate form and the sibling `.import` file), and `.tscn`
+  collision bodies followed through instanced sub-scenes. A missing or
+  unreadable source is `unknown`, never `absent`: "the file is not there" and
+  "the file has no collision" are different problems and only one of them is
+  the operator's to fix. Only a demonstrated collider earns a hole, so an
+  unchecked site cuts none -- keeping ground can never create a fall.
+- **Both write paths audit.** `assemble()` decides before the gameplay file is
+  written, so `merged["ground"]` and the `LOT_SHELL_NO_COLLISION` /
+  `LOT_SHELL_COLLISION_UNKNOWN` findings travel with the site into Level
+  Factory's Validation Center. `package.py` audits the assets it has already
+  resolved, so a shipped pack cannot carry a void to whoever opens it.
+- The findings are `major` and `moderate`, not blockers: filling the hole stops
+  the fall, but it does not make the shell solid -- those buildings are still
+  pass-through until Deli Counter exports them with `-col` nodes.
+- Tests: `tests/test_site_ground.py` (23), including
+  `test_no_mission_point_stands_over_a_hole`, which assembles a four-building
+  block of collisionless shells and asserts every LaserTag hook in the walk
+  scene stands on a ground slab. Removing the guard fails it at 12 of 15.
+
 ## [0.24.0] - Walk scenes are legal in Godot and playable by Laser Tag
 
 - **Node names are sanitized to Godot's own rule at write time.** Godot 4's

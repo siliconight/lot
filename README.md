@@ -1,5 +1,17 @@
 # Lot — site assembler for Deli Counter buildings
 
+
+> **Read [`../PIPELINE_MAP.md`](../PIPELINE_MAP.md) before changing anything here.**
+> It covers every repo's role, the job DAG, where artifacts land, and the two
+> rules everything follows from: the deliverable is a level shell that must work
+> standalone in somebody else's Godot project with none of these tools present,
+> and **these tools are not the authority on gameplay or networking**.
+>
+> This repo owns sites: buildings, routes, cover, spawns, and the walkable scene. The last tool that can still change the geometry, so most guardrails belong here.
+> It does not decide what a fight feels like — it decides what the ground affords.
+>
+> Live state of the current work: [`../PIPELINE_ROADMAP.md`](../PIPELINE_ROADMAP.md).
+
 Lot composes several already-built [Deli Counter](https://github.com/siliconight/deli-counter)
 buildings into a single **site** — a PAYDAY-scale compound of multiple buildings
 with space between them — which a single Deli Counter spec cannot make (Deli

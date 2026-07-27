@@ -228,13 +228,28 @@ def build_pack(site_spec_path, out_dir=None, keep_folder=False, dc=None,
     merged["pacing"] = site_pacing.estimate_pacing(site_spec, merged)
     merged["encounters"] = site_pacing.encounter_intel(site_spec, adj)
 
+    # Same ground policy as assemble(): a hole is cut under a building only
+    # where its geometry is known to bring collision. The pack has already
+    # resolved every asset, so audit those exact files -- a pack that shipped a
+    # void would take it to whoever opened it, with no source spec to re-check.
+    import site_ground
+    ground_reports = site_ground.audit(site_spec, [base_dir, dc_dir],
+                                       resolved=resolved)
+    self_flooring = site_ground.self_flooring_ids(ground_reports)
+    merged["ground"] = {bid: rep.as_dict() for bid, rep in
+                        sorted(ground_reports.items())}
+    ground_findings = site_ground.findings(ground_reports)
+    merged["tactical"].setdefault("findings", []).extend(ground_findings)
+    for f_ in ground_findings:
+        print(f"[package] {f_['code']}: {f_['message']}")
+
     with open(os.path.join(pack_dir, f"{name}.site.gameplay.json"), "w",
               encoding="utf-8") as f:
         json.dump(merged, f, indent=2)
 
     lot.write_godot_scene(site_spec, merged,
                           os.path.join(pack_dir, f"{name}.tscn"),
-                          portable=True)
+                          portable=True, self_flooring=self_flooring)
     lot.write_walk_scene(site_spec, merged,
                          os.path.join(pack_dir, f"{name}_walk.tscn"),
                          name, portable=True)

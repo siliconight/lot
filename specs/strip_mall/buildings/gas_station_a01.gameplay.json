@@ -345,7 +345,7 @@
       "breach_class": null,
       "material": null,
       "vaultable": false,
-      "reinforceable": false,
+      "reinforceable": true,
       "building": "gas_station_a01"
     },
     {

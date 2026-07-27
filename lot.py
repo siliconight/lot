@@ -288,16 +288,19 @@ def _streetlight_anchors(site_spec):
             "reacts_to_alarm": False,
         })
 
-    g = site_spec.get("ground")
-    if g:
-        hx, hy = g["size_x"] / 2.0, g["size_y"] / 2.0
+    import site_extent
+    rect = site_extent.resolve(site_spec).rect
+    if rect:
+        x0, y0, x1, y1 = rect
+        cx, cy = (x0 + x1) / 2.0, (y0 + y1) / 2.0
+        span_x, span_y = x1 - x0, y1 - y0
         inset = 2.0
         # (name, x, y, rot_y, span-along-the-edge)
         edges = [
-            ("s", 0.0, -(hy - inset), 0.0, g["size_x"]),
-            ("n", 0.0, (hy - inset), 0.0, g["size_x"]),
-            ("w", -(hx - inset), 0.0, 90.0, g["size_y"]),
-            ("e", (hx - inset), 0.0, 90.0, g["size_y"]),
+            ("s", cx, y0 + inset, 0.0, span_x),
+            ("n", cx, y1 - inset, 0.0, span_x),
+            ("w", x0 + inset, cy, 90.0, span_y),
+            ("e", x1 - inset, cy, 90.0, span_y),
         ]
         for name, x, y, rot, span in edges:
             count = max(2, min(10, round(span / 15.0)))
@@ -478,12 +481,21 @@ def _blocker_source(bk):
     return bk.get("scene") or bk.get("glb")
 
 
-def _ground_tiles(gx, gy, holes):
+def _ground_tiles(rect, holes):
     """Axis-aligned decomposition of the ground rect minus hole rects.
 
-    Band split on hole y-edges, then per-band x-interval subtraction.
-    Deterministic; returns (x0, y0, x1, y1) site-space tiles."""
-    x_min, y_min, x_max, y_max = -gx / 2, -gy / 2, gx / 2, gy / 2
+    `rect` is the resolved (x0, y0, x1, y1) plate from `site_extent.resolve` --
+    not a size, because a plate is not necessarily centred on the origin and
+    assuming it was is what put a building's ground hole off the edge of the
+    world. Band split on hole y-edges, then per-band x-interval subtraction.
+    Deterministic; returns (x0, y0, x1, y1) site-space tiles.
+
+    A hole outside the plate is dropped and a hole straddling the rim is
+    trimmed, exactly as before -- but by this point `site_extent.resolve` has
+    grown the plate to contain every hole, and `site_extent.hole_findings`
+    reports any that it could not. The clipping here is arithmetic, no longer
+    a decision taken in silence."""
+    x_min, y_min, x_max, y_max = rect
     holes = [(max(x_min, h[0]), max(y_min, h[1]),
               min(x_max, h[2]), min(y_max, h[3])) for h in holes
              if h[0] < x_max and h[2] > x_min and h[1] < y_max and h[3] > y_min]
@@ -506,38 +518,73 @@ def _ground_tiles(gx, gy, holes):
     return tiles
 
 
-def _outdoor_nodes(site_spec, preview=False):
-    """(body_lines, subres_lines) for all Phase-2 outdoor geometry."""
+#: How far inside a footprint the ground hole is cut. The overlap keeps the
+#: building's exterior walls seated on ground with no gap at the threshold.
+GROUND_HOLE_INSET = 0.45
+
+
+def ground_holes(site_spec, self_flooring=None):
+    """The rects cut out of the ground plate, in site space.
+
+    Shared by the scene builder and by the gate that checks the plate contains
+    them, so the two cannot disagree about which holes were cut. `self_flooring`
+    is the set of building ids whose geometry demonstrably brings collision
+    (see `site_ground.audit`); None means nothing was checked, so nothing is
+    cut -- an unchecked assumption must not be able to open a void.
+    """
+    import site_extent
+    floors = set() if self_flooring is None else set(self_flooring)
+    holes = []
+    for bdef in site_spec.get("buildings") or []:
+        if str(bdef.get("id", "?")) not in floors:
+            continue
+        # `_footprint` specifically: the annotation `merge_gameplay` writes from
+        # the building's own gameplay file. A footprint recovered from anywhere
+        # else is fine for sizing the ground and not authority enough to cut a
+        # hole in it.
+        if not bdef.get("_footprint"):
+            continue
+        rect = site_extent.rotated_footprint(bdef)
+        if rect is None:
+            continue
+        hole = site_extent.grow(rect, -GROUND_HOLE_INSET)
+        if hole[2] > hole[0] and hole[3] > hole[1]:
+            holes.append(hole)
+    return holes
+
+
+def _outdoor_nodes(site_spec, preview=False, self_flooring=None):
+    """(body_lines, subres_lines) for all Phase-2 outdoor geometry.
+
+    `self_flooring` is the set of building ids whose geometry demonstrably
+    brings collision (see site_ground.audit). Only those get a hole cut in the
+    ground beneath them. Passing None means nothing has been checked, so no
+    holes are cut -- an unchecked assumption must not be able to open a void.
+    """
     body, sub = [], []
     bld = {b["id"]: b for b in site_spec["buildings"]}
+    # preview massing boxes are Lot's own StaticBody3D geometry, but they are
+    # solid blocks rather than floored interiors, so the ground stays under
+    # them too and the site remains walkable up to the massing.
+    floors = set() if self_flooring is None else set(self_flooring)
 
+    import site_extent
+    ground = site_extent.resolve(site_spec)
     g = site_spec.get("ground")
-    if g:
-        gx, gy = g["size_x"], g["size_y"]
+    if g and ground.rect:
         # NOT one solid box: a ground slab running through a building
         # footprint seals its basement stairwell (Phase 1 site walktests:
         # basements bake as disjoint islands). Cut an inset hole per
         # footprint -- the inset keeps exterior walls seated on ground with
         # no exterior gap; the building's own slabs floor the interior.
-        INSET = 0.45
-        holes = []
-        for bdef in site_spec["buildings"]:
-            fp = bdef.get("_footprint")
-            if not fp:
-                continue
-            fx, fy = fp
-            rot = (bdef.get("rot", 0) % 360 + 360) % 360
-            if rot % 180 == 90:
-                fx, fy = fy, fx
-            elif rot % 90 != 0:
-                th = math.radians(rot)
-                fx, fy = (abs(fx * math.cos(th)) + abs(fy * math.sin(th)),
-                          abs(fx * math.sin(th)) + abs(fy * math.cos(th)))
-            cx, cy = bdef["at"]
-            hx, hy = max(0.0, fx / 2 - INSET), max(0.0, fy / 2 - INSET)
-            if hx and hy:
-                holes.append((cx - hx, cy - hy, cx + hx, cy + hy))
-        for j, (x0, y0, x1, y1) in enumerate(_ground_tiles(gx, gy, holes)):
+        #
+        # "The building's own slabs floor the interior" is a premise, not a
+        # fact: a plain shell.glb imports as MeshInstance3D with no collision
+        # at all. Cutting under one of those leaves a hole nothing fills, and
+        # four adjacent footprints merge into a void big enough to swallow the
+        # spawn, the objective and every enemy. Cut only where checked.
+        holes = ground_holes(site_spec, floors)
+        for j, (x0, y0, x1, y1) in enumerate(_ground_tiles(ground.rect, holes)):
             bl, sr = _box_node("Ground" if j == 0 else f"Ground_{j}",
                                (x1 - x0, GROUND_THICK, y1 - y0),
                                ((x0 + x1) / 2, -GROUND_THICK / 2,
@@ -570,15 +617,19 @@ def _outdoor_nodes(site_spec, preview=False):
         sub += sr
 
     per = site_spec.get("perimeter")
-    if per and g:
+    if per and ground.rect:
         h = per.get("height", 3.0)
-        gx, gy = g["size_x"], g["size_y"]
-        hx, hy = gx / 2, gy / 2
+        # The wall rings the ground that was actually built, not a rect derived
+        # a second time from the declared size: a perimeter around a plate that
+        # has been extended would otherwise cut straight through the site.
+        x0, y0, x1, y1 = ground.rect
+        gx, gy = x1 - x0, y1 - y0
+        cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
         for name, size, at_xyz in [
-            ("perim_N", (gx, h, WALL_THICK), (0, h / 2, -hy)),
-            ("perim_S", (gx, h, WALL_THICK), (0, h / 2, hy)),
-            ("perim_E", (WALL_THICK, h, gy), (hx, h / 2, 0)),
-            ("perim_W", (WALL_THICK, h, gy), (-hx, h / 2, 0)),
+            ("perim_N", (gx, h, WALL_THICK), (cx, h / 2, -y1)),
+            ("perim_S", (gx, h, WALL_THICK), (cx, h / 2, -y0)),
+            ("perim_E", (WALL_THICK, h, gy), (x1, h / 2, -cy)),
+            ("perim_W", (WALL_THICK, h, gy), (x0, h / 2, -cy)),
         ]:
             bl, sr = _box_node(name, size, at_xyz)
             body += bl
@@ -687,7 +738,7 @@ def _preview_building_nodes(b, height):
 
 
 def write_godot_scene(site_spec, merged, out_path, glb_dir=".", preview=False,
-                      portable=False):
+                      portable=False, self_flooring=None):
     """Emit a .tscn that instances each building (a .tscn scene or a baked .glb)
     at its placement, plus Phase-2 outdoor geometry. With preview=True, buildings
     are emitted as greybox massing boxes instead (no .glb needed) so the level is
@@ -721,7 +772,8 @@ def write_godot_scene(site_spec, merged, out_path, glb_dir=".", preview=False,
                 res_lines.append(
                     f'[ext_resource type="PackedScene" path="{prefix}{rel}" id="{rid}"]')
 
-    outdoor_body, outdoor_sub = _outdoor_nodes(site_spec, preview=preview)
+    outdoor_body, outdoor_sub = _outdoor_nodes(
+        site_spec, preview=preview, self_flooring=self_flooring)
 
     building_body, building_sub = [], []
     if preview:
@@ -773,6 +825,40 @@ def _building_at(site_spec, bid):
         if b.get("id") == bid:
             return b.get("at", [0.0, 0.0])
     return [0.0, 0.0]
+
+
+def _room_bounds_at(merged, point):
+    """The bounds of the smallest merged room containing `point`, or None.
+
+    A nav hook that has to be moved off a prop should not leave the room it
+    was placed in: the mission is designed around where it happens, and a
+    hook that wanders into the corridor is a different level. Smallest-wins so
+    a room nested inside a hall keeps the tighter bound.
+    """
+    x, y = point[0], point[1]
+    best = None
+    for r in merged.get("rooms", []) or []:
+        b = r.get("bounds")
+        if not b or len(b) != 4:
+            continue
+        if b[0] <= x <= b[2] and b[1] <= y <= b[3]:
+            area = abs(b[2] - b[0]) * abs(b[3] - b[1])
+            if best is None or area < best[0]:
+                best = (area, (b[0], b[1], b[2], b[3]))
+    return best[1] if best else None
+
+
+def _destination_bounds(merged, positions):
+    """key -> room rect, for the mission points that stand in a room."""
+    out = {}
+    for key in ("spawn", "objective", "extraction"):
+        point = positions.get(key)
+        if point is None:
+            continue
+        rect = _room_bounds_at(merged, point)
+        if rect:
+            out[key] = rect
+    return out
 
 
 def _walk_positions(site_spec, merged):
@@ -856,7 +942,8 @@ def _node_name(raw):
     return "".join("_" if c in _GODOT_BAD_NAME_CHARS else c for c in str(raw))
 
 
-def _lasertag_hook_nodes(pos, enemy_count=6, lateral=1.5):
+def _lasertag_hook_nodes(pos, site_spec=None, enemy_count=6, lateral=1.5,
+                         solids=None, bounds=None):
     """Lot's half of the LaserTag map contract (LaserTag TDD 8).
 
     LaserTag's evaluator discovers its fixtures by node name -- LT_PlayerSpawn,
@@ -867,29 +954,27 @@ def _lasertag_hook_nodes(pos, enemy_count=6, lateral=1.5):
     it reports a grade for a match it never played. Emit the nodes so the
     positions Lot already knows are the positions LaserTag actually reads.
 
-    Enemies are sampled along the spawn -> objective -> extraction polyline and
-    kicked alternately to either side, so they are an engagement sequence rather
-    than one stacked encounter.
+    Enemies are still an engagement sequence spread along the spawn ->
+    objective -> extraction route, but where each one lands is decided by
+    `site_spawns` against the footprints and ground rect this site was built
+    from. The arithmetic that used to place them knew only the route, so on any
+    site whose buildings straddle it the whole sequence went indoors and
+    LaserTag refused the map. `site_spawns.place_enemies` returns the findings
+    for anything it could not honour; `_lasertag_hook_nodes` returns only the
+    body, and the caller that has somewhere to put findings asks for them.
     """
+    import site_spawns
+
+    # The nav hooks first: a destination on top of a counter has no route to
+    # it, and every point below is derived from these three. `solids` is the
+    # site's collision reading when the caller has one -- without it the hook
+    # is only floored, not moved off whatever it is standing in.
+    pos = site_spawns.seat_destinations(
+        pos, solids=solids, bounds=bounds)[0]
     route = [pos["spawn"], pos["objective"], pos["extraction"]]
-    segs = list(zip(route, route[1:]))
-    lengths = [max(1e-6, math.dist(a[:2], b[:2])) for a, b in segs]
-    total = sum(lengths)
-    enemies = []
-    for i in range(max(1, int(enemy_count))):
-        target = total * (i + 1) / (int(enemy_count) + 1)
-        walked, pt, seg = 0.0, route[-1], segs[-1]
-        for (a, b), length in zip(segs, lengths):
-            if walked + length >= target:
-                t = (target - walked) / length
-                pt = tuple(a[k] + (b[k] - a[k]) * t for k in range(3))
-                seg = (a, b)
-                break
-            walked += length
-        dx, dy = seg[1][0] - seg[0][0], seg[1][1] - seg[0][1]
-        norm = math.hypot(dx, dy) or 1.0
-        side = lateral if i % 2 == 0 else -lateral
-        enemies.append((pt[0] - dy / norm * side, pt[1] + dx / norm * side, pt[2]))
+    enemies = site_spawns.place_enemies(
+        site_spec or {}, pos, enemy_count=enemy_count,
+        lateral=lateral).positions
 
     def _hook(name, parent, world, lift=0.0):
         return [f'[node name="{name}" type="Node3D" parent="{parent}"]',
@@ -906,8 +991,32 @@ def _lasertag_hook_nodes(pos, enemy_count=6, lateral=1.5):
         body += _hook(f"Route_{i}", "LT_PlayerRoutePoints", r)
     body += ['[node name="LT_CoverTestPoints" type="Node3D" parent="."]', '']
     ox, oy, oz = pos["objective"]
-    for i, (cx, cy) in enumerate(((5.0, 0.0), (-5.0, 0.0), (0.0, 5.0), (0.0, -5.0))):
-        body += _hook(f"Cover_{i}", "LT_CoverTestPoints", (ox + cx, oy + cy, oz))
+    # The cover the crew can actually hide behind, which until now this never
+    # named. These four points were a hardcoded rosette 5 m around the
+    # objective, unrelated to any cover the site had -- so
+    # `LT_BotPlayerController._on_damaged` seeking "nearest cover" was always
+    # seeking the objective, whatever `site_cover` had placed and wherever it
+    # had placed it. On seed 5017 that meant a crew taking fire 69 m out broke
+    # off its route to walk toward four imaginary points sitting 10.8-19.4 m
+    # from an enemy spawn. It never arrived; it died at 11.9 s having fired
+    # twice.
+    #
+    # `assemble` extends `site_spec["cover"]` from the cover plan before the
+    # walk scene is written, so the real positions are here to be read. A site
+    # with no planned cover keeps the rosette: the hook is optional to Laser
+    # Tag, but an empty node reads as "this map has no cover" when what is true
+    # is "nothing was planned", and those want different answers.
+    placed = [c for c in (site_spec or {}).get("cover", [])
+              if isinstance(c, dict) and len(c.get("at", ())) >= 2]
+    if placed:
+        for i, piece in enumerate(placed):
+            cx, cy = piece["at"][0], piece["at"][1]
+            body += _hook(f"Cover_{i}", "LT_CoverTestPoints", (cx, cy, oz))
+    else:
+        for i, (cx, cy) in enumerate(((5.0, 0.0), (-5.0, 0.0),
+                                      (0.0, 5.0), (0.0, -5.0))):
+            body += _hook(f"Cover_{i}", "LT_CoverTestPoints",
+                          (ox + cx, oy + cy, oz))
     return body
 
 
@@ -947,15 +1056,29 @@ def _ladder_volume_nodes(merged):
 
 
 def write_walk_scene(site_spec, merged, walk_out, site_tscn_base,
-                     addon_dir="addons/lot", portable=False):
+                     addon_dir="addons/lot", portable=False, solids=None):
     """Emit <name>_walk.tscn: instances the composed site under a baked
     NavigationRegion3D, spawns a first-person player at the crew start, and
     beacons the objective + extraction. Reuses godot/addons/lot scripts."""
-    pos = _walk_positions(site_spec, merged)
+    import site_spawns
+
+    raw = _walk_positions(site_spec, merged)
+    # Seat the mission points here, once, and write the seated ones everywhere.
+    # The scene used to carry two different answers for the same destination --
+    # `objective_pos` took the marker's z verbatim while LT_ObjectivePoint was
+    # floored -- so the beacon the player walks to and the point the bot paths
+    # to were metres apart in a scene that looked internally consistent.
+    # Findings are dropped here on purpose: `assemble` runs the same call on
+    # the same inputs and reports them, and a finding raised twice reads as two
+    # problems.
+    pos = site_spawns.seat_destinations(
+        raw, solids=solids, bounds=_destination_bounds(merged, raw))[0]
     _p = "" if portable else "res://"
     _a = "" if portable else addon_dir + "/"
     ladder_body, ladder_subs = _ladder_volume_nodes(merged)
-    lt_body = _lasertag_hook_nodes(pos)
+    lt_body = _lasertag_hook_nodes(
+        pos, site_spec, solids=solids,
+        bounds=_destination_bounds(merged, pos))
     sx, sy, sz = pos["spawn"]
     player_godot = f"{sx:g}, {sz + 1.0:g}, {-sy:g}"   # eye/capsule lift
 
@@ -1167,6 +1290,130 @@ def assemble(site_spec_path, out_dir=None, walkable=False, navqa=False, preview=
     merged = merge_gameplay(site_spec, base_dir)
     merged["tactical"] = tactical_report
 
+    # Ground policy: a hole is cut under a building only where its geometry is
+    # known to bring collision. A plain shell.glb brings none, and cutting
+    # under it opens a void the site never fills -- which downstream reads as
+    # NO_WORLD_COLLISION and zero evaluated runs, four steps and fifteen
+    # minutes away from the cause. Decide here, before the gameplay file is
+    # written, so the reason travels with the site.
+    # How big the ground is and where it sits, decided from the content before
+    # anything is placed against it. This runs ahead of the hole policy because
+    # a hole is cut in a plate, and a plate in the wrong place turns the cut
+    # into a clip nobody sees.
+    import site_extent
+    extent = site_extent.resolve(site_spec)
+    if extent.rect:
+        merged["ground_extent"] = {
+            "rect": [round(v, 3) for v in extent.rect],
+            "declared": [round(v, 3) for v in extent.declared] if extent.declared else None,
+            "required": [round(v, 3) for v in extent.required] if extent.required else None,
+            "extended": extent.extended,
+        }
+    for f_ in extent.findings:
+        tactical_report.setdefault("findings", []).append(f_)
+        print(f"[lot] {f_['code']}: {f_['message']}")
+
+    import site_ground
+    ground_reports = site_ground.audit(site_spec, [base_dir, out_dir])
+    self_flooring = site_ground.self_flooring_ids(ground_reports)
+    merged["ground"] = {bid: rep.as_dict() for bid, rep in
+                        sorted(ground_reports.items())}
+    ground_findings = site_ground.findings(ground_reports)
+    # Every hole that will be cut, checked against the plate it is cut from.
+    # `_ground_tiles` trims a hole to the plate as arithmetic; before the extent
+    # was resolved from the content that trim was also the only record that a
+    # building had fallen off the edge of the world, and it left none.
+    ground_findings = list(ground_findings) + site_extent.hole_findings(
+        extent.rect, ground_holes(site_spec, self_flooring))
+    # ...and every shell checked against its neighbours. Nothing compared two
+    # footprints to each other until now, so a row spaced narrower than the
+    # buildings standing in it assembled interpenetrating shells and reported a
+    # clean site.
+    ground_findings += site_extent.overlap_findings(site_spec)
+    tactical_report.setdefault("findings", []).extend(ground_findings)
+    for f_ in ground_findings:
+        print(f"[lot] {f_['code']}: {f_['message']}")
+
+    # Where the enemies can stand, decided against the footprints and ground
+    # rect above rather than by arithmetic on the route. Run here as well as in
+    # write_walk_scene -- same inputs, same answer -- because the walk scene is
+    # written after this report closes and a placement Lot could not honour has
+    # to travel with the site, not sit silently in a .tscn nobody diffs.
+    # What the shells are actually solid at. `site_ground` above answers "does
+    # this building bring collision at all"; this answers "and where", which is
+    # the question a nav hook standing inside a counter needs asked. Read once
+    # and shared with the walk scene so the site report and the scene cannot
+    # disagree about which prop was in the way.
+    import site_collision
+    solids = site_collision.read_site(site_spec, [base_dir, out_dir])
+    merged["collision"] = {
+        "colliders": len(solids.boxes),
+        "complete": solids.complete,
+        "unread": list(solids.unread),
+        "detail": solids.detail,
+    }
+
+    import site_spawns
+    raw_pos = _walk_positions(site_spec, merged)
+    walk_pos, seat_findings = site_spawns.seat_destinations(
+        raw_pos, solids=solids,
+        bounds=_destination_bounds(merged, raw_pos))
+    spawn_plan = site_spawns.place_enemies(site_spec, walk_pos)
+
+    # Something to hide behind, before the scene is written.
+    #
+    # Moving an enemy is what Lot used to do about an unfair opening, and it
+    # only ever traded one bad grade for another: the ground between the two
+    # markers was still empty. Laser Tag is a soft gate -- it grades a map, it
+    # never refuses one -- so its finding is answered by changing what gets
+    # built rather than by blocking the build, and the thing to change is the
+    # floor. `site_cover` decides where; the existing `cover` emitter in
+    # `_outdoor_nodes` builds it, so the pieces land in the site scene, are
+    # instanced under the walk scene's NavigationRegion3D, and are parsed by
+    # the same bake that carves the buildings out. Cover the navmesh cannot see
+    # is cover the bots walk into and stick on.
+    import site_cover
+    cover_points = {"LT_PlayerSpawn": tuple(walk_pos["spawn"][:2]),
+                    "LT_ObjectivePoint": tuple(walk_pos["objective"][:2]),
+                    "LT_ExtractionPoint": tuple(walk_pos["extraction"][:2])}
+    for i, (ex, ey, _ez) in enumerate(spawn_plan.positions):
+        cover_points[f"Enemy_{i}"] = (ex, ey)
+    cover_plan = site_cover.plan_cover(
+        cover_points,
+        # The footprints as built. `plan_cover` measures sightlines against
+        # these and adds a piece's own clearance itself -- passing pre-grown
+        # rects makes a marker standing legally clear of a wall read as indoors
+        # and silently deletes that building from the measurement.
+        site_spawns.footprints(site_spec, margin=0.0),
+        site_spawns.ground_rect(site_spec),
+        opening_range=site_spawns.OPENING_RANGE,
+        # The bake's own numbers, so the room a cover piece needs beside a wall
+        # is derived from the agent contract rather than guessed.
+        nav_bake=_agent().get("nav_bake"),
+        # The crew's actual path, so cover can be placed on the ground it
+        # crosses and not only between the markers at either end of it.
+        route=[cover_points["LT_PlayerSpawn"],
+               cover_points["LT_ObjectivePoint"],
+               cover_points["LT_ExtractionPoint"]])
+    site_spec.setdefault("cover", []).extend(
+        c.as_site_cover() for c in cover_plan.cover)
+    merged["cover_plan"] = {
+        "placed": [c.as_dict() for c in cover_plan.cover],
+        "still_open": [f"{a} -> {b} ({d:.1f} m)"
+                       for a, b, _pa, _pb, d in cover_plan.open_lines],
+        "unbreakable": [f"{a} -> {b} ({d:.1f} m)"
+                        for a, b, _pa, _pb, d in cover_plan.unbreakable],
+        "route_open": [f"{a} -> {b} ({d:.1f} m)"
+                       for a, b, _pa, _pb, d in cover_plan.route_open],
+        "pinches": [f"{n} vs {w} ({g:g} m)" for n, w, g in cover_plan.pinches],
+    }
+
+    cover_findings = site_cover.findings(
+        cover_plan, opening_range=site_spawns.OPENING_RANGE)
+    for f_ in seat_findings + spawn_plan.findings + cover_findings:
+        tactical_report.setdefault("findings", []).append(f_)
+        print(f"[lot] {f_['code']}: {f_['message']}")
+
     # pvp_heist post-merge gates: defender spawns live inside the buildings'
     # gameplay.json files, so they can only be validated after the merge.
     pvp_report = site_tactical.gate_merged(site_spec, merged)
@@ -1207,7 +1454,8 @@ def assemble(site_spec_path, out_dir=None, walkable=False, navqa=False, preview=
           f"({len(merged_lights['anchors'])} anchors)")
 
     tscn_out = os.path.join(out_dir, f"{site_spec['name']}.tscn")
-    write_godot_scene(site_spec, merged, tscn_out, preview=preview)
+    write_godot_scene(site_spec, merged, tscn_out, preview=preview,
+                      self_flooring=self_flooring)
 
     result = {
         "gameplay": gp_out, "scene": tscn_out, "lights": lights_out,
@@ -1221,7 +1469,7 @@ def assemble(site_spec_path, out_dir=None, walkable=False, navqa=False, preview=
     if walkable:
         walk_out = os.path.join(out_dir, f"{site_spec['name']}_walk.tscn")
         result["walk_positions"] = write_walk_scene(
-            site_spec, merged, walk_out, site_spec["name"])
+            site_spec, merged, walk_out, site_spec["name"], solids=solids)
         result["walk_scene"] = walk_out
 
     if navqa:

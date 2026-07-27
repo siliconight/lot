@@ -123,13 +123,16 @@ def _approach_points(site_spec, merged):
 
 
 def _perimeter_bounds(site_spec):
-    """Half-extents of the perimeter (from the ground rect), or None if open."""
+    """The rect the perimeter wall rings, or None when the site is open.
+
+    Reads the resolved ground extent rather than halving the declared size:
+    the wall is built around the plate Lot actually lays down, and on an
+    extended plate the two are not the same rect.
+    """
     if not site_spec.get("perimeter"):
         return None
-    g = site_spec.get("ground")
-    if not g:
-        return None
-    return g["size_x"] / 2, g["size_y"] / 2
+    import site_extent
+    return site_extent.resolve(site_spec).rect
 
 
 def _near_route(site_spec, merged, px, py):
@@ -175,7 +178,8 @@ def analyze(site_spec, merged):
         routed = 0
         for (ex, ey), (ax, ay), wall in entries:
             blocked = False
-            if bounds and (abs(ax) > bounds[0] or abs(ay) > bounds[1]):
+            if bounds and not (bounds[0] <= ax <= bounds[2]
+                               and bounds[1] <= ay <= bounds[3]):
                 blocked = True  # approach falls outside the perimeter wall
             if not blocked:
                 for oid, ob in others.items():

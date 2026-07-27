@@ -44,6 +44,7 @@ non-enterable filler by design).
 """
 
 import argparse
+import hashlib
 import json
 import os
 import shutil
@@ -71,14 +72,61 @@ def find_dc(explicit=None):
     return None
 
 
+def spec_stamp_path(glb_path):
+    """Where the digest of the spec a .glb was built from is recorded."""
+    return glb_path + ".spec.sha256"
+
+
+def spec_digest(spec_path):
+    """sha256 of a spec's bytes."""
+    h = hashlib.sha256()
+    with open(spec_path, "rb") as fh:
+        for chunk in iter(lambda: fh.read(65536), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def record_build(spec_path, glb_path):
+    """Stamp a freshly built .glb with the digest of the spec it came from.
+
+    Best effort: a stamp that could not be written costs one needless rebuild
+    next run, which is the safe direction to fail in."""
+    try:
+        with open(spec_stamp_path(glb_path), "w", encoding="utf-8") as fh:
+            fh.write(spec_digest(spec_path))
+    except OSError:
+        pass
+
+
 def needs_build(spec_path, glb_path, force=False):
-    """True if the .glb must be (re)built: forced, missing, or older than its
-    spec. The spec is the source of truth; the .glb is disposable output."""
+    """True if the .glb must be (re)built: forced, missing, or built from a
+    different spec than the one on disk now.
+
+    This asks what the .glb was built FROM, not when. It used to compare
+    mtimes -- `getmtime(spec) > getmtime(glb)` -- and a filesystem timestamp
+    comes from a coarse clock, one timer tick wide: roughly 1-4 ms on Linux and
+    ~15.6 ms on Windows. Two operations inside the same tick receive the SAME
+    stamp, so a spec edited in the same tick that the build finished compared
+    equal, `>` answered False, and the .glb was declared current forever after.
+    Rare, silent, and it produces a build serving stale geometry with every
+    timestamp on disk agreeing it is fresh.
+
+    A digest cannot tie. An unstamped .glb -- one built before this existed, or
+    whose stamp failed to write -- rebuilds: we cannot say what it came from,
+    and rebuilding costs Blender time while trusting it costs correctness."""
     if force:
         return True
     if not os.path.exists(glb_path):
         return True
-    return os.path.getmtime(spec_path) > os.path.getmtime(glb_path)
+    stamp = spec_stamp_path(glb_path)
+    if not os.path.exists(stamp):
+        return True
+    try:
+        with open(stamp, encoding="utf-8") as fh:
+            recorded = fh.read().strip()
+        return recorded != spec_digest(spec_path)
+    except OSError:
+        return True
 
 
 def facade_jobs(site_spec, dc_dir):
@@ -285,6 +333,7 @@ def cater(site_spec_path, project_dir, dc=None, blender=None, preview=False,
             glb_out = os.path.join(dc_build, stem + ".glb")
             if needs_build(spec_path, glb_out, force_build):
                 build_in_dc(dc_dir, spec_path, blender)
+                record_build(spec_path, glb_out)
                 built += 1
             else:
                 print(f"[cater] up to date: {stem}.glb")

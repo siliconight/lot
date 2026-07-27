@@ -256,11 +256,11 @@
       "width": 1.25,
       "height": 2.2,
       "sill": 0.0,
-      "tag": null,
+      "tag": "secure_door",
       "breach_class": null,
       "material": null,
       "vaultable": false,
-      "reinforceable": false,
+      "reinforceable": true,
       "building": "strip_club_a01"
     },
     {

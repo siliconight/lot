@@ -42,8 +42,25 @@ func _bake_nav() -> void:
 	#     (the known Deli Counter multi-floor caveat). Ground traversal across the
 	#     whole site is what this first walk proves.
 	var nav := get_node_or_null("Nav") as NavigationRegion3D
-	if nav and nav.navigation_mesh:
-		nav.bake_navigation_mesh()
+	if nav == null or nav.navigation_mesh == null:
+		return
+	if DisplayServer.get_name() == "headless":
+		# Nobody is walking this scene. Headless means it was loaded by an
+		# evaluation runner (Laser Tag's map eval, CI) that bakes navigation
+		# itself against its own agent parameters.
+		#
+		# bake_navigation_mesh() is threaded and returns immediately, so leaving
+		# it running here does not just duplicate the runner's work -- it races
+		# it. Godot refuses a second bake against a NavigationMesh that is
+		# already baking, and the refused bake leaves a 0-polygon mesh that is
+		# indistinguishable from a map with no collision at all. That is how a
+		# fully walkable site came back as NAVIGATION_MISSING and burned 900
+		# seconds watching bots walk into walls.
+		#
+		# When there is no walker, the right amount of baking is none.
+		print("[lot] site_walk: headless — the evaluation runner owns the navmesh bake")
+		return
+	nav.bake_navigation_mesh()
 
 
 func _waypoint(label: String, pos: Vector3, col: Color) -> void:
