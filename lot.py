@@ -1235,9 +1235,18 @@ def write_navqa_scene(site_spec, merged, navqa_out, site_tscn_base,
         '[node name="Site" parent="./Nav" instance=ExtResource("site")]', '',
         '[node name="NavQASetup" type="Node3D" parent="."]',
         'script = ExtResource("setup")',
-        f'player_proxies = {_pv3_array(anc["player_proxies"], 1.0)}',
+        # NO LIFT on the proxies or the bot spawns. Deli Counter already places
+        # these markers at body height -- a ground-floor marker carries z 0.9
+        # over a floor at 0.0 -- and adding another metre put every building
+        # anchor ~1.9 m above the surface it is supposed to stand on. The nav QA
+        # then snapped each one to the NEAREST navmesh in any direction, which
+        # from up there is a counter top at 1.4 m rather than the floor at 0.2,
+        # so every route query in the walktest started on a two-polygon scrap of
+        # furniture. crew_home keeps its lift: it comes from _walk_positions at
+        # z 0, so it needs raising off the floor rather than lowering onto it.
+        f'player_proxies = {_pv3_array(anc["player_proxies"])}',
         f'cover_points = {_pv3_array(anc["cover"])}',
-        f'bot_spawns = {_pv3_array(anc["bot_spawns"], 1.0)}',
+        f'bot_spawns = {_pv3_array(anc["bot_spawns"])}',
         f'crew_home = {_v3(crew, 1.0)}', '',
     ]
     with open(navqa_out, "w", encoding="utf-8") as f:

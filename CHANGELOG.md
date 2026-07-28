@@ -1,3 +1,49 @@
+## [0.35.0] - the anchors were standing on the furniture
+
+The first honest walktest failed all four seeds, and after a day of pointing
+instruments at the navmesh the navmesh turned out to be fine. `crew_home` sits
+inside building b2, snaps to y 0.2, and reaches 18 of 20 anchors: interior
+floors bake, and they are connected to the street. What was broken is where the
+anchors were and how they were snapped.
+
+### the height
+
+`_navqa_anchors` reads markers Deli Counter has already placed at body height --
+a ground-floor marker carries z 0.9 over a floor at 0.0 -- and `write_navqa_scene`
+lifted them another metre. Every building proxy floated about 1.9 m above the
+surface it was supposed to be standing on. The lift is dropped for proxies and
+bot spawns. `crew_home` keeps it: that one comes from `_walk_positions` at z 0,
+so it needs raising off the floor rather than lowering onto it.
+
+### the snap
+
+`map_get_closest_point` is omnidirectional, which is the wrong question for a
+standing position. From 1.9 m up, a counter top at 1.4 m is 0.5 m away while the
+floor is 1.9 m away -- so the anchor snapped sideways and every route query in
+the walktest started on a two-polygon scrap of furniture. `_snap` asks the right
+question instead: closest point to a short DOWNWARD segment, because a body
+stands on the surface beneath it. Used by both `_prove_path` and the anchor
+census.
+
+Neither fix would have been found without the other half of this release.
+
+### clusters, not zeroes
+
+0.26.0 counted how many other anchors each one reaches and flagged zero. It
+found nothing, because Lot emits four duplicate marker pairs per site (two
+markers 0.2 m apart snapping to one point), so every stranded anchor still
+reached its own twin. Sixteen of twenty-one anchors were off the main network
+and the count said none.
+
+`_anchor_reachability` now unions the reachability relation into clusters and
+flags any anchor NOT on the largest one, reporting `cluster_size`,
+`main_cluster_size` and `coincident_with`. That last field names the duplicate
+pairs directly, since they are a Lot defect in their own right rather than
+noise.
+
+Five tests in `tests/test_navqa_anchors.py`, none of which launch Godot: the
+conversion and the height are arithmetic.
+
 ## [0.34.0] - an anchor can be on the navmesh and still go nowhere
 
 `_prove_path` has always refused an anchor further than `SNAP_MAX` (2.0 m, from

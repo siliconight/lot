@@ -50,7 +50,7 @@ var ARRIVE_DIST := _envf("DC_QA_ARRIVE", 1.5)
 
 var _report := {}
 var _walkers: Array = []
-#: anchor name -> true, for the anchors that reach no other anchor at all.
+#: anchor name -> true, for anchors that are NOT on the largest cluster.
 var _stranded_names := {}
 var _sim_time := 0.0
 var _time_limit := TIME_LIMIT     # scaled to the spine after the proofs run
@@ -137,11 +137,12 @@ func _run() -> void:
 	_report["anchors"] = _anchor_reachability(map, home, proxies)
 	var stranded := 0
 	for a in _report["anchors"]:
-		if int(a["reaches"]) == 0:
+		if int(a["cluster_size"]) < int(a["main_cluster_size"]):
 			stranded += 1
-			print("[nav-qa] %s: ISOLATED -- snapped %.2f m to (%.1f, %.1f, %.1f) and reaches 0 of %d anchors"
+			print("[nav-qa] %s: OFF THE MAIN NETWORK -- snapped %.2f m to (%.1f, %.1f, %.1f), cluster of %d vs main %d"
 				% [a["name"], a["snap_m"], a["snap"][0], a["snap"][1],
-				   a["snap"][2], int(a["of"])])
+				   a["snap"][2], int(a["cluster_size"]),
+				   int(a["main_cluster_size"])])
 	_report["stranded_anchors"] = stranded
 
 	# ---- pass 1: path proofs ----------------------------------------------
@@ -161,7 +162,7 @@ func _run() -> void:
 			var blame := _stranded_blame(leg[0])
 			if blame != "":
 				rep["isolated_endpoint"] = blame
-				rep["detail"] = "%s is isolated (reaches no other anchor); %s" \
+				rep["detail"] = "%s is off the main network; %s" \
 					% [blame, rep["detail"]]
 		_report["path_proofs"].append(rep)
 		if not rep["ok"]:
@@ -301,6 +302,30 @@ func _group_points(group: String) -> Array:
 	return pts
 
 
+#: How far below an anchor to look for the surface it stands on. One storey.
+const SNAP_DROP := 3.0
+
+
+func _snap(map: RID, p: Vector3) -> Vector3:
+	## Where does a body at `p` stand? On the surface BELOW it.
+	##
+	## map_get_closest_point is omnidirectional, and that is the wrong question
+	## for a standing position. Deli Counter places markers at body height and
+	## Lot lifted them again, so every building proxy floated ~1.9 m over its
+	## own floor -- and from there a counter top at 1.4 m is 0.5 m away while
+	## the floor is 1.9 m away. Every route query started on a two-polygon
+	## scrap of furniture, and the reports read as a broken navmesh for a day.
+	##
+	## Closest point to a short DOWNWARD segment asks the right question: the
+	## floor under the anchor is on the segment, the counter beside it is not.
+	var down := NavigationServer3D.map_get_closest_point_to_segment(
+		map, p + Vector3(0.0, 0.1, 0.0), p - Vector3(0.0, SNAP_DROP, 0.0), false)
+	if down.distance_to(p) <= SNAP_MAX + SNAP_DROP:
+		return down
+	# Nothing plausibly underneath; fall back rather than invent a position.
+	return NavigationServer3D.map_get_closest_point(map, p)
+
+
 func _reaches(map: RID, from_snapped: Vector3, to_snapped: Vector3) -> bool:
 	## Can a walkable route get from one snapped anchor to another? Uses the
 	## same rules as _prove_path, including its vertical-access concession, so
@@ -328,30 +353,80 @@ func _anchor_reachability(map: RID, home: Vector3, proxies: Array) -> Array:
 
 	var snapped: Array = []
 	for p in pts:
-		snapped.append(NavigationServer3D.map_get_closest_point(map, p))
+		snapped.append(_snap(map, p))
 
-	var out: Array = []
-	_stranded_names = {}
-	for i in pts.size():
-		var reaches := 0
-		for j in pts.size():
+	# Reachability, and the CLUSTERS it forms. Counting "reaches 0" was not
+	# enough: Lot emits four duplicate anchor pairs per site (two markers 0.2 m
+	# apart snap to one point), so a stranded anchor still reached its own twin
+	# and passed. Sixteen of twenty-one anchors were off the main network and
+	# the count said zero were stranded. What matters is whether an anchor is on
+	# the LARGEST cluster, not whether it can see anybody at all.
+	var n := pts.size()
+	var parent := PackedInt32Array()
+	parent.resize(n)
+	for i in n:
+		parent[i] = i
+	var reach_count := PackedInt32Array()
+	reach_count.resize(n)
+	for i in n:
+		var c := 0
+		for j in n:
 			if i == j:
 				continue
 			if _reaches(map, snapped[i], snapped[j]):
-				reaches += 1
+				c += 1
+				var ra := _find(parent, i)
+				var rb := _find(parent, j)
+				if ra != rb:
+					parent[ra] = rb
+		reach_count[i] = c
+
+	var size_of := {}
+	for i in n:
+		var r := _find(parent, i)
+		size_of[r] = int(size_of.get(r, 0)) + 1
+	var main_size := 0
+	for k in size_of.keys():
+		main_size = maxi(main_size, int(size_of[k]))
+
+	var out: Array = []
+	_stranded_names = {}
+	for i in n:
 		var s: Vector3 = snapped[i]
 		var raw: Vector3 = pts[i]
-		if reaches == 0:
+		var csize: int = int(size_of[_find(parent, i)])
+		# Two anchors on the same point is Lot emitting the same position twice.
+		# Worth naming: it is why a "reaches 1" pair looked healthy.
+		var twin := ""
+		for j in n:
+			if j != i and snapped[j].distance_to(s) <= 0.05:
+				twin = names[j]
+				break
+		if csize < main_size:
 			_stranded_names[names[i]] = true
 		out.append({
 			"name": names[i],
 			"raw": [snappedf(raw.x, 0.1), snappedf(raw.y, 0.1), snappedf(raw.z, 0.1)],
 			"snap": [snappedf(s.x, 0.1), snappedf(s.y, 0.1), snappedf(s.z, 0.1)],
 			"snap_m": snappedf(s.distance_to(raw), 0.01),
-			"reaches": reaches,
-			"of": pts.size() - 1,
+			"reaches": reach_count[i],
+			"of": n - 1,
+			"cluster_size": csize,
+			"main_cluster_size": main_size,
+			"coincident_with": twin,
 		})
 	return out
+
+
+func _find(parent: PackedInt32Array, i: int) -> int:
+	var r := i
+	while parent[r] != r:
+		r = parent[r]
+	while parent[i] != r:
+		var nxt := parent[i]
+		parent[i] = r
+		i = nxt
+	return r
 
 
 func _stranded_blame(leg_label: String) -> String:
@@ -366,8 +441,8 @@ func _stranded_blame(leg_label: String) -> String:
 
 
 func _prove_path(map: RID, label: String, a: Vector3, b: Vector3) -> Dictionary:
-	var sa := NavigationServer3D.map_get_closest_point(map, a)
-	var sb := NavigationServer3D.map_get_closest_point(map, b)
+	var sa := _snap(map, a)
+	var sb := _snap(map, b)
 	var da := sa.distance_to(a)
 	var db := sb.distance_to(b)
 	if da > SNAP_MAX or db > SNAP_MAX:
