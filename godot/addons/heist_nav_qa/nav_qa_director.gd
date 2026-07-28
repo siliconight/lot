@@ -50,6 +50,8 @@ var ARRIVE_DIST := _envf("DC_QA_ARRIVE", 1.5)
 
 var _report := {}
 var _walkers: Array = []
+#: anchor name -> true, for the anchors that reach no other anchor at all.
+var _stranded_names := {}
 var _sim_time := 0.0
 var _time_limit := TIME_LIMIT     # scaled to the spine after the proofs run
 var _done := false
@@ -119,6 +121,29 @@ func _run() -> void:
 		_finish(false)
 		return
 
+	# ---- pass 0: is each anchor standing on anything that GOES anywhere? ---
+	#
+	# `_prove_path` already refuses an anchor further than SNAP_MAX from the
+	# mesh, and that check is not the one that was missing: on the run that
+	# started this, every anchor passed it and nine legs still failed. An anchor
+	# 0.7 m from a two-polygon scrap is ON the navmesh and goes nowhere, and a
+	# leg failing from there reported "disjoint islands" -- a true statement
+	# about the navmesh that reads as a claim about the whole site rather than
+	# about one endpoint. Four instruments disagreed for a day over it.
+	#
+	# So measure connectivity, not just proximity, using the same API the proof
+	# uses. Anchors x anchors is 400 queries at twenty anchors; the walker sim
+	# that follows costs 230 seconds.
+	_report["anchors"] = _anchor_reachability(map, home, proxies)
+	var stranded := 0
+	for a in _report["anchors"]:
+		if int(a["reaches"]) == 0:
+			stranded += 1
+			print("[nav-qa] %s: ISOLATED -- snapped %.2f m to (%.1f, %.1f, %.1f) and reaches 0 of %d anchors"
+				% [a["name"], a["snap_m"], a["snap"][0], a["snap"][1],
+				   a["snap"][2], int(a["of"])])
+	_report["stranded_anchors"] = stranded
+
 	# ---- pass 1: path proofs ----------------------------------------------
 	var proof_fail := 0
 	var legs: Array = []
@@ -129,6 +154,15 @@ func _run() -> void:
 					 proxies[i], proxies[i + 1]])
 	for leg in legs:
 		var rep := _prove_path(map, leg[0], leg[1], leg[2])
+		# A leg from or to a stranded anchor is not evidence about the route --
+		# it is the anchor, restated. Say which, so the reader does not go
+		# looking at the navmesh for a defect that is in the placement.
+		if not rep["ok"]:
+			var blame := _stranded_blame(leg[0])
+			if blame != "":
+				rep["isolated_endpoint"] = blame
+				rep["detail"] = "%s is isolated (reaches no other anchor); %s" \
+					% [blame, rep["detail"]]
 		_report["path_proofs"].append(rep)
 		if not rep["ok"]:
 			proof_fail += 1
@@ -265,6 +299,70 @@ func _group_points(group: String) -> Array:
 		if n is Node3D:
 			pts.append((n as Node3D).global_position)
 	return pts
+
+
+func _reaches(map: RID, from_snapped: Vector3, to_snapped: Vector3) -> bool:
+	## Can a walkable route get from one snapped anchor to another? Uses the
+	## same rules as _prove_path, including its vertical-access concession, so
+	## an anchor served only by a ladder is not called isolated.
+	var path := NavigationServer3D.map_get_path(map, from_snapped, to_snapped, true)
+	if path.size() < 2:
+		return false
+	var pe: Vector3 = path[path.size() - 1]
+	if pe.distance_to(to_snapped) <= SNAP_MAX:
+		return true
+	var h_gap := Vector2(pe.x - to_snapped.x, pe.z - to_snapped.z).length()
+	var v_gap := absf(pe.y - to_snapped.y)
+	return h_gap <= SNAP_MAX * 1.5 and v_gap > 1.0
+
+
+func _anchor_reachability(map: RID, home: Vector3, proxies: Array) -> Array:
+	## For every anchor: where it snapped, how far, and how many OTHER anchors
+	## it can actually reach. Zero is the number that matters -- an anchor on a
+	## scrap passes every distance check and can never appear in a route.
+	var names: Array = ["home"]
+	var pts: Array = [home]
+	for i in proxies.size():
+		names.append("proxy_%d" % i)
+		pts.append(proxies[i])
+
+	var snapped: Array = []
+	for p in pts:
+		snapped.append(NavigationServer3D.map_get_closest_point(map, p))
+
+	var out: Array = []
+	_stranded_names = {}
+	for i in pts.size():
+		var reaches := 0
+		for j in pts.size():
+			if i == j:
+				continue
+			if _reaches(map, snapped[i], snapped[j]):
+				reaches += 1
+		var s: Vector3 = snapped[i]
+		var raw: Vector3 = pts[i]
+		if reaches == 0:
+			_stranded_names[names[i]] = true
+		out.append({
+			"name": names[i],
+			"raw": [snappedf(raw.x, 0.1), snappedf(raw.y, 0.1), snappedf(raw.z, 0.1)],
+			"snap": [snappedf(s.x, 0.1), snappedf(s.y, 0.1), snappedf(s.z, 0.1)],
+			"snap_m": snappedf(s.distance_to(raw), 0.01),
+			"reaches": reaches,
+			"of": pts.size() - 1,
+		})
+	return out
+
+
+func _stranded_blame(leg_label: String) -> String:
+	## The endpoint of this leg that reaches nothing, if either does. The label
+	## is "a->b"; either end being isolated makes the leg say more about the
+	## anchor than about the route between them.
+	var parts := leg_label.split("->")
+	for part in parts:
+		if _stranded_names.has(part):
+			return part
+	return ""
 
 
 func _prove_path(map: RID, label: String, a: Vector3, b: Vector3) -> Dictionary:

@@ -1,3 +1,37 @@
+## [0.34.0] - an anchor can be on the navmesh and still go nowhere
+
+`_prove_path` has always refused an anchor further than `SNAP_MAX` (2.0 m, from
+the agent contract's `qa.snap_max_m`) from the mesh. On the run that started
+this, every anchor passed that check and nine legs failed anyway, each reporting
+
+    path stops 32.71 m short (disjoint islands)
+
+which is TRUE, and reads as a claim about the whole site rather than about one
+endpoint. Four instruments were pointed at the navmesh for a day: nav_gate
+passed the building, three source-geometry modes gave the same nine failures,
+six agent-parameter variations moved nothing, and the island census came back
+1675 polygons in one connected component out of 1827. The navmesh was never
+fragmented. Two-polygon scraps were, and anchors were standing on them.
+
+### the measurement that was missing
+
+Proximity, not connectivity. An anchor 0.7 m from a scrap is on the mesh by
+every existing check and can never appear in a route.
+
+`_anchor_reachability` snaps every anchor with `map_get_closest_point` and then
+asks, for each, how many OTHER anchors it can reach -- using `_reaches`, which
+applies the same rules `_prove_path` does, vertical-access concession included,
+so an anchor served only by a ladder is not called isolated. Twenty anchors is
+400 queries next to a 230-second walker sim.
+
+The report gains an `anchors` array (`name`, `raw`, `snap`, `snap_m`, `reaches`,
+`of`) and a `stranded_anchors` count. A leg that fails from or to a stranded
+anchor now carries `isolated_endpoint` and says which anchor before it describes
+the path, so the reader is pointed at the placement rather than at the geometry.
+
+Nothing about the verdict changes: a stranded anchor already failed its legs and
+still does. What changes is that the report now says what it is.
+
 ## [0.33.0] - the report goes where the caller asked
 
 `walktest.py` gains `--report-dir`. The `heist_nav_qa` director names its report
