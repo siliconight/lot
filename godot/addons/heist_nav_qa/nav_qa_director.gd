@@ -793,6 +793,29 @@ func _set_leg(w: Dictionary, target: Vector3) -> void:
 	w["wp_best"] = INF
 
 
+func _blocked_by(body: CharacterBody3D) -> Array:
+	## Every surface the capsule is in contact with after this frame's
+	## move_and_slide, named. Valid only in the same frame as that call.
+	var out: Array = []
+	for i in body.get_slide_collision_count():
+		var c := body.get_slide_collision(i)
+		var o = c.get_collider()
+		var nm := "<freed>"
+		var np := ""
+		if o is Node:
+			nm = String((o as Node).name)
+			np = String((o as Node).get_path())
+		var n := c.get_normal()
+		var p := c.get_position()
+		out.append({
+			"collider": nm,
+			"path": np,
+			"normal": [snappedf(n.x, 0.01), snappedf(n.y, 0.01), snappedf(n.z, 0.01)],
+			"at": [snappedf(p.x, 0.1), snappedf(p.y, 0.1), snappedf(p.z, 0.1)],
+		})
+	return out
+
+
 func _drive(w: Dictionary, delta: float) -> void:
 	var body: CharacterBody3D = w["body"]
 	var target: Vector3 = w["targets"][w["ti"]]
@@ -904,3 +927,30 @@ func _drive(w: Dictionary, delta: float) -> void:
 				w["finished"] = true
 				w["status"] = "stuck@target_%d at (%.1f, %.1f, %.1f)" \
 					% [w["ti"], pp.x, pp.y, pp.z]
+				# WHAT it is stuck against. A coordinate alone sends the reader
+				# to a plan view to guess, and guessing does not work: seed 5017
+				# put all four walkers on the same point with six metres of open
+				# floor around it and a clear line to the target, and an offline
+				# reconstruction of the colliders could not see the obstacle --
+				# because the obstacle is whatever move_and_slide is touching,
+				# and only the engine knows that. An empty list is an answer
+				# too, and a different one: touching nothing means the steering
+				# froze rather than the geometry blocked.
+				var against := _blocked_by(body)
+				w["blocked_by"] = against
+				w["waypoint"] = [snappedf(next.x, 0.1), snappedf(next.y, 0.1),
+								 snappedf(next.z, 0.1)]
+				w["waypoint_dist_m"] = snappedf(d_next, 0.01)
+				w["path_index"] = pi
+				w["path_points"] = path.size()
+				w["on_floor"] = body.is_on_floor()
+				w["on_wall"] = body.is_on_wall()
+				var names := []
+				for c in against:
+					names.append(str(c.get("collider", "?")))
+				print("[nav-qa] walker %s STUCK at (%.1f, %.1f, %.1f) %.2f m from waypoint %d/%d (%.1f, %.1f, %.1f); on_floor=%s on_wall=%s; touching: %s"
+					% [w["name"], pp.x, pp.y, pp.z, d_next, pi, path.size(),
+					   next.x, next.y, next.z, body.is_on_floor(),
+					   body.is_on_wall(),
+					   ", ".join(names) if names.size() > 0
+					   else "NOTHING -- the steering froze, the geometry did not block"])

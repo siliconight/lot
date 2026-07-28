@@ -1,3 +1,22 @@
+## [0.38.0] - a stuck walker now says what it is stuck against
+
+Seed 5017 put all four walkers on the same coordinate, (20.5, 0.9, -2.7), on the
+same leg, with every path proof passing. The report said where and not what, so
+settling it meant reconstructing the site's colliders offline -- and that could
+not answer it either: six metres of clear floor in both axes around the point,
+and an unobstructed straight line to the target. The obstacle is whatever
+`move_and_slide` is touching, and only the engine knows that.
+
+So the walker records it. On giving up, `_drive` captures every slide collision
+-- collider name, node path, contact normal, contact point -- plus the waypoint
+it was steering to, how far short it stopped, where that waypoint sits in the
+path, and `is_on_floor` / `is_on_wall`.
+
+The empty case is the one worth having. A capsule wedged in geometry is a level
+defect. A capsule stopped in open space touching NOTHING is this tool's steering
+giving up, and the two were indistinguishable in the report. Blaming a level for
+the second is how an afternoon goes missing.
+
 ## [0.37.0] - the vault is sealed on purpose, and the census said so four different ways
 
 With the anchors on their floors, failures fell from nine legs of thirty-nine to
