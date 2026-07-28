@@ -1166,12 +1166,71 @@ def _pv3_array(world_pts, lift=0.0):
     return "PackedVector3Array(" + ", ".join(nums) + ")"
 
 
+def _floor_index(merged):
+    """room id -> that room's floor elevation, from the merged gameplay file.
+
+    Deli Counter writes one room record per room per storey, and `center[2]` is
+    the storey's floor height (story -1/0/1 -> -4.0/0.0/4.0 for a 4 m storey).
+    Read the elevation rather than multiplying `story` by an assumed height:
+    the storey height is Deli Counter's to choose and it is not in this file."""
+    idx = {}
+    for r in merged.get("rooms", []):
+        c = r.get("center")
+        if r.get("id") and isinstance(c, (list, tuple)) and len(c) >= 3:
+            idx[r["id"]] = float(c[2])
+    return idx
+
+
+def _floor_of(marker, floors, merged):
+    """The elevation of the floor this marker stands on, or None.
+
+    Markers name their room unnamespaced (`"vault"`); the merged room ids are
+    namespaced by building (`"b0/vault"`). If the room is missing or unknown,
+    fall back to the highest floor in the same building at or below the marker
+    -- a marker is on the storey it sits above, never the one over its head."""
+    bid = marker.get("building")
+    room = marker.get("room")
+    if bid and room:
+        z = floors.get(f"{bid}/{room}")
+        if z is not None:
+            return z
+    z_marker = float(marker.get("z", 0.0))
+    below = [z for rid, z in floors.items()
+             if (not bid or rid.startswith(f"{bid}/")) and z <= z_marker + 0.01]
+    return max(below) if below else None
+
+
 def _navqa_anchors(site_spec, merged):
+    """The heist's own markers, as STANDING POSITIONS for the nav QA.
+
+    A marker is where a thing IS. An anchor is where a body has to be able to
+    stand to use it, and those are not the same point. Deli Counter puts
+    OBJECTIVE_CAGE at the cashier counter, LOOT_VAULT_CASH on the vault block:
+    marker heights of 0.9 and -2.8 sit ON the prop, and the floor directly
+    under them is inside a solid box. Emitted at marker height, every one of
+    them snapped to the prop's own tabletop -- a 1.0 m surface no body can
+    climb to, which bakes as an isolated navmesh island. Sixteen of twenty-one
+    anchors in the first honest walktest were standing on furniture, and the
+    report read as a severed navmesh.
+
+    So anchors are emitted at their room's FLOOR, keeping x/y. From there the
+    nav QA looks for standing room on that storey plane and finds the floor
+    beside the counter, which is where a player actually stands to use it."""
     markers = merged.get("markers", [])
+    floors = _floor_index(merged)
+    unresolved = []
 
     def pts(types):
-        return [(m.get("x", 0.0), m.get("y", 0.0), m.get("z", 0.0))
-                for m in markers if m.get("type") in types]
+        out = []
+        for m in markers:
+            if m.get("type") not in types:
+                continue
+            z = _floor_of(m, floors, merged)
+            if z is None:
+                unresolved.append(m.get("name", m.get("type", "?")))
+                z = float(m.get("z", 0.0))
+            out.append((m.get("x", 0.0), m.get("y", 0.0), z))
+        return out
 
     proxies = pts(_PROXY_TYPES)
     bots = pts(_BOT_TYPES)
@@ -1184,8 +1243,29 @@ def _navqa_anchors(site_spec, merged):
             # cop pressure arrives from the STREET — road ends, alleys — which
             # is site geography, not any one building's spec.
             bots.append((a[0], a[1], 0.0))
+    # Dropping markers onto their floor makes stacked markers coincide: Deli
+    # Counter puts the vault objective and the vault loot at one XY, 0.2 m
+    # apart in Z. Two anchors on one point are not two tests, and they hid a
+    # stranded anchor once already -- it "reached" its own twin and passed.
+    proxies, merged_pairs = _dedupe_anchors(proxies)
+    bots, _ = _dedupe_anchors(bots)
     return {"player_proxies": proxies, "cover": pts(_COVER_TYPES),
-            "bot_spawns": bots}
+            "bot_spawns": bots, "unresolved": unresolved,
+            "merged_pairs": merged_pairs}
+
+
+def _dedupe_anchors(points, tol=0.01):
+    """Collapse anchors that land on the same point; return (kept, dropped)."""
+    kept, seen = [], set()
+    dropped = 0
+    for p in points:
+        key = tuple(round(v / tol) for v in p)
+        if key in seen:
+            dropped += 1
+            continue
+        seen.add(key)
+        kept.append(p)
+    return kept, dropped
 
 
 def write_navqa_scene(site_spec, merged, navqa_out, site_tscn_base,
@@ -1235,14 +1315,12 @@ def write_navqa_scene(site_spec, merged, navqa_out, site_tscn_base,
         '[node name="Site" parent="./Nav" instance=ExtResource("site")]', '',
         '[node name="NavQASetup" type="Node3D" parent="."]',
         'script = ExtResource("setup")',
-        # NO LIFT on the proxies or the bot spawns. Deli Counter already places
-        # these markers at body height -- a ground-floor marker carries z 0.9
-        # over a floor at 0.0 -- and adding another metre put every building
-        # anchor ~1.9 m above the surface it is supposed to stand on. The nav QA
-        # then snapped each one to the NEAREST navmesh in any direction, which
-        # from up there is a counter top at 1.4 m rather than the floor at 0.2,
-        # so every route query in the walktest started on a two-polygon scrap of
-        # furniture. crew_home keeps its lift: it comes from _walk_positions at
+        # NO LIFT. _navqa_anchors already put these on their room's floor, which
+        # is the only height a standing position can have. Two earlier versions
+        # got this wrong in opposite directions: one added a metre to markers
+        # that already carried body height, the other trusted the marker height
+        # itself -- and a marker height is the height of the counter the loot is
+        # lying on. crew_home keeps its lift: it comes from _walk_positions at
         # z 0, so it needs raising off the floor rather than lowering onto it.
         f'player_proxies = {_pv3_array(anc["player_proxies"])}',
         f'cover_points = {_pv3_array(anc["cover"])}',
@@ -1251,8 +1329,18 @@ def write_navqa_scene(site_spec, merged, navqa_out, site_tscn_base,
     ]
     with open(navqa_out, "w", encoding="utf-8") as f:
         f.write("\n".join(lines))
+    if anc.get("unresolved"):
+        names = ", ".join(anc["unresolved"][:4])
+        print(f"[lot] navqa: {len(anc['unresolved'])} marker(s) name no room this "
+              f"site knows the floor of ({names}) -- emitted at marker height, "
+              f"so the nav QA may snap them onto whatever they are sitting on")
+    if anc.get("merged_pairs"):
+        print(f"[lot] navqa: {anc['merged_pairs']} anchor(s) coincided once "
+              f"dropped to their floor (stacked markers) and were merged")
     return {"player_proxies": len(anc["player_proxies"]),
-            "cover": len(anc["cover"]), "bot_spawns": len(anc["bot_spawns"])}
+            "cover": len(anc["cover"]), "bot_spawns": len(anc["bot_spawns"]),
+            "unresolved": len(anc.get("unresolved", [])),
+            "merged_pairs": anc.get("merged_pairs", 0)}
 
 
 # ---------------------------------------------------------------------------

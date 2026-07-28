@@ -52,6 +52,8 @@ var _report := {}
 var _walkers: Array = []
 #: anchor name -> true, for anchors that are NOT on the largest cluster.
 var _stranded_names := {}
+#: raw anchor position -> the standing position the census settled on.
+var _resolved := {}
 var _sim_time := 0.0
 var _time_limit := TIME_LIMIT     # scaled to the spine after the proofs run
 var _done := false
@@ -136,14 +138,28 @@ func _run() -> void:
 	# that follows costs 230 seconds.
 	_report["anchors"] = _anchor_reachability(map, home, proxies)
 	var stranded := 0
+	var no_room := 0
+	var behind_barrier := 0
 	for a in _report["anchors"]:
+		if float(a.get("unreachable_stand_m", 0.0)) > 0.0:
+			behind_barrier += 1
+			print("[nav-qa] %s: nearest standing room (%.2f m) is on a component nothing reaches; using the nearest CONNECTED one at %.2f m -- the marker is behind something no body walks through"
+				% [a["name"], float(a["unreachable_stand_m"]), a["snap_m"]])
+		if bool(a.get("no_standing_room", false)):
+			no_room += 1
+			print("[nav-qa] %s: NO STANDING ROOM on its own storey within %.0f m of (%.1f, %.1f, %.1f) -- that room did not bake"
+				% [a["name"], STAND_SEARCH_M, a["raw"][0], a["raw"][1],
+				   a["raw"][2]])
+			continue
 		if int(a["cluster_size"]) < int(a["main_cluster_size"]):
 			stranded += 1
-			print("[nav-qa] %s: OFF THE MAIN NETWORK -- snapped %.2f m to (%.1f, %.1f, %.1f), cluster of %d vs main %d"
+			print("[nav-qa] %s: OFF THE MAIN NETWORK -- stands %.2f m away at (%.1f, %.1f, %.1f), cluster of %d vs main %d"
 				% [a["name"], a["snap_m"], a["snap"][0], a["snap"][1],
 				   a["snap"][2], int(a["cluster_size"]),
 				   int(a["main_cluster_size"])])
 	_report["stranded_anchors"] = stranded
+	_report["anchors_without_standing_room"] = no_room
+	_report["anchors_behind_a_barrier"] = behind_barrier
 
 	# ---- pass 1: path proofs ----------------------------------------------
 	var proof_fail := 0
@@ -271,10 +287,10 @@ func _nearest_reachable(map: RID, points: Array, from_pos: Vector3) -> Variant:
 	var order := points.duplicate()
 	order.sort_custom(func(a, b):
 		return from_pos.distance_to(a) < from_pos.distance_to(b))
-	var sa := NavigationServer3D.map_get_closest_point(map, from_pos)
+	var sa := _snap(map, from_pos)
 	for pt in order:
 		var v: Vector3 = pt
-		var sb := NavigationServer3D.map_get_closest_point(map, v)
+		var sb := _snap(map, v)
 		var path := NavigationServer3D.map_get_path(map, sa, sb, true)
 		if path.size() >= 2 \
 				and path[path.size() - 1].distance_to(sb) <= SNAP_MAX:
@@ -302,40 +318,128 @@ func _group_points(group: String) -> Array:
 	return pts
 
 
-#: How far below an anchor to look for the surface it stands on. One storey.
-const SNAP_DROP := 3.0
+#: How far ABOVE its own floor a standing position may be found: one max_climb
+#: plus a bake voxel, and no more. Downward the allowance is a body height --
+#: see _stand_at for why the two directions are not the same question.
+const STOREY_BAND := 0.6
+#: How far sideways to look for standing room, and at what granularity.
+const STAND_SEARCH_M := 6.0
+const STAND_STEP_M := 0.5
+const STAND_DIRS := 12
+
+
+func _stand_at(map: RID, q: Vector3, plane_y: float) -> Variant:
+	## Navmesh nearest the short vertical segment at `q`, if it lies on the
+	## anchor's own storey. null when this sample finds nothing on that plane.
+	var c := NavigationServer3D.map_get_closest_point_to_segment(
+		map, q + Vector3(0.0, STOREY_BAND, 0.0),
+		q - Vector3(0.0, AGENT_HEIGHT, 0.0), false)
+	# map_get_closest_point* answers Vector3.ZERO when it has nothing to say.
+	# Only the world origin can legitimately be that answer.
+	if c == Vector3.ZERO and q.distance_to(Vector3.ZERO) > STAND_STEP_M:
+		return null
+	# Asymmetric on purpose. BELOW the anchor by up to a body height is still
+	# this storey -- crew_home carries a 1.0 m lift and an unroomed marker still
+	# carries Deli Counter's 0.9 m body height. ABOVE the anchor is a different
+	# surface: that direction is how a counter top at 1.4 m came to stand in for
+	# the floor at 0.2, and it stays shut to within a bake voxel.
+	if c.y > plane_y + STOREY_BAND or c.y < plane_y - AGENT_HEIGHT:
+		return null
+	# The sample owns its neighbourhood: a point further out than the ring
+	# spacing belongs to some other sample, and taking it here would let one
+	# lucky direction stand in for a sweep that never happened.
+	if Vector2(c.x - q.x, c.z - q.z).length() > STAND_STEP_M:
+		return null
+	return c
 
 
 func _snap(map: RID, p: Vector3) -> Vector3:
-	## Where does a body at `p` stand? On the surface BELOW it.
+	var pt: Vector3 = _stand_point(map, p)["point"]
+	return pt
+
+
+func _key(p: Vector3) -> String:
+	return "%.2f,%.2f,%.2f" % [p.x, p.y, p.z]
+
+
+func _stand_point(map: RID, p: Vector3) -> Dictionary:
+	# The census resolves anchors whose nearest standing room is on a component
+	# nothing reaches. Every later consumer -- the path proofs, the walker legs,
+	# the bot target search -- has to use the same answer, or the report grades
+	# routes to a position the census already ruled out. One cache, one answer.
+	if _resolved.has(_key(p)):
+		return _resolved[_key(p)]
+	return _stand_search(map, p)
+
+
+func _stand_search(map: RID, p: Vector3) -> Dictionary:
+	## Where does a body stand to use the thing at `p`? On the floor of p's own
+	## storey -- beside it if need be, never above it.
 	##
 	## map_get_closest_point is omnidirectional, and that is the wrong question
-	## for a standing position. Deli Counter places markers at body height and
-	## Lot lifted them again, so every building proxy floated ~1.9 m over its
-	## own floor -- and from there a counter top at 1.4 m is 0.5 m away while
-	## the floor is 1.9 m away. Every route query started on a two-polygon
-	## scrap of furniture, and the reports read as a broken navmesh for a day.
+	## for a standing position. Two earlier versions of this asked it anyway and
+	## the reports were wrong in two different ways. A marker is where a thing
+	## IS: Deli Counter puts OBJECTIVE_CAGE on the cashier counter and
+	## LOOT_VAULT_CASH inside an 8 x 6 m vault block. The floor directly under
+	## those markers is inside a solid prop, so the nearest navmesh in any
+	## direction is the prop's own tabletop -- a 1.0 m surface no body can climb
+	## to, which bakes as an isolated island. Sixteen of twenty-one anchors
+	## snapped onto furniture and the report read as a severed navmesh.
 	##
-	## Closest point to a short DOWNWARD segment asks the right question: the
-	## floor under the anchor is on the segment, the counter beside it is not.
-	var down := NavigationServer3D.map_get_closest_point_to_segment(
-		map, p + Vector3(0.0, 0.1, 0.0), p - Vector3(0.0, SNAP_DROP, 0.0), false)
-	if down.distance_to(p) <= SNAP_MAX + SNAP_DROP:
-		return down
-	# Nothing plausibly underneath; fall back rather than invent a position.
-	return NavigationServer3D.map_get_closest_point(map, p)
+	## Lot now emits anchors at their room's floor, so the storey is known: search
+	## that plane outward for the first place a body fits. A vault marker resolves
+	## to the floor at the vault's edge, which is where a player stands to open it.
+	var plane_y := p.y
+	var here = _stand_at(map, p, plane_y)
+	if here != null:
+		var hv: Vector3 = here
+		return {"point": hv, "offset": hv.distance_to(p), "found": true}
+	var r := STAND_STEP_M
+	while r <= STAND_SEARCH_M:
+		# Ring density follows the radius. A fixed count leaves 3 m arc gaps at
+		# 6 m, and every sample only speaks for STAND_STEP_M around itself, so a
+		# fixed count would report "no standing room" for floor it never sampled.
+		var dirs := maxi(STAND_DIRS, int(ceil(TAU * r / STAND_STEP_M)))
+		var best := Vector3.ZERO
+		var best_d := INF
+		for k in dirs:
+			var a := TAU * float(k) / float(dirs)
+			var c = _stand_at(map, p + Vector3(cos(a) * r, 0.0, sin(a) * r), plane_y)
+			if c == null:
+				continue
+			var cv: Vector3 = c
+			var d := cv.distance_to(p)
+			if d < best_d:
+				best_d = d
+				best = cv
+		if best_d < INF:
+			return {"point": best, "offset": best_d, "found": true}
+		r += STAND_STEP_M
+	# No standing room anywhere on this storey within STAND_SEARCH_M -- the room
+	# this anchor names did not bake. Return the anchor itself and say so rather
+	# than resolving to a position on some other floor that no body can use.
+	return {"point": p, "offset": 0.0, "found": false}
 
 
-func _reaches(map: RID, from_snapped: Vector3, to_snapped: Vector3) -> bool:
-	## Can a walkable route get from one snapped anchor to another? Uses the
-	## same rules as _prove_path, including its vertical-access concession, so
-	## an anchor served only by a ladder is not called isolated.
+func _reaches(map: RID, from_snapped: Vector3, to_snapped: Vector3,
+			  strict: bool = false) -> bool:
+	## Can a walkable route get from one snapped anchor to another?
+	##
+	## `strict` drops the vertical-access concession. Clustering uses it, and
+	## has to: a 2.9 m drop onto a tabletop satisfied the concession in both
+	## directions, so union-find glued every furniture island to the floor and
+	## reported "one cluster of 21, 0 stranded" on a run where sixteen anchors
+	## could not be walked to. A drop is not a two-way edge and must not join
+	## two components. Legs keep the concession -- a ladder is real access, and
+	## _prove_path says which kind it found.
 	var path := NavigationServer3D.map_get_path(map, from_snapped, to_snapped, true)
 	if path.size() < 2:
 		return false
 	var pe: Vector3 = path[path.size() - 1]
 	if pe.distance_to(to_snapped) <= SNAP_MAX:
 		return true
+	if strict:
+		return false
 	var h_gap := Vector2(pe.x - to_snapped.x, pe.z - to_snapped.z).length()
 	var v_gap := absf(pe.y - to_snapped.y)
 	return h_gap <= SNAP_MAX * 1.5 and v_gap > 1.0
@@ -351,10 +455,102 @@ func _anchor_reachability(map: RID, home: Vector3, proxies: Array) -> Array:
 		names.append("proxy_%d" % i)
 		pts.append(proxies[i])
 
+	_resolved = {}
 	var snapped: Array = []
+	var no_room: Array = []
+	var offsets: Array = []
+	var rerouted: Array = []
 	for p in pts:
-		snapped.append(_snap(map, p))
+		var pv: Vector3 = p
+		var info := _stand_search(map, pv)
+		snapped.append(info["point"])
+		offsets.append(float(info["offset"]))
+		no_room.append(not bool(info["found"]))
+		rerouted.append(0.0)
 
+	var out := _census(map, names, pts, snapped, offsets, no_room, rerouted)
+
+	# ---- second pass: the nearest standing room is not always a standing
+	# position a player can ever occupy ----------------------------------------
+	#
+	# A marker on the wrong side of something nothing walks through resolves to
+	# a floor no route reaches. The vault is the case that forced this: Deli
+	# Counter divides the basement with a full-height wall whose only opening is
+	# a reinforced concrete breach panel, and it puts LOOT_VAULT_CASH inside a
+	# vault block that straddles that wall. The two sides are within a few
+	# centimetres of each other in distance from the marker, so which side the
+	# ring search picked was a tie-break -- and one or two vaults per seed came
+	# out stranded while the rest passed, on identical geometry.
+	#
+	# Asking for the nearest CONNECTED standing room settles it, and settles it
+	# correctly rather than arbitrarily: for a sealed room that is the floor
+	# outside its door, which is where a player stands to breach. The bound is
+	# the same STAND_SEARCH_M as the first pass, so this cannot walk an anchor
+	# across a site, and both distances are reported.
+	var main_ref := _main_reference(out)
+	var moved := false
+	if main_ref >= 0:
+		for i in pts.size():
+			if int(out[i]["cluster_size"]) >= int(out[i]["main_cluster_size"]):
+				continue
+			if bool(out[i]["no_standing_room"]):
+				continue
+			var pv2: Vector3 = pts[i]
+			var refp: Vector3 = snapped[main_ref]
+			var alt := _stand_point_on_network(map, pv2, refp)
+			if not bool(alt["found"]):
+				continue
+			rerouted[i] = offsets[i]
+			snapped[i] = alt["point"]
+			offsets[i] = float(alt["offset"])
+			moved = true
+	if moved:
+		out = _census(map, names, pts, snapped, offsets, no_room, rerouted)
+	for i in pts.size():
+		var raw: Vector3 = pts[i]
+		_resolved[_key(raw)] = {"point": snapped[i], "offset": float(offsets[i]),
+								"found": not bool(no_room[i])}
+	return out
+
+
+func _main_reference(census: Array) -> int:
+	## Index of an anchor on the largest cluster; -1 if there is no majority.
+	for i in census.size():
+		if int(census[i]["cluster_size"]) == int(census[i]["main_cluster_size"]):
+			return i
+	return -1
+
+
+func _stand_point_on_network(map: RID, p: Vector3, ref: Vector3) -> Dictionary:
+	## Nearest standing room on p's storey that can walk to `ref` and back.
+	## Mutual on purpose: a one-way drop is not somewhere a player arrives from.
+	var r := 0.0
+	while r <= STAND_SEARCH_M:
+		var dirs := 1 if r == 0.0 else maxi(STAND_DIRS,
+			int(ceil(TAU * r / STAND_STEP_M)))
+		var best := Vector3.ZERO
+		var best_d := INF
+		for k in dirs:
+			var a := TAU * float(k) / float(dirs)
+			var q := p if r == 0.0 else p + Vector3(cos(a) * r, 0.0, sin(a) * r)
+			var c = _stand_at(map, q, p.y)
+			if c == null:
+				continue
+			var cv: Vector3 = c
+			var d := cv.distance_to(p)
+			if d >= best_d:
+				continue
+			if _reaches(map, cv, ref, true) and _reaches(map, ref, cv, true):
+				best_d = d
+				best = cv
+		if best_d < INF:
+			return {"point": best, "offset": best_d, "found": true}
+		r += STAND_STEP_M
+	return {"point": p, "offset": 0.0, "found": false}
+
+
+func _census(map: RID, names: Array, pts: Array, snapped: Array,
+			 offsets: Array, no_room: Array, rerouted: Array) -> Array:
 	# Reachability, and the CLUSTERS it forms. Counting "reaches 0" was not
 	# enough: Lot emits four duplicate anchor pairs per site (two markers 0.2 m
 	# apart snap to one point), so a stranded anchor still reached its own twin
@@ -368,18 +564,34 @@ func _anchor_reachability(map: RID, home: Vector3, proxies: Array) -> Array:
 		parent[i] = i
 	var reach_count := PackedInt32Array()
 	reach_count.resize(n)
+	var can := []
+	for i in n:
+		var row := []
+		for j in n:
+			row.append(false if i == j
+				else _reaches(map, snapped[i], snapped[j], true))
+		can.append(row)
 	for i in n:
 		var c := 0
 		for j in n:
-			if i == j:
-				continue
-			if _reaches(map, snapped[i], snapped[j]):
+			if bool(can[i][j]):
 				c += 1
-				var ra := _find(parent, i)
-				var rb := _find(parent, j)
-				if ra != rb:
-					parent[ra] = rb
 		reach_count[i] = c
+	# Union on MUTUAL reachability only. Reachability is not symmetric here and
+	# the asymmetry is the tolerance's, not the navmesh's: arrival is judged
+	# within SNAP_MAX of the destination, so a route from the main network to an
+	# anchor on a nearby island "arrives" while the route back off that island
+	# stops nowhere near the main network. One directed edge was enough to union,
+	# so an anchor reporting `reaches 0/16` still came out `cluster 16/16` -- the
+	# census contradicting itself in two adjacent columns of the same row.
+	for i in n:
+		for j in range(i + 1, n):
+			if not (bool(can[i][j]) and bool(can[j][i])):
+				continue
+			var ra := _find(parent, i)
+			var rb := _find(parent, j)
+			if ra != rb:
+				parent[ra] = rb
 
 	var size_of := {}
 	for i in n:
@@ -396,7 +608,8 @@ func _anchor_reachability(map: RID, home: Vector3, proxies: Array) -> Array:
 		var raw: Vector3 = pts[i]
 		var csize: int = int(size_of[_find(parent, i)])
 		# Two anchors on the same point is Lot emitting the same position twice.
-		# Worth naming: it is why a "reaches 1" pair looked healthy.
+		# Lot 0.28.0 merges them at source, so this should now find nothing --
+		# which is the reason to keep it. It is how the duplicate was found.
 		var twin := ""
 		for j in n:
 			if j != i and snapped[j].distance_to(s) <= 0.05:
@@ -408,7 +621,15 @@ func _anchor_reachability(map: RID, home: Vector3, proxies: Array) -> Array:
 			"name": names[i],
 			"raw": [snappedf(raw.x, 0.1), snappedf(raw.y, 0.1), snappedf(raw.z, 0.1)],
 			"snap": [snappedf(s.x, 0.1), snappedf(s.y, 0.1), snappedf(s.z, 0.1)],
-			"snap_m": snappedf(s.distance_to(raw), 0.01),
+			"snap_m": snappedf(float(offsets[i]), 0.01),
+			# The anchor's own storey had no walkable surface within reach. This
+			# is a room that did not bake, and it is a different fact from an
+			# anchor that stands somewhere real but cannot be walked to.
+			"no_standing_room": bool(no_room[i]),
+			# > 0 means the nearest standing room was on a component no route
+			# reaches, and this is the nearest CONNECTED one instead. The value
+			# is how far the nearest one was, so both readings survive.
+			"unreachable_stand_m": snappedf(float(rerouted[i]), 0.01),
 			"reaches": reach_count[i],
 			"of": n - 1,
 			"cluster_size": csize,
@@ -441,14 +662,24 @@ func _stranded_blame(leg_label: String) -> String:
 
 
 func _prove_path(map: RID, label: String, a: Vector3, b: Vector3) -> Dictionary:
-	var sa := _snap(map, a)
-	var sb := _snap(map, b)
-	var da := sa.distance_to(a)
-	var db := sb.distance_to(b)
-	if da > SNAP_MAX or db > SNAP_MAX:
-		return {"leg": label, "ok": false,
-				"detail": "anchor off navmesh (snap %.2f m / %.2f m, max %.1f)"
-				% [da, db, SNAP_MAX]}
+	var ia := _stand_point(map, a)
+	var ib := _stand_point(map, b)
+	var sa: Vector3 = ia["point"]
+	var sb: Vector3 = ib["point"]
+	var da: float = ia["offset"]
+	var db: float = ib["offset"]
+	if not ia["found"] or not ib["found"]:
+		# Not "off the navmesh by a bit" -- no walkable surface anywhere on this
+		# anchor's own storey within %.0f m. That is a room that did not bake.
+		return {"leg": label, "ok": false, "no_standing_room": true,
+				"detail": "no standing room on the anchor's own storey within %.0f m (from %s)"
+				% [STAND_SEARCH_M,
+				   "start" if not ia["found"] else "target"]}
+	# How far a body has to stand from the marker is intel, not a verdict. A
+	# loot marker in the middle of an 8 x 6 m vault block is 3 m from the
+	# nearest floor and the level is fine; the old SNAP_MAX proximity test
+	# called that an off-mesh anchor. Report the distance, judge the route.
+	var far := maxf(da, db)
 	var path := NavigationServer3D.map_get_path(map, sa, sb, true)
 	if path.size() < 2:
 		return {"leg": label, "ok": false, "detail": "no navmesh path"}
@@ -463,16 +694,25 @@ func _prove_path(map: RID, label: String, a: Vector3, b: Vector3) -> Dictionary:
 			# traversal is game code (climb volumes), gated by Deli
 			# Counter's ladder checks -- report as intel, don't fail.
 			return {"leg": label, "ok": true, "vertical_access": true,
+					"stand_offset_m": snappedf(far, 0.01),
 					"detail": "walkable to (%.1f, %.1f, %.1f); %.1f m VERTICAL access (ladder/drop) to anchor at (%.1f, %.1f, %.1f)"
 					% [pe.x, pe.y, pe.z, v_gap, sb.x, sb.y, sb.z]}
 		return {"leg": label, "ok": false,
-				"detail": "path stops %.2f m short (disjoint islands): ends (%.1f, %.1f, %.1f), target snap (%.1f, %.1f, %.1f), raw target (%.1f, %.1f, %.1f)"
+				"stand_offset_m": snappedf(far, 0.01),
+				"detail": "path stops %.2f m short (disjoint islands): ends (%.1f, %.1f, %.1f), target stands at (%.1f, %.1f, %.1f), raw target (%.1f, %.1f, %.1f)"
 				% [endgap, pe.x, pe.y, pe.z, sb.x, sb.y, sb.z, b.x, b.y, b.z]}
 	var length := 0.0
 	for i in range(path.size() - 1):
 		length += path[i].distance_to(path[i + 1])
-	return {"leg": label, "ok": true, "length_m": length,
+	var rep := {"leg": label, "ok": true, "length_m": length,
+			"stand_offset_m": snappedf(far, 0.01),
 			"detail": "path %.1f m, %d points" % [length, path.size()]}
+	if far > SNAP_MAX:
+		# The route is fine; the marker is buried. Worth saying -- a marker a
+		# body cannot get within SNAP_MAX of is a marker inside the furniture.
+		rep["detail"] += "; nearest standing room is %.1f m from the marker" % far
+		rep["marker_buried"] = true
+	return rep
 
 
 func _spawn_walker(walker_name: String, at: Vector3, targets: Array) -> void:
@@ -526,8 +766,12 @@ func _set_leg(w: Dictionary, target: Vector3) -> void:
 	## is traversed by game code, not walking: credit it and advance.
 	var map: RID = get_world_3d().navigation_map
 	var body: CharacterBody3D = w["body"]
-	var sa := NavigationServer3D.map_get_closest_point(map, body.global_position)
-	var sb := NavigationServer3D.map_get_closest_point(map, target)
+	# Same question the proofs ask, so a walker is never sent somewhere the
+	# proofs would not have counted: map_get_closest_point is omnidirectional and
+	# would aim this leg at the counter top above the target rather than the
+	# floor beside it, then report the walker STUCK for failing to climb it.
+	var sa := _snap(map, body.global_position)
+	var sb := _snap(map, target)
 	var path := NavigationServer3D.map_get_path(map, sa, sb, true)
 	if path.size() >= 2:
 		var pe := path[path.size() - 1]

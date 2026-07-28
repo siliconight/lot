@@ -1,3 +1,119 @@
+## [0.37.0] - the vault is sealed on purpose, and the census said so four different ways
+
+With the anchors on their floors, failures fell from nine legs of thirty-nine to
+one or two of thirty-one -- and every remaining one was a vault. The basement
+geometry says why. `int_-1_4` is a full-height wall running the whole 32 m at
+building-local x 0, and its one opening is filled by
+`int_-1_4_open0_BREACHPANEL` (y -3.85 to -1.65) with its lintel above. The gap
+under the panel is 0.15 m. Nothing walks through it, which is the point: the
+opening is `kind: "breach"`, `breach_class: "reinforceable"`,
+`material: "concrete"`, tag `vault_breach`. The vault is entered by blowing it.
+
+So the mission spine was going to fail on the vault forever, on every seed of
+every mission, and `WALKTEST_ENFORCED` could never have been flipped.
+
+### why it was one or two vaults per seed and not all four
+
+`LOOT_VAULT_CASH` sits at the centre of `vault_block`, an 8 x 6 m mass that
+straddles the dividing wall. The nearest standing room is ~3.5 m away past a
+block corner, and the two sides of the wall are within a few centimetres of each
+other in distance from the marker. Which side the ring search picked was a
+tie-break on identical geometry -- so some vault anchors landed in the sealed
+half and stranded, and the rest landed in the stairwell half and passed.
+
+### the nearest standing room is not always one a player can occupy
+
+The census now runs twice. Any anchor that comes out off the main network is
+re-searched for the nearest standing room that can walk to a main-network anchor
+**and back**, bounded by the same `STAND_SEARCH_M` as the first pass. For a
+sealed room that is the floor outside its door, which is where a player stands
+to breach -- derived from the navmesh rather than guessed from a wall normal,
+which Lot does not have for interior walls.
+
+This is the one place the walktest passes over a substitution, so it is recorded
+in three places rather than none: the anchor carries `unreachable_stand_m` (how
+far the unreachable one was, so both readings survive), the director prints it,
+and Level Factory raises `WALKTEST_ANCHOR_BEHIND_BARRIER`. Every consumer --
+path proofs, walker legs, the bot target search -- reads the resolved position
+through one cache, so the report cannot grade a route to a position the census
+already ruled out.
+
+### clusters union on MUTUAL reachability
+
+Seed 5219 reported `proxy_3 ... reaches 0/16 cluster 16/16` -- the census
+contradicting itself in two adjacent columns of the same row. Reachability is
+not symmetric, and the asymmetry is the tolerance's rather than the navmesh's:
+arrival is judged within `SNAP_MAX` of the destination, so a route from the main
+network onto a nearby island "arrives" while the route back off it stops nowhere
+near. One directed edge was enough to union. It now takes both.
+
+## [0.36.0] - a marker is where the thing is, not where a body stands
+
+0.35.0 stopped lifting the nav-QA anchors and started snapping them downward,
+and the walktest still failed nine legs out of thirty-nine. This is the rest of
+it, and the mistake underneath both halves was the same one: treating a marker
+position as a standing position.
+
+Deli Counter puts `OBJECTIVE_CAGE` at the cashier counter and
+`LOOT_VAULT_CASH` inside the vault block. Their heights -- 0.9 and -2.8 -- are
+the heights of the props, and the floor directly beneath them is inside a solid
+box. Emitted at marker height, sixteen of twenty-one anchors resolved to the
+prop's own tabletop: `cage_counter` at 1.1 m, `count_table` at 4.9 m,
+`vault_block` at -2.6 m, each carrying a navmesh surface 0.3 m above it that no
+body can climb to and nothing can reach. Every route query in the walktest
+started on one of those islands, and the reports read as a severed navmesh for
+two days.
+
+### anchors land on their room's floor
+
+`_navqa_anchors` now resolves each marker through `rooms[building/room].center[2]`
+-- the storey's floor elevation, read rather than derived, because the storey
+height is Deli Counter's to choose and is not in the merged file. A marker whose
+room is unknown falls back to the highest floor in its building at or below it;
+a marker with no rooms at all keeps its own height and is named on stdout rather
+than silently guessed.
+
+### stacked markers become one anchor
+
+Dropping markers to their floor makes some of them coincide: Deli Counter puts
+the vault objective and the vault loot at one XY, 0.2 m apart in Z. Two anchors
+on one point are not two tests, and this pair is why the reachability census
+under-reported for a day -- each stranded anchor still "reached" its twin. Lot
+merges them and reports the count.
+
+### the director looks for standing room, not for navmesh
+
+`_snap` (heist_nav_qa) no longer asks "what navmesh is nearest". It searches the
+anchor's own storey plane outward in rings for the first place a body fits, so a
+loot marker in the middle of an 8 x 6 m vault block resolves to the floor at the
+vault's edge -- which is where a player stands to open it. The band is
+deliberately asymmetric: a body height DOWN, one max_climb plus a voxel UP. Down
+is where the floor is when a marker carries body height; up is how a counter top
+came to stand in for a floor.
+
+Three consequences follow, and all three are reported rather than assumed:
+
+- An anchor with no walkable surface anywhere on its storey is no longer "off
+  the navmesh by a bit". It is a room that did not bake, it carries
+  `no_standing_room`, and Level Factory raises `WALKTEST_ANCHOR_NO_FLOOR`.
+- How far a body has to stand from a marker is intel, not a verdict. The old
+  `SNAP_MAX` proximity test failed the vault loot at 3 m and blamed the navmesh
+  for where a marker was put. Legs now carry `stand_offset_m` and pass.
+- Clustering drops the vertical-access concession. A 2.9 m drop onto a tabletop
+  satisfied it in both directions, so union-find glued every furniture island to
+  the floor and reported "one cluster of 21, 0 stranded" on a run where sixteen
+  anchors could not be walked to. A drop is not a two-way edge. Legs keep the
+  concession, because a ladder is real access and the proof says which it found.
+
+`_set_leg` and `_nearest_reachable` ask the same question the proofs do, so a
+walker is never sent to a counter top and then reported STUCK for failing to
+climb it.
+
+Not fixed here, and now measured: props bake as walkable navmesh. `gaming_tables`
+is a 12 x 6 m box whose top is 72 m2 of surface a metre off the floor that
+nothing can reach, and it is one of sixty-one islands in a navmesh that is 91.7%
+one piece. The anchors no longer land on them; the dead polygons are still there.
+
 ## [0.35.0] - the anchors were standing on the furniture
 
 The first honest walktest failed all four seeds, and after a day of pointing
