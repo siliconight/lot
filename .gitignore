@@ -20,3 +20,9 @@ specs/*/buildings/*.combat_audit.json
 
 # scratch and unread build sidecars
 _scratch_archive/
+
+# scratch and editor backups -- copies of tracked files, not history
+*.pre_gate
+*.pre_visible
+*.pre_accessor
+*.pre_angle

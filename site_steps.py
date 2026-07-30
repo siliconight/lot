@@ -18,15 +18,21 @@ over, not what it can walk over.
 Lot's own outdoor surfaces sit at:
 
     Ground      top 0.00
-    road        top 0.08     ROAD_THICK
-    path        top 0.10     PATH_THICK
-    courtyard   top 0.12     COURT_THICK
+    road                     ROAD_THICK
+    path                     PATH_THICK
+    courtyard                COURT_THICK
     sidewalk    top 0.16     SIDEWALK_H   -- "concrete, raised curb"
+
+The three slabs are derived in lot.py from this limit rather than pinned, and
+have to satisfy it in both directions: walkable from the ground, and walkable
+onto the sidewalk beside them, so each sits inside [SIDEWALK_H - limit, limit].
+They were picked once and COURT_THICK had drifted to 0.12 against a limit of
+0.1025 -- a wall, on ballpark_block's own circulation.
 
 Stepping off the ground onto a sidewalk is a 0.16 m rise. That is a wall to a
 stock CharacterBody3D, which is why walking from a spawn toward the street stops
-at the kerb and needs a jump. The courtyard edge at 0.12 clears the limit by
-3 mm, which is not a margin.
+at the kerb and needs a jump. It stays a wall on purpose; kerb cuts are what
+make the crossings legal.
 
 This reads the scene Lot actually wrote rather than re-deriving the numbers from
 the same constants that produced it -- the two agreeing costs microseconds, and
@@ -101,6 +107,19 @@ def _seg_hits_rect(a, b, half_w, corners):
 
 
 def _point_in(px, pz, corners, margin):
+    """Is (px, pz) within `margin` of this convex plan polygon?
+
+    The projection test is a cheap REJECT only. Allowing `margin` of slack on
+    each of the polygon's own axes inflates it per-axis -- a BOX inflation --
+    which is not the set of points within `margin` of the polygon. Near a corner
+    it over-reports by up to sqrt(2)*margin, and it did: on ballpark_block it put
+    two sidewalk sections into LOT_STEP_BLOCKS_A_ROUTE whose exact clearance from
+    the route centreline was 3.43 m against a 3.00 m half-width. The route never
+    reaches them. An instrument that reports a wall a body cannot touch is the
+    same substitution defect it exists to catch, so the slack test rejects and an
+    exact distance decides.
+    """
+    inside = True
     for ax, az in _axes(corners):
         ln = math.hypot(ax, az)
         if ln < 1e-9:
@@ -109,8 +128,26 @@ def _point_in(px, pz, corners, margin):
         proj = [c[0] * nx + c[1] * nz for c in corners]
         d = px * nx + pz * nz
         if d < min(proj) - margin or d > max(proj) + margin:
-            return False
-    return True
+            return False                      # beyond margin on some axis
+        if d < min(proj) or d > max(proj):
+            inside = False
+    if inside:
+        return True
+    n = len(corners)
+    return any(_seg_point_dist(px, pz, corners[i], corners[(i + 1) % n])
+               <= margin for i in range(n))
+
+
+def _seg_point_dist(px, pz, a, b):
+    """Exact distance from a plan point to a plan segment."""
+    ax, az = a
+    bx, bz = b
+    dx, dz = bx - ax, bz - az
+    ln2 = dx * dx + dz * dz
+    if ln2 < 1e-12:
+        return math.hypot(px - ax, pz - az)
+    t = max(0.0, min(1.0, ((px - ax) * dx + (pz - az) * dz) / ln2))
+    return math.hypot(px - (ax + dx * t), pz - (az + dz * t))
 
 
 def unassisted_step_max_m(radius_m, floor_max_angle_deg):

@@ -41,10 +41,27 @@ import math
 import os
 
 
+#: What a MISSING contract file falls back to. These must track the ratified
+#: values in deli_counter/agent_contract.json -- they had drifted, still saying
+#: agent_max_climb_m 0.5 and cell_size_m 0.15 after both were changed, so a
+#: build with no contract present would have silently used the numbers that let
+#: the bake promise a 0.49 m climb and then severed every stair over 45 deg.
 _AGENT_DEFAULTS = {"nav_bake": {"agent_radius_m": 0.4, "agent_height_m": 1.8,
-                                "agent_max_climb_m": 0.5,
+                                "agent_max_climb_m": 0.15,
                                 "agent_max_slope_deg": 55.0,
-                                "cell_size_m": 0.15, "cell_height_m": 0.15},
+                                "cell_size_m": 0.10, "cell_height_m": 0.15},
+                   "characters": {"player": {"radius_m": 0.35,
+                                             "height_m": 1.8,
+                                             "eye_height_m": 1.6,
+                                             "crouch_height_m": 1.2,
+                                             "max_step_up_m": 0.5,
+                                             "walk_speed_mps": 4.0},
+                                  "npc_standard": {"radius_m": 0.35,
+                                                   "height_m": 1.8}},
+                   "clearances": {"min_door_width_m": 1.25,
+                                  "min_corridor_width_m": 1.1,
+                                  "min_headroom_m": 2.0,
+                                  "unassisted_step_max_m": 0.1025},
                    "qa": {"arrive_dist_m": 1.5, "stuck_seconds": 4.0,
                           "snap_max_m": 2.0}}
 _agent_cache = None
@@ -70,8 +87,18 @@ def _agent():
         try:
             with open(c, "r", encoding="utf-8") as f:
                 data = json.load(f)
-            for sec in merged:
-                merged[sec].update(data.get(sec, {}))
+            # Merge what the FILE has, not what the defaults happen to
+            # list. This iterated over `merged` -- the defaults' keys -- so any
+            # contract section absent from _AGENT_DEFAULTS was read off disk and
+            # discarded. `characters` and `clearances` were both dropped, which
+            # is why the step gate died on KeyError: 'characters' and why the
+            # walk-scene player had to be a literal. The contract is
+            # authoritative; defaults only survive a missing file.
+            for sec, val in data.items():
+                if isinstance(val, dict) and isinstance(merged.get(sec), dict):
+                    merged[sec].update(val)
+                else:
+                    merged[sec] = val
             break
         except (OSError, json.JSONDecodeError):
             continue
@@ -383,15 +410,47 @@ def _godot_transform(at, rot, z=0.0):
 # No terrain, no organic shapes (that would break the thesis). Site coords (x,y)
 # map to Godot (x, height, -y); thickness/height is Godot-Y.
 
-PATH_THICK = 0.1
-COURT_THICK = 0.12
+# The walkable slab thicknesses are DERIVED, not picked. A capsule walks up a
+# step only while the contact normal stays inside floor_max_angle, which for the
+# contract player is clearances.unassisted_step_max_m. Every adjacent pair of
+# outdoor surfaces has to clear that in BOTH directions, and the sidewalk is on
+# the other side of each slab:
+#
+#     ground 0.00  -> slab                    slab <= step
+#     slab         -> sidewalk SIDEWALK_H     SIDEWALK_H - slab <= step
+#
+# so a walkable slab is squeezed into [SIDEWALK_H - step, step]. The picked
+# values had drifted out of it: COURT_THICK was 0.12 against a step limit of
+# 0.1025, which walled the courtyard edge on ballpark_block's own circulation,
+# and PATH_THICK 0.10 was inside by 2.5 mm. Fixed fractions of the band keep the
+# surfaces ordered and visually distinct and move them together when the
+# gameplay team picks a different body.
 GROUND_THICK = 0.5
 WALL_THICK = 0.3
 COVER = (1.0, 1.0, 1.0)
-ROAD_THICK = 0.08
 ROAD_COLOR = (0.13, 0.13, 0.14)        # asphalt
-SIDEWALK_H = 0.16
+SIDEWALK_H = 0.16                      # a kerb is MEANT to be a wall
 SIDEWALK_COLOR = (0.55, 0.55, 0.57)    # concrete, raised curb
+
+#: The tallest step the contract player walks up with no step-up code.
+STEP_MAX = float(_agent()["clearances"]["unassisted_step_max_m"])
+#: Legal band for a slab walkable from the ground AND onto the sidewalk beside
+#: it. Empty when the kerb is taller than two steps -- _outdoor_nodes says so
+#: out loud rather than emitting a wall and letting play discover it.
+SLAB_LO = SIDEWALK_H - STEP_MAX
+SLAB_HI = STEP_MAX
+
+
+def _slab(frac):
+    """A walkable slab thickness at `frac` across the legal band."""
+    if SLAB_LO > SLAB_HI:
+        return round(SLAB_HI * 0.8, 4)
+    return round(SLAB_LO + (SLAB_HI - SLAB_LO) * frac, 4)
+
+
+ROAD_THICK = _slab(0.15)
+PATH_THICK = _slab(0.50)
+COURT_THICK = _slab(0.85)
 BLOCKER_COLOR = (0.38, 0.34, 0.30)     # warm massing -- reads as a building you can't enter
 
 
@@ -554,11 +613,12 @@ def ground_holes(site_spec, self_flooring=None):
 
 
 def _kerb_crossings(site_spec, bld, origin, along, perp, offset, length, width):
-    """Distances along a kerb where the site's own paths cross it.
+    """(centre, span) per crossing: where a path crosses this kerb, and how much
+    kerb that crossing consumes measured along it.
 
-    Returns the centre of each crossing measured from the road's start point.
-    A path that runs parallel, or crosses beyond either end, contributes
-    nothing -- there is no crossing to drop."""
+    Distances are from the road's start point. A path that runs parallel, or
+    crosses beyond either end, contributes nothing -- there is no crossing to
+    drop. `width` is the kerb band's depth."""
     ox, oy = origin
     ux, uy = along
     px, py = perp
@@ -583,21 +643,46 @@ def _kerb_crossings(site_spec, bld, origin, along, perp, offset, length, width):
             continue                      # crosses the LINE, not the path
         if t < 0.0 or t > length:
             continue                      # past the end of this kerb
-        out.append((t, float(p.get("width", 6.0))))
+        # How much kerb this crossing consumes ALONG the kerb. A strip of width
+        # pw meeting a LINE at angle t leaves pw/sin(t) on that line, not pw --
+        # and a kerb is not a line, it is a band `width` deep, so the strip also
+        # shears along it by width*cos(t)/sin(t). Dropping only pw assumed every
+        # crossing was head-on: on ballpark_block a 6 m path meets the kerb at
+        # 35 deg and needs 12.0 m, so a 7.2 m cut left the route spilling onto
+        # the sidewalk sections either side and hitting a 0.16 m wall on both.
+        pw = float(p.get("width", 6.0))
+        vl = math.hypot(vx, vy) or 1e-9
+        cos_t = abs(vx * ux + vy * uy) / vl
+        sin_t = abs(vx * px + vy * py) / vl
+        span = (pw + float(width) * cos_t) / max(sin_t, 1e-6)
+        if span > 3.0 * pw:
+            # Shallow enough that the path is running ALONG the kerb rather than
+            # across it. The span is still emitted, because a body has to get
+            # over the rise somewhere -- but a designer should see it, since the
+            # honest fix is usually to re-route or to run the path on the
+            # sidewalk instead of through it.
+            print(f"[lot] LOT_KERB_CROSSED_SHALLOW: a {pw} m path meets this "
+                  f"kerb at {math.degrees(math.asin(min(1.0, sin_t))):.0f} deg "
+                  f"{t:.1f} m along it, so {span:.1f} m of kerb is dropped to "
+                  f"keep the crossing walkable. Re-route it closer to square, "
+                  f"or run it along the sidewalk rather than across it.")
+        out.append((t, span))
     return out
 
 
 def _split_span(length, cuts, margin=0.6):
     """[(t0, t1, is_cut)] along a kerb: crossings, and the kerb between them.
 
-    `margin` widens each crossing past the path itself so a body approaching at
-    an angle still meets the dropped section rather than clipping its corner --
-    the same reason a real dropped kerb is wider than the crossing painted on
-    it."""
+    Each entry in `cuts` is (centre, span) from _kerb_crossings: where a route
+    crosses, and the along-kerb length it actually covers -- which is wider than
+    the path wherever the path meets the kerb at an angle. `margin` widens it
+    further so a body approaching off-centre still meets the dropped section
+    rather than clipping its corner, the same reason a real dropped kerb is
+    wider than the crossing painted on it."""
     spans = []
     bands = []
-    for t, w in sorted(cuts):
-        half = w / 2.0 + margin
+    for t, span in sorted(cuts):
+        half = span / 2.0 + margin
         bands.append((max(0.0, t - half), min(length, t + half)))
     merged = []
     for b in bands:
@@ -626,6 +711,14 @@ def _outdoor_nodes(site_spec, preview=False, self_flooring=None):
     """
     body, sub = [], []
     bld = {b["id"]: b for b in site_spec["buildings"]}
+    if SLAB_LO > SLAB_HI:
+        # No slab thickness is walkable in both directions. Emitting anyway and
+        # staying quiet is how a wall reaches play; four defects in this pass
+        # were a check going silent.
+        print(f"[lot] LOT_SURFACE_STACK_IMPOSSIBLE: climbing a {SIDEWALK_H} m "
+              f"kerb from the ground needs two steps of {STEP_MAX:.4f} m, so no "
+              f"slab thickness clears both. Lower SIDEWALK_H below "
+              f"{2 * STEP_MAX:.3f} m, or the body has to get wider.")
     # preview massing boxes are Lot's own StaticBody3D geometry, but they are
     # solid blocks rather than floored interiors, so the ground stays under
     # them too and the site remains walkable up to the massing.
@@ -1182,9 +1275,18 @@ def write_walk_scene(site_spec, merged, walk_out, site_tscn_base,
         # limit quantizes them into disjoint islands (same fix as nav_gate)
         f'agent_max_slope = {_agent()["nav_bake"]["agent_max_slope_deg"]}',
         f'agent_max_climb = {_agent()["nav_bake"]["agent_max_climb_m"]}', '',
+        # The body a human walks in the preview scene. These two were fixed
+        # string literals -- 0.4 radius and 1.8 height -- sitting three lines
+        # under an agent_radius and agent_height that both read the contract.
+        # So the shipped capsule was wider than the contract player every
+        # clearance had been derived for. Deliberately not quoting the old
+        # values in a way a search could match: a comment mentioning
+        # `site_steps.py` is what made this patch's own idempotency guard
+        # report success while skipping the wiring. Godot's `height` is the
+        # FULL height including both hemispheres.
         '[sub_resource type="CapsuleShape3D" id="PlayerCol"]',
-        'radius = 0.4',
-        'height = 1.8', '',
+        f'radius = {_agent()["characters"]["player"]["radius_m"]}',
+        f'height = {_agent()["characters"]["player"]["height_m"]}', '',
         # sun + sky + ambient: mirrors Deli Counter's walk harness
         # (godot/addon/deli_counter/template/level_test.tscn) so a Lot site
         # walk lights identically to a DC building walk. Without this the
@@ -1637,12 +1739,44 @@ def assemble(site_spec_path, out_dir=None, walkable=False, navqa=False, preview=
     write_godot_scene(site_spec, merged, tscn_out, preview=preview,
                       self_flooring=self_flooring)
 
+    # Site-level step gate, read back off the scene just WRITTEN rather than
+    # re-derived from the constants that produced it. A capsule walks up a step
+    # only while the contact normal stays inside floor_max_angle, which for the
+    # contract player is clearances.unassisted_step_max_m -- and SIDEWALK_H is
+    # 0.16, so a kerb away from a crossing is a wall to anything without
+    # step-up code. Two codes: BLOCKS_A_ROUTE is major and fires when a designed
+    # route crosses the rise; NEEDS_ASSIST is minor and fires off-route, which
+    # is what a kerb correctly is. Never allowed to break a build -- but note
+    # that a check which cannot fail is also a check that can go silent, so the
+    # unavailable branch says so loudly.
+    result_steps = []
+    try:
+        import site_steps as _steps
+        _a = _agent()
+        result_steps = _steps.findings(
+            tscn_out,
+            radius_m=float(_a["characters"]["player"]["radius_m"]),
+            floor_max_angle_deg=45.0,
+            assist_m=float(_a["characters"]["player"]["max_step_up_m"]),
+            site_spec=site_spec)
+        for _i in result_steps:
+            # Column zero, and the prefix library_walk.py filters on. Its
+            # forwarder does `if line.startswith("[lot]")` and adds the indent
+            # itself, so a leading space here means the line is dropped -- which
+            # silently hid this gate's first live run, findings and failures
+            # alike.
+            print(f"[lot] {_i['code']}: {_i['message']}")
+    except Exception as _e:
+        print(f"[lot] STEP GATE DID NOT RUN ({type(_e).__name__}: {_e}) -- "
+              f"a silent check is not a passing one")
+
     result = {
         "gameplay": gp_out, "scene": tscn_out, "lights": lights_out,
         "buildings": len(site_spec["buildings"]),
         "markers": len(merged["markers"]),
         "rooms": len(merged["rooms"]),
         "tactical": tactical_report,
+        "steps": result_steps,
         "pacing": merged["pacing"],
     }
 
