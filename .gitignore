@@ -17,3 +17,6 @@ specs/*/buildings/*.slots.json
 specs/*/buildings/*.navigation.json
 specs/*/buildings/*.validation.json
 specs/*/buildings/*.combat_audit.json
+
+# scratch and unread build sidecars
+_scratch_archive/

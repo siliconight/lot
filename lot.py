@@ -553,6 +553,69 @@ def ground_holes(site_spec, self_flooring=None):
     return holes
 
 
+def _kerb_crossings(site_spec, bld, origin, along, perp, offset, length, width):
+    """Distances along a kerb where the site's own paths cross it.
+
+    Returns the centre of each crossing measured from the road's start point.
+    A path that runs parallel, or crosses beyond either end, contributes
+    nothing -- there is no crossing to drop."""
+    ox, oy = origin
+    ux, uy = along
+    px, py = perp
+    # A point on this kerb is origin + u*t + p*offset.
+    kx, ky = ox + px * offset, oy + py * offset
+    out = []
+    for p in site_spec.get("paths", []) or []:
+        try:
+            pax, pay = bld[p["from"]]["at"] if "from" in p else p["a"]
+            pbx, pby = bld[p["to"]]["at"] if "to" in p else p["b"]
+        except (KeyError, TypeError):
+            continue
+        vx, vy = pbx - pax, pby - pay
+        # solve  k + u*t = pa + v*s   for t
+        den = ux * (-vy) - uy * (-vx)
+        if abs(den) < 1e-9:
+            continue                      # parallel: never crosses
+        rx, ry = pax - kx, pay - ky
+        t = (rx * (-vy) - ry * (-vx)) / den
+        s = (ux * ry - uy * rx) / den
+        if not (-0.05 <= s <= 1.05):
+            continue                      # crosses the LINE, not the path
+        if t < 0.0 or t > length:
+            continue                      # past the end of this kerb
+        out.append((t, float(p.get("width", 6.0))))
+    return out
+
+
+def _split_span(length, cuts, margin=0.6):
+    """[(t0, t1, is_cut)] along a kerb: crossings, and the kerb between them.
+
+    `margin` widens each crossing past the path itself so a body approaching at
+    an angle still meets the dropped section rather than clipping its corner --
+    the same reason a real dropped kerb is wider than the crossing painted on
+    it."""
+    spans = []
+    bands = []
+    for t, w in sorted(cuts):
+        half = w / 2.0 + margin
+        bands.append((max(0.0, t - half), min(length, t + half)))
+    merged = []
+    for b in bands:
+        if merged and b[0] <= merged[-1][1]:
+            merged[-1] = (merged[-1][0], max(merged[-1][1], b[1]))
+        else:
+            merged.append(b)
+    cursor = 0.0
+    for b0, b1 in merged:
+        if b0 > cursor:
+            spans.append((cursor, b0, False))
+        spans.append((b0, b1, True))
+        cursor = b1
+    if cursor < length:
+        spans.append((cursor, length, False))
+    return spans
+
+
 def _outdoor_nodes(site_spec, preview=False, self_flooring=None):
     """(body_lines, subres_lines) for all Phase-2 outdoor geometry.
 
@@ -662,13 +725,33 @@ def _outdoor_nodes(site_spec, preview=False, self_flooring=None):
             ux, uy = dx / length, dy / length        # along
             px, py = -uy, ux                          # perpendicular (left)
             off = w / 2 + sw / 2
+            # Where the site's own circulation crosses this kerb. A kerb is
+            # SUPPOSED to be a wall -- 0.16 m against an unassisted step limit
+            # of 0.117 -- and the answer is not to flatten it but to drop it
+            # where people are meant to cross, exactly as a real street does.
+            # Anything this does not reach is still a wall, and site_steps.py
+            # says so rather than leaving it to be discovered in play.
             for side, sgn in (("L", 1), ("R", -1)):
-                scx, scy = cx + px * off * sgn, cy + py * off * sgn
-                bl, sr = _yaw_box_node(
-                    f"sidewalk_{i}{side}", (length, SIDEWALK_H, sw),
-                    (scx, SIDEWALK_H / 2, -scy), -ang, SIDEWALK_COLOR)
-                body += bl
-                sub += sr
+                lcx, lcy = cx + px * off * sgn, cy + py * off * sgn
+                cuts = _kerb_crossings(site_spec, bld,
+                                       (ax, ay), (ux, uy), (px, py),
+                                       off * sgn, length, sw)
+                spans = _split_span(length, cuts)
+                for j, (t0, t1, is_cut) in enumerate(spans):
+                    seg = t1 - t0
+                    if seg <= 0.05:
+                        continue
+                    mid = (t0 + t1) / 2.0 - length / 2.0
+                    scx = lcx + ux * mid
+                    scy = lcy + uy * mid
+                    h = ROAD_THICK if is_cut else SIDEWALK_H
+                    nm = (f"kerbcut_{i}{side}_{j}" if is_cut
+                          else f"sidewalk_{i}{side}_{j}")
+                    bl, sr = _yaw_box_node(
+                        nm, (seg, h, sw), (scx, h / 2, -scy), -ang,
+                        SIDEWALK_COLOR)
+                    body += bl
+                    sub += sr
 
     # blockers: non-interactable filler buildings -- SOLID collision massing you
     # cannot enter. They wall the street and channel the player toward the real
