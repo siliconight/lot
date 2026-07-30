@@ -1,0 +1,304 @@
+{
+  "light_manifest_version": "1.1.0",
+  "building_id": "parking_garage_a02",
+  "theme": "greybox",
+  "space": "Blender Z-up, meters; rot_y = degrees about up; pos is the fixture location",
+  "rig_library": "lux",
+  "anchors": [
+    {
+      "id": "attendant_booth_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        -16.0,
+        -12.0,
+        2.9
+      ],
+      "rot_y": 0.0,
+      "room": "attendant_booth",
+      "row": {
+        "count": 3,
+        "spacing": 2.667
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "deck_0_south_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        4.0,
+        -12.0,
+        2.9
+      ],
+      "rot_y": 0.0,
+      "room": "deck_0_south",
+      "row": {
+        "count": 5,
+        "spacing": 6.4
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "deck_0_main_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        0.0,
+        3.0,
+        2.9
+      ],
+      "rot_y": 0.0,
+      "room": "deck_0_main",
+      "row": {
+        "count": 5,
+        "spacing": 8.0
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "deck_1_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        0.0,
+        -4.5,
+        5.9
+      ],
+      "rot_y": 0.0,
+      "room": "deck_1",
+      "row": {
+        "count": 5,
+        "spacing": 8.0
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "deck_1_west_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        -8.0,
+        10.5,
+        5.9
+      ],
+      "rot_y": 0.0,
+      "room": "deck_1_west",
+      "row": {
+        "count": 5,
+        "spacing": 4.8
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "armored_pen_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        12.0,
+        10.5,
+        5.9
+      ],
+      "rot_y": 0.0,
+      "room": "armored_pen",
+      "row": {
+        "count": 5,
+        "spacing": 3.2
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "ext_1_N_window_1",
+      "type": "window",
+      "source": "derived",
+      "pos": [
+        -10.0,
+        15.0,
+        4.85
+      ],
+      "rot_y": 270.0,
+      "size": [
+        6.0,
+        1.4
+      ],
+      "reacts_to_alarm": false
+    },
+    {
+      "id": "ext_1_N_window_2",
+      "type": "window",
+      "source": "derived",
+      "pos": [
+        10.0,
+        15.0,
+        4.85
+      ],
+      "rot_y": 270.0,
+      "size": [
+        6.0,
+        1.4
+      ],
+      "reacts_to_alarm": false
+    },
+    {
+      "id": "ext_1_S_window_1",
+      "type": "window",
+      "source": "derived",
+      "pos": [
+        -10.0,
+        -15.0,
+        4.85
+      ],
+      "rot_y": 90.0,
+      "size": [
+        6.0,
+        1.4
+      ],
+      "reacts_to_alarm": false
+    },
+    {
+      "id": "ext_1_S_window_2",
+      "type": "window",
+      "source": "derived",
+      "pos": [
+        10.0,
+        -15.0,
+        4.85
+      ],
+      "rot_y": 90.0,
+      "size": [
+        6.0,
+        1.4
+      ],
+      "reacts_to_alarm": false
+    },
+    {
+      "id": "ext_1_E_window_1",
+      "type": "window",
+      "source": "derived",
+      "pos": [
+        20.0,
+        -7.5,
+        4.85
+      ],
+      "rot_y": 180.0,
+      "size": [
+        6.0,
+        1.4
+      ],
+      "reacts_to_alarm": false
+    },
+    {
+      "id": "ext_1_E_window_2",
+      "type": "window",
+      "source": "derived",
+      "pos": [
+        20.0,
+        7.5,
+        4.85
+      ],
+      "rot_y": 180.0,
+      "size": [
+        6.0,
+        1.4
+      ],
+      "reacts_to_alarm": false
+    },
+    {
+      "id": "ext_1_W_window_1",
+      "type": "window",
+      "source": "derived",
+      "pos": [
+        -20.0,
+        -7.5,
+        4.85
+      ],
+      "rot_y": 0.0,
+      "size": [
+        6.0,
+        1.4
+      ],
+      "reacts_to_alarm": false
+    },
+    {
+      "id": "ext_1_W_window_2",
+      "type": "window",
+      "source": "derived",
+      "pos": [
+        -20.0,
+        7.5,
+        4.85
+      ],
+      "rot_y": 0.0,
+      "size": [
+        6.0,
+        1.4
+      ],
+      "reacts_to_alarm": false
+    },
+    {
+      "id": "ext_0_S_pack_1",
+      "type": "wall_pack",
+      "source": "derived",
+      "pos": [
+        -10.0,
+        -15.15,
+        2.65
+      ],
+      "rot_y": 270.0,
+      "wall": "ext_0_S",
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "ext_0_S_pack_2",
+      "type": "wall_pack",
+      "source": "derived",
+      "pos": [
+        10.0,
+        -15.15,
+        2.65
+      ],
+      "rot_y": 270.0,
+      "wall": "ext_0_S",
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "ext_0_S_pack_3",
+      "type": "wall_pack",
+      "source": "derived",
+      "pos": [
+        18.0,
+        -15.15,
+        2.45
+      ],
+      "rot_y": 270.0,
+      "wall": "ext_0_S",
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "ext_0_E_pack_1",
+      "type": "wall_pack",
+      "source": "derived",
+      "pos": [
+        20.15,
+        0.0,
+        2.45
+      ],
+      "rot_y": 0.0,
+      "wall": "ext_0_E",
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "ext_0_W_pack_1",
+      "type": "wall_pack",
+      "source": "derived",
+      "pos": [
+        -20.15,
+        0.0,
+        2.45
+      ],
+      "rot_y": 180.0,
+      "wall": "ext_0_W",
+      "reacts_to_alarm": true
+    }
+  ]
+}

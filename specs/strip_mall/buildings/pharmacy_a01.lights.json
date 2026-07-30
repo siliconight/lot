@@ -1,0 +1,122 @@
+{
+  "light_manifest_version": "1.1.0",
+  "building_id": "pharmacy_a01",
+  "theme": "greybox",
+  "space": "Blender Z-up, meters; rot_y = degrees about up; pos is the fixture location",
+  "rig_library": "lux",
+  "anchors": [
+    {
+      "id": "retail_floor_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        0.0,
+        -3.5,
+        3.3
+      ],
+      "rot_y": 0.0,
+      "room": "retail_floor",
+      "row": {
+        "count": 5,
+        "spacing": 4.8
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "rx_counter_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        -4.0,
+        5.5,
+        3.3
+      ],
+      "rot_y": 0.0,
+      "room": "rx_counter",
+      "row": {
+        "count": 5,
+        "spacing": 3.2
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "rx_vault_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        8.0,
+        5.5,
+        3.3
+      ],
+      "rot_y": 0.0,
+      "room": "rx_vault",
+      "row": {
+        "count": 3,
+        "spacing": 2.667
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "ext_0_S_window_1",
+      "type": "window",
+      "source": "derived",
+      "pos": [
+        7.2,
+        -9.0,
+        1.75
+      ],
+      "rot_y": 90.0,
+      "size": [
+        2.0,
+        1.4
+      ],
+      "reacts_to_alarm": false
+    },
+    {
+      "id": "ext_0_W_window_1",
+      "type": "window",
+      "source": "derived",
+      "pos": [
+        -12.0,
+        0.0,
+        2.35
+      ],
+      "rot_y": 0.0,
+      "size": [
+        1.4,
+        1.4
+      ],
+      "reacts_to_alarm": false
+    },
+    {
+      "id": "ext_0_S_sign",
+      "type": "sign",
+      "source": "derived",
+      "pos": [
+        -3.6,
+        -9.2,
+        2.55
+      ],
+      "rot_y": 270.0,
+      "wall": "ext_0_S",
+      "size": [
+        2.4,
+        0.6
+      ],
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "ext_0_E_pack_1",
+      "type": "wall_pack",
+      "source": "derived",
+      "pos": [
+        12.15,
+        3.6,
+        2.45
+      ],
+      "rot_y": 0.0,
+      "wall": "ext_0_E",
+      "reacts_to_alarm": true
+    }
+  ]
+}

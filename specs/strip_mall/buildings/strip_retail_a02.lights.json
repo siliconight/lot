@@ -1,0 +1,122 @@
+{
+  "light_manifest_version": "1.1.0",
+  "building_id": "strip_retail_a02",
+  "theme": "greybox",
+  "space": "Blender Z-up, meters; rot_y = degrees about up; pos is the fixture location",
+  "rig_library": "lux",
+  "anchors": [
+    {
+      "id": "showroom_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        0.0,
+        -3.0,
+        3.3
+      ],
+      "rot_y": 0.0,
+      "room": "showroom",
+      "row": {
+        "count": 5,
+        "spacing": 3.6
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "workshop_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        -3.0,
+        4.0,
+        3.3
+      ],
+      "rot_y": 0.0,
+      "room": "workshop",
+      "row": {
+        "count": 4,
+        "spacing": 3.0
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "stone_vault_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        6.0,
+        4.0,
+        3.3
+      ],
+      "rot_y": 0.0,
+      "room": "stone_vault",
+      "row": {
+        "count": 2,
+        "spacing": 3.0
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "ext_0_S_window_1",
+      "type": "window",
+      "source": "derived",
+      "pos": [
+        -6.3,
+        -7.0,
+        1.75
+      ],
+      "rot_y": 90.0,
+      "size": [
+        1.8,
+        1.4
+      ],
+      "reacts_to_alarm": false
+    },
+    {
+      "id": "ext_0_W_window_1",
+      "type": "window",
+      "source": "derived",
+      "pos": [
+        -9.0,
+        0.0,
+        2.35
+      ],
+      "rot_y": 0.0,
+      "size": [
+        1.2,
+        1.4
+      ],
+      "reacts_to_alarm": false
+    },
+    {
+      "id": "ext_0_S_sign",
+      "type": "sign",
+      "source": "derived",
+      "pos": [
+        -0.0,
+        -7.2,
+        2.55
+      ],
+      "rot_y": 270.0,
+      "wall": "ext_0_S",
+      "size": [
+        2.3,
+        0.6
+      ],
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "ext_0_N_pack_1",
+      "type": "wall_pack",
+      "source": "derived",
+      "pos": [
+        5.4,
+        7.15,
+        2.45
+      ],
+      "rot_y": 90.0,
+      "wall": "ext_0_N",
+      "reacts_to_alarm": true
+    }
+  ]
+}

@@ -7,3 +7,13 @@ specs/example_compound.tscn
 # never committed (see specs/ref_pvp/README.md).
 specs/ref_pvp/buildings/
 *.preview.gameplay.json
+
+# scratch and editor backups -- copies of tracked files, not history
+_bridge/
+*.pre_wp
+*.pre_wpdefault
+specs/*/buildings/*.manifest.json
+specs/*/buildings/*.slots.json
+specs/*/buildings/*.navigation.json
+specs/*/buildings/*.validation.json
+specs/*/buildings/*.combat_audit.json

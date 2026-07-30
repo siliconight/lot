@@ -1,0 +1,212 @@
+{
+  "light_manifest_version": "1.1.0",
+  "building_id": "auto_shop_a02",
+  "theme": "greybox",
+  "space": "Blender Z-up, meters; rot_y = degrees about up; pos is the fixture location",
+  "rig_library": "lux",
+  "anchors": [
+    {
+      "id": "service_bay_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        0.0,
+        -2.5,
+        3.5
+      ],
+      "rot_y": 0.0,
+      "room": "service_bay",
+      "row": {
+        "count": 5,
+        "spacing": 5.2
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "parts_back_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        0.0,
+        6.5,
+        3.5
+      ],
+      "rot_y": 0.0,
+      "room": "parts_back",
+      "row": {
+        "count": 5,
+        "spacing": 5.2
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "upper_office_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        0.0,
+        5.5,
+        7.1
+      ],
+      "rot_y": 0.0,
+      "room": "upper_office",
+      "row": {
+        "count": 5,
+        "spacing": 5.2
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "upper_storage_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        0.0,
+        -3.5,
+        7.1
+      ],
+      "rot_y": 0.0,
+      "room": "upper_storage",
+      "row": {
+        "count": 5,
+        "spacing": 5.2
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "ext_0_W_window_1",
+      "type": "window",
+      "source": "derived",
+      "pos": [
+        -13.0,
+        4.5,
+        2.05
+      ],
+      "rot_y": 0.0,
+      "size": [
+        1.4,
+        1.4
+      ],
+      "reacts_to_alarm": false
+    },
+    {
+      "id": "ext_1_N_window_1",
+      "type": "window",
+      "source": "derived",
+      "pos": [
+        -7.8,
+        9.0,
+        5.45
+      ],
+      "rot_y": 270.0,
+      "size": [
+        1.3,
+        1.4
+      ],
+      "reacts_to_alarm": false
+    },
+    {
+      "id": "ext_1_S_window_1",
+      "type": "window",
+      "source": "derived",
+      "pos": [
+        -5.2,
+        -9.0,
+        5.45
+      ],
+      "rot_y": 90.0,
+      "size": [
+        1.3,
+        1.4
+      ],
+      "reacts_to_alarm": false
+    },
+    {
+      "id": "ext_1_S_window_2",
+      "type": "window",
+      "source": "derived",
+      "pos": [
+        6.5,
+        -9.0,
+        5.45
+      ],
+      "rot_y": 90.0,
+      "size": [
+        1.3,
+        1.4
+      ],
+      "reacts_to_alarm": false
+    },
+    {
+      "id": "ext_1_E_window_1",
+      "type": "window",
+      "source": "derived",
+      "pos": [
+        13.0,
+        0.0,
+        5.45
+      ],
+      "rot_y": 180.0,
+      "size": [
+        1.3,
+        1.4
+      ],
+      "reacts_to_alarm": false
+    },
+    {
+      "id": "ext_1_W_window_1",
+      "type": "window",
+      "source": "derived",
+      "pos": [
+        -13.0,
+        0.0,
+        5.45
+      ],
+      "rot_y": 0.0,
+      "size": [
+        1.3,
+        1.4
+      ],
+      "reacts_to_alarm": false
+    },
+    {
+      "id": "ext_0_S_pack_1",
+      "type": "wall_pack",
+      "source": "derived",
+      "pos": [
+        -3.9,
+        -9.15,
+        3.25
+      ],
+      "rot_y": 270.0,
+      "wall": "ext_0_S",
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "ext_0_S_pack_2",
+      "type": "wall_pack",
+      "source": "derived",
+      "pos": [
+        9.1,
+        -9.15,
+        2.45
+      ],
+      "rot_y": 270.0,
+      "wall": "ext_0_S",
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "ext_0_E_pack_1",
+      "type": "wall_pack",
+      "source": "derived",
+      "pos": [
+        13.15,
+        -5.4,
+        2.45
+      ],
+      "rot_y": 0.0,
+      "wall": "ext_0_E",
+      "reacts_to_alarm": true
+    }
+  ]
+}

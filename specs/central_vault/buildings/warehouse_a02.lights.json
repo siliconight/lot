@@ -1,0 +1,234 @@
+{
+  "light_manifest_version": "1.1.0",
+  "building_id": "warehouse_a02",
+  "theme": "greybox",
+  "space": "Blender Z-up, meters; rot_y = degrees about up; pos is the fixture location",
+  "rig_library": "lux",
+  "anchors": [
+    {
+      "id": "main_floor_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        0.0,
+        -8.0,
+        3.9
+      ],
+      "rot_y": 0.0,
+      "room": "main_floor",
+      "row": {
+        "count": 5,
+        "spacing": 8.0
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "north_aisles_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        0.0,
+        2.5,
+        3.9
+      ],
+      "rot_y": 0.0,
+      "room": "north_aisles",
+      "row": {
+        "count": 5,
+        "spacing": 8.0
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "floor_cage_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        -11.5,
+        10.5,
+        3.9
+      ],
+      "rot_y": 0.0,
+      "room": "floor_cage",
+      "row": {
+        "count": 5,
+        "spacing": 3.4
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "mezz_south_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        0.0,
+        -6.5,
+        7.9
+      ],
+      "rot_y": 0.0,
+      "room": "mezz_south",
+      "row": {
+        "count": 5,
+        "spacing": 8.0
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "mezz_hall_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        -7.0,
+        6.5,
+        7.9
+      ],
+      "rot_y": 0.0,
+      "room": "mezz_hall",
+      "row": {
+        "count": 5,
+        "spacing": 5.2
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "mezz_office_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        13.0,
+        6.5,
+        7.9
+      ],
+      "rot_y": 0.0,
+      "room": "mezz_office",
+      "row": {
+        "count": 5,
+        "spacing": 2.8
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "north_dock_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        8.5,
+        10.5,
+        3.9
+      ],
+      "rot_y": 0.0,
+      "room": "north_dock",
+      "row": {
+        "count": 5,
+        "spacing": 4.6
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "ext_0_S_window_1",
+      "type": "window",
+      "source": "derived",
+      "pos": [
+        -10.0,
+        -13.0,
+        2.25
+      ],
+      "rot_y": 90.0,
+      "size": [
+        1.8,
+        1.4
+      ],
+      "reacts_to_alarm": false
+    },
+    {
+      "id": "ext_0_E_window_1",
+      "type": "window",
+      "source": "derived",
+      "pos": [
+        20.0,
+        0.0,
+        2.25
+      ],
+      "rot_y": 180.0,
+      "size": [
+        1.8,
+        1.4
+      ],
+      "reacts_to_alarm": false
+    },
+    {
+      "id": "ext_1_N_window_1",
+      "type": "window",
+      "source": "derived",
+      "pos": [
+        0.0,
+        13.0,
+        6.05
+      ],
+      "rot_y": 270.0,
+      "size": [
+        1.6,
+        1.4
+      ],
+      "reacts_to_alarm": false
+    },
+    {
+      "id": "ext_1_S_window_1",
+      "type": "window",
+      "source": "derived",
+      "pos": [
+        -10.0,
+        -13.0,
+        5.75
+      ],
+      "rot_y": 90.0,
+      "size": [
+        2.2,
+        1.4
+      ],
+      "reacts_to_alarm": false
+    },
+    {
+      "id": "ext_1_S_window_2",
+      "type": "window",
+      "source": "derived",
+      "pos": [
+        10.0,
+        -13.0,
+        5.75
+      ],
+      "rot_y": 90.0,
+      "size": [
+        2.2,
+        1.4
+      ],
+      "reacts_to_alarm": false
+    },
+    {
+      "id": "ext_0_N_pack_1",
+      "type": "wall_pack",
+      "source": "derived",
+      "pos": [
+        0.0,
+        13.15,
+        3.25
+      ],
+      "rot_y": 90.0,
+      "wall": "ext_0_N",
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "ext_0_W_pack_1",
+      "type": "wall_pack",
+      "source": "derived",
+      "pos": [
+        -20.15,
+        -5.2,
+        2.45
+      ],
+      "rot_y": 180.0,
+      "wall": "ext_0_W",
+      "reacts_to_alarm": true
+    }
+  ]
+}

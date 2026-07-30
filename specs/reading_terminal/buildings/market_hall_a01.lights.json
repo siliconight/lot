@@ -1,0 +1,161 @@
+{
+  "light_manifest_version": "1.1.0",
+  "building_id": "market_hall_a01",
+  "theme": "greybox",
+  "space": "Blender Z-up, meters; rot_y = degrees about up; pos is the fixture location",
+  "rig_library": "lux",
+  "anchors": [
+    {
+      "id": "stall_floor_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        0.0,
+        -5.2,
+        6.4
+      ],
+      "rot_y": 0.0,
+      "room": "stall_floor",
+      "row": {
+        "count": 5,
+        "spacing": 9.6
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "deposit_cage_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        -18.72,
+        10.8,
+        6.4
+      ],
+      "rot_y": 0.0,
+      "room": "deposit_cage",
+      "row": {
+        "count": 4,
+        "spacing": 2.64
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "loading_band_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        5.28,
+        10.8,
+        6.4
+      ],
+      "rot_y": 0.0,
+      "room": "loading_band",
+      "row": {
+        "count": 5,
+        "spacing": 7.488
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "ext_0_S_window_1",
+      "type": "window",
+      "source": "derived",
+      "pos": [
+        0.0,
+        -16.0,
+        2.45
+      ],
+      "rot_y": 90.0,
+      "size": [
+        3.0,
+        1.4
+      ],
+      "reacts_to_alarm": false
+    },
+    {
+      "id": "ext_0_W_window_1",
+      "type": "window",
+      "source": "derived",
+      "pos": [
+        -24.0,
+        11.2,
+        2.65
+      ],
+      "rot_y": 0.0,
+      "size": [
+        2.0,
+        1.4
+      ],
+      "reacts_to_alarm": false
+    },
+    {
+      "id": "ext_0_S_sign",
+      "type": "sign",
+      "source": "derived",
+      "pos": [
+        -12.0,
+        -16.2,
+        2.55
+      ],
+      "rot_y": 270.0,
+      "wall": "ext_0_S",
+      "size": [
+        3.2,
+        0.6
+      ],
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "ext_0_N_pack_1",
+      "type": "wall_pack",
+      "source": "derived",
+      "pos": [
+        7.2,
+        16.15,
+        3.25
+      ],
+      "rot_y": 90.0,
+      "wall": "ext_0_N",
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "ext_0_N_pack_2",
+      "type": "wall_pack",
+      "source": "derived",
+      "pos": [
+        -16.8,
+        16.15,
+        2.45
+      ],
+      "rot_y": 90.0,
+      "wall": "ext_0_N",
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "ext_0_S_pack_1",
+      "type": "wall_pack",
+      "source": "derived",
+      "pos": [
+        12.0,
+        -16.15,
+        2.45
+      ],
+      "rot_y": 270.0,
+      "wall": "ext_0_S",
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "ext_0_E_pack_1",
+      "type": "wall_pack",
+      "source": "derived",
+      "pos": [
+        24.15,
+        8.0,
+        2.45
+      ],
+      "rot_y": 0.0,
+      "wall": "ext_0_E",
+      "reacts_to_alarm": true
+    }
+  ]
+}

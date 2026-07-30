@@ -1,0 +1,267 @@
+{
+  "light_manifest_version": "1.1.0",
+  "building_id": "bank_branch_a04",
+  "theme": "greybox",
+  "space": "Blender Z-up, meters; rot_y = degrees about up; pos is the fixture location",
+  "rig_library": "lux",
+  "anchors": [
+    {
+      "id": "grand_lobby_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        0.0,
+        -6.0,
+        4.1
+      ],
+      "rot_y": 0.0,
+      "room": "grand_lobby",
+      "row": {
+        "count": 5,
+        "spacing": 8.0
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "teller_line_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        -7.0,
+        9.0,
+        4.1
+      ],
+      "rot_y": 0.0,
+      "room": "teller_line",
+      "row": {
+        "count": 5,
+        "spacing": 5.2
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "security_office_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        13.0,
+        9.0,
+        4.1
+      ],
+      "rot_y": 0.0,
+      "room": "security_office",
+      "row": {
+        "count": 5,
+        "spacing": 2.8
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "mezzanine_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        0.0,
+        -7.5,
+        8.3
+      ],
+      "rot_y": 0.0,
+      "room": "mezzanine",
+      "row": {
+        "count": 5,
+        "spacing": 8.0
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "boardroom_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        0.0,
+        7.5,
+        8.3
+      ],
+      "rot_y": 0.0,
+      "room": "boardroom",
+      "row": {
+        "count": 5,
+        "spacing": 8.0
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "vault_antechamber_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        0.0,
+        -6.5,
+        -0.1
+      ],
+      "rot_y": 0.0,
+      "room": "vault_antechamber",
+      "row": {
+        "count": 5,
+        "spacing": 8.0
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "vault_room_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        0.0,
+        8.5,
+        -0.1
+      ],
+      "rot_y": 0.0,
+      "room": "vault_room",
+      "row": {
+        "count": 5,
+        "spacing": 8.0
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "ext_0_S_window_1",
+      "type": "window",
+      "source": "derived",
+      "pos": [
+        -12.0,
+        -15.0,
+        2.45
+      ],
+      "rot_y": 90.0,
+      "size": [
+        1.8,
+        1.4
+      ],
+      "reacts_to_alarm": false
+    },
+    {
+      "id": "ext_0_S_window_2",
+      "type": "window",
+      "source": "derived",
+      "pos": [
+        12.0,
+        -15.0,
+        2.45
+      ],
+      "rot_y": 90.0,
+      "size": [
+        1.8,
+        1.4
+      ],
+      "reacts_to_alarm": false
+    },
+    {
+      "id": "ext_1_N_window_1",
+      "type": "window",
+      "source": "derived",
+      "pos": [
+        -10.0,
+        15.0,
+        6.25
+      ],
+      "rot_y": 270.0,
+      "size": [
+        1.6,
+        1.4
+      ],
+      "reacts_to_alarm": false
+    },
+    {
+      "id": "ext_1_N_window_2",
+      "type": "window",
+      "source": "derived",
+      "pos": [
+        10.0,
+        15.0,
+        6.25
+      ],
+      "rot_y": 270.0,
+      "size": [
+        1.6,
+        1.4
+      ],
+      "reacts_to_alarm": false
+    },
+    {
+      "id": "ext_1_S_window_1",
+      "type": "window",
+      "source": "derived",
+      "pos": [
+        -10.0,
+        -15.0,
+        6.25
+      ],
+      "rot_y": 90.0,
+      "size": [
+        1.6,
+        1.4
+      ],
+      "reacts_to_alarm": false
+    },
+    {
+      "id": "ext_1_S_window_2",
+      "type": "window",
+      "source": "derived",
+      "pos": [
+        10.0,
+        -15.0,
+        6.25
+      ],
+      "rot_y": 90.0,
+      "size": [
+        1.6,
+        1.4
+      ],
+      "reacts_to_alarm": false
+    },
+    {
+      "id": "ext_0_S_sign",
+      "type": "sign",
+      "source": "derived",
+      "pos": [
+        -0.0,
+        -15.2,
+        2.55
+      ],
+      "rot_y": 270.0,
+      "wall": "ext_0_S",
+      "size": [
+        3.0,
+        0.6
+      ],
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "ext_0_E_pack_1",
+      "type": "wall_pack",
+      "source": "derived",
+      "pos": [
+        20.15,
+        7.5,
+        2.45
+      ],
+      "rot_y": 0.0,
+      "wall": "ext_0_E",
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "ext_0_W_pack_1",
+      "type": "wall_pack",
+      "source": "derived",
+      "pos": [
+        -20.15,
+        -6.0,
+        2.45
+      ],
+      "rot_y": 180.0,
+      "wall": "ext_0_W",
+      "reacts_to_alarm": true
+    }
+  ]
+}

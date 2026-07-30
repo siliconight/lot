@@ -1,0 +1,168 @@
+{
+  "light_manifest_version": "1.1.0",
+  "building_id": "gas_station_a03",
+  "theme": "greybox",
+  "space": "Blender Z-up, meters; rot_y = degrees about up; pos is the fixture location",
+  "rig_library": "lux",
+  "anchors": [
+    {
+      "id": "sales_floor_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        0.0,
+        -2.25,
+        3.5
+      ],
+      "rot_y": 0.0,
+      "room": "sales_floor",
+      "row": {
+        "count": 5,
+        "spacing": 4.4
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "walkin_cooler_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        6.5,
+        5.75,
+        3.5
+      ],
+      "rot_y": 0.0,
+      "room": "walkin_cooler",
+      "row": {
+        "count": 3,
+        "spacing": 3.0
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "stockroom_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        -1.5,
+        5.75,
+        3.5
+      ],
+      "rot_y": 0.0,
+      "room": "stockroom",
+      "row": {
+        "count": 2,
+        "spacing": 3.5
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "back_hall_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        -8.0,
+        5.75,
+        3.5
+      ],
+      "rot_y": 0.0,
+      "room": "back_hall",
+      "row": {
+        "count": 2,
+        "spacing": 3.0
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "ext_0_S_window_1",
+      "type": "window",
+      "source": "derived",
+      "pos": [
+        3.3,
+        -8.0,
+        1.75
+      ],
+      "rot_y": 90.0,
+      "size": [
+        2.4,
+        1.4
+      ],
+      "reacts_to_alarm": false
+    },
+    {
+      "id": "ext_0_S_window_2",
+      "type": "window",
+      "source": "derived",
+      "pos": [
+        8.36,
+        -8.0,
+        1.75
+      ],
+      "rot_y": 90.0,
+      "size": [
+        2.4,
+        1.4
+      ],
+      "reacts_to_alarm": false
+    },
+    {
+      "id": "ext_0_W_window_1",
+      "type": "window",
+      "source": "derived",
+      "pos": [
+        -11.0,
+        -3.2,
+        1.75
+      ],
+      "rot_y": 0.0,
+      "size": [
+        2.0,
+        1.4
+      ],
+      "reacts_to_alarm": false
+    },
+    {
+      "id": "ext_0_S_sign",
+      "type": "sign",
+      "source": "derived",
+      "pos": [
+        -3.3,
+        -8.2,
+        2.55
+      ],
+      "rot_y": 270.0,
+      "wall": "ext_0_S",
+      "size": [
+        2.6,
+        0.6
+      ],
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "ext_0_N_pack_1",
+      "type": "wall_pack",
+      "source": "derived",
+      "pos": [
+        -6.6,
+        8.15,
+        2.45
+      ],
+      "rot_y": 90.0,
+      "wall": "ext_0_N",
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "ext_0_E_pack_1",
+      "type": "wall_pack",
+      "source": "derived",
+      "pos": [
+        11.15,
+        4.8,
+        2.45
+      ],
+      "rot_y": 0.0,
+      "wall": "ext_0_E",
+      "reacts_to_alarm": true
+    }
+  ]
+}

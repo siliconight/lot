@@ -1,0 +1,382 @@
+{
+  "light_manifest_version": "1.1.0",
+  "building_id": "strip_retail_a01",
+  "theme": "greybox",
+  "space": "Blender Z-up, meters; rot_y = degrees about up; pos is the fixture location",
+  "rig_library": "lux",
+  "anchors": [
+    {
+      "id": "dining_room_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        -4.0,
+        -3.0,
+        3.1
+      ],
+      "rot_y": 0.0,
+      "room": "dining_room",
+      "row": {
+        "count": 4,
+        "spacing": 3.0
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "kitchen_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        6.0,
+        -3.0,
+        3.1
+      ],
+      "rot_y": 0.0,
+      "room": "kitchen",
+      "row": {
+        "count": 3,
+        "spacing": 2.667
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "walkin_cooler_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        -7.5,
+        4.0,
+        3.1
+      ],
+      "rot_y": 90.0,
+      "room": "walkin_cooler",
+      "row": {
+        "count": 2,
+        "spacing": 3.0
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "rear_hall_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        -0.5,
+        4.0,
+        3.1
+      ],
+      "rot_y": 0.0,
+      "room": "rear_hall",
+      "row": {
+        "count": 3,
+        "spacing": 3.0
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "stair_room_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        7.0,
+        4.0,
+        3.1
+      ],
+      "rot_y": 0.0,
+      "room": "stair_room",
+      "row": {
+        "count": 2,
+        "spacing": 3.0
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "social_club_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        -4.0,
+        -3.0,
+        6.3
+      ],
+      "rot_y": 0.0,
+      "room": "social_club",
+      "row": {
+        "count": 4,
+        "spacing": 3.0
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "count_room_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        6.0,
+        -3.0,
+        6.3
+      ],
+      "rot_y": 0.0,
+      "room": "count_room",
+      "row": {
+        "count": 3,
+        "spacing": 2.667
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "upper_hall_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        0.0,
+        4.0,
+        6.3
+      ],
+      "rot_y": 0.0,
+      "room": "upper_hall",
+      "row": {
+        "count": 5,
+        "spacing": 4.0
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "dough_cellar_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        -5.0,
+        0.0,
+        -0.1
+      ],
+      "rot_y": 90.0,
+      "room": "dough_cellar",
+      "row": {
+        "count": 5,
+        "spacing": 2.8
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "stash_room_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        5.0,
+        0.0,
+        -0.1
+      ],
+      "rot_y": 90.0,
+      "room": "stash_room",
+      "row": {
+        "count": 5,
+        "spacing": 2.8
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "ext_0_S_window_1",
+      "type": "window",
+      "source": "derived",
+      "pos": [
+        -4.0,
+        -7.0,
+        1.75
+      ],
+      "rot_y": 90.0,
+      "size": [
+        2.2,
+        1.4
+      ],
+      "reacts_to_alarm": false
+    },
+    {
+      "id": "ext_0_S_window_2",
+      "type": "window",
+      "source": "derived",
+      "pos": [
+        0.6,
+        -7.0,
+        1.75
+      ],
+      "rot_y": 90.0,
+      "size": [
+        2.2,
+        1.4
+      ],
+      "reacts_to_alarm": false
+    },
+    {
+      "id": "ext_0_S_window_3",
+      "type": "window",
+      "source": "derived",
+      "pos": [
+        6.0,
+        -7.0,
+        1.95
+      ],
+      "rot_y": 90.0,
+      "size": [
+        1.4,
+        1.4
+      ],
+      "reacts_to_alarm": false
+    },
+    {
+      "id": "ext_0_W_window_1",
+      "type": "window",
+      "source": "derived",
+      "pos": [
+        -10.0,
+        -4.06,
+        1.75
+      ],
+      "rot_y": 0.0,
+      "size": [
+        1.8,
+        1.4
+      ],
+      "reacts_to_alarm": false
+    },
+    {
+      "id": "ext_1_N_window_1",
+      "type": "window",
+      "source": "derived",
+      "pos": [
+        3.0,
+        7.0,
+        5.05
+      ],
+      "rot_y": 270.0,
+      "size": [
+        1.6,
+        1.4
+      ],
+      "reacts_to_alarm": false
+    },
+    {
+      "id": "ext_1_S_window_1",
+      "type": "window",
+      "source": "derived",
+      "pos": [
+        -6.0,
+        -7.0,
+        4.95
+      ],
+      "rot_y": 90.0,
+      "size": [
+        1.8,
+        1.4
+      ],
+      "reacts_to_alarm": false
+    },
+    {
+      "id": "ext_1_S_window_2",
+      "type": "window",
+      "source": "derived",
+      "pos": [
+        -1.0,
+        -7.0,
+        4.95
+      ],
+      "rot_y": 90.0,
+      "size": [
+        1.8,
+        1.4
+      ],
+      "reacts_to_alarm": false
+    },
+    {
+      "id": "ext_1_S_window_3",
+      "type": "window",
+      "source": "derived",
+      "pos": [
+        6.0,
+        -7.0,
+        5.15
+      ],
+      "rot_y": 90.0,
+      "size": [
+        1.4,
+        1.4
+      ],
+      "reacts_to_alarm": false
+    },
+    {
+      "id": "ext_1_E_window_1",
+      "type": "window",
+      "source": "derived",
+      "pos": [
+        10.0,
+        -2.94,
+        5.15
+      ],
+      "rot_y": 180.0,
+      "size": [
+        1.2,
+        1.4
+      ],
+      "reacts_to_alarm": false
+    },
+    {
+      "id": "ext_1_W_window_1",
+      "type": "window",
+      "source": "derived",
+      "pos": [
+        -10.0,
+        -2.94,
+        4.95
+      ],
+      "rot_y": 0.0,
+      "size": [
+        1.4,
+        1.4
+      ],
+      "reacts_to_alarm": false
+    },
+    {
+      "id": "ext_0_S_sign",
+      "type": "sign",
+      "source": "derived",
+      "pos": [
+        -8.0,
+        -7.2,
+        2.55
+      ],
+      "rot_y": 270.0,
+      "wall": "ext_0_S",
+      "size": [
+        2.2,
+        0.6
+      ],
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "ext_0_N_pack_1",
+      "type": "wall_pack",
+      "source": "derived",
+      "pos": [
+        -1.0,
+        7.15,
+        2.85
+      ],
+      "rot_y": 90.0,
+      "wall": "ext_0_N",
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "ext_0_E_pack_1",
+      "type": "wall_pack",
+      "source": "derived",
+      "pos": [
+        10.15,
+        -2.94,
+        2.45
+      ],
+      "rot_y": 0.0,
+      "wall": "ext_0_E",
+      "reacts_to_alarm": true
+    }
+  ]
+}

@@ -1,0 +1,129 @@
+{
+  "light_manifest_version": "1.1.0",
+  "building_id": "self_storage_a01",
+  "theme": "greybox",
+  "space": "Blender Z-up, meters; rot_y = degrees about up; pos is the fixture location",
+  "rig_library": "lux",
+  "anchors": [
+    {
+      "id": "south_aisle_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        0.0,
+        -10.0,
+        3.1
+      ],
+      "rot_y": 0.0,
+      "room": "south_aisle",
+      "row": {
+        "count": 5,
+        "spacing": 8.0
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "mid_aisle_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        0.0,
+        0.0,
+        3.1
+      ],
+      "rot_y": 0.0,
+      "room": "mid_aisle",
+      "row": {
+        "count": 5,
+        "spacing": 8.0
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "vault_unit_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        -16.0,
+        10.0,
+        3.1
+      ],
+      "rot_y": 0.0,
+      "room": "vault_unit",
+      "row": {
+        "count": 3,
+        "spacing": 2.667
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "north_aisle_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        4.0,
+        10.0,
+        3.1
+      ],
+      "rot_y": 0.0,
+      "room": "north_aisle",
+      "row": {
+        "count": 5,
+        "spacing": 6.4
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "ext_0_N_pack_1",
+      "type": "wall_pack",
+      "source": "derived",
+      "pos": [
+        12.0,
+        14.15,
+        2.45
+      ],
+      "rot_y": 90.0,
+      "wall": "ext_0_N",
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "ext_0_S_pack_1",
+      "type": "wall_pack",
+      "source": "derived",
+      "pos": [
+        -10.0,
+        -14.15,
+        2.45
+      ],
+      "rot_y": 270.0,
+      "wall": "ext_0_S",
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "ext_0_S_pack_2",
+      "type": "wall_pack",
+      "source": "derived",
+      "pos": [
+        10.0,
+        -14.15,
+        3.25
+      ],
+      "rot_y": 270.0,
+      "wall": "ext_0_S",
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "ext_0_E_pack_1",
+      "type": "wall_pack",
+      "source": "derived",
+      "pos": [
+        20.15,
+        0.0,
+        2.45
+      ],
+      "rot_y": 0.0,
+      "wall": "ext_0_E",
+      "reacts_to_alarm": true
+    }
+  ]
+}

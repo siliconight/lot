@@ -1,0 +1,172 @@
+{
+  "light_manifest_version": "1.1.0",
+  "building_id": "pawn_shop_a02",
+  "theme": "greybox",
+  "space": "Blender Z-up, meters; rot_y = degrees about up; pos is the fixture location",
+  "rig_library": "lux",
+  "anchors": [
+    {
+      "id": "shop_floor_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        0.0,
+        -2.5,
+        3.1
+      ],
+      "rot_y": 0.0,
+      "room": "shop_floor",
+      "row": {
+        "count": 5,
+        "spacing": 3.6
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "back_room_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        0.0,
+        4.5,
+        3.1
+      ],
+      "rot_y": 0.0,
+      "room": "back_room",
+      "row": {
+        "count": 5,
+        "spacing": 3.6
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "upper_hall_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        0.0,
+        -3.5,
+        6.3
+      ],
+      "rot_y": 0.0,
+      "room": "upper_hall",
+      "row": {
+        "count": 5,
+        "spacing": 3.6
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "upper_flat_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        -4.0,
+        3.5,
+        6.3
+      ],
+      "rot_y": 0.0,
+      "room": "upper_flat",
+      "row": {
+        "count": 3,
+        "spacing": 3.333
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "lockup_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        5.0,
+        3.5,
+        6.3
+      ],
+      "rot_y": 0.0,
+      "room": "lockup",
+      "row": {
+        "count": 3,
+        "spacing": 2.667
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "ext_0_S_window_1",
+      "type": "window",
+      "source": "derived",
+      "pos": [
+        6.3,
+        -7.0,
+        1.75
+      ],
+      "rot_y": 90.0,
+      "size": [
+        1.6,
+        1.4
+      ],
+      "reacts_to_alarm": false
+    },
+    {
+      "id": "ext_1_S_window_1",
+      "type": "window",
+      "source": "derived",
+      "pos": [
+        -4.5,
+        -7.0,
+        4.95
+      ],
+      "rot_y": 90.0,
+      "size": [
+        1.4,
+        1.4
+      ],
+      "reacts_to_alarm": false
+    },
+    {
+      "id": "ext_1_S_window_2",
+      "type": "window",
+      "source": "derived",
+      "pos": [
+        5.4,
+        -7.0,
+        4.95
+      ],
+      "rot_y": 90.0,
+      "size": [
+        1.4,
+        1.4
+      ],
+      "reacts_to_alarm": false
+    },
+    {
+      "id": "ext_0_S_sign",
+      "type": "sign",
+      "source": "derived",
+      "pos": [
+        -2.7,
+        -7.2,
+        2.55
+      ],
+      "rot_y": 270.0,
+      "wall": "ext_0_S",
+      "size": [
+        2.3,
+        0.6
+      ],
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "ext_0_E_pack_1",
+      "type": "wall_pack",
+      "source": "derived",
+      "pos": [
+        9.15,
+        2.8,
+        2.45
+      ],
+      "rot_y": 0.0,
+      "wall": "ext_0_E",
+      "reacts_to_alarm": true
+    }
+  ]
+}

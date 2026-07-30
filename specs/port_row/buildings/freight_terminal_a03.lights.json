@@ -1,0 +1,149 @@
+{
+  "light_manifest_version": "1.1.0",
+  "building_id": "freight_terminal_a03",
+  "theme": "greybox",
+  "space": "Blender Z-up, meters; rot_y = degrees about up; pos is the fixture location",
+  "rig_library": "lux",
+  "anchors": [
+    {
+      "id": "lanes_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        0.0,
+        -4.5,
+        4.9
+      ],
+      "rot_y": 0.0,
+      "room": "lanes",
+      "row": {
+        "count": 5,
+        "spacing": 9.6
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "sort_hall_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        0.0,
+        10.5,
+        4.9
+      ],
+      "rot_y": 0.0,
+      "room": "sort_hall",
+      "row": {
+        "count": 5,
+        "spacing": 9.6
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "bond_approach_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        -11.0,
+        0.0,
+        -0.1
+      ],
+      "rot_y": 90.0,
+      "room": "bond_approach",
+      "row": {
+        "count": 5,
+        "spacing": 6.0
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "bond_vault_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        13.0,
+        0.0,
+        -0.1
+      ],
+      "rot_y": 90.0,
+      "room": "bond_vault",
+      "row": {
+        "count": 5,
+        "spacing": 6.0
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "ext_0_S_window_1",
+      "type": "window",
+      "source": "derived",
+      "pos": [
+        14.4,
+        -15.0,
+        2.65
+      ],
+      "rot_y": 90.0,
+      "size": [
+        2.0,
+        1.4
+      ],
+      "reacts_to_alarm": false
+    },
+    {
+      "id": "ext_0_S_sign",
+      "type": "sign",
+      "source": "derived",
+      "pos": [
+        -9.6,
+        -15.2,
+        2.55
+      ],
+      "rot_y": 270.0,
+      "wall": "ext_0_S",
+      "size": [
+        2.05,
+        0.6
+      ],
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "ext_0_N_pack_1",
+      "type": "wall_pack",
+      "source": "derived",
+      "pos": [
+        14.4,
+        15.15,
+        2.45
+      ],
+      "rot_y": 90.0,
+      "wall": "ext_0_N",
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "ext_0_W_pack_1",
+      "type": "wall_pack",
+      "source": "derived",
+      "pos": [
+        -24.15,
+        -6.0,
+        3.25
+      ],
+      "rot_y": 180.0,
+      "wall": "ext_0_W",
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "ext_0_W_pack_2",
+      "type": "wall_pack",
+      "source": "derived",
+      "pos": [
+        -24.15,
+        9.0,
+        3.25
+      ],
+      "rot_y": 180.0,
+      "wall": "ext_0_W",
+      "reacts_to_alarm": true
+    }
+  ]
+}

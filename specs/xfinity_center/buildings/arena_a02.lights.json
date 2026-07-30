@@ -1,0 +1,161 @@
+{
+  "light_manifest_version": "1.1.0",
+  "building_id": "arena_a02",
+  "theme": "greybox",
+  "space": "Blender Z-up, meters; rot_y = degrees about up; pos is the fixture location",
+  "rig_library": "lux",
+  "anchors": [
+    {
+      "id": "event_floor_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        0.0,
+        -5.55,
+        5.4
+      ],
+      "rot_y": 0.0,
+      "room": "event_floor",
+      "row": {
+        "count": 5,
+        "spacing": 10.0
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "box_office_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        -19.5,
+        11.45,
+        5.4
+      ],
+      "rot_y": 90.0,
+      "room": "box_office",
+      "row": {
+        "count": 4,
+        "spacing": 2.775
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "back_of_house_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        5.5,
+        11.45,
+        5.4
+      ],
+      "rot_y": 0.0,
+      "room": "back_of_house",
+      "row": {
+        "count": 5,
+        "spacing": 7.8
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "ext_0_S_window_1",
+      "type": "window",
+      "source": "derived",
+      "pos": [
+        0.0,
+        -17.0,
+        2.45
+      ],
+      "rot_y": 90.0,
+      "size": [
+        3.0,
+        1.4
+      ],
+      "reacts_to_alarm": false
+    },
+    {
+      "id": "ext_0_W_window_1",
+      "type": "window",
+      "source": "derived",
+      "pos": [
+        -25.0,
+        11.9,
+        2.65
+      ],
+      "rot_y": 0.0,
+      "size": [
+        2.0,
+        1.4
+      ],
+      "reacts_to_alarm": false
+    },
+    {
+      "id": "ext_0_S_sign",
+      "type": "sign",
+      "source": "derived",
+      "pos": [
+        -12.5,
+        -17.2,
+        2.55
+      ],
+      "rot_y": 270.0,
+      "wall": "ext_0_S",
+      "size": [
+        3.2,
+        0.6
+      ],
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "ext_0_N_pack_1",
+      "type": "wall_pack",
+      "source": "derived",
+      "pos": [
+        7.5,
+        17.15,
+        3.25
+      ],
+      "rot_y": 90.0,
+      "wall": "ext_0_N",
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "ext_0_N_pack_2",
+      "type": "wall_pack",
+      "source": "derived",
+      "pos": [
+        -17.5,
+        17.15,
+        2.45
+      ],
+      "rot_y": 90.0,
+      "wall": "ext_0_N",
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "ext_0_S_pack_1",
+      "type": "wall_pack",
+      "source": "derived",
+      "pos": [
+        12.5,
+        -17.15,
+        2.45
+      ],
+      "rot_y": 270.0,
+      "wall": "ext_0_S",
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "ext_0_E_pack_1",
+      "type": "wall_pack",
+      "source": "derived",
+      "pos": [
+        25.15,
+        8.5,
+        2.45
+      ],
+      "rot_y": 0.0,
+      "wall": "ext_0_E",
+      "reacts_to_alarm": true
+    }
+  ]
+}

@@ -1,0 +1,151 @@
+{
+  "light_manifest_version": "1.1.0",
+  "building_id": "freight_terminal_a01",
+  "theme": "greybox",
+  "space": "Blender Z-up, meters; rot_y = degrees about up; pos is the fixture location",
+  "rig_library": "lux",
+  "anchors": [
+    {
+      "id": "cross_dock_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        5.5,
+        0.0,
+        5.9
+      ],
+      "rot_y": 0.0,
+      "room": "cross_dock",
+      "row": {
+        "count": 5,
+        "spacing": 8.6
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "west_hall_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        -21.5,
+        -4.0,
+        5.9
+      ],
+      "rot_y": 90.0,
+      "room": "west_hall",
+      "row": {
+        "count": 5,
+        "spacing": 4.8
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "bonded_cage_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        -21.5,
+        12.0,
+        5.9
+      ],
+      "rot_y": 0.0,
+      "room": "bonded_cage",
+      "row": {
+        "count": 4,
+        "spacing": 2.75
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "ext_0_N_pack_1",
+      "type": "wall_pack",
+      "source": "derived",
+      "pos": [
+        -13.5,
+        16.15,
+        3.25
+      ],
+      "rot_y": 90.0,
+      "wall": "ext_0_N",
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "ext_0_N_pack_2",
+      "type": "wall_pack",
+      "source": "derived",
+      "pos": [
+        13.5,
+        16.15,
+        3.25
+      ],
+      "rot_y": 90.0,
+      "wall": "ext_0_N",
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "ext_0_S_pack_1",
+      "type": "wall_pack",
+      "source": "derived",
+      "pos": [
+        -16.2,
+        -16.15,
+        3.25
+      ],
+      "rot_y": 270.0,
+      "wall": "ext_0_S",
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "ext_0_S_pack_2",
+      "type": "wall_pack",
+      "source": "derived",
+      "pos": [
+        -0.0,
+        -16.15,
+        3.25
+      ],
+      "rot_y": 270.0,
+      "wall": "ext_0_S",
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "ext_0_S_pack_3",
+      "type": "wall_pack",
+      "source": "derived",
+      "pos": [
+        16.2,
+        -16.15,
+        3.25
+      ],
+      "rot_y": 270.0,
+      "wall": "ext_0_S",
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "ext_0_E_pack_1",
+      "type": "wall_pack",
+      "source": "derived",
+      "pos": [
+        27.15,
+        0.0,
+        2.45
+      ],
+      "rot_y": 0.0,
+      "wall": "ext_0_E",
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "ext_0_W_pack_1",
+      "type": "wall_pack",
+      "source": "derived",
+      "pos": [
+        -27.15,
+        -9.6,
+        2.45
+      ],
+      "rot_y": 180.0,
+      "wall": "ext_0_W",
+      "reacts_to_alarm": true
+    }
+  ]
+}

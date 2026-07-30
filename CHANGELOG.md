@@ -1,3 +1,68 @@
+## [0.40.0] - the walker could not climb a legal stair
+
+The library sweep left one class of failure across three sites -- central_vault,
+walkup_siege, ref_pvp -- every path proof passing, all four walkers stopped on
+one coordinate. 0.39.0 let the contact list out of the serializer, and it named
+the thing:
+
+    walker bot_1 STUCK at (35.8, -2.3, -14.9) 0.75 m from waypoint 2/18;
+    on_floor=true on_wall=true; touching: stair0ramp_-1, slab_col_-1
+
+Measuring that ramp with full node transforms rather than untransformed bounds:
+**39.2 degrees**, rise 3.40 m over a 4.16 m run. The bake accepts 55, the
+walker's own floor_max_angle is 56, and the navmesh had built an eighteen-point
+path over it. A ramp that is legal by every number in agent_contract.json, and
+a physical capsule that cannot climb it. That is this tool, not the site.
+
+Two causes, both in `_drive`:
+
+*Gravity was applied every frame regardless of `is_on_floor()`.* A waypoint on a
+stair flight usually sits at the same height as the body, so the climbing branch
+never fires and the flat branch has to walk the slope -- while accumulating a
+downward component that pins the capsule into the junction where the ramp meets
+the floor. Gravity now applies only while airborne.
+
+*The step-up probe was a single 0.5 m lift.* That assumed the only thing which
+can stop a body at a stair mouth is the riser in front of it. If there is no
+headroom for the lift there is no step and no second attempt. It now tries 0.5,
+0.35 and 0.2 before giving up.
+
+And when it does give up it says which probe failed. "Nothing overhead to lift
+into" is a finding about the stairwell, against clearances.min_headroom_m;
+"lifted clear but nothing to step onto ahead" is a finding about the obstacle. A
+walker that gives up without distinguishing them sends the reader to the wrong
+repo -- which is what three sites' worth of "stuck" did for a day.
+
+`floor_snap_length` is set to the step height so a walker stays glued to a
+descending slope instead of launching off its crest into frames where the step
+probe cannot fire at all.
+
+## [0.39.0] - the director measured the contact and the serializer threw it away
+
+The library sweep came back 17 of 20, and all three failures had the same shape:
+every path proof passing, all four walkers stopped at one coordinate. Exactly
+what 0.30.0's contact capture was written to explain -- and all three reports
+came back with `blocked_by` absent, from a director that had recorded it.
+
+`_conclude` builds each walker's report entry from a hand-written list of five
+keys. Everything `_drive` records on a stuck walker -- every slide collision
+with its collider name and contact normal, the waypoint it was steering to, how
+far short it stopped, `is_on_floor` / `is_on_wall` -- was written to the walker
+dict and then dropped on the way out.
+
+A serializer with a fixed key list silently discards whatever is added later.
+That is the same defect as an instrument measuring the wrong thing, one layer
+further out, and it is worse in one respect: the measurement existed and looked
+like it had never been taken. The keys are now named in one place next to a note
+saying `_conclude` has to copy them.
+
+`at` follows the same fix. It was set for a walker that ran out the clock and
+not for one that gave up, so a stuck walker's position lived only inside the
+status prose and nothing could read it as a number.
+
+Three sites to re-run, and the answer to roadmap item 14 is in whichever of them
+comes back with an empty contact list.
+
 ## [0.38.0] - a stuck walker now says what it is stuck against
 
 Seed 5017 put all four walkers on the same coordinate, (20.5, 0.9, -2.7), on the

@@ -1,0 +1,151 @@
+{
+  "light_manifest_version": "1.1.0",
+  "building_id": "clinic_a01",
+  "theme": "greybox",
+  "space": "Blender Z-up, meters; rot_y = degrees about up; pos is the fixture location",
+  "rig_library": "lux",
+  "anchors": [
+    {
+      "id": "waiting_room_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        0.0,
+        -5.0,
+        3.3
+      ],
+      "rot_y": 0.0,
+      "room": "waiting_room",
+      "row": {
+        "count": 5,
+        "spacing": 6.0
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "exam_wing_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        -5.0,
+        6.0,
+        3.3
+      ],
+      "rot_y": 0.0,
+      "room": "exam_wing",
+      "row": {
+        "count": 5,
+        "spacing": 4.0
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "dispensary_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        10.0,
+        6.0,
+        3.3
+      ],
+      "rot_y": 0.0,
+      "room": "dispensary",
+      "row": {
+        "count": 3,
+        "spacing": 3.333
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "ext_0_S_window_1",
+      "type": "window",
+      "source": "derived",
+      "pos": [
+        -10.5,
+        -11.0,
+        1.75
+      ],
+      "rot_y": 90.0,
+      "size": [
+        2.0,
+        1.4
+      ],
+      "reacts_to_alarm": false
+    },
+    {
+      "id": "ext_0_S_window_2",
+      "type": "window",
+      "source": "derived",
+      "pos": [
+        10.5,
+        -11.0,
+        1.75
+      ],
+      "rot_y": 90.0,
+      "size": [
+        2.0,
+        1.4
+      ],
+      "reacts_to_alarm": false
+    },
+    {
+      "id": "ext_0_W_window_1",
+      "type": "window",
+      "source": "derived",
+      "pos": [
+        -15.0,
+        0.0,
+        2.25
+      ],
+      "rot_y": 0.0,
+      "size": [
+        1.6,
+        1.4
+      ],
+      "reacts_to_alarm": false
+    },
+    {
+      "id": "ext_0_S_sign",
+      "type": "sign",
+      "source": "derived",
+      "pos": [
+        -0.0,
+        -11.2,
+        2.55
+      ],
+      "rot_y": 270.0,
+      "wall": "ext_0_S",
+      "size": [
+        2.6,
+        0.6
+      ],
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "ext_0_N_pack_1",
+      "type": "wall_pack",
+      "source": "derived",
+      "pos": [
+        -9.0,
+        11.15,
+        2.45
+      ],
+      "rot_y": 90.0,
+      "wall": "ext_0_N",
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "ext_0_E_pack_1",
+      "type": "wall_pack",
+      "source": "derived",
+      "pos": [
+        15.15,
+        5.5,
+        2.45
+      ],
+      "rot_y": 0.0,
+      "wall": "ext_0_E",
+      "reacts_to_alarm": true
+    }
+  ]
+}

@@ -1,0 +1,206 @@
+{
+  "light_manifest_version": "1.1.0",
+  "building_id": "apartment_walkup_a01",
+  "theme": "greybox",
+  "space": "Blender Z-up, meters; rot_y = degrees about up; pos is the fixture location",
+  "rig_library": "lux",
+  "anchors": [
+    {
+      "id": "front_hall_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        -5.5,
+        -4.5,
+        3.1
+      ],
+      "rot_y": 0.0,
+      "room": "front_hall",
+      "row": {
+        "count": 4,
+        "spacing": 2.75
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "kitchen_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        5.5,
+        -4.5,
+        3.1
+      ],
+      "rot_y": 0.0,
+      "room": "kitchen",
+      "row": {
+        "count": 4,
+        "spacing": 2.75
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "garage_bay_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        0.0,
+        4.5,
+        3.1
+      ],
+      "rot_y": 0.0,
+      "room": "garage_bay",
+      "row": {
+        "count": 5,
+        "spacing": 4.4
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "office_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        -4.25,
+        0.0,
+        6.3
+      ],
+      "rot_y": 90.0,
+      "room": "office",
+      "row": {
+        "count": 5,
+        "spacing": 3.6
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "bedroom_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        6.75,
+        0.0,
+        6.3
+      ],
+      "rot_y": 90.0,
+      "room": "bedroom",
+      "row": {
+        "count": 5,
+        "spacing": 3.6
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "basement_vault_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        6.5,
+        1.0,
+        -0.1
+      ],
+      "rot_y": 90.0,
+      "room": "basement_vault",
+      "row": {
+        "count": 5,
+        "spacing": 3.2
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "basement_approach_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        -4.5,
+        1.0,
+        -0.1
+      ],
+      "rot_y": 90.0,
+      "room": "basement_approach",
+      "row": {
+        "count": 5,
+        "spacing": 3.2
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "ext_0_S_window_1",
+      "type": "window",
+      "source": "derived",
+      "pos": [
+        6.0,
+        -9.0,
+        1.85
+      ],
+      "rot_y": 90.0,
+      "size": [
+        1.2,
+        1.4
+      ],
+      "reacts_to_alarm": false
+    },
+    {
+      "id": "ext_1_N_window_1",
+      "type": "window",
+      "source": "derived",
+      "pos": [
+        0.0,
+        9.0,
+        5.05
+      ],
+      "rot_y": 270.0,
+      "size": [
+        1.6,
+        1.4
+      ],
+      "reacts_to_alarm": false
+    },
+    {
+      "id": "ext_1_E_window_1",
+      "type": "window",
+      "source": "derived",
+      "pos": [
+        12.0,
+        0.0,
+        5.05
+      ],
+      "rot_y": 180.0,
+      "size": [
+        1.2,
+        1.4
+      ],
+      "reacts_to_alarm": false
+    },
+    {
+      "id": "ext_0_S_sign",
+      "type": "sign",
+      "source": "derived",
+      "pos": [
+        -6.0,
+        -9.2,
+        2.55
+      ],
+      "rot_y": 270.0,
+      "wall": "ext_0_S",
+      "size": [
+        2.05,
+        0.6
+      ],
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "ext_0_N_pack_1",
+      "type": "wall_pack",
+      "source": "derived",
+      "pos": [
+        0.0,
+        9.15,
+        3.25
+      ],
+      "rot_y": 90.0,
+      "wall": "ext_0_N",
+      "reacts_to_alarm": true
+    }
+  ]
+}

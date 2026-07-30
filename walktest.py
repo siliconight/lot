@@ -196,6 +196,14 @@ def main(argv=None):
                     help="a missing Godot is a FAILURE, not a skip")
     ap.add_argument("--report-dir", default=None,
                     help="also copy each written report into this directory")
+    # A wall-clock bound on a simulation whose length scales with the site.
+    # This was hardcoded at 300 in run_one, which is fine for a 651 m spine and
+    # kills a 1352 m one before it can write a report -- and library_walk's own
+    # --timeout bounded only the python wrapper, so raising it did nothing.
+    ap.add_argument("--timeout", type=int, default=300,
+                    help="seconds of WALL CLOCK per scene before Godot is "
+                         "killed (default 300; a long spine on a dense "
+                         "navmesh needs more)")
     args = ap.parse_args(argv)
 
     ensure_project(args.project)
@@ -230,6 +238,7 @@ def main(argv=None):
     rc = 0
     for scene in targets:
         if not run_one(godot, args.project, scene,
+                       timeout=args.timeout,
                        report_dir=args.report_dir):
             rc = 1
     return rc

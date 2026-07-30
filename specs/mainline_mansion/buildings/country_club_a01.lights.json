@@ -1,0 +1,168 @@
+{
+  "light_manifest_version": "1.1.0",
+  "building_id": "country_club_a01",
+  "theme": "greybox",
+  "space": "Blender Z-up, meters; rot_y = degrees about up; pos is the fixture location",
+  "rig_library": "lux",
+  "anchors": [
+    {
+      "id": "grand_lounge_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        0.0,
+        -5.5,
+        3.7
+      ],
+      "rot_y": 0.0,
+      "room": "grand_lounge",
+      "row": {
+        "count": 5,
+        "spacing": 8.0
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "dining_wing_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        0.0,
+        8.5,
+        3.7
+      ],
+      "rot_y": 0.0,
+      "room": "dining_wing",
+      "row": {
+        "count": 5,
+        "spacing": 8.0
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "cellar_hall_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        -10.0,
+        0.0,
+        -0.1
+      ],
+      "rot_y": 90.0,
+      "room": "cellar_hall",
+      "row": {
+        "count": 5,
+        "spacing": 5.6
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "wine_cellar_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        10.0,
+        0.0,
+        -0.1
+      ],
+      "rot_y": 90.0,
+      "room": "wine_cellar",
+      "row": {
+        "count": 5,
+        "spacing": 5.6
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "ext_0_N_window_1",
+      "type": "window",
+      "source": "derived",
+      "pos": [
+        -14.0,
+        14.0,
+        1.75
+      ],
+      "rot_y": 270.0,
+      "size": [
+        2.4,
+        1.4
+      ],
+      "reacts_to_alarm": false
+    },
+    {
+      "id": "ext_0_S_window_1",
+      "type": "window",
+      "source": "derived",
+      "pos": [
+        -14.0,
+        -14.0,
+        1.75
+      ],
+      "rot_y": 90.0,
+      "size": [
+        2.0,
+        1.4
+      ],
+      "reacts_to_alarm": false
+    },
+    {
+      "id": "ext_0_S_window_2",
+      "type": "window",
+      "source": "derived",
+      "pos": [
+        14.0,
+        -14.0,
+        1.75
+      ],
+      "rot_y": 90.0,
+      "size": [
+        2.0,
+        1.4
+      ],
+      "reacts_to_alarm": false
+    },
+    {
+      "id": "ext_0_S_sign",
+      "type": "sign",
+      "source": "derived",
+      "pos": [
+        -0.0,
+        -14.2,
+        2.55
+      ],
+      "rot_y": 270.0,
+      "wall": "ext_0_S",
+      "size": [
+        3.0,
+        0.6
+      ],
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "ext_0_N_pack_1",
+      "type": "wall_pack",
+      "source": "derived",
+      "pos": [
+        0.0,
+        14.15,
+        2.45
+      ],
+      "rot_y": 90.0,
+      "wall": "ext_0_N",
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "ext_0_E_pack_1",
+      "type": "wall_pack",
+      "source": "derived",
+      "pos": [
+        20.15,
+        7.0,
+        2.45
+      ],
+      "rot_y": 0.0,
+      "wall": "ext_0_E",
+      "reacts_to_alarm": true
+    }
+  ]
+}

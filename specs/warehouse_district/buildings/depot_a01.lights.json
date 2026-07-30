@@ -1,0 +1,144 @@
+{
+  "light_manifest_version": "1.1.0",
+  "building_id": "depot_a01",
+  "theme": "greybox",
+  "space": "Blender Z-up, meters; rot_y = degrees about up; pos is the fixture location",
+  "rig_library": "lux",
+  "anchors": [
+    {
+      "id": "lanes_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        0.0,
+        -4.0,
+        5.4
+      ],
+      "rot_y": 0.0,
+      "room": "lanes",
+      "row": {
+        "count": 5,
+        "spacing": 9.2
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "dispatch_office_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        -16.5,
+        9.0,
+        5.4
+      ],
+      "rot_y": 0.0,
+      "room": "dispatch_office",
+      "row": {
+        "count": 4,
+        "spacing": 3.25
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "parcel_hall_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        6.5,
+        9.0,
+        5.4
+      ],
+      "rot_y": 0.0,
+      "room": "parcel_hall",
+      "row": {
+        "count": 5,
+        "spacing": 6.6
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "ext_0_N_window_1",
+      "type": "window",
+      "source": "derived",
+      "pos": [
+        -11.5,
+        13.0,
+        2.65
+      ],
+      "rot_y": 270.0,
+      "size": [
+        2.0,
+        1.4
+      ],
+      "reacts_to_alarm": false
+    },
+    {
+      "id": "ext_0_N_window_2",
+      "type": "window",
+      "source": "derived",
+      "pos": [
+        11.5,
+        13.0,
+        2.65
+      ],
+      "rot_y": 270.0,
+      "size": [
+        2.0,
+        1.4
+      ],
+      "reacts_to_alarm": false
+    },
+    {
+      "id": "ext_0_S_pack_1",
+      "type": "wall_pack",
+      "source": "derived",
+      "pos": [
+        -0.0,
+        -13.15,
+        2.45
+      ],
+      "rot_y": 270.0,
+      "wall": "ext_0_S",
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "ext_0_E_pack_1",
+      "type": "wall_pack",
+      "source": "derived",
+      "pos": [
+        23.15,
+        -6.5,
+        3.25
+      ],
+      "rot_y": 0.0,
+      "wall": "ext_0_E",
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "ext_0_E_pack_2",
+      "type": "wall_pack",
+      "source": "derived",
+      "pos": [
+        23.15,
+        9.1,
+        2.45
+      ],
+      "rot_y": 0.0,
+      "wall": "ext_0_E",
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "ext_0_W_pack_1",
+      "type": "wall_pack",
+      "source": "derived",
+      "pos": [
+        -23.15,
+        -6.5,
+        3.25
+      ],
+      "rot_y": 180.0,
+      "wall": "ext_0_W",
+      "reacts_to_alarm": true
+    }
+  ]
+}

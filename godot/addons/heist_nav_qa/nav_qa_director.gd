@@ -47,6 +47,32 @@ const MAX_REPATHS := 3           # per-leg fresh-path retries before "stuck"
 const STEP_UP := 0.5             # agent_contract characters.player.max_step_up_m
 const STEP_FWD := 0.35           # forward probe when stepping (≈ capsule radius)
 var ARRIVE_DIST := _envf("DC_QA_ARRIVE", 1.5)
+#: How close counts as HAVING REACHED a path waypoint. Not ARRIVE_DIST -- that
+#: one is for leg targets. This was a hardcoded 0.6, which is wider than the
+#: lateral correction a funnelled path asks for at a corner: on
+#: warehouse_district the corner waypoint sat 0.45 m away, inside 0.6, so it was
+#: consumed while the body was still on the wrong side of the corner and the
+#: body then steered at the far waypoint straight into a wall. Bounded by the
+#: body instead of chosen. The margin available is exactly
+#: (nav agent radius after voxel ceiling) - (this body's radius): the funnel
+#: offsets a corner waypoint by the radius the map was BAKED for, and the body
+#: only needs its own. On warehouse_district that is 0.45 - 0.28 = 0.17, so a
+#: consume radius above 0.17 eats the clearance and the body clips the corner.
+#: Simulated against the real wall from the .glb: 0.60 hits it (which is the
+#: shipped behaviour and the observed failure), 0.30 still hits it, 0.15 clears.
+#: NOTE this margin VANISHES if the walker is widened to the bake radius --
+#: see clearances in agent_contract.json before raising the body.
+#: Derived, not chosen. The funnel offsets a corner waypoint by the radius the
+#: map was BAKED for and the body only needs its own, so the clearance a corner
+#: gives us is (bake radius) - (walker radius). This walker is AGENT_RADIUS *
+#: 0.7, making the margin 0.3 * AGENT_RADIUS, and 60% of that leaves room for
+#: the step the body takes between frames. Two measured points agree: at
+#: cell_size 0.15 the bake radius ceiled to 0.45 (margin 0.17) and 0.15 worked;
+#: at cell_size 0.10 it is 0.40 exactly (margin 0.12) and 0.15 CLIPPED while
+#: 0.07 cleared. Uses the un-ceiled radius because the director cannot see
+#: cell_size, and ceiling only ever widens the real margin -- so this is the
+#: conservative reading at any grid size.
+var WP_RADIUS := _envf("DC_QA_WP", AGENT_RADIUS * 0.18)
 
 var _report := {}
 var _walkers: Array = []
@@ -54,6 +80,16 @@ var _walkers: Array = []
 var _stranded_names := {}
 #: raw anchor position -> the standing position the census settled on.
 var _resolved := {}
+#: What _drive records on a walker that gives up, and _conclude must copy into
+#: the report. _conclude built its entry from a fixed list of five keys, so
+#: 0.30.0 captured every slide collision the stuck capsule was touching and then
+#: dropped all of it on the way out -- the library sweep came back with
+#: `blocked_by` absent on all three failing sites, from a director that had
+#: measured it. A serializer with a hand-written key list silently discards
+#: whatever is added later, which is the same defect as the instrument that
+#: measures the wrong thing, one layer further out.
+const WALKER_DIAGNOSTIC_KEYS := ["blocked_by", "waypoint", "waypoint_dist_m",
+	"path_index", "path_points", "on_floor", "on_wall", "step_fail"]
 var _sim_time := 0.0
 var _time_limit := TIME_LIMIT     # scaled to the spine after the proofs run
 var _done := false
@@ -243,7 +279,12 @@ func _conclude() -> void:
 					"targets_reached": w["reached"],
 					"targets_total": w["targets"].size(),
 					"travelled_m": snappedf(w["travelled"], 0.1)}
+		for k in WALKER_DIAGNOSTIC_KEYS:
+			if w.has(k):
+				rep[k] = w[k]
 		var suffix := ""
+		if w.has("at"):
+			rep["at"] = w["at"]
 		if w.get("body") != null and not w["finished"]:
 			# ran out the clock -- record WHERE, so a timeout is debuggable
 			var p: Vector3 = (w["body"] as CharacterBody3D).global_position
@@ -746,6 +787,9 @@ func _spawn_walker(walker_name: String, at: Vector3, targets: Array) -> void:
 	# then treats the ramp as a WALL -- every walker jams at the stair mouth
 	# (warehouse_district: 4.2-4.5 m stories, ramp ~49-52 deg)
 	body.floor_max_angle = deg_to_rad(_envf("DC_NAV_SLOPE", 55.0) + 1.0)
+	# Stay glued to a descending slope instead of launching off its crest and
+	# spending the next frames airborne, where the step probe cannot fire.
+	body.floor_snap_length = STEP_UP
 	add_child(body)
 	body.global_position = at
 	if targets.is_empty():
@@ -816,6 +860,25 @@ func _blocked_by(body: CharacterBody3D) -> Array:
 	return out
 
 
+static func _passed(pos: Vector3, wp: Vector3, nxt: Vector3) -> bool:
+	## Has the body gone PAST this waypoint on its way to the next one?
+	##
+	## Proximity cannot answer this. A corner waypoint 0.45 m away is near while
+	## the body is still on the wrong side of the corner, so a radius test marks
+	## it reached and the body steers at whatever comes after it -- on
+	## warehouse_district, through the wall the corner existed to avoid. This
+	## asks the direction question instead: project the body onto the leg
+	## leaving the waypoint, and call it consumed only once it is on the far
+	## side. Horizontal only, for the same reason the proximity test is: the
+	## capsule centre rides about half its height above the nav surface, and a
+	## 3D test folds that constant offset into every comparison.
+	var leg := Vector2(nxt.x - wp.x, nxt.z - wp.z)
+	if leg.length() < 0.01:
+		return true
+	var rel := Vector2(pos.x - wp.x, pos.z - wp.z)
+	return rel.dot(leg.normalized()) > 0.0
+
+
 func _drive(w: Dictionary, delta: float) -> void:
 	var body: CharacterBody3D = w["body"]
 	var target: Vector3 = w["targets"][w["ti"]]
@@ -849,7 +912,13 @@ func _drive(w: Dictionary, delta: float) -> void:
 		var hd := Vector2(body.global_position.x - wp.x,
 						  body.global_position.z - wp.z).length()
 		var vd := absf(body.global_position.y - wp.y)
-		if hd < 0.6 and (vd < 1.6 or hd < 0.1):
+		if hd < WP_RADIUS and (vd < 1.6 or hd < 0.1):
+			pi += 1
+		elif pi + 1 < path.size() and _passed(body.global_position, wp,
+				path[pi + 1]):
+			# Not near, but behind: the body has rounded this waypoint and is
+			# on its way to the next. Distance alone cannot tell those apart,
+			# which is the whole defect this replaces.
 			pi += 1
 		else:
 			break
@@ -869,7 +938,13 @@ func _drive(w: Dictionary, delta: float) -> void:
 		var dir := Vector3(to_next.x, 0.0, to_next.z)
 		vel = dir.normalized() * WALK_SPEED if dir.length() > 0.05 \
 			else Vector3.ZERO
-		vel.y = body.velocity.y - 9.8 * delta
+		# Gravity only while AIRBORNE. Accumulating it every frame on a body
+		# that is already standing pins the capsule into the junction where a
+		# ramp meets the floor and fights the slide that would carry it up. A
+		# waypoint on a stair flight often sits at the same height as the body,
+		# so the climbing branch above never fires and this one has to be able
+		# to walk a slope.
+		vel.y = 0.0 if body.is_on_floor() else body.velocity.y - 9.8 * delta
 	body.velocity = vel
 	body.move_and_slide()
 
@@ -880,13 +955,39 @@ func _drive(w: Dictionary, delta: float) -> void:
 	# wedge under a stair flight.
 	if body.is_on_floor() and body.is_on_wall() \
 			and Vector2(vel.x, vel.z).length() > 0.1:
+		# One 0.5 m probe assumed the only thing that can stop a body at a stair
+		# mouth is the riser in front of it. walkup_siege proved otherwise: a
+		# 39.2 deg ramp -- legal by every number in agent_contract.json, and
+		# carrying an eighteen-point navmesh path -- jammed four bots because
+		# the lift had nowhere to go. Try smaller lifts before giving up.
+		#
+		# And record WHICH probe failed. "No headroom to lift" is a finding
+		# about the stairwell, against clearances.min_headroom_m; "no room
+		# ahead" is a finding about the obstacle. A walker that gives up without
+		# saying which sends the reader to the wrong repo.
 		var fwd := Vector3(vel.x, 0.0, vel.z).normalized()
-		var up := Vector3(0, STEP_UP, 0)
-		if not body.test_move(body.global_transform, up):
+		var stepped := false
+		var lifts_blocked := 0
+		var lifts := [STEP_UP, STEP_UP * 0.7, STEP_UP * 0.4]
+		for lift in lifts:
+			var up := Vector3(0.0, float(lift), 0.0)
+			if body.test_move(body.global_transform, up):
+				lifts_blocked += 1
+				continue
 			var lifted := body.global_transform.translated(up)
-			if not body.test_move(lifted, fwd * STEP_FWD):
-				body.global_position += up + fwd * STEP_FWD
-				body.velocity.y = 0.0
+			if body.test_move(lifted, fwd * STEP_FWD):
+				continue
+			body.global_position += up + fwd * STEP_FWD
+			body.velocity.y = 0.0
+			stepped = true
+			break
+		if stepped:
+			w.erase("step_fail")
+		else:
+			w["step_fail"] = ("nothing overhead to lift into (%d/%d probes blocked)"
+							  % [lifts_blocked, lifts.size()]) \
+				if lifts_blocked == lifts.size() \
+				else "lifted clear but nothing to step onto ahead"
 
 	var moved := body.global_position.distance_to(w["last_pos"])
 	w["travelled"] += moved
@@ -927,6 +1028,11 @@ func _drive(w: Dictionary, delta: float) -> void:
 				w["finished"] = true
 				w["status"] = "stuck@target_%d at (%.1f, %.1f, %.1f)" \
 					% [w["ti"], pp.x, pp.y, pp.z]
+				# `at` is set for a walker that ran out the clock but was not
+				# set for one that gave up, so the position existed only inside
+				# the status prose and nothing could read it as a number.
+				w["at"] = [snappedf(pp.x, 0.1), snappedf(pp.y, 0.1),
+						   snappedf(pp.z, 0.1)]
 				# WHAT it is stuck against. A coordinate alone sends the reader
 				# to a plan view to guess, and guessing does not work: seed 5017
 				# put all four walkers on the same point with six metres of open

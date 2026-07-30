@@ -1,0 +1,136 @@
+{
+  "light_manifest_version": "1.1.0",
+  "building_id": "brewery_a02",
+  "theme": "greybox",
+  "space": "Blender Z-up, meters; rot_y = degrees about up; pos is the fixture location",
+  "rig_library": "lux",
+  "anchors": [
+    {
+      "id": "brew_hall_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        0.0,
+        -5.0,
+        4.9
+      ],
+      "rot_y": 0.0,
+      "room": "brew_hall",
+      "row": {
+        "count": 5,
+        "spacing": 8.4
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "north_stock_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        0.0,
+        10.0,
+        4.9
+      ],
+      "rot_y": 0.0,
+      "room": "north_stock",
+      "row": {
+        "count": 5,
+        "spacing": 8.4
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "cellar_west_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        -11.5,
+        0.0,
+        -0.1
+      ],
+      "rot_y": 90.0,
+      "room": "cellar_west",
+      "row": {
+        "count": 5,
+        "spacing": 6.0
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "barrel_vault_ceiling",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        9.5,
+        0.0,
+        -0.1
+      ],
+      "rot_y": 90.0,
+      "room": "barrel_vault",
+      "row": {
+        "count": 5,
+        "spacing": 6.0
+      },
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "ext_0_S_window_1",
+      "type": "window",
+      "source": "derived",
+      "pos": [
+        -14.7,
+        -15.0,
+        2.45
+      ],
+      "rot_y": 90.0,
+      "size": [
+        2.0,
+        1.4
+      ],
+      "reacts_to_alarm": false
+    },
+    {
+      "id": "ext_0_S_sign",
+      "type": "sign",
+      "source": "derived",
+      "pos": [
+        -0.0,
+        -15.2,
+        2.55
+      ],
+      "rot_y": 270.0,
+      "wall": "ext_0_S",
+      "size": [
+        2.6,
+        0.6
+      ],
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "ext_0_N_pack_1",
+      "type": "wall_pack",
+      "source": "derived",
+      "pos": [
+        12.6,
+        15.15,
+        2.45
+      ],
+      "rot_y": 90.0,
+      "wall": "ext_0_N",
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "ext_0_W_pack_1",
+      "type": "wall_pack",
+      "source": "derived",
+      "pos": [
+        -21.15,
+        0.0,
+        3.25
+      ],
+      "rot_y": 180.0,
+      "wall": "ext_0_W",
+      "reacts_to_alarm": true
+    }
+  ]
+}
