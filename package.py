@@ -183,8 +183,124 @@ sha256 (sidecar `.sha256` file) identifies the release.
 """
 
 
+#: A host project for walking a pack in place. The pack ships WITHOUT this by
+#: default: its contract is to be dropped inside someone else's project, and a
+#: nested project.godot breaks that. --walkable opts in, for local validation.
+_WALK_PROJECT = """; Host project for walking this site pack locally.
+;
+; NOT part of the pack's contract. The pack is a drop-in folder for your own
+; Godot project -- DELETE THIS FILE before dropping the folder in, or you will
+; have two project.godot files and Godot will complain about the nested one.
+;
+; Written by `package.py --walkable`.
+
+config_version=5
+
+[application]
+
+config/name="{name} (site pack walk)"
+run/main_scene="res://{scene}"
+{features}
+[navigation]
+
+; The baked navmesh in this pack uses the agent contract's nav_bake grid. Godot's
+; project-wide navigation map defaults to 0.25/0.25, and the engine warns that a
+; map coarser than the mesh it carries "can cause rasterization errors with
+; navigation mesh edges" -- edges in the wrong place, which is the whole class of
+; defect a walk test exists to catch. A consumer dropping this pack into their own
+; project has to set these there; the pack cannot set them for you.
+3d/default_cell_size={cell_size}
+3d/default_cell_height={cell_height}
+
+[debug]
+
+gdscript/warnings/inference_on_variant=1
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
+"""
+
+
+def _godot_features(godot):
+    """The `config/features` line, asked of the engine rather than guessed.
+
+    Naming a version the local editor is not produces an upgrade prompt on open,
+    and hardcoding one bakes whichever machine wrote this tool into every host
+    project it emits. So: query the binary when there is one, and otherwise omit
+    the line entirely and let Godot fill it in on first open.
+    """
+    import re
+    import subprocess
+    if godot and os.path.exists(godot):
+        try:
+            r = subprocess.run([godot, "--version"], capture_output=True,
+                               text=True, timeout=30)
+            m = re.search(r"(\d+)\.(\d+)", (r.stdout or "") + (r.stderr or ""))
+            if m:
+                return f'config/features=PackedStringArray("{m.group(1)}.'\
+                       f'{m.group(2)}")\n'
+        except (OSError, subprocess.SubprocessError):
+            pass
+    return ""
+
+
+def _write_walk_project(pack_dir, name, godot=None):
+    """project.godot in the pack, main scene = the QA walk scene."""
+    scene = f"{name}_walk.tscn"
+    if not os.path.exists(os.path.join(pack_dir, scene)):
+        print(f"[package] --walkable asked for, but {scene} is not in the pack; "
+              f"no project.godot written")
+        return None
+    path = os.path.join(pack_dir, "project.godot")
+    with open(path, "w", encoding="utf-8") as f:
+        nav = lot._agent()["nav_bake"]
+        f.write(_WALK_PROJECT.format(
+            name=name, scene=scene, features=_godot_features(godot),
+            cell_size=float(nav["cell_size_m"]),
+            cell_height=float(nav["cell_height_m"])))
+    return path
+
+
+def _engine_check(pack_dir, godot, name):
+    """Import the pack and instantiate its walk scene, headless.
+
+    A weaker claim than "a human walked it" on purpose: it proves the pack
+    IMPORTS and its scene LOADS, which is the failure class a deterministic zip
+    and a sha256 are silent about. The building packager has had this since day
+    one; the site packager never did, so no site pack has ever been confirmed to
+    open in Godot.
+    """
+    import subprocess
+    if not os.path.exists(godot):
+        print(f"[package] CHECK SKIPPED: no Godot at {godot} -- and a skipped "
+              f"check is not a passing one")
+        return False
+    print(f"[package] engine check: {godot}")
+    imp = subprocess.run([godot, "--headless", "--path", pack_dir, "--import"],
+                         capture_output=True, text=True)
+    run = subprocess.run([godot, "--headless", "--path", pack_dir,
+                          "--quit-after", "120"],
+                         capture_output=True, text=True)
+    blob = "\n".join([imp.stdout or "", imp.stderr or "",
+                       run.stdout or "", run.stderr or ""])
+    errs = [ln for ln in blob.splitlines()
+            if "ERROR" in ln or "SCRIPT ERROR" in ln or "Failed to load" in ln]
+    ok = run.returncode == 0 and not errs
+    print(f"[package]   import exit {imp.returncode}, "
+          f"scene run exit {run.returncode}, {len(errs)} error line(s)")
+    for ln in errs[:8]:
+        print(f"[package]     {ln.strip()[:160]}")
+    print(f"[package]   PACK LOADS IN GODOT = {ok}")
+    if not ok:
+        print(f"[package]   this is the only check that touches the engine. "
+              f"A pack that\n[package]   fails here is not a deliverable, "
+              f"however clean its manifest is.")
+    return ok
+
+
 def build_pack(site_spec_path, out_dir=None, keep_folder=False, dc=None,
-               note=None):
+               note=None, walkable=False, check_godot=None):
     site_spec_path = os.path.abspath(site_spec_path)
     base_dir = os.path.dirname(site_spec_path)
     with open(site_spec_path, encoding="utf-8") as f:
@@ -255,7 +371,26 @@ def build_pack(site_spec_path, out_dir=None, keep_folder=False, dc=None,
                          name, portable=True)
 
     for src, p in resolved.items():
-        shutil.copy2(p, os.path.join(pack_dir, os.path.basename(src)))
+        # Copy to the asset's OWN relative path, not its basename. The scene
+        # emits `path="buildings/x.glb"` relative to itself (that relativity is
+        # what lets this folder sit at any path in a consumer's project), and
+        # basename() flattened it to "x.glb" -- one directory above where the
+        # scene looks. Every site pack ever built failed to load for this reason,
+        # and a manifest, a deterministic zip and a sha256 all describe such a
+        # pack without complaint. Only the engine notices.
+        rel = str(src).replace("\\", "/").lstrip("/")
+        if os.path.isabs(str(src)) or ".." in rel.split("/"):
+            # The scene would have emitted this same odd path, so flattening it
+            # here would not save the pack -- say so rather than quietly
+            # producing something that cannot load.
+            print(f"[package] ASSET PATH NOT PACK-RELATIVE: {src!r}. The scene "
+                  f"references it as written, so the pack will not resolve it. "
+                  f"Use a path relative to the site spec, like "
+                  f"buildings/<name>.glb.")
+            rel = os.path.basename(str(src))
+        dest = os.path.join(pack_dir, *rel.split("/"))
+        os.makedirs(os.path.dirname(dest), exist_ok=True)
+        shutil.copy2(p, dest)
     for gd in ("lot_site_walk.gd", "lot_player.gd"):
         shutil.copy2(os.path.join(HERE, "godot", "addons", "lot", gd),
                      os.path.join(pack_dir, gd))
@@ -293,13 +428,35 @@ def build_pack(site_spec_path, out_dir=None, keep_folder=False, dc=None,
             "sha256": _sha256(p),
             **({"deli_counter": prov} if prov else {}),
         }
-    for fn in sorted(os.listdir(pack_dir)):
-        full = os.path.join(pack_dir, fn)
-        manifest["files"][fn] = {"sha256": _sha256(full),
-                                 "bytes": os.path.getsize(full)}
+    # WALK the pack, do not list it. os.listdir returns names, and every name
+    # used to be a file only because the pack was flat -- assets are now copied
+    # to their own relative paths, so `buildings/` is a directory and
+    # open(directory, "rb") is PermissionError on Windows.
+    #
+    # Recording POSIX relative paths also makes the manifest describe the pack as
+    # the SCENE addresses it ("buildings/warehouse_a02.glb"), agree with the
+    # deterministic zip, which has always stored nested paths, and stay correct
+    # for any depth rather than for exactly one level.
+    for root, dirs, files in os.walk(pack_dir):
+        dirs.sort()
+        for fn in sorted(files):
+            full = os.path.join(root, fn)
+            rel = os.path.relpath(full, pack_dir).replace(os.sep, "/")
+            if rel == "pack.manifest.json":
+                continue        # written below; cannot hash itself
+            manifest["files"][rel] = {"sha256": _sha256(full),
+                                      "bytes": os.path.getsize(full)}
     with open(os.path.join(pack_dir, "pack.manifest.json"), "w",
               encoding="utf-8") as f:
         json.dump(manifest, f, indent=2, sort_keys=True)
+
+    # Written BEFORE the zip so a --walkable pack and its zip agree. It is not
+    # part of the pack's contract, so the README says to delete it when nesting.
+    if walkable:
+        wp = _write_walk_project(pack_dir, name, check_godot)
+        if wp:
+            print(f"[package] walkable: project.godot -> main scene "
+                  f"{name}_walk.tscn")
 
     zip_path = os.path.join(out_dir, f"{name}_pack_v{ver}.zip")
     if os.path.exists(zip_path):
@@ -308,7 +465,11 @@ def build_pack(site_spec_path, out_dir=None, keep_folder=False, dc=None,
     zip_hash = _sha256(zip_path)
     with open(zip_path + ".sha256", "w", encoding="utf-8") as f:
         f.write(f"{zip_hash}  {os.path.basename(zip_path)}\n")
-    if not keep_folder:
+    if check_godot:
+        # The folder has to survive for the engine to look at it, whatever
+        # --keep-folder said.
+        _engine_check(pack_dir, check_godot, name)
+    if not keep_folder and not walkable:
         shutil.rmtree(pack_dir)
 
     if "version" not in site_spec:
@@ -321,6 +482,10 @@ def build_pack(site_spec_path, out_dir=None, keep_folder=False, dc=None,
     print(f"[package]   -> {zip_path}")
     print(f"[package]   sha256 {zip_hash[:16]}…  (sidecar .sha256; "
           f"deterministic: identical inputs give an identical zip)")
+    if walkable:
+        print(f"[package]   walk it:  <godot> --path \"{pack_dir}\"")
+        print(f"[package]   then F6, or add --check <godot> to have package.py "
+              f"load it headless")
     return zip_path
 
 
@@ -333,8 +498,18 @@ def main(argv=None):
     ap.add_argument("--dc", help="Deli Counter repo (for build/ .glb lookup)")
     ap.add_argument("--note", help="free-text release note recorded in "
                     "pack.manifest.json (e.g. 'walked full route 2026-07-01')")
+    ap.add_argument("--walkable", action="store_true",
+                    help="also write project.godot so the pack opens as a Godot "
+                         "project and F6 walks it (delete that file before "
+                         "dropping the folder into your own project); implies "
+                         "--keep-folder")
+    ap.add_argument("--check", metavar="GODOT", default=None,
+                    help="import the pack and load its walk scene headless, "
+                         "failing on a Godot error; implies --walkable")
     a = ap.parse_args(argv)
-    build_pack(a.site_spec, a.out, a.keep_folder, a.dc, note=a.note)
+    walkable = a.walkable or bool(a.check)
+    build_pack(a.site_spec, a.out, a.keep_folder, a.dc, note=a.note,
+               walkable=walkable, check_godot=a.check)
 
 
 if __name__ == "__main__":

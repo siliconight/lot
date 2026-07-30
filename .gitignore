@@ -29,3 +29,10 @@ _scratch_archive/
 *.pre_cli
 *.pre_stamp
 *.pre_endings
+
+# build output and editor backups -- regenerable, not history
+dist/
+*.pre_step
+*.pre_walkable
+*.pre_paths
+*.pre_manifest

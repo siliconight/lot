@@ -1231,6 +1231,19 @@ def _ladder_volume_nodes(merged):
     return body, subs
 
 
+def _player_metric(key, fallback):
+    """One body metric from the contract, for the walk scene's Player node.
+
+    Exists so the walk scene cannot carry a second opinion about the body. Each
+    of these was a literal in the emitted .tscn, and lot_player.gd carried a
+    third copy of the step height as an export default.
+    """
+    try:
+        return float(_agent()["characters"]["player"][key])
+    except (KeyError, TypeError, ValueError):
+        return fallback
+
+
 def write_walk_scene(site_spec, merged, walk_out, site_tscn_base,
                      addon_dir="addons/lot", portable=False, solids=None):
     """Emit <name>_walk.tscn: instances the composed site under a baked
@@ -1319,14 +1332,24 @@ def write_walk_scene(site_spec, merged, walk_out, site_tscn_base,
         '[node name="Nav" type="NavigationRegion3D" parent="."]',
         'navigation_mesh = SubResource("NavMesh")', '',
         '[node name="Site" parent="./Nav" instance=ExtResource("site")]', '',
+        # Every body metric on this node comes from the contract. The capsule
+        # already did; the step-up ceiling, the head-clearance height, the
+        # collision offset and the eye height were literals, and lot_player.gd's
+        # own default step height (0.45) had already drifted from the contract's
+        # max_step_up_m (0.5). The collision shape sits half the body height up
+        # because the node origin is at the FEET.
         '[node name="Player" type="CharacterBody3D" parent="."]',
         f'transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, {player_godot})',
-        'script = ExtResource("player")', '',
+        'script = ExtResource("player")',
+        f'max_step_height = {_player_metric("max_step_up_m", 0.5)}',
+        f'body_height = {_player_metric("height_m", 1.8)}', '',
         '[node name="col" type="CollisionShape3D" parent="Player"]',
-        'transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)',
+        f'transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, '
+        f'{_player_metric("height_m", 1.8) / 2.0}, 0)',
         'shape = SubResource("PlayerCol")', '',
         '[node name="Camera" type="Camera3D" parent="Player"]',
-        'transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, 0)', '',
+        f'transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, '
+        f'{_player_metric("eye_height_m", 1.6)}, 0)', '',
     ]
     with open(walk_out, "w", encoding="utf-8") as f:
         f.write("\n".join(lines))

@@ -11,11 +11,20 @@ extends CharacterBody3D
 @export var jump_velocity := 4.5
 @export var mouse_sensitivity := 0.0025
 ## Max height the body auto-steps up in one move: curbs/sidewalks, ledges, and
-## steep stair noses the capsule would otherwise catch on. Keep under ~0.5 m so
-## you don't climb things you shouldn't. This is a raycast-probe step-up with a
-## valid-direction + head-clearance check (after move_and_slide), adapted from
-## the standard FPS step-climbing approach.
+## steep stair noses the capsule would otherwise catch on. This is a
+## raycast-probe step-up with a valid-direction + head-clearance check (after
+## move_and_slide), adapted from the standard FPS step-climbing approach.
+##
+## The walk scene sets this from the agent contract
+## (characters.player.max_step_up_m), because a default here and a number in the
+## contract are two values for one quantity and they had already diverged -- 0.45
+## against 0.5.
 @export var max_step_height := 0.45
+## Full body height, including both capsule hemispheres. Used for the step-up's
+## head-clearance probe: a hardcoded 1.7 m there cleared only 1.65 m against a
+## 1.8 m body, so the body could be lifted into geometry its own head occupies.
+## Also set from the contract by the walk scene.
+@export var body_height := 1.8
 ## Vertical climb speed on ladder volumes (m/s). The walk scene emits the
 ## Area3D climb volumes (group "ladder") from the site's gameplay ladder
 ## markers — same contract as Deli Counter's post-import.
@@ -93,11 +102,27 @@ func _move_with_steps(delta: float) -> void:
 		return
 	var into := horiz.normalized()
 
-	# Only step if we're pushing INTO a near-vertical face, not sliding along it.
+	# Only step if we're pushing INTO something the engine does NOT count as
+	# floor, and not merely sliding along it.
+	#
+	# This threshold was a fixed 0.2, and that made the step-up backwards. A
+	# capsule meets a LOW step on its bottom hemisphere, so the contact normal is
+	# sloped, not vertical: n.y = (R - h) / R. Demanding n.y < 0.2 demands
+	# h > 0.8 * R -- 0.28 m for a 0.35 m body -- so nothing shorter ever set
+	# `blocked` and nothing shorter was ever stepped. Tall obstacles got climbed
+	# and curbs did not. Between the tallest step the capsule WALKS up (0.1025 m)
+	# and 0.28 m the body just stopped, and SIDEWALK_H at 0.16 m sat in that band.
+	#
+	# floor_max_angle is the same threshold the engine uses to decide whether a
+	# contact is floor, so cos(floor_max_angle) puts this lower bound exactly
+	# where walking stops working: n.y < cos(45 deg) means h > 0.2929 * R, which
+	# is R * (1 - cos(floor_max_angle)) -- clearances.unassisted_step_max_m. The
+	# two ranges meet with no gap, and they keep meeting if the body changes.
+	var floor_cos := cos(floor_max_angle)
 	var blocked := false
 	for i in get_slide_collision_count():
 		var col := get_slide_collision(i)
-		if absf(col.get_normal().y) < 0.2 and into.dot(-col.get_normal()) > 0.3:
+		if absf(col.get_normal().y) < floor_cos and into.dot(-col.get_normal()) > 0.3:
 			blocked = true
 			break
 	if not blocked:
@@ -117,10 +142,14 @@ func _move_with_steps(delta: float) -> void:
 	if rise <= 0.02 or rise > max_step_height:
 		return
 
-	# Head clearance: don't climb into a low ceiling / under geometry.
+	# Head clearance: don't climb into a low ceiling / under geometry. The upper
+	# end was a hardcoded 1.7, which clears 1.65 m from the step surface against
+	# a body 1.8 m tall -- 0.15 m short, so the body could be lifted into
+	# geometry its own head occupies.
 	var hp: Vector3 = hit["position"]
 	var head := PhysicsRayQueryParameters3D.create(
-		Vector3(hp.x, step_top + 0.05, hp.z), Vector3(hp.x, step_top + 1.7, hp.z))
+		Vector3(hp.x, step_top + 0.05, hp.z),
+		Vector3(hp.x, step_top + body_height, hp.z))
 	head.exclude = [get_rid()]
 	if not space.intersect_ray(head).is_empty():
 		return
