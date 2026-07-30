@@ -1,0 +1,11 @@
+{
+  "glb": "bank_tower_a01.glb",
+  "glb_sha256": "9f1ec1ff98f6c0ac15168776c7788f8f59f80a37732978c53af100c273b16594",
+  "glb_bytes": 167540,
+  "spec": "bank_tower_a01.json",
+  "spec_sha256": "3a5f20b702e1e739c8b15689eafd38a1a7da4a76d9db7cb59c4e5f2af53644bf",
+  "builder_sha256": "6caf6fc1d8d2f7ee3e3d59d243cb3022361bffccc430fd90be14862ac52d675e",
+  "builder_files": 68,
+  "deli_counter_version": "Deli Counter 0.88.0",
+  "stamped_utc": "2026-07-30T11:56:32Z"
+}

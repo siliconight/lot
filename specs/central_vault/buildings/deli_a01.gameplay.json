@@ -4873,7 +4873,7 @@
         "type": "exit_passage",
         "room": "stairwell",
         "via": [],
-        "destination": "stockroom_loading",
+        "destination": "deli_counter",
         "route_hops": 1
       },
       "egress": {
@@ -5039,7 +5039,7 @@
         "type": "exit_passage",
         "room": "stairwell",
         "via": [],
-        "destination": "stockroom_loading",
+        "destination": "deli_counter",
         "route_hops": 1
       },
       "egress": {

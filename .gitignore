@@ -26,3 +26,6 @@ _scratch_archive/
 *.pre_visible
 *.pre_accessor
 *.pre_angle
+*.pre_cli
+*.pre_stamp
+*.pre_endings

@@ -1,0 +1,11 @@
+{
+  "glb": "brewery_a02.glb",
+  "glb_sha256": "3c5669f92aaa3a22a4c7d6f6ba711f9a7023d706bddf480135100dbf06ca9c5b",
+  "glb_bytes": 166060,
+  "spec": "brewery_a02.json",
+  "spec_sha256": "ff5f0e1f7d0326d14410e06619d779ea84468fb8180378e1a6b635496bd774af",
+  "builder_sha256": "6caf6fc1d8d2f7ee3e3d59d243cb3022361bffccc430fd90be14862ac52d675e",
+  "builder_files": 68,
+  "deli_counter_version": "Deli Counter 0.88.0",
+  "stamped_utc": "2026-07-30T11:56:35Z"
+}

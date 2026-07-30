@@ -1,0 +1,11 @@
+{
+  "glb": "funeral_home_a01.glb",
+  "glb_sha256": "163649a4f0eeeb0a672bc26d005cd2a111a76b099b4e2817670d5798dfad3767",
+  "glb_bytes": 139068,
+  "spec": "funeral_home_a01.json",
+  "spec_sha256": "3294638ca9b24098df1a0392bf01c1e66a7ee950479682be1a59b0a21798c337",
+  "builder_sha256": "6caf6fc1d8d2f7ee3e3d59d243cb3022361bffccc430fd90be14862ac52d675e",
+  "builder_files": 68,
+  "deli_counter_version": "Deli Counter 0.88.0",
+  "stamped_utc": "2026-07-30T11:57:00Z"
+}

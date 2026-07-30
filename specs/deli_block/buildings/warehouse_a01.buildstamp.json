@@ -1,0 +1,11 @@
+{
+  "glb": "warehouse_a01.glb",
+  "glb_sha256": "35c08b6721dfd14e7fae5a70b3fe5e3d851ae52bbe91586362c98b255e873db1",
+  "glb_bytes": 119380,
+  "spec": "warehouse_a01.json",
+  "spec_sha256": "477e58e2c9f2b5adb5844dbdeec2e2acc85aafd8c4a3a6fe67334aa4e597dddb",
+  "builder_sha256": "6caf6fc1d8d2f7ee3e3d59d243cb3022361bffccc430fd90be14862ac52d675e",
+  "builder_files": 68,
+  "deli_counter_version": "Deli Counter 0.88.0",
+  "stamped_utc": "2026-07-30T11:57:46Z"
+}

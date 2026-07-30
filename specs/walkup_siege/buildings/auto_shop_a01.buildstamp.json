@@ -1,0 +1,11 @@
+{
+  "glb": "auto_shop_a01.glb",
+  "glb_sha256": "35d1efe4d1466a860fca966ec0f463614a01187bcad6f657628778b3167ab673",
+  "glb_bytes": 180404,
+  "spec": "auto_shop_a01.json",
+  "spec_sha256": "b6f058986b465337ebda692881872aea996f1c15b259aa5d7bbbbb07b6b9c451",
+  "builder_sha256": "6caf6fc1d8d2f7ee3e3d59d243cb3022361bffccc430fd90be14862ac52d675e",
+  "builder_files": 68,
+  "deli_counter_version": "Deli Counter 0.88.0",
+  "stamped_utc": "2026-07-30T11:56:24Z"
+}

@@ -1,0 +1,11 @@
+{
+  "glb": "museum_a02.glb",
+  "glb_sha256": "330389decd46d0e2264463a85fa12d55a16f4ee9c868ef6952d1f4fd62e2e509",
+  "glb_bytes": 154908,
+  "spec": "museum_a02.json",
+  "spec_sha256": "d2f9e2bb9e7eb5123475846beffe28c1fa2e3b44f3e05e9e394541631d5c80cb",
+  "builder_sha256": "6caf6fc1d8d2f7ee3e3d59d243cb3022361bffccc430fd90be14862ac52d675e",
+  "builder_files": 68,
+  "deli_counter_version": "Deli Counter 0.88.0",
+  "stamped_utc": "2026-07-30T11:57:19Z"
+}
