@@ -1789,17 +1789,6 @@ def assemble(site_spec_path, out_dir=None, walkable=False, navqa=False, preview=
             # silently hid this gate's first live run, findings and failures
             # alike.
             print(f"[lot] {_i['code']}: {_i['message']}")
-        # This gate necessarily runs AFTER the gameplay contract was written,
-        # because it reads back the .tscn emitted above. Fold its findings in and
-        # rewrite, so <site>.site.gameplay.json carries EVERY finding with the
-        # severity its emitter gave it. Anything downstream can then read one
-        # file instead of re-deriving severity from printed text -- which is what
-        # library_walk was doing, with a hardcoded lookup table that was already
-        # missing a severity level the emitters use.
-        if result_steps:
-            tactical_report.setdefault("findings", []).extend(result_steps)
-            with open(gp_out, "w", encoding="utf-8") as _gf:
-                json.dump(merged, _gf, indent=2)
     except Exception as _e:
         print(f"[lot] STEP GATE DID NOT RUN ({type(_e).__name__}: {_e}) -- "
               f"a silent check is not a passing one")
