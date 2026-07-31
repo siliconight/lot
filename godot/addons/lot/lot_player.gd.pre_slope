@@ -172,25 +172,6 @@ func _move_with_steps(delta: float, wish: Vector3) -> void:
 	if rise <= 0.02 or rise > max_step_height:
 		return
 
-	# Is the thing we would stand on actually a FLOOR? A step has a walkable top;
-	# a ramp does not, and on a continuous incline this probe ALWAYS finds a
-	# surface `ahead * tan(pitch)` higher -- 0.48 m on a 50 degree flight, inside
-	# max_step_height, so it fires. It then lifts the body by that much while
-	# advancing it about 0.05 m, leaving it in mid-air above the ramp; is_on_floor
-	# goes false, this stops running, the body slides back down, and next frame it
-	# fires again. The lift is set by the probe distance rather than by the
-	# geometry, so it never converges: reported from play as "it tries to get up
-	# but fails and falls down".
-	#
-	# The old `absf(n.y) < 0.2` gate never fired on a slope, so a too-steep flight
-	# simply stopped the body. Widening the gate to cos(floor_max_angle) -- right
-	# for the kerb it was written for -- also opened it to slopes it cannot climb.
-	# Stopping dead is a better failure than being launched and dropped.
-	#
-	# The probe already returns the surface normal and it was being discarded.
-	if hit.get("normal", Vector3.UP).y < cos(floor_max_angle):
-		return
-
 	# Head clearance: don't climb into a low ceiling / under geometry. The upper
 	# end was a hardcoded 1.7, which clears 1.65 m from the step surface against
 	# a body 1.8 m tall -- 0.15 m short, so the body could be lifted into

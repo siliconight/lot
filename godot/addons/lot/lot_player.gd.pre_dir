@@ -33,24 +33,9 @@ extends CharacterBody3D
 var _cam: Camera3D
 var _yaw := 0.0
 var _pitch := 0.0
-## Capsule radius, taken from the collision shape this scene actually carries so
-## the step-up's forward probe clears the body instead of landing inside it.
-var _radius := 0.35
-
-
-func _find_radius() -> float:
-	for c in get_children():
-		if c is CollisionShape3D:
-			var s := (c as CollisionShape3D).shape
-			if s is CapsuleShape3D:
-				return (s as CapsuleShape3D).radius
-			if s is CylinderShape3D:
-				return (s as CylinderShape3D).radius
-	return 0.35
 
 
 func _ready() -> void:
-	_radius = _find_radius()
 	_cam = get_node_or_null("Camera") as Camera3D
 	if _cam == null:
 		# build a camera at eye height if the scene didn't ship one
@@ -102,32 +87,20 @@ func _physics_process(delta: float) -> void:
 	var dir := (transform.basis * Vector3(input_dir.x, 0, input_dir.y)).normalized()
 	velocity.x = dir.x * spd
 	velocity.z = dir.z * spd
-	# `dir` is where the player is STEERING. Pass it: move_and_slide rewrites
-	# velocity to the post-slide result, so reading velocity afterwards tells you
-	# where the body ended up, which at a kerb is either nowhere (head-on, the
-	# component into the face removed) or sideways (angled, sliding along it).
-	_move_with_steps(delta, dir)
+	_move_with_steps(delta)
 
 
-func _move_with_steps(delta: float, wish: Vector3) -> void:
+func _move_with_steps(delta: float) -> void:
 	# Normal move first. If grounded and walking into a short near-vertical
 	# obstacle (curb, ledge, steep stair nose), lift onto it and continue --
 	# CharacterBody3D has no built-in step handling.
 	move_and_slide()
 	if not is_on_floor():
 		return
-	# Where the body is TRYING to go, not where it ended up. This read velocity
-	# AFTER move_and_slide, which rewrites it to the post-slide result: head-on
-	# into a kerb the horizontal velocity is ~0 and the length test returned
-	# early, and at an angle the velocity runs ALONG the kerb so the dot test
-	# below failed. Between them the step-up fired only for a narrow band of
-	# approach angles -- reported from play as kerbs that work from some
-	# directions and not others. `wish` is the input direction, identical on
-	# every approach and unaffected by the collision response.
-	var into := Vector3(wish.x, 0.0, wish.z)
-	if into.length() < 0.05:
+	var horiz := Vector3(velocity.x, 0.0, velocity.z)
+	if horiz.length() < 0.05:
 		return
-	into = into.normalized()
+	var into := horiz.normalized()
 
 	# Only step if we're pushing INTO something the engine does NOT count as
 	# floor, and not merely sliding along it.
@@ -155,12 +128,9 @@ func _move_with_steps(delta: float, wish: Vector3) -> void:
 	if not blocked:
 		return
 
-	# Probe straight down from step height, just past the body's own surface, for
-	# the step's top. The distance was pinned at 0.4, which clears a 0.35 m
-	# capsule by 0.05 and would land INSIDE anything wider -- finding the body's
-	# own floor instead of the step in front of it.
+	# Probe straight down from step height, just ahead, for the surface top.
 	var space := get_world_3d().direct_space_state
-	var ahead := into * (_radius + 0.05)
+	var ahead := into * 0.4
 	var from := global_position + Vector3.UP * max_step_height + ahead
 	var q := PhysicsRayQueryParameters3D.create(from, from - Vector3.UP * (max_step_height + 0.05))
 	q.exclude = [get_rid()]
@@ -170,25 +140,6 @@ func _move_with_steps(delta: float, wish: Vector3) -> void:
 	var step_top: float = hit["position"].y
 	var rise := step_top - global_position.y
 	if rise <= 0.02 or rise > max_step_height:
-		return
-
-	# Is the thing we would stand on actually a FLOOR? A step has a walkable top;
-	# a ramp does not, and on a continuous incline this probe ALWAYS finds a
-	# surface `ahead * tan(pitch)` higher -- 0.48 m on a 50 degree flight, inside
-	# max_step_height, so it fires. It then lifts the body by that much while
-	# advancing it about 0.05 m, leaving it in mid-air above the ramp; is_on_floor
-	# goes false, this stops running, the body slides back down, and next frame it
-	# fires again. The lift is set by the probe distance rather than by the
-	# geometry, so it never converges: reported from play as "it tries to get up
-	# but fails and falls down".
-	#
-	# The old `absf(n.y) < 0.2` gate never fired on a slope, so a too-steep flight
-	# simply stopped the body. Widening the gate to cos(floor_max_angle) -- right
-	# for the kerb it was written for -- also opened it to slopes it cannot climb.
-	# Stopping dead is a better failure than being launched and dropped.
-	#
-	# The probe already returns the surface normal and it was being discarded.
-	if hit.get("normal", Vector3.UP).y < cos(floor_max_angle):
 		return
 
 	# Head clearance: don't climb into a low ceiling / under geometry. The upper
