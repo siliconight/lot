@@ -613,10 +613,10 @@ def ground_holes(site_spec, self_flooring=None):
 
 
 def _kerb_crossings(site_spec, bld, origin, along, perp, offset, length, width):
-    """(centre, span) per crossing: where a path crosses this kerb, and how much
-    kerb that crossing consumes measured along it.
+    """(centre, span) per crossing: where a path OR another road crosses this
+    kerb, and how much kerb that crossing consumes measured along it.
 
-    Distances are from the road's start point. A path that runs parallel, or
+    Distances are from the road's start point. Anything that runs parallel, or
     crosses beyond either end, contributes nothing -- there is no crossing to
     drop. `width` is the kerb band's depth."""
     ox, oy = origin
@@ -625,7 +625,22 @@ def _kerb_crossings(site_spec, bld, origin, along, perp, offset, length, width):
     # A point on this kerb is origin + u*t + p*offset.
     kx, ky = ox + px * offset, oy + py * offset
     out = []
-    for p in site_spec.get("paths", []) or []:
+    # Everything that crosses this kerb and therefore needs it dropped. `paths`
+    # are the site's designed circulation; ROADS were missing entirely, and at a
+    # junction that means one road's kerb runs uncut across the other's
+    # carriageway -- four raised strips through the crossroads on
+    # warehouse_district, a 0.16 m wall across a road. No gate catches it either:
+    # site_steps reports a rise only where a designed PATH crosses it.
+    #
+    # The angle-aware span below is already correct for a road; a road simply
+    # brings its carriageway width where a path brings its own. And a road does
+    # not cut its own kerb without a special case, because a road is parallel to
+    # its own sidewalk and the parallel test drops it.
+    crossers = [(p, float(p.get("width", 6.0)), "path")
+                for p in site_spec.get("paths", []) or []]
+    crossers += [(r, float(r.get("width", 9.0)), "road")
+                 for r in site_spec.get("roads", []) or []]
+    for p, pw, kind in crossers:
         try:
             pax, pay = bld[p["from"]]["at"] if "from" in p else p["a"]
             pbx, pby = bld[p["to"]]["at"] if "to" in p else p["b"]
@@ -650,7 +665,6 @@ def _kerb_crossings(site_spec, bld, origin, along, perp, offset, length, width):
         # crossing was head-on: on ballpark_block a 6 m path meets the kerb at
         # 35 deg and needs 12.0 m, so a 7.2 m cut left the route spilling onto
         # the sidewalk sections either side and hitting a 0.16 m wall on both.
-        pw = float(p.get("width", 6.0))
         vl = math.hypot(vx, vy) or 1e-9
         cos_t = abs(vx * ux + vy * uy) / vl
         sin_t = abs(vx * px + vy * py) / vl
@@ -661,8 +675,9 @@ def _kerb_crossings(site_spec, bld, origin, along, perp, offset, length, width):
             # over the rise somewhere -- but a designer should see it, since the
             # honest fix is usually to re-route or to run the path on the
             # sidewalk instead of through it.
-            print(f"[lot] LOT_KERB_CROSSED_SHALLOW: a {pw} m path meets this "
-                  f"kerb at {math.degrees(math.asin(min(1.0, sin_t))):.0f} deg "
+            print(f"[lot] LOT_KERB_CROSSED_SHALLOW: a {pw} m {kind} meets "
+                  f"this kerb at "
+                  f"{math.degrees(math.asin(min(1.0, sin_t))):.0f} deg "
                   f"{t:.1f} m along it, so {span:.1f} m of kerb is dropped to "
                   f"keep the crossing walkable. Re-route it closer to square, "
                   f"or run it along the sidewalk rather than across it.")
