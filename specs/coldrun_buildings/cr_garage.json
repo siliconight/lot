@@ -1,0 +1,758 @@
+{
+  "$schema": "../schema/level.schema.json",
+  "name": "cr_garage",
+  "mode": "heist",
+  "seed": 2002,
+  "grid": 0.5,
+  "footprint_x": 36.0,
+  "footprint_y": 28.0,
+  "story_height": 3.0,
+  "n_stories": 2,
+  "has_basement": false,
+  "wall_thick": 0.35,
+  "floor_thick": 0.3,
+  "collision": "convex",
+  "auto_exterior": true,
+  "scale_ref": false,
+  "default_material": "concrete",
+  "materials": [
+    {
+      "id": "concrete",
+      "acoustic": "Concrete",
+      "absorption": 0.7,
+      "damping": 0.6
+    },
+    {
+      "id": "drywall",
+      "acoustic": "Drywall"
+    },
+    {
+      "id": "glass",
+      "acoustic": "Glass",
+      "absorption": 0.1,
+      "damping": 0.05
+    },
+    {
+      "id": "metal",
+      "acoustic": "Metal",
+      "absorption": 0.5,
+      "damping": 0.3
+    },
+    {
+      "id": "wood",
+      "acoustic": "Wood"
+    }
+  ],
+  "ext_walls": [
+    {
+      "wall": "S",
+      "story": 0,
+      "material": "concrete",
+      "openings": [
+        {
+          "kind": "garage",
+          "pos": -0.25,
+          "width": 5.0,
+          "height": 2.4,
+          "tag": "vehicle_in"
+        },
+        {
+          "kind": "garage",
+          "pos": 0.25,
+          "width": 5.0,
+          "height": 2.4,
+          "tag": "vehicle_out"
+        },
+        {
+          "kind": "door",
+          "pos": 0.45,
+          "width": 1.1,
+          "tag": "pedestrian_s"
+        }
+      ]
+    },
+    {
+      "wall": "N",
+      "story": 0,
+      "material": "concrete",
+      "openings": [
+        {
+          "kind": "door",
+          "pos": -0.4,
+          "width": 1.1,
+          "tag": "pedestrian_n"
+        },
+        {
+          "kind": "breach",
+          "pos": 0.3,
+          "width": 1.6,
+          "breach_class": "soft_wall",
+          "material": "drywall",
+          "tag": "north_breach"
+        }
+      ]
+    },
+    {
+      "wall": "W",
+      "story": 0,
+      "material": "concrete",
+      "openings": [
+        {
+          "kind": "door",
+          "pos": 0.0,
+          "width": 1.1,
+          "tag": "west_ped"
+        }
+      ]
+    },
+    {
+      "wall": "E",
+      "story": 0,
+      "material": "concrete",
+      "openings": [
+        {
+          "kind": "door",
+          "pos": 0.0,
+          "width": 1.1,
+          "tag": "east_ped"
+        }
+      ]
+    },
+    {
+      "wall": "S",
+      "story": 1,
+      "material": "concrete",
+      "openings": [
+        {
+          "kind": "window",
+          "pos": -0.25,
+          "width": 6.0,
+          "height": 1.4,
+          "sill": 1.0
+        },
+        {
+          "kind": "window",
+          "pos": 0.25,
+          "width": 6.0,
+          "height": 1.4,
+          "sill": 1.0
+        }
+      ]
+    },
+    {
+      "wall": "N",
+      "story": 1,
+      "material": "concrete",
+      "openings": [
+        {
+          "kind": "window",
+          "pos": -0.25,
+          "width": 6.0,
+          "height": 1.4,
+          "sill": 1.0
+        },
+        {
+          "kind": "window",
+          "pos": 0.25,
+          "width": 6.0,
+          "height": 1.4,
+          "sill": 1.0
+        }
+      ]
+    },
+    {
+      "wall": "E",
+      "story": 1,
+      "material": "concrete",
+      "openings": [
+        {
+          "kind": "window",
+          "pos": -0.25,
+          "width": 6.0,
+          "height": 1.4,
+          "sill": 1.0
+        },
+        {
+          "kind": "window",
+          "pos": 0.25,
+          "width": 6.0,
+          "height": 1.4,
+          "sill": 1.0
+        }
+      ]
+    },
+    {
+      "wall": "W",
+      "story": 1,
+      "material": "concrete",
+      "openings": [
+        {
+          "kind": "window",
+          "pos": -0.25,
+          "width": 6.0,
+          "height": 1.4,
+          "sill": 1.0
+        },
+        {
+          "kind": "window",
+          "pos": 0.25,
+          "width": 6.0,
+          "height": 1.4,
+          "sill": 1.0
+        }
+      ]
+    }
+  ],
+  "partitions": [
+    {
+      "story": 0,
+      "axis": "Y",
+      "pos": -10.0,
+      "start": -14.0,
+      "end": -8.0,
+      "material": "glass",
+      "openings": [
+        {
+          "kind": "door",
+          "pos": 0.0,
+          "width": 1.4,
+          "tag": "booth_e"
+        }
+      ]
+    },
+    {
+      "story": 0,
+      "axis": "X",
+      "pos": -8.0,
+      "start": -18.0,
+      "end": -10.0,
+      "material": "glass",
+      "openings": [
+        {
+          "kind": "door",
+          "pos": 0.0,
+          "width": 1.2,
+          "tag": "booth_n"
+        }
+      ]
+    }
+  ],
+  "ramps": [
+    {
+      "x": 13.0,
+      "y": 0.0,
+      "from_story": 0,
+      "to_story": 1,
+      "run": 10.0,
+      "width": 3.0,
+      "axis": "Y",
+      "cut_slabs": true
+    }
+  ],
+  "stairs": [
+    {
+      "x": -14.0,
+      "y": 10.0,
+      "from_story": 0,
+      "to_story": 1,
+      "style": "switchback",
+      "cut_slabs": true,
+      "facing": "E",
+      "id": "cr_garage_stair_0",
+      "meta": {
+        "generated_by": "presets"
+      },
+      "role": "primary_egress"
+    }
+  ],
+  "vault_ledges": [],
+  "volumes": [
+    {
+      "name": "col_0_00",
+      "x": -12.0,
+      "y": -8.0,
+      "z": 1.5,
+      "size_x": 0.5,
+      "size_y": 0.5,
+      "size_z": 3.0,
+      "collision": "convex",
+      "material": "concrete"
+    },
+    {
+      "name": "col_0_01",
+      "x": -12.0,
+      "y": 0.0,
+      "z": 1.5,
+      "size_x": 0.5,
+      "size_y": 0.5,
+      "size_z": 3.0,
+      "collision": "convex",
+      "material": "concrete"
+    },
+    {
+      "name": "col_0_02",
+      "x": -12.0,
+      "y": 8.0,
+      "z": 1.5,
+      "size_x": 0.5,
+      "size_y": 0.5,
+      "size_z": 3.0,
+      "collision": "convex",
+      "material": "concrete"
+    },
+    {
+      "name": "col_0_10",
+      "x": -4.0,
+      "y": -8.0,
+      "z": 1.5,
+      "size_x": 0.5,
+      "size_y": 0.5,
+      "size_z": 3.0,
+      "collision": "convex",
+      "material": "concrete"
+    },
+    {
+      "name": "col_0_11",
+      "x": -4.0,
+      "y": 0.0,
+      "z": 1.5,
+      "size_x": 0.5,
+      "size_y": 0.5,
+      "size_z": 3.0,
+      "collision": "convex",
+      "material": "concrete"
+    },
+    {
+      "name": "col_0_12",
+      "x": -4.0,
+      "y": 8.0,
+      "z": 1.5,
+      "size_x": 0.5,
+      "size_y": 0.5,
+      "size_z": 3.0,
+      "collision": "convex",
+      "material": "concrete"
+    },
+    {
+      "name": "col_0_20",
+      "x": 4.0,
+      "y": -8.0,
+      "z": 1.5,
+      "size_x": 0.5,
+      "size_y": 0.5,
+      "size_z": 3.0,
+      "collision": "convex",
+      "material": "concrete"
+    },
+    {
+      "name": "col_0_21",
+      "x": 4.0,
+      "y": 0.0,
+      "z": 1.5,
+      "size_x": 0.5,
+      "size_y": 0.5,
+      "size_z": 3.0,
+      "collision": "convex",
+      "material": "concrete"
+    },
+    {
+      "name": "col_0_22",
+      "x": 4.0,
+      "y": 8.0,
+      "z": 1.5,
+      "size_x": 0.5,
+      "size_y": 0.5,
+      "size_z": 3.0,
+      "collision": "convex",
+      "material": "concrete"
+    },
+    {
+      "name": "col_0_30",
+      "x": 10.0,
+      "y": -8.0,
+      "z": 1.5,
+      "size_x": 0.5,
+      "size_y": 0.5,
+      "size_z": 3.0,
+      "collision": "convex",
+      "material": "concrete"
+    },
+    {
+      "name": "col_0_31",
+      "x": 10.0,
+      "y": 0.0,
+      "z": 1.5,
+      "size_x": 0.5,
+      "size_y": 0.5,
+      "size_z": 3.0,
+      "collision": "convex",
+      "material": "concrete"
+    },
+    {
+      "name": "col_0_32",
+      "x": 10.0,
+      "y": 8.0,
+      "z": 1.5,
+      "size_x": 0.5,
+      "size_y": 0.5,
+      "size_z": 3.0,
+      "collision": "convex",
+      "material": "concrete"
+    },
+    {
+      "name": "col_1_00",
+      "x": -12.0,
+      "y": -8.0,
+      "z": 4.5,
+      "size_x": 0.5,
+      "size_y": 0.5,
+      "size_z": 3.0,
+      "collision": "convex",
+      "material": "concrete"
+    },
+    {
+      "name": "col_1_01",
+      "x": -12.0,
+      "y": 0.0,
+      "z": 4.5,
+      "size_x": 0.5,
+      "size_y": 0.5,
+      "size_z": 3.0,
+      "collision": "convex",
+      "material": "concrete"
+    },
+    {
+      "name": "col_1_02",
+      "x": -12.0,
+      "y": 8.0,
+      "z": 4.5,
+      "size_x": 0.5,
+      "size_y": 0.5,
+      "size_z": 3.0,
+      "collision": "convex",
+      "material": "concrete"
+    },
+    {
+      "name": "col_1_10",
+      "x": -4.0,
+      "y": -8.0,
+      "z": 4.5,
+      "size_x": 0.5,
+      "size_y": 0.5,
+      "size_z": 3.0,
+      "collision": "convex",
+      "material": "concrete"
+    },
+    {
+      "name": "col_1_11",
+      "x": -4.0,
+      "y": 0.0,
+      "z": 4.5,
+      "size_x": 0.5,
+      "size_y": 0.5,
+      "size_z": 3.0,
+      "collision": "convex",
+      "material": "concrete"
+    },
+    {
+      "name": "col_1_12",
+      "x": -4.0,
+      "y": 8.0,
+      "z": 4.5,
+      "size_x": 0.5,
+      "size_y": 0.5,
+      "size_z": 3.0,
+      "collision": "convex",
+      "material": "concrete"
+    },
+    {
+      "name": "col_1_20",
+      "x": 4.0,
+      "y": -8.0,
+      "z": 4.5,
+      "size_x": 0.5,
+      "size_y": 0.5,
+      "size_z": 3.0,
+      "collision": "convex",
+      "material": "concrete"
+    },
+    {
+      "name": "col_1_21",
+      "x": 4.0,
+      "y": 0.0,
+      "z": 4.5,
+      "size_x": 0.5,
+      "size_y": 0.5,
+      "size_z": 3.0,
+      "collision": "convex",
+      "material": "concrete"
+    },
+    {
+      "name": "col_1_22",
+      "x": 4.0,
+      "y": 8.0,
+      "z": 4.5,
+      "size_x": 0.5,
+      "size_y": 0.5,
+      "size_z": 3.0,
+      "collision": "convex",
+      "material": "concrete"
+    },
+    {
+      "name": "col_1_30",
+      "x": 10.0,
+      "y": -8.0,
+      "z": 4.5,
+      "size_x": 0.5,
+      "size_y": 0.5,
+      "size_z": 3.0,
+      "collision": "convex",
+      "material": "concrete"
+    },
+    {
+      "name": "col_1_31",
+      "x": 10.0,
+      "y": 0.0,
+      "z": 4.5,
+      "size_x": 0.5,
+      "size_y": 0.5,
+      "size_z": 3.0,
+      "collision": "convex",
+      "material": "concrete"
+    },
+    {
+      "name": "col_1_32",
+      "x": 10.0,
+      "y": 8.0,
+      "z": 4.5,
+      "size_x": 0.5,
+      "size_y": 0.5,
+      "size_z": 3.0,
+      "collision": "convex",
+      "material": "concrete"
+    },
+    {
+      "name": "booth_desk",
+      "x": -14.0,
+      "y": -11.0,
+      "z": 0.5,
+      "size_x": 2.0,
+      "size_y": 1.0,
+      "size_z": 1.0,
+      "collision": "convex",
+      "material": "metal"
+    }
+  ],
+  "rooms": [
+    {
+      "id": "attendant_booth",
+      "story": 0,
+      "bounds": [
+        -18.0,
+        -14.0,
+        -10.0,
+        -8.0
+      ],
+      "role": "objective_room",
+      "objective": true,
+      "fortifiable": true,
+      "combat_range": "close"
+    },
+    {
+      "id": "deck_0_south",
+      "story": 0,
+      "bounds": [
+        -10.0,
+        -14.0,
+        18.0,
+        -8.0
+      ],
+      "role": "public_entry",
+      "combat_range": "long"
+    },
+    {
+      "id": "deck_0_main",
+      "story": 0,
+      "bounds": [
+        -18.0,
+        -8.0,
+        18.0,
+        14.0
+      ],
+      "role": "connector",
+      "combat_range": "long"
+    },
+    {
+      "id": "deck_1",
+      "story": 1,
+      "bounds": [
+        -18.0,
+        -14.0,
+        18.0,
+        14.0
+      ],
+      "role": "connector",
+      "combat_range": "long"
+    }
+  ],
+  "objectives": [
+    {
+      "id": "booth_safe",
+      "kind": "drill",
+      "x": -14.0,
+      "y": -11.0,
+      "z": 0.5,
+      "room": "attendant_booth",
+      "required": true,
+      "duration": 25.0
+    }
+  ],
+  "loot": [
+    {
+      "id": "booth_cash",
+      "kind": "cash",
+      "x": -14.0,
+      "y": -11.0,
+      "z": 0.6,
+      "value": 6000,
+      "bags": 2,
+      "room": "attendant_booth"
+    }
+  ],
+  "zones": [
+    {
+      "id": "vehicle_extract",
+      "kind": "extraction",
+      "story": 0,
+      "bounds": [
+        -18.0,
+        -14.0,
+        0.0,
+        -8.0
+      ]
+    }
+  ],
+  "markers": [
+    {
+      "type": "cover_high",
+      "id": "COL00",
+      "x": -12.0,
+      "y": -8.0,
+      "z": 0.0,
+      "room": "deck_0_main"
+    },
+    {
+      "type": "cover_high",
+      "id": "COL11",
+      "x": -4.0,
+      "y": 0.0,
+      "z": 0.0,
+      "room": "deck_0_main"
+    },
+    {
+      "type": "cover_high",
+      "id": "COL22",
+      "x": 4.0,
+      "y": 8.0,
+      "z": 0.0,
+      "room": "deck_0_main"
+    },
+    {
+      "type": "camera_socket",
+      "id": "01",
+      "x": 15.0,
+      "y": 11.0,
+      "z": 2.6,
+      "room": "deck_0_main",
+      "rot_z": 225
+    },
+    {
+      "type": "objective",
+      "id": "BOOTHSAFE",
+      "x": -14.0,
+      "y": -11.0,
+      "z": 0.5,
+      "room": "attendant_booth"
+    },
+    {
+      "type": "loot",
+      "id": "BOOTHCASH",
+      "x": -14.0,
+      "y": -11.0,
+      "z": 0.6,
+      "room": "attendant_booth"
+    },
+    {
+      "type": "extraction",
+      "id": "VEHICLE",
+      "x": -4.0,
+      "y": -12.0,
+      "z": 0.0,
+      "room": "deck_0_south"
+    },
+    {
+      "type": "attacker_spawn",
+      "id": "A",
+      "x": -9.0,
+      "y": -12.0,
+      "z": 0.0,
+      "rot_z": 0,
+      "room": "deck_0_south"
+    },
+    {
+      "type": "attacker_spawn",
+      "id": "B",
+      "x": 9.0,
+      "y": -12.0,
+      "z": 0.0,
+      "rot_z": 0,
+      "room": "deck_0_south"
+    },
+    {
+      "type": "cover_low",
+      "id": "AUTO_BOOTH_DESK",
+      "x": -14.0,
+      "y": -11.0,
+      "z": 0.0,
+      "room": "attendant_booth",
+      "meta": {
+        "auto": "cover_from_volume",
+        "from": "booth_desk"
+      }
+    },
+    {
+      "type": "landmark",
+      "id": "ATTENDANT_BOOTH",
+      "x": -14.0,
+      "y": -11.0,
+      "z": 1.0,
+      "room": "attendant_booth",
+      "meta": {
+        "auto": "landmark",
+        "label": "attendant_booth",
+        "role": "objective_room"
+      }
+    },
+    {
+      "type": "landmark",
+      "id": "DECK_0_SOUTH",
+      "x": 4.0,
+      "y": -11.0,
+      "z": 1.0,
+      "room": "deck_0_south",
+      "meta": {
+        "auto": "landmark",
+        "label": "deck_0_south",
+        "role": "public_entry"
+      }
+    }
+  ],
+  "parapets": [
+    {
+      "story": 2,
+      "height": 1.1,
+      "thick": 0.35
+    }
+  ],
+  "modular": true
+}

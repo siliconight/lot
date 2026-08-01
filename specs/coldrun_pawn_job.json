@@ -1,0 +1,34 @@
+{
+  "name": "coldrun_pawn_job",
+  "ground": {"size_x": 150, "size_y": 110},
+
+  "mode": "heist",
+  "spawn": "garage",
+  "objective": "pawn",
+  "extraction": "gas",
+
+  "buildings": [
+    {"id": "garage", "spec": "coldrun_buildings/cr_garage.json", "glb": "cr_garage.glb", "gameplay": "cr_garage.gameplay.json", "at": [-48, -28], "rot": 0},
+    {"id": "deli",   "spec": "coldrun_buildings/cr_deli.json",   "glb": "cr_deli.glb",   "gameplay": "cr_deli.gameplay.json",   "at": [-6, 18],   "rot": 90},
+    {"id": "pawn",   "spec": "coldrun_buildings/cr_pawn.json",   "glb": "cr_pawn.glb",   "gameplay": "cr_pawn.gameplay.json",   "at": [32, -22],  "rot": 0},
+    {"id": "gas",    "spec": "coldrun_buildings/cr_gas.json",    "glb": "cr_gas.glb",    "gameplay": "cr_gas.gameplay.json",    "at": [58, 26],   "rot": 180}
+  ],
+
+  "paths": [
+    {"from": "garage", "to": "deli", "width": 5},
+    {"from": "deli",   "to": "pawn", "width": 5},
+    {"from": "pawn",   "to": "gas",  "width": 5}
+  ],
+
+  "courtyards": [
+    {"at": [12, -2], "size_x": 22, "size_y": 16}
+  ],
+
+  "cover": [
+    {"at": [4, -6]},
+    {"at": [20, 4]},
+    {"at": [40, 2], "size": [2, 1, 1]}
+  ],
+
+  "perimeter": {"height": 3}
+}
