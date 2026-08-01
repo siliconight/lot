@@ -460,6 +460,23 @@ SURFACE_TIER = 0.002
 ROAD_THICK = SURFACE_BASE
 PATH_THICK = SURFACE_BASE + SURFACE_TIER
 COURT_THICK = SURFACE_BASE + 2 * SURFACE_TIER
+
+#: The rung below the ladder, for the one surface Lot does not own.
+#:
+#: A building's ground-floor slab tops out at y = 0 -- that is Deli Counter's
+#: coordinate contract, not a choice made here -- and `GROUND_HOLE_INSET` cuts
+#: the ground hole INSIDE the footprint on purpose, so the plate and the slab
+#: overlap in a 0.45 m ring around every building. With the plate topping out
+#: at 0 as well, that ring is two coplanar up-facing faces: roughly 59 m^2 of
+#: z-fight per 38 x 28 building, hugging the inside of every exterior wall.
+#:
+#: No per-building gate could see it. One solid is Deli Counter's, the other is
+#: Lot's, and they first share a scene after cater composes them.
+#:
+#: Sinking the plate rather than raising the building is deliberate: y = 0 is
+#: read by slot transforms, opening heights, marker Z and the nav bake, while
+#: nothing anywhere measures against the plate's top face.
+GROUND_SINK = SURFACE_TIER
 BLOCKER_COLOR = (0.38, 0.34, 0.30)     # warm massing -- reads as a building you can't enter
 
 
@@ -770,9 +787,12 @@ def _outdoor_nodes(site_spec, preview=False, self_flooring=None):
         # spawn, the objective and every enemy. Cut only where checked.
         holes = ground_holes(site_spec, floors)
         for j, (x0, y0, x1, y1) in enumerate(_ground_tiles(ground.rect, holes)):
+            # Top at -GROUND_SINK, bottom where it always was: the plate
+            # gets thicker rather than moving, so nothing below it shifts.
             bl, sr = _box_node("Ground" if j == 0 else f"Ground_{j}",
-                               (x1 - x0, GROUND_THICK, y1 - y0),
-                               ((x0 + x1) / 2, -GROUND_THICK / 2,
+                               (x1 - x0, GROUND_THICK - GROUND_SINK, y1 - y0),
+                               ((x0 + x1) / 2,
+                                -(GROUND_THICK + GROUND_SINK) / 2,
                                 -(y0 + y1) / 2))
             body += bl
             sub += sr
@@ -788,16 +808,20 @@ def _outdoor_nodes(site_spec, preview=False, self_flooring=None):
         length = math.hypot(dx, dy)
         ang = math.degrees(math.atan2(dy, dx))
         # path lies along its length (x), width across (z), thin (y)
-        bl, sr = _yaw_box_node(f"path_{i}", (length, PATH_THICK, w),
-                               (cx, PATH_THICK / 2, -cy), -ang)
+        # Extended DOWN by GROUND_SINK so it stays buried in the plate; the
+        # top face does not move, so every height check reads the same number.
+        bl, sr = _yaw_box_node(f"path_{i}",
+                               (length, PATH_THICK + GROUND_SINK, w),
+                               (cx, (PATH_THICK - GROUND_SINK) / 2, -cy), -ang)
         body += bl
         sub += sr
 
     for i, cdef in enumerate(site_spec.get("courtyards", [])):
         cx, cy = cdef["at"]
         sx, sy = cdef.get("size_x", 10), cdef.get("size_y", 10)
-        bl, sr = _box_node(f"courtyard_{i}", (sx, COURT_THICK, sy),
-                           (cx, COURT_THICK / 2, -cy))
+        bl, sr = _box_node(f"courtyard_{i}",
+                           (sx, COURT_THICK + GROUND_SINK, sy),
+                           (cx, (COURT_THICK - GROUND_SINK) / 2, -cy))
         body += bl
         sub += sr
 
@@ -838,8 +862,10 @@ def _outdoor_nodes(site_spec, preview=False, self_flooring=None):
         dx, dy = bx_ - ax, by_ - ay
         length = math.hypot(dx, dy) or 0.001
         ang = math.degrees(math.atan2(dy, dx))
-        bl, sr = _yaw_box_node(f"road_{i}", (length, ROAD_THICK, w),
-                               (cx, ROAD_THICK / 2, -cy), -ang, ROAD_COLOR)
+        bl, sr = _yaw_box_node(f"road_{i}",
+                               (length, ROAD_THICK + GROUND_SINK, w),
+                               (cx, (ROAD_THICK - GROUND_SINK) / 2, -cy),
+                               -ang, ROAD_COLOR)
         body += bl
         sub += sr
         sw = rd.get("sidewalk")
