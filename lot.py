@@ -410,47 +410,56 @@ def _godot_transform(at, rot, z=0.0):
 # No terrain, no organic shapes (that would break the thesis). Site coords (x,y)
 # map to Godot (x, height, -y); thickness/height is Godot-Y.
 
-# The walkable slab thicknesses are DERIVED, not picked. A capsule walks up a
-# step only while the contact normal stays inside floor_max_angle, which for the
-# contract player is clearances.unassisted_step_max_m. Every adjacent pair of
-# outdoor surfaces has to clear that in BOTH directions, and the sidewalk is on
-# the other side of each slab:
+# Outdoor surface heights are DERIVED, and the derivation changed once the kerb
+# probe measured what the previous one cost.
 #
-#     ground 0.00  -> slab                    slab <= step
-#     slab         -> sidewalk SIDEWALK_H     SIDEWALK_H - slab <= step
+# THE OLD SHAPE. SIDEWALK_H was a picked 0.16 carrying the comment "a kerb is
+# MEANT to be a wall". A capsule walks up a step only while the contact normal
+# stays inside floor_max_angle, so it clears STEP_MAX and no more -- 0.16 sits
+# above that, making the kerb unclimbable from bare ground by design. Slabs then
+# had to live in [SIDEWALK_H - step, step] so they could serve as a half-step
+# onto it, which is why paths stood 0.08 proud of the ground with roads and
+# courtyards 1.6 cm either side.
 #
-# so a walkable slab is squeezed into [SIDEWALK_H - step, step]. The picked
-# values had drifted out of it: COURT_THICK was 0.12 against a step limit of
-# 0.1025, which walled the courtyard edge on ballpark_block's own circulation,
-# and PATH_THICK 0.10 was inside by 2.5 mm. Fixed fractions of the band keep the
-# surfaces ordered and visually distinct and move them together when the
-# gameplay team picks a different body.
+# WHY THAT WAS WRONG, measured rather than argued. lot_player.gd implements
+# step-up, so the kerb never walled OUR player. It walled a stock
+# CharacterBody3D -- which is what every recipient of a site pack has. The wall
+# only ever stopped the person we ship to. coldrun_kerb_probe made it explicit:
+# LOT_STEP_NEEDS_ASSIST on ground -> sidewalk, 0.16 m against a 0.1025 m
+# ceiling, on a level that walks perfectly inside this repo.
+#
+# THE NEW SHAPE. Put the kerb under the step ceiling and the stack collapses:
+# bare ground mounts the kerb, so slabs stop being a half-step to anything and
+# can lie flat. Every outdoor surface becomes reachable by a stock controller
+# with no step-up code -- which is what the standalone contract needs -- and
+# every lip on the site goes, including the 1.6 cm path-over-road lip that no
+# traversal gate could see.
 GROUND_THICK = 0.5
 WALL_THICK = 0.3
 COVER = (1.0, 1.0, 1.0)
 ROAD_COLOR = (0.13, 0.13, 0.14)        # asphalt
-SIDEWALK_H = 0.16                      # a kerb is MEANT to be a wall
 SIDEWALK_COLOR = (0.55, 0.55, 0.57)    # concrete, raised curb
 
 #: The tallest step the contract player walks up with no step-up code.
 STEP_MAX = float(_agent()["clearances"]["unassisted_step_max_m"])
-#: Legal band for a slab walkable from the ground AND onto the sidewalk beside
-#: it. Empty when the kerb is taller than two steps -- _outdoor_nodes says so
-#: out loud rather than emitting a wall and letting play discover it.
-SLAB_LO = SIDEWALK_H - STEP_MAX
-SLAB_HI = STEP_MAX
 
+#: A kerb the contract body mounts from bare ground, with margin rather than at
+#: the limit: a rise exactly equal to STEP_MAX puts the contact normal exactly
+#: on floor_max_angle, and shipping physics that sits on a boundary is how a
+#: thing works on one machine and not the next.
+KERB_FRACTION = 0.95
+SIDEWALK_H = round(STEP_MAX * KERB_FRACTION, 4)
 
-def _slab(frac):
-    """A walkable slab thickness at `frac` across the legal band."""
-    if SLAB_LO > SLAB_HI:
-        return round(SLAB_HI * 0.8, 4)
-    return round(SLAB_LO + (SLAB_HI - SLAB_LO) * frac, 4)
-
-
-ROAD_THICK = _slab(0.15)
-PATH_THICK = _slab(0.50)
-COURT_THICK = _slab(0.85)
+#: Flush -- but not zero. Two coplanar faces z-fight where a path crosses a
+#: road, so these tiers exist to separate them and for no other reason. 2 mm
+#: against a ~103 mm step ceiling is not a step, and check_steps will not see
+#: it. The ordering (road lowest, courtyard highest) is kept so overlaps
+#: resolve the way a reader expects.
+SURFACE_BASE = 0.010
+SURFACE_TIER = 0.002
+ROAD_THICK = SURFACE_BASE
+PATH_THICK = SURFACE_BASE + SURFACE_TIER
+COURT_THICK = SURFACE_BASE + 2 * SURFACE_TIER
 BLOCKER_COLOR = (0.38, 0.34, 0.30)     # warm massing -- reads as a building you can't enter
 
 
@@ -726,14 +735,19 @@ def _outdoor_nodes(site_spec, preview=False, self_flooring=None):
     """
     body, sub = [], []
     bld = {b["id"]: b for b in site_spec["buildings"]}
-    if SLAB_LO > SLAB_HI:
-        # No slab thickness is walkable in both directions. Emitting anyway and
-        # staying quiet is how a wall reaches play; four defects in this pass
-        # were a check going silent.
-        print(f"[lot] LOT_SURFACE_STACK_IMPOSSIBLE: climbing a {SIDEWALK_H} m "
-              f"kerb from the ground needs two steps of {STEP_MAX:.4f} m, so no "
-              f"slab thickness clears both. Lower SIDEWALK_H below "
-              f"{2 * STEP_MAX:.3f} m, or the body has to get wider.")
+    if SIDEWALK_H > STEP_MAX:
+        # RE-AIMED, not deleted. The old test asked whether the half-step band
+        # had collapsed, which a kerb under the step ceiling makes unreachable
+        # -- and a check that cannot fail is indistinguishable from one that
+        # passed. This is the invariant
+        # the flat surfaces above actually rest on: if the kerb ever climbs back
+        # over the step ceiling, they become unreachable and nothing else here
+        # would notice.
+        print(f"[lot] LOT_KERB_ABOVE_STEP: the {SIDEWALK_H:.4f} m kerb is taller "
+              f"than the {STEP_MAX:.4f} m a contract body walks up unassisted, "
+              f"so a stock CharacterBody3D cannot leave the road except at a "
+              f"crossing. The flat surfaces assume it can. Lower SIDEWALK_H, or "
+              f"put the slabs back on a half-step band.")
     # preview massing boxes are Lot's own StaticBody3D geometry, but they are
     # solid blocks rather than floored interiors, so the ground stays under
     # them too and the site remains walkable up to the massing.

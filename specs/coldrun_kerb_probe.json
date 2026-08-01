@@ -1,0 +1,142 @@
+{
+  "name": "coldrun_kerb_probe",
+  "version": "0.1.0",
+  "ground": {
+    "size_x": 240,
+    "size_y": 140
+  },
+  "mode": "heist",
+  "spawn": "garage",
+  "objective": "pawn",
+  "extraction": "gas",
+  "buildings": [
+    {
+      "id": "garage",
+      "spec": "coldrun_buildings/cr_garage.json",
+      "glb": "cr_garage.glb",
+      "gameplay": "cr_garage.gameplay.json",
+      "at": [
+        -70,
+        42
+      ],
+      "rot": 0
+    },
+    {
+      "id": "pawn",
+      "spec": "coldrun_buildings/cr_pawn.json",
+      "glb": "cr_pawn.glb",
+      "gameplay": "cr_pawn.gameplay.json",
+      "at": [
+        8,
+        -44
+      ],
+      "rot": 0
+    },
+    {
+      "id": "gas",
+      "spec": "coldrun_buildings/cr_gas.json",
+      "glb": "cr_gas.glb",
+      "gameplay": "cr_gas.gameplay.json",
+      "at": [
+        76,
+        44
+      ],
+      "rot": 180
+    }
+  ],
+  "roads": [
+    {
+      "a": [
+        -110,
+        0.0
+      ],
+      "b": [
+        110,
+        0.0
+      ],
+      "width": 10,
+      "sidewalk": 3
+    }
+  ],
+  "paths": [
+    {
+      "from": "garage",
+      "to": "pawn",
+      "width": 5
+    },
+    {
+      "from": "pawn",
+      "to": "gas",
+      "width": 5
+    },
+    {
+      "a": [
+        -80.0,
+        -30.0
+      ],
+      "b": [
+        -80.0,
+        30.0
+      ],
+      "width": 4
+    },
+    {
+      "a": [
+        -55.76,
+        -28.98
+      ],
+      "b": [
+        -40.24,
+        28.98
+      ],
+      "width": 4
+    },
+    {
+      "a": [
+        -31.0,
+        -25.98
+      ],
+      "b": [
+        -1.0,
+        25.98
+      ],
+      "width": 4
+    },
+    {
+      "a": [
+        -5.21,
+        -21.21
+      ],
+      "b": [
+        37.21,
+        21.21
+      ],
+      "width": 4
+    },
+    {
+      "a": [
+        22.02,
+        -15.0
+      ],
+      "b": [
+        73.98,
+        15.0
+      ],
+      "width": 4
+    },
+    {
+      "a": [
+        51.81,
+        -10.26
+      ],
+      "b": [
+        108.19,
+        10.26
+      ],
+      "width": 4
+    }
+  ],
+  "perimeter": {
+    "height": 3
+  }
+}
