@@ -1,3 +1,38 @@
+## [0.41.0] - the ground plate and the ground floor were the same plane
+
+Every per-building z-fight gate ran clean and the composed site still reported
+`site <-> building` pairs, because no per-building check can see a pair whose
+two halves come from different emitters.
+
+Lot's ground plate topped out at y = 0. So does a building's ground-floor slab.
+And `GROUND_HOLE_INSET = 0.45` deliberately leaves a ring of plate underneath
+every footprint rather than cutting the hole flush -- so each 38 x 28 m building
+sat on roughly **59 m2 of coplanar up-facing surface**, two solids claiming the
+same plane with nothing between them.
+
+`GROUND_SINK` drops the plate one tier below the floor datum, and extends roads,
+paths and courtyards downward by the same amount so that **no top face moves**.
+The surfaces a body walks on are where they were; only the underside changed.
+Verified by reading the generated scene rather than the intent:
+
+    Ground   [-0.5000, -0.0020]
+    path_0   [-0.0020, +0.0120]     tops unchanged
+
+Composed result: **zero `site <-> building` pairs.**
+
+### What this did not fix, which is worth recording
+
+This landed as part of chasing a flickering band along wall-to-floor junctions,
+and it was not the cause of it. The composed gate read 961 solids in one frame
+and found no coplanar pair anywhere near a wall meeting a floor; turning the
+sun's shadow off made the band vanish. It was shadow acne, cross-hatched by two
+directional lights **one degree apart in elevation** -- a Lux defect, fixed in
+Lux 0.16.0 and `tools/lux_inject.py`.
+
+The geometry above is real and was worth doing. It was not what was on screen,
+and a changelog that let those two run together would be the reason somebody
+later believes a sunk ground plate fixes shadow acne.
+
 ## [0.40.0] - the walker could not climb a legal stair
 
 The library sweep left one class of failure across three sites -- central_vault,
