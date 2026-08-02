@@ -88,9 +88,39 @@ MAX_SCENE_DEPTH = 6
 #: Collider declarations a .tscn can carry that this module does not turn into
 #: boxes. Finding one does not make the reading wrong -- it makes it *partial*,
 #: and the difference has to survive to the caller.
+#: Collider declarations still outside this reader. CollisionShape3D used to be
+#: here and is now modelled below; the rest describe shapes a box hull cannot
+#: honestly stand in for, or geometry that is generated rather than declared.
 _TSCN_OWN_COLLIDER = re.compile(
-    r'type="(CollisionShape3D|CollisionPolygon3D|GridMap|CSGBox3D|CSGPolygon3D|'
+    r'type="(CollisionPolygon3D|GridMap|CSGBox3D|CSGPolygon3D|'
     r'CSGMesh3D|CSGCombiner3D|HeightMapShape3D)"')
+
+_TSCN_SUBRES = re.compile(r'^\[sub_resource\s+(.*)\]\s*$')
+_TSCN_SHAPE_REF = re.compile(r'^shape\s*=\s*SubResource\(\s*"?([^")]+)"?\s*\)')
+_TSCN_SIZE = re.compile(r'^size\s*=\s*Vector3\(([^)]*)\)')
+_TSCN_RADIUS = re.compile(r'^radius\s*=\s*([-\d.eE+]+)')
+_TSCN_HEIGHT = re.compile(r'^height\s*=\s*([-\d.eE+]+)')
+_TSCN_DISABLED = re.compile(r'^disabled\s*=\s*true')
+
+#: Node types whose CollisionShape3D children are SOLID.
+#:
+#: Area3D is deliberately absent, and it is the whole reason this distinction
+#: exists rather than "a CollisionShape3D is a collider". Deli Counter bakes a
+#: ladder's climb volume as an Area3D with a CollisionShape3D inside it -- in
+#: the themed scene measured on 2026-08-02 that was the ONLY CollisionShape3D
+#: in the file. Modelling it as solid would fill the ladder with a box and make
+#: the one route up read as blocked, which is the exact opposite of what the
+#: node is for. A trigger is not a wall.
+_SOLID_BODIES = ("StaticBody3D", "RigidBody3D", "CharacterBody3D",
+                 "AnimatableBody3D", "PhysicalBone3D")
+
+#: Shapes this reader turns into boxes. Every one of them is bounded by a box
+#: exactly (BoxShape3D) or conservatively (the round ones), which is the
+#: direction this module errs in everywhere else: a box that is too big reports
+#: floor as blocked, and the caller then declines to move a marker onto it. The
+#: reverse -- missing a solid -- moves a marker INTO it.
+_BOX_SHAPES = ("BoxShape3D", "SphereShape3D", "CapsuleShape3D",
+               "CylinderShape3D")
 _TSCN_EXT_SCENE = re.compile(
     r'\[ext_resource[^\]]*type="PackedScene"[^\]]*path="([^"]+)"[^\]]*'
     r'id="([^"]+)"')
@@ -453,6 +483,157 @@ def _transform_boxes(boxes, matrix):
     return out
 
 
+
+def _tscn_own_solids(text: str, label: str, prefix: str):
+    """``(boxes, unread)`` for the colliders a ``.tscn`` declares itself.
+
+    Deli Counter's themed building scene is a greybox base plus instanced
+    modules plus a handful of shapes written into the scene text -- and until
+    this existed, one such shape made the ENTIRE reading partial, which is what
+    `LOT_DESTINATION_COLLISION_UNREAD` has been reporting. The instanced shells
+    were read; the scene's own shapes were not; the caller was told, correctly,
+    that it could not see the whole site.
+
+    Two things decide whether a shape becomes a box:
+
+    * its nearest body ancestor. Under a physics body it is a wall; under an
+      ``Area3D`` it is a trigger and is skipped. A ``CollisionShape3D`` with no
+      body above it at all is inert in Godot and skipped the same way -- Godot
+      ignores it, so modelling it would invent a solid nobody can touch.
+    * whether a box can honestly bound its shape. Box, sphere, capsule and
+      cylinder can; a polygon, height map or CSG solid cannot, and those still
+      come back as ``unread`` so the reading stays honest about them.
+
+    Transforms compose down the node path, so a shape under a rotated ladder
+    lands where the ladder puts it rather than at the scene origin.
+    """
+    shapes = {}
+    nodes = {}
+    order = []
+    kind = None          # "sub" | "node"
+    current = None
+    for raw in text.splitlines():
+        line = raw.strip()
+        head = _TSCN_SUBRES.match(line)
+        if head:
+            attrs = dict(_TSCN_ATTR.findall(head.group(1)))
+            kind, current = "sub", {"type": attrs.get("type", ""),
+                                    "size": None, "radius": None,
+                                    "height": None}
+            shapes[attrs.get("id", "")] = current
+            continue
+        head = _TSCN_NODE.match(line)
+        if head:
+            attrs = dict(_TSCN_ATTR.findall(head.group(1)))
+            parent = attrs.get("parent")
+            name = attrs.get("name", "?")
+            path = name if parent in (None, ".") else f"{parent}/{name}"
+            if parent is None:
+                path = "."
+            kind, current = "node", {
+                "type": attrs.get("type", ""), "parent": parent,
+                "path": path, "transform": _IDENTITY, "shape": None,
+                "disabled": False}
+            nodes[path] = current
+            order.append(path)
+            continue
+        if current is None:
+            continue
+        if kind == "node":
+            matrix = _TSCN_TRANSFORM.match(line)
+            if matrix:
+                current["transform"] = _godot_transform(
+                    matrix.group(1).split(","))
+                continue
+            ref = _TSCN_SHAPE_REF.match(line)
+            if ref:
+                current["shape"] = ref.group(1)
+                continue
+            if _TSCN_DISABLED.match(line):
+                current["disabled"] = True
+            continue
+        size = _TSCN_SIZE.match(line)
+        if size:
+            try:
+                current["size"] = tuple(
+                    float(n) for n in size.group(1).split(","))
+            except ValueError:
+                current["size"] = None
+            continue
+        radius = _TSCN_RADIUS.match(line)
+        if radius:
+            current["radius"] = float(radius.group(1))
+            continue
+        height = _TSCN_HEIGHT.match(line)
+        if height:
+            current["height"] = float(height.group(1))
+
+    def world(path):
+        """Transform of ``path`` in the scene root's space."""
+        node = nodes.get(path)
+        if node is None:
+            return _IDENTITY
+        parent = node.get("parent")
+        if parent in (None, "."):
+            outer = _IDENTITY
+        else:
+            outer = world(parent)
+        return compose(outer, node["transform"])
+
+    def body_above(path):
+        """The nearest ancestor that decides solidity, or ``None``."""
+        node = nodes.get(path)
+        seen = 0
+        while node is not None and seen < MAX_NODE_DEPTH:
+            if node["type"] in _SOLID_BODIES:
+                return "solid"
+            if node["type"] == "Area3D":
+                return "area"
+            parent = node.get("parent")
+            if parent in (None, "."):
+                return None
+            node = nodes.get(parent)
+            seen += 1
+        return None
+
+    boxes = []
+    unread = []
+    for path in order:
+        node = nodes[path]
+        if node["type"] != "CollisionShape3D" or node["disabled"]:
+            continue
+        host = body_above(node.get("parent") or ".")
+        if host != "solid":
+            continue                      # trigger volume, or inert: not a wall
+        shape = shapes.get(node["shape"] or "")
+        if shape is None:
+            unread.append(f"{prefix}{label}/{path}: shape is not a sub_resource "
+                          f"of this scene")
+            continue
+        if shape["type"] not in _BOX_SHAPES:
+            unread.append(f"{prefix}{label}/{path}: {shape['type']} is not "
+                          f"bounded by a box by this reader")
+            continue
+        if shape["type"] == "BoxShape3D":
+            if not shape["size"] or len(shape["size"]) < 3:
+                unread.append(f"{prefix}{label}/{path}: BoxShape3D has no size")
+                continue
+            gx, gy, gz = (abs(v) for v in shape["size"][:3])
+        else:
+            radius = shape["radius"]
+            if radius is None:
+                unread.append(f"{prefix}{label}/{path}: {shape['type']} has "
+                              f"no radius")
+                continue
+            span = shape["height"]
+            if shape["type"] == "SphereShape3D" or span is None:
+                span = 2.0 * radius
+            gx, gy, gz = 2.0 * radius, abs(span), 2.0 * radius
+        # Godot (x, y, z) -> site (x, z, y): y is up in Godot, z is up here.
+        local = Box(f"{label}/{path}", (0.0, 0.0, 0.0), (gx, gz, gy))
+        boxes.extend(_transform_boxes([local], world(path)))
+    return boxes, unread
+
 def read_source(path, *, search_dirs=(), prefix: str = "", _depth: int = 0,
                 _seen=None) -> Reading:
     """Every collider the geometry at ``path`` brings, in its own site space."""
@@ -510,11 +691,13 @@ def read_source(path, *, search_dirs=(), prefix: str = "", _depth: int = 0,
 
     boxes = []
     unread = []
+    # The scene's OWN colliders, before its instanced ones. Shapes a box can
+    # bound become boxes; the rest stay unread, so a hook is never moved onto
+    # something nobody looked at -- which is what this whole branch is for.
+    own_boxes, own_unread = _tscn_own_solids(text, label, prefix)
+    boxes.extend(own_boxes)
+    unread.extend(own_unread)
     if _TSCN_OWN_COLLIDER.search(text):
-        # The scene declares collision this module does not turn into boxes.
-        # Reading the instanced shells anyway is still worth doing -- it is the
-        # furniture -- but the answer is partial and has to say so, or a hook
-        # gets moved onto a shape nobody looked at.
         unread.append(f"{prefix}{label}: declares collision shapes in the scene "
                       f"text, which this reader does not model")
     if _depth >= MAX_SCENE_DEPTH:

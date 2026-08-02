@@ -324,9 +324,19 @@ def test_an_instance_transform_moves_the_colliders_with_it(tmp_path):
 
 
 def test_a_scene_that_declares_its_own_shapes_reads_as_partial(tmp_path):
-    """A CollisionShape3D in the scene text is real collision this reader does
+    """A shape this reader cannot resolve keeps the answer partial.
+
+    ORIGINAL RATIONALE, kept because it is still the reason this test exists:
+    "A CollisionShape3D in the scene text is real collision this reader does
     not turn into a box. Reporting the instanced furniture and calling the
-    answer complete would let a hook be moved onto a shape nobody looked at."""
+    answer complete would let a hook be moved onto a shape nobody looked at."
+
+    What changed on 2026-08-02 is only the scope. CollisionShape3D IS modelled
+    now when its shape is a box-boundable sub_resource under a physics body.
+    The node here has no `shape` at all, so there is nothing to bound and
+    nothing to trust -- which is exactly the case the assertion below protects.
+    The message moved from "does not model" to naming the node, because naming
+    which shape was missed is more use than saying that some shape was."""
     _write(tmp_path, "shell.glb", _doc([CAGE]))
     p = _text(tmp_path, "b.tscn",
               '[gd_scene format=3]\n'
@@ -337,7 +347,7 @@ def test_a_scene_that_declares_its_own_shapes_reads_as_partial(tmp_path):
     reading = site_collision.read_source(p)
     assert len(reading.boxes) == 1, "the furniture is still worth reading"
     assert not reading.complete
-    assert "does not model" in reading.unread[0]
+    assert "col" in reading.unread[0], reading.unread
 
 
 def test_an_instance_that_does_not_resolve_is_named(tmp_path):
@@ -765,3 +775,172 @@ def test_a_room_with_no_counter_in_it_leaves_the_objective_alone(tmp_path):
     assert "LOT_DESTINATION_ON_PROP" not in codes, codes
     assert result["walk_positions"]["objective"] == (0.0, 0.0, 0.0), (
         "seated for height, unmoved in the ground plane")
+
+
+# ---------------------------------------------------------------------------
+# colliders a .tscn declares in its own text
+#
+# Before these, ANY CollisionShape3D in a scene made the whole reading partial,
+# and `LOT_DESTINATION_COLLISION_UNREAD` fired on Deli Counter's themed
+# building every time. Measured 2026-08-02, the only CollisionShape3D in that
+# scene was a ladder's climb volume -- a trigger, not a wall. So the reader was
+# blinding itself over a node that is not collision in the sense it cares
+# about.
+# ---------------------------------------------------------------------------
+
+_LADDER_AND_WALL = """[gd_scene load_steps=3 format=3]
+
+[sub_resource type="BoxShape3D" id="WallBox_0"]
+size = Vector3(4, 3, 0.5)
+
+[sub_resource type="BoxShape3D" id="LadderClimbBox_0"]
+size = Vector3(1, 4, 0.9)
+
+[node name="site" type="Node3D"]
+
+[node name="Walls" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.0, 0.0, 0.0)
+
+[node name="Wall_0" type="StaticBody3D" parent="Walls"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.0, 1.5, -6.0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Walls/Wall_0"]
+shape = SubResource("WallBox_0")
+
+[node name="Ladders" type="Node3D" parent="."]
+
+[node name="Ladder_0" type="Area3D" parent="Ladders" groups=["ladder_area3d"]]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -21.0, 0.0, -9.0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Ladders/Ladder_0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.0, 0.45)
+shape = SubResource("LadderClimbBox_0")
+"""
+
+
+def test_a_scene_declared_wall_is_read_where_the_node_puts_it(tmp_path):
+    """The transform composes down the path, so the box lands at the node.
+
+    Godot: Walls at x=10, Wall_0 at (2, 1.5, -6) inside it -> world
+    (12, 1.5, -6). Site space is x east, y north, z up, so that is
+    (12, 6, 1.5), and a 3 m wall on the ground runs z 0 -> 3.
+    """
+    p = _text(tmp_path, "w.tscn", _LADDER_AND_WALL)
+    reading = site_collision.read_source(p)
+    walls = [b for b in reading.boxes if "Wall_0" in b.name]
+    assert len(walls) == 1, [b.name for b in reading.boxes]
+    box = walls[0]
+    assert math.isclose(box.centre[0], 12.0, abs_tol=1e-6), box.centre
+    assert math.isclose(box.centre[1], 6.0, abs_tol=1e-6), box.centre
+    assert math.isclose(box.centre[2], 1.5, abs_tol=1e-6), box.centre
+    assert math.isclose(box.bottom, 0.0, abs_tol=1e-6), box.bottom
+    assert math.isclose(box.top, 3.0, abs_tol=1e-6), box.top
+    assert box.covers(12.0, 6.0)
+    assert not box.covers(0.0, 0.0)
+
+
+def test_a_ladder_climb_volume_is_not_a_wall(tmp_path):
+    """An Area3D's shape is a trigger. Modelling it as solid fills the ladder.
+
+    This is the one that would hurt: the climb volume is the ONLY route up, so
+    reporting it as a solid turns the only way out of a room into a blockage,
+    and the nav-hook resolve then walks markers away from the one place they
+    belong.
+    """
+    p = _text(tmp_path, "w.tscn", _LADDER_AND_WALL)
+    reading = site_collision.read_source(p)
+    assert not [b for b in reading.boxes if "Ladder" in b.name], (
+        [b.name for b in reading.boxes])
+    # And nothing else drifted over the ladder either: the column the climb
+    # volume occupies -- Godot (-21, *, -9), so site (-21, 9) -- is clear.
+    assert not [b for b in reading.boxes if b.covers(-21.0, 9.0)], (
+        "the ladder column must read as free floor")
+
+
+def test_a_scene_whose_own_shapes_are_all_modelled_reads_complete(tmp_path):
+    """`complete` is the flag callers gate on, and it is what was stuck False.
+
+    With the wall modelled and the trigger skipped there is nothing left this
+    reader could not see, so the reading is complete and
+    LOT_DESTINATION_COLLISION_UNREAD has nothing to report.
+    """
+    p = _text(tmp_path, "w.tscn", _LADDER_AND_WALL)
+    reading = site_collision.read_source(p)
+    assert reading.complete, reading.unread
+    assert reading.unread == ()
+
+
+def test_a_shape_a_box_cannot_bound_stays_unread(tmp_path):
+    """Honesty in the other direction: a polygon collider is still not modelled.
+
+    A reader that quietly bounded everything would be worse than the blind one
+    it replaced, because the caller would trust it.
+    """
+    body = """[gd_scene load_steps=2 format=3]
+
+[sub_resource type="ConvexPolygonShape3D" id="Hull_0"]
+points = PackedVector3Array(0, 0, 0, 1, 0, 0, 0, 1, 0)
+
+[node name="site" type="Node3D"]
+
+[node name="Body" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Body"]
+shape = SubResource("Hull_0")
+"""
+    p = _text(tmp_path, "hull.tscn", body)
+    reading = site_collision.read_source(p)
+    assert reading.boxes == ()
+    assert not reading.complete
+    assert any("ConvexPolygonShape3D" in note for note in reading.unread), (
+        reading.unread)
+
+
+def test_a_disabled_shape_is_not_a_solid(tmp_path):
+    """`disabled = true` means Godot ignores it, so Lot must too."""
+    body = """[gd_scene load_steps=2 format=3]
+
+[sub_resource type="BoxShape3D" id="Off_0"]
+size = Vector3(4, 3, 0.5)
+
+[node name="site" type="Node3D"]
+
+[node name="Body" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Body"]
+shape = SubResource("Off_0")
+disabled = true
+"""
+    p = _text(tmp_path, "off.tscn", body)
+    reading = site_collision.read_source(p)
+    assert reading.boxes == ()
+    assert reading.complete, reading.unread
+
+
+def test_a_round_shape_is_bounded_conservatively(tmp_path):
+    """A capsule becomes the box around it, not a box inside it.
+
+    Too big reports floor as blocked and the caller declines to move a marker
+    onto it. Too small moves the marker INTO the solid. This module errs the
+    first way everywhere else and does so here too.
+    """
+    body = """[gd_scene load_steps=2 format=3]
+
+[sub_resource type="CapsuleShape3D" id="Cap_0"]
+radius = 0.5
+height = 2.0
+
+[node name="site" type="Node3D"]
+
+[node name="Body" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Body"]
+shape = SubResource("Cap_0")
+"""
+    p = _text(tmp_path, "cap.tscn", body)
+    reading = site_collision.read_source(p)
+    assert len(reading.boxes) == 1, reading.unread
+    box = reading.boxes[0]
+    assert math.isclose(abs(box.size[0]), 1.0, abs_tol=1e-6), box.size
+    assert math.isclose(abs(box.size[1]), 1.0, abs_tol=1e-6), box.size
+    assert math.isclose(abs(box.size[2]), 2.0, abs_tol=1e-6), box.size
