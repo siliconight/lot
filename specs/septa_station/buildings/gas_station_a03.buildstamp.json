@@ -1,11 +1,11 @@
 {
   "glb": "gas_station_a03.glb",
-  "glb_sha256": "47d0e2ec4010cedebf5a791e15d71abdcfaf72052b797b4ec72a6537cfb16d02",
-  "glb_bytes": 94696,
+  "glb_sha256": "d8c45b904f403cd934f62a37e0a94817a8e46d9d3b773546d8c880a2e5036070",
+  "glb_bytes": 94888,
   "spec": "gas_station_a03.json",
   "spec_sha256": "a5ce9499b98d19fda54258f1dbcec7c1245367f0cebcfaca5a0cd2d77efc5d90",
-  "builder_sha256": "6caf6fc1d8d2f7ee3e3d59d243cb3022361bffccc430fd90be14862ac52d675e",
-  "builder_files": 68,
+  "builder_sha256": "753ed496b12e2db450c12b9fd52a4c05379b62cf2df0266c0ff54aeba41ab15e",
+  "builder_files": 69,
   "deli_counter_version": "Deli Counter 0.88.0",
-  "stamped_utc": "2026-07-30T11:57:03Z"
+  "stamped_utc": "2026-08-01T19:14:26Z"
 }

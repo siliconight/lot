@@ -1,11 +1,11 @@
 {
   "glb": "stadium_a01.glb",
-  "glb_sha256": "3f6b91970b155fe13ceb41ded0595ed833acedf254dd0db9bec6769e226f29b9",
-  "glb_bytes": 186680,
+  "glb_sha256": "125d594b74c708a0a3ef6cd8dd22dc599e31db4ee8a32df308350b9602a2d111",
+  "glb_bytes": 193920,
   "spec": "stadium_a01.json",
   "spec_sha256": "2e489226eb09750a436f926527dfe8c0080601805a95438f590f77235374a3c4",
-  "builder_sha256": "6caf6fc1d8d2f7ee3e3d59d243cb3022361bffccc430fd90be14862ac52d675e",
-  "builder_files": 68,
+  "builder_sha256": "753ed496b12e2db450c12b9fd52a4c05379b62cf2df0266c0ff54aeba41ab15e",
+  "builder_files": 69,
   "deli_counter_version": "Deli Counter 0.88.0",
-  "stamped_utc": "2026-07-30T11:57:33Z"
+  "stamped_utc": "2026-08-01T19:15:00Z"
 }

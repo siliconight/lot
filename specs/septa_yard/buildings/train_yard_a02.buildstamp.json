@@ -1,11 +1,11 @@
 {
   "glb": "train_yard_a02.glb",
-  "glb_sha256": "5317419dbb7f03c5d929eba27cbb2a2226e0de995e38d8eabf64d9f0990b39a4",
-  "glb_bytes": 183468,
+  "glb_sha256": "a59045d635e6a82d6d8f89261ca63a5ec116cc1fbb9a0dc43a08497b06a37ea0",
+  "glb_bytes": 189728,
   "spec": "train_yard_a02.json",
   "spec_sha256": "848a09879d4fdf0eb0337cde8e2f9ed434c969ebaa1b71a7631530d2c9cffbc4",
-  "builder_sha256": "6caf6fc1d8d2f7ee3e3d59d243cb3022361bffccc430fd90be14862ac52d675e",
-  "builder_files": 68,
+  "builder_sha256": "753ed496b12e2db450c12b9fd52a4c05379b62cf2df0266c0ff54aeba41ab15e",
+  "builder_files": 69,
   "deli_counter_version": "Deli Counter 0.88.0",
-  "stamped_utc": "2026-07-30T11:57:45Z"
+  "stamped_utc": "2026-08-01T19:15:14Z"
 }

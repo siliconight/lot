@@ -150,7 +150,7 @@
       "story": 0,
       "x": -10.2,
       "y": 12.0,
-      "z": 1.25,
+      "z": 1.1,
       "width": 1.25,
       "height": 2.2,
       "sill": 0.0,
@@ -167,7 +167,7 @@
       "story": 0,
       "x": 10.2,
       "y": 12.0,
-      "z": 1.25,
+      "z": 1.1,
       "width": 1.4,
       "height": 2.2,
       "sill": 0.0,
@@ -184,7 +184,7 @@
       "story": 0,
       "x": -5.1,
       "y": -12.0,
-      "z": 1.25,
+      "z": 1.1,
       "width": 1.6,
       "height": 2.2,
       "sill": 0.0,
@@ -201,7 +201,7 @@
       "story": 0,
       "x": 11.9,
       "y": -12.0,
-      "z": 2.65,
+      "z": 2.5,
       "width": 1.2,
       "height": 1.4,
       "sill": 1.8,
@@ -218,7 +218,7 @@
       "story": 0,
       "x": 17.0,
       "y": 6.0,
-      "z": 1.25,
+      "z": 1.1,
       "width": 1.25,
       "height": 2.2,
       "sill": 0.0,
@@ -235,7 +235,7 @@
       "story": 0,
       "x": -10.2,
       "y": 2.0,
-      "z": 1.25,
+      "z": 1.1,
       "width": 1.25,
       "height": 2.2,
       "sill": 0.0,
@@ -252,7 +252,7 @@
       "story": 0,
       "x": 11.9,
       "y": 2.0,
-      "z": 1.25,
+      "z": 1.1,
       "width": 1.25,
       "height": 2.2,
       "sill": 0.0,
@@ -269,7 +269,7 @@
       "story": 0,
       "x": 7.0,
       "y": 7.0,
-      "z": 1.25,
+      "z": 1.1,
       "width": 1.25,
       "height": 2.2,
       "sill": 0.0,
@@ -286,7 +286,7 @@
       "story": 0,
       "x": 7.0,
       "y": 3.0,
-      "z": 1.25,
+      "z": 1.1,
       "width": 1.4,
       "height": 2.2,
       "sill": 0.0,
@@ -651,15 +651,6 @@
     },
     {
       "node": "ext_col_0_S_seg13",
-      "material": {
-        "id": "concrete",
-        "acoustic": "Concrete",
-        "absorption": 0.7,
-        "damping": 0.6
-      }
-    },
-    {
-      "node": "ext_col_0_S_open1_lintel",
       "material": {
         "id": "concrete",
         "acoustic": "Concrete",
@@ -1226,7 +1217,7 @@
         "translation": [
           -10.2,
           12.0,
-          1.25
+          1.1
         ],
         "rot_y": 0
       },
@@ -1259,7 +1250,7 @@
         "translation": [
           10.2,
           12.0,
-          1.25
+          1.1
         ],
         "rot_y": 0
       },
@@ -1287,7 +1278,7 @@
         "translation": [
           -5.1,
           -12.0,
-          1.25
+          1.1
         ],
         "rot_y": 180
       },
@@ -1320,7 +1311,7 @@
         "translation": [
           17.0,
           6.0,
-          1.25
+          1.1
         ],
         "rot_y": 90
       },
@@ -1353,7 +1344,7 @@
         "translation": [
           -10.2,
           2.0,
-          1.25
+          1.1
         ],
         "rot_y": 0
       },
@@ -1386,7 +1377,7 @@
         "translation": [
           11.9,
           2.0,
-          1.25
+          1.1
         ],
         "rot_y": 0
       },
@@ -1419,7 +1410,7 @@
         "translation": [
           7.0,
           7.0,
-          1.25
+          1.1
         ],
         "rot_y": 90
       },
@@ -1452,7 +1443,7 @@
         "translation": [
           7.0,
           3.0,
-          1.25
+          1.1
         ],
         "rot_y": 90
       },
@@ -1529,7 +1520,6 @@
     "ext_0_S_seg11": "wall",
     "ext_0_S_seg12": "wall",
     "ext_0_S_seg13": "wall",
-    "ext_0_S_open1_lintel": "window",
     "ext_0_S_open1_sill": "window",
     "ext_0_S_open1_pane": "window",
     "ext_0_S_seg14": "wall",

@@ -1,11 +1,11 @@
 {
   "glb": "large_warehouse_a03.glb",
-  "glb_sha256": "493b6c5d0f7b6ecff813c0c101aeaa8f6e956f868cd192d4783a33ce19da9430",
-  "glb_bytes": 282372,
+  "glb_sha256": "59ed4badecf39a7e0492c91b57903e2c5742f11f5b4afab00f01b811c23f7535",
+  "glb_bytes": 293860,
   "spec": "large_warehouse_a03.json",
   "spec_sha256": "c6352bf8ed266ce288c91cdc99209207de845b0845863cb1eedd5813f9d6790a",
-  "builder_sha256": "6caf6fc1d8d2f7ee3e3d59d243cb3022361bffccc430fd90be14862ac52d675e",
-  "builder_files": 68,
+  "builder_sha256": "753ed496b12e2db450c12b9fd52a4c05379b62cf2df0266c0ff54aeba41ab15e",
+  "builder_files": 69,
   "deli_counter_version": "Deli Counter 0.88.0",
-  "stamped_utc": "2026-07-30T11:57:10Z"
+  "stamped_utc": "2026-08-01T19:14:35Z"
 }

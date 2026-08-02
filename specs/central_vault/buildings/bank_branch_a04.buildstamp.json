@@ -1,11 +1,11 @@
 {
   "glb": "bank_branch_a04.glb",
-  "glb_sha256": "06d5bdb886f66083bc7bf42ed6c7ba989d2f78fe7e23818c2cefff724690a8c0",
-  "glb_bytes": 255316,
+  "glb_sha256": "ff63d5e6efc8bf19d2dbbabed2920547e530d4553cd145de389673da3ab57a84",
+  "glb_bytes": 252808,
   "spec": "bank_branch_a04.json",
   "spec_sha256": "0e3e687b2702780f28ecd7e0226f63f0c79ce0ae58253837411982d1669c8631",
-  "builder_sha256": "6caf6fc1d8d2f7ee3e3d59d243cb3022361bffccc430fd90be14862ac52d675e",
-  "builder_files": 68,
+  "builder_sha256": "753ed496b12e2db450c12b9fd52a4c05379b62cf2df0266c0ff54aeba41ab15e",
+  "builder_files": 69,
   "deli_counter_version": "Deli Counter 0.88.0",
-  "stamped_utc": "2026-07-30T11:56:28Z"
+  "stamped_utc": "2026-08-01T19:13:47Z"
 }

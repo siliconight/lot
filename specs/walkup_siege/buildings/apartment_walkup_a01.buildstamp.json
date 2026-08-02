@@ -1,11 +1,11 @@
 {
   "glb": "apartment_walkup_a01.glb",
-  "glb_sha256": "8bd8dd43a632de617c98a703c6f762d30db18c4b96a580eccb2def122581cc2f",
-  "glb_bytes": 198964,
+  "glb_sha256": "399d74c039725466b4b8c8210d029ec467cb5e0c13c00b255495e632c5ed30f3",
+  "glb_bytes": 195568,
   "spec": "apartment_walkup_a01.json",
   "spec_sha256": "18693ef34695f48696469cb59dfcd9a0c23f0d3b4f4128aae1d9052c3da3cb1b",
-  "builder_sha256": "6caf6fc1d8d2f7ee3e3d59d243cb3022361bffccc430fd90be14862ac52d675e",
-  "builder_files": 68,
+  "builder_sha256": "753ed496b12e2db450c12b9fd52a4c05379b62cf2df0266c0ff54aeba41ab15e",
+  "builder_files": 69,
   "deli_counter_version": "Deli Counter 0.88.0",
-  "stamped_utc": "2026-07-30T11:56:16Z"
+  "stamped_utc": "2026-08-01T19:13:33Z"
 }

@@ -1,11 +1,11 @@
 {
   "glb": "credit_union_a01.glb",
-  "glb_sha256": "938f12fcfc4ccb640ed294627c2021069a17f0c68fcc9d8bf006fb3288e03f1e",
-  "glb_bytes": 134688,
+  "glb_sha256": "88e481b03d5717efc87065e58efc389e0fc77d56d9fff96d1f27b87f0b228e28",
+  "glb_bytes": 134560,
   "spec": "credit_union_a01.json",
   "spec_sha256": "e26bd421bcc4a896a4bb26bcc2c50ced94c6dd1ff5cedce407d0585e58aa7abd",
-  "builder_sha256": "6caf6fc1d8d2f7ee3e3d59d243cb3022361bffccc430fd90be14862ac52d675e",
-  "builder_files": 68,
+  "builder_sha256": "753ed496b12e2db450c12b9fd52a4c05379b62cf2df0266c0ff54aeba41ab15e",
+  "builder_files": 69,
   "deli_counter_version": "Deli Counter 0.88.0",
-  "stamped_utc": "2026-07-30T11:56:46Z"
+  "stamped_utc": "2026-08-01T19:14:06Z"
 }

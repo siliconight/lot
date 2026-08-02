@@ -1,11 +1,11 @@
 {
   "glb": "strip_club_a01.glb",
-  "glb_sha256": "31c50fb14c654df7da696bad50865a48d6918bd1cd9ce211be97a88ff392ba8f",
-  "glb_bytes": 74452,
+  "glb_sha256": "241d18af674155f9354621c555a4f6c75ea72dce87583ddbb42f51b283967905",
+  "glb_bytes": 72284,
   "spec": "strip_club_a01.json",
   "spec_sha256": "107946fe54f9516d6d099c8b128d2474b8471c5a6e9d727c35f1dc69c8f11133",
-  "builder_sha256": "6caf6fc1d8d2f7ee3e3d59d243cb3022361bffccc430fd90be14862ac52d675e",
-  "builder_files": 68,
+  "builder_sha256": "753ed496b12e2db450c12b9fd52a4c05379b62cf2df0266c0ff54aeba41ab15e",
+  "builder_files": 69,
   "deli_counter_version": "Deli Counter 0.88.0",
-  "stamped_utc": "2026-07-30T11:57:36Z"
+  "stamped_utc": "2026-08-01T19:15:04Z"
 }

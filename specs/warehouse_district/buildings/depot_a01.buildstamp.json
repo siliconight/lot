@@ -1,11 +1,11 @@
 {
   "glb": "depot_a01.glb",
-  "glb_sha256": "76e90736fe9f82c56807b717f465c06f1e641b09177102e8c3a9b53048ed9b12",
-  "glb_bytes": 115904,
+  "glb_sha256": "4322d97c7f49d8040dbd143dbb23768c8ed169cade94b8763c4b7158e15c80c5",
+  "glb_bytes": 119628,
   "spec": "depot_a01.json",
   "spec_sha256": "5bf4123b3ba14dddf796607a9fe962c1cc9fb3ef39b281a8953b1f4f382d4fc7",
-  "builder_sha256": "6caf6fc1d8d2f7ee3e3d59d243cb3022361bffccc430fd90be14862ac52d675e",
-  "builder_files": 68,
+  "builder_sha256": "753ed496b12e2db450c12b9fd52a4c05379b62cf2df0266c0ff54aeba41ab15e",
+  "builder_files": 69,
   "deli_counter_version": "Deli Counter 0.88.0",
-  "stamped_utc": "2026-07-30T11:56:53Z"
+  "stamped_utc": "2026-08-01T19:14:16Z"
 }

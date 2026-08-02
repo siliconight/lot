@@ -1,11 +1,11 @@
 {
   "glb": "landmark_hall_a01.glb",
-  "glb_sha256": "ae08b7e989b1eec343dd8fc0115917d4521b6eaaafba5b885c8fcc73999a1f54",
-  "glb_bytes": 120820,
+  "glb_sha256": "a5293104b32e8978be7b908eb1b8eb0273075ef26cf53a7ec6e4dfbdebc00e07",
+  "glb_bytes": 124288,
   "spec": "landmark_hall_a01.json",
   "spec_sha256": "a95eaf175b33307513d4b280d09e94c9492d2d1ae31f43f9b32a8921acb6e0c2",
-  "builder_sha256": "6caf6fc1d8d2f7ee3e3d59d243cb3022361bffccc430fd90be14862ac52d675e",
-  "builder_files": 68,
+  "builder_sha256": "753ed496b12e2db450c12b9fd52a4c05379b62cf2df0266c0ff54aeba41ab15e",
+  "builder_files": 69,
   "deli_counter_version": "Deli Counter 0.88.0",
-  "stamped_utc": "2026-07-30T11:57:04Z"
+  "stamped_utc": "2026-08-01T19:14:28Z"
 }
