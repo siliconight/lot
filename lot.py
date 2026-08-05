@@ -1242,7 +1242,35 @@ def _lasertag_hook_nodes(pos, site_spec=None, enemy_count=6, lateral=1.5,
     if placed:
         for i, piece in enumerate(placed):
             cx, cy = piece["at"][0], piece["at"][1]
-            body += _hook(f"Cover_{i}", "LT_CoverTestPoints", (cx, cy, oz))
+            # THE COVER'S OWN ELEVATION, not the objective's. `at` is a
+            # ground-plan XY and carries no height, and this used to fill the
+            # third component with `oz` -- so every cover test point inherited
+            # whatever height the OBJECTIVE happened to sit at.
+            #
+            # It is invisible while the objective is at grade and wrong the
+            # moment it is not. Measured on a five-building street whose
+            # objective sits in a basement at -3.10: the eight cover BODIES
+            # were written at y 1.00, standing on the street, and their eight
+            # test points at y -3.10, three metres under it. Level Factory's
+            # ground-contact preflight refused the map -- correctly -- with
+            # "8 of 19 mission point(s) have no ground beneath them", and no
+            # firefight was ever evaluated.
+            #
+            # The BODY has always taken its height from its own size
+            # (`_box_node(..., (cx, sy / 2, -cy))` above). Reading the same
+            # size here is what makes the two agree; two writers of one thing
+            # disagreeing is what produced this.
+            # `size` is written in the GODOT frame -- (x, height, y) -- which
+            # `site_cover.Cover.as_spec` states explicitly, so the height is
+            # the SECOND component and not the third.
+            size = piece.get("size") or ()
+            if len(size) >= 2:
+                height = float(size[1])
+            else:
+                import site_cover
+                height = site_cover.COVER_HEIGHT
+            body += _hook(f"Cover_{i}", "LT_CoverTestPoints",
+                          (cx, cy, height / 2.0))
     else:
         for i, (cx, cy) in enumerate(((5.0, 0.0), (-5.0, 0.0),
                                       (0.0, 5.0), (0.0, -5.0))):
