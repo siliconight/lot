@@ -263,6 +263,99 @@ def _segment_crosses(a, b, rect) -> bool:
     return t_enter <= t_exit
 
 
+#: Where the two sightlines run. `LT_BotPlayerController` sights from
+#: ``body.global_position + UP * 1.4`` and ``LT_LineOfSightTester.CHEST_OFFSET``
+#: is ``UP * 1.0``; `site_cover` carries the same pair and derives
+#: `MIN_COVER_HEIGHT` from where they cross.
+#:
+#: Carried rather than imported, the same stated assumption `OPENING_RANGE`
+#: makes: Lot cannot read the Laser Tag checkout, so it holds the numbers and
+#: names where they came from, and `packages.validation.lasertag_contract`
+#: reports drift against what is written here.
+EYE_HEIGHT = 1.4
+CHEST_HEIGHT = 1.0
+
+#: ``enemy_sight_range = 35.0`` in ``default_laser_tag_scenario.tres``, and
+#: `LT_EnemyBrain` gates its fire on ``has_los and distance <= sight_range``.
+#: Carried for the reason `OPENING_RANGE` is: so `lasertag_contract` can report
+#: drift on it rather than it going stale unnoticed.
+#:
+#: IT IS NOT A PLACEMENT RULE, AND IT WAS ONE FOR ONE RUN. An earlier version of
+#: this patch refused occlusion inside this range outright -- "inside the range
+#: where being wrong is expensive, place on the fact rather than the model" --
+#: on the argument that a wrong occlusion claim outside 35 m costs nothing and
+#: inside it costs the grade. The argument was sound and the outcome was not.
+#: Measured across 25 runs, before and after:
+#:
+#:     survival_min             6.73 -> 19.60      the fast deaths stopped
+#:     enemy_stuck_events         34 -> 75         and this is why
+#:     avg_enemy_deaths_per_run 0.72 -> 0.24
+#:     avg_engagement_distance 25.13 -> 21.61
+#:     route_completion_rate     0.0 -> 0.0
+#:     total score                45 -> 45
+#:
+#: The crew survived longer because the enemies pushed out past 35 m landed on
+#: ground they could not path off. `place_enemies` tests `outdoors()`, which
+#: asks whether a point is outside a building -- not whether a navmesh polygon
+#: will exist under it. Buying an opening by stranding the opposition is not
+#: buying an opening, and the score agreed: unchanged, every category.
+#:
+#: Reverted. What stays is the part that was a correctness fix on its own
+#: merits: occluding against measured colliders instead of declared footprints.
+ENEMY_SIGHT_RANGE = 35.0
+
+
+def solid_occluders(reading) -> list:
+    """2D rects from MEASURED colliders -- only what can block an eyeline.
+
+    `has_line_of_sight` speaks rects, and until now the rects it got were
+    declared building footprints. A footprint is the extent a building occupies,
+    not the shape of its walls: `brewery_a02` declares 42.0 x 30.0 m and the
+    shell inside it has doors, windows and open ground. Occluding with the
+    declared extent credits all of that as solid.
+
+    A collider is kept when it spans the WHOLE band the two lines occupy --
+    bottom at or below chest, top at or above eye. Requiring the whole band
+    rather than any overlap is the point: a kerb that clips the bottom of the
+    line stops nothing, and a partial intersection counted as cover is the
+    error being corrected here, one rectangle at a time.
+
+    Returns rects in Lot site space (x east, y north), the same convention
+    `footprints` returns, so the caller substitutes one for the other and
+    nothing downstream needs to know which it got.
+    """
+    rects = []
+    for box in getattr(reading, "boxes", ()) or ():
+        try:
+            if box.bottom > CHEST_HEIGHT or box.top < EYE_HEIGHT:
+                continue
+            cx, cy = float(box.centre[0]), float(box.centre[1])
+            hx = abs(float(box.size[0])) / 2.0
+            hy = abs(float(box.size[1])) / 2.0
+        except (AttributeError, IndexError, TypeError, ValueError):
+            continue
+        rects.append((cx - hx, cy - hy, cx + hx, cy + hy))
+    return rects
+
+
+def sight_occluders(site_spec, solids):
+    """``(rects, source)`` -- measured collision when there is any, else declared.
+
+    Measured REPLACES declared rather than joining it. Keeping both would put
+    every building's full footprint back in the set, which is the thing that
+    admitted an enemy 26.5 m from the crew on `lot_demo_001` seed 5118.
+
+    `Reading.complete` decides, and it is documented for exactly this: a site
+    that parsed and holds nothing is a confident "nothing is in the way"; a
+    site with one unreadable shell is "cannot tell". An empty-but-complete
+    reading therefore returns an empty rect list on purpose -- that is an
+    answer, not a failure, and the distance branch still holds the opening.
+    """
+    if solids is not None and getattr(solids, "complete", False):
+        return solid_occluders(solids), "collision"
+    return footprints(site_spec, margin=0.0), "footprints"
+
+
 def has_line_of_sight(a, b, rects) -> bool:
     """True when nothing Lot knows about stands between ``a`` and ``b``.
 
@@ -285,28 +378,99 @@ def has_line_of_sight(a, b, rects) -> bool:
     return True
 
 
-def opening_engagement_is_fair(candidate, spawn, occluders,
+#: How finely to sample the crew's opening walk. Half a metre is shorter than
+#: any wall this site builds, so a corner cannot pass between two samples.
+_PATH_STEP = 0.5
+
+
+def crew_reaction_path(route, clearance: float = OPENING_CLEARANCE,
+                       step: float = _PATH_STEP) -> list:
+    """Where the crew is during the window the opening is judged over.
+
+    Not a point. `CREW_SPEED` and `REACTION_SECONDS` are already multiplied
+    together in `OPENING_CLEARANCE` to widen the distance branch; this walks the
+    same metres along the actual route so the occlusion branch is asked about
+    the same window. The spawn is the first sample, so a caller with nowhere to
+    walk gets the old single-point behaviour without a second code path.
+    """
+    if not route:
+        return []
+    points = [tuple(route[0][:2])]
+    walked = 0.0
+    for a, b in zip(route, route[1:]):
+        a, b = tuple(a[:2]), tuple(b[:2])
+        leg = math.dist(a, b)
+        if leg <= 1e-9:
+            continue
+        travelled = 0.0
+        while travelled + step <= leg:
+            travelled += step
+            walked += step
+            if walked > clearance:
+                return points
+            t = travelled / leg
+            points.append((a[0] + (b[0] - a[0]) * t,
+                           a[1] + (b[1] - a[1]) * t))
+        walked += leg - travelled
+        if walked >= clearance:
+            return points
+    return points
+
+
+def opening_engagement_is_fair(candidate, crew_path, occluders,
                                opening_range: float = OPENING_RANGE,
                                clearance: float = OPENING_CLEARANCE) -> bool:
     """True when an enemy here cannot shoot the crew before it has moved.
 
     Either it is further away than *either* side can open fire from with a
-    second of daylight on top, or a building stands between the two. Both are
-    checked at the spawn point rather than along the route on purpose: the
+    second of daylight on top, or a building stands between the two -- and
+    both are now asked of the STRETCH OF ROUTE the crew covers in that second,
+    not of the spawn tile alone.
+
+    THE SPAWN TILE WAS THE DEFECT, and it was a deliberate choice with a
+    reason that does not survive contact with the bot. The reason was: "the
     crew's first second is the only moment it has no cover, no information and
     no ability to react, and that is the moment Laser Tag measures as
-    ``time_to_first_contact``.
+    ``time_to_first_contact``." True, and the crew does not spend that second
+    standing on the spawn. It walks at `CREW_SPEED` from frame one. A corner
+    that hides an enemy from the spawn and not from four metres down the street
+    was credited as cover for a fight that starts after the crew has walked
+    those four metres.
 
-    The range defaults to `OPENING_RANGE`, which is the crew's reach and not the
-    enemy's -- the crew sees ten metres further and shoots first, so the enemy's
-    35 m answers the wrong question. `OPENING_CLEARANCE` is the part that was
-    missing after that: a distance *equal* to the acquisition threshold is not
-    a standoff, it is the threshold, and it starts the fight on frame one just
-    as surely as standing next to the crew does.
+    Measured, `lot_demo_001` seed 5118: Enemy_0 stood 26.5 m out, admitted
+    because `b0` -- the crew's OWN spawn building -- covered 48% of the line
+    from the spawn tile. Laser Tag's raycast disagreed at 0.08 s, its sampler
+    reported 37% of walkable positions visible to 3+ enemy spawns, and the run
+    graded 45/100 with `route_completion_rate: 0.0`. Per `OPENING_RANGE`'s own
+    note, one visible enemy is 0% route completion by construction, so that one
+    spawn cost the whole 25-point traversal category and the 10 pacing points
+    on top.
+
+    `crew_path` is required rather than defaulted to ``[spawn]``. A default
+    would leave both existing callers testing the old thing while this code sat
+    unreached, which is precisely the failure this patch exists to correct one
+    instance of.
+
+    The range still defaults to `OPENING_RANGE`, which is the crew's reach and
+    not the enemy's -- the crew sees ten metres further and shoots first, so the
+    enemy's 35 m answers the wrong question. `OPENING_CLEARANCE` is the part
+    that was missing after that: a distance *equal* to the acquisition threshold
+    is not a standoff, it is the threshold, and it starts the fight on frame one
+    just as surely as standing next to the crew does.
+
+    STILL NOT A COLLISION TEST. `has_line_of_sight` remains a 2D segment
+    against footprint rects and a rect is not a shell. `lot.py` reads real
+    collider boxes into `solids` three lines above its `place_enemies` call and
+    does not pass them; doing so, filtered by eye height the way `site_cover`
+    derives `MIN_COVER_HEIGHT`, is the fix this one does not attempt.
     """
-    if math.dist(candidate, spawn) >= opening_range + clearance:
+    if not crew_path:
+        return False
+    reach = opening_range + clearance
+    if all(math.dist(candidate, p) >= reach for p in crew_path):
         return True
-    return not has_line_of_sight(candidate, spawn, occluders)
+    return not any(has_line_of_sight(candidate, p, occluders)
+                   for p in crew_path)
 
 
 def _fractions(index: int, count: int, step: float = SLIDE_STEP):
@@ -380,9 +544,175 @@ def _offsets(lateral: float, max_push: float, step: float):
         yield -distance
 
 
+#: Directions tried at each radius when pushing the crew spawn clear. Sixteen
+#: is fine enough that a 0.5 m ring never steps over a doorway-width gap, and
+#: coarse enough that the whole search is a few hundred rect tests.
+_RING_DIRECTIONS = 16
+
+
+def _rings(max_push: float, step: float):
+    """Offsets ordered by distance, nearest first, deterministic.
+
+    Nearest-first for the reason `_offsets` gives: the crew should end up on
+    the street it was already standing beside, not on whichever side of the
+    block the search happened to scan first.
+    """
+    distance = step
+    while distance <= max_push:
+        for i in range(_RING_DIRECTIONS):
+            angle = 2.0 * math.pi * i / _RING_DIRECTIONS
+            yield (distance * math.cos(angle), distance * math.sin(angle))
+        distance += step
+
+
+#: How far apart two crew members have to stand.
+#:
+#: Derived, not picked. `LT_PlayerPill` is a capsule and Godot bakes this site's
+#: navmesh at a 0.4 m agent radius; two pills inside one agent diameter is the
+#: state that produced `lot_demo_001`'s 10/BROKEN -- four crew written to one
+#: coordinate, interpenetrating, 116 stuck events, zero shots fired by either
+#: side and every run timing out at the full 180 s.
+#:
+#: Two metres is a clear pill diameter plus the `WALL_MARGIN` a spawn is already
+#: required to have, so a crew member on a ring point stands in the same room
+#: the mission spawn is held to.
+CREW_SPACING = 2.0
+
+
+def crew_spawns(site_spec, spawn, count: int, *,
+                spacing: float = CREW_SPACING,
+                max_push: float = MAX_PUSH,
+                step: float = PUSH_STEP) -> list:
+    """``count`` places for the crew to stand, the first being ``spawn``.
+
+    THE FIRST IS ALWAYS THE SPAWN, unmoved. `clear_crew_spawn` has already
+    decided where the mission starts and re-deciding it here would be two
+    answers for one position, which is the defect that function was written to
+    end. This only adds places for the people who arrive with them.
+
+    The rest are found on the same nearest-first rings `clear_crew_spawn`
+    walks, and each has to be `outdoors()` of every building and ``spacing``
+    clear of every crew position already placed. Nearest-first for the reason
+    `_offsets` gives: the crew should end up on the street it starts on, not
+    strung out across whichever side of the block the search scanned first.
+
+    A ``count`` of 1 returns ``[spawn]`` -- the exact node Lot has always
+    written, at the exact position -- so a mission that has not asked for a crew
+    is byte-identical.
+
+    Laser Tag needs no change to read these. `LT_MapEvalHarness._walk` matches
+    player spawns with ``begins_with(LT_Const.HOOK_PLAYER_SPAWN)`` and
+    `spawn_players` cycles the list it finds, so `LT_PlayerSpawn_1` and up are
+    discovered by a harness that has supported a crew all along.
+    """
+    base = tuple(spawn)
+    placed = [base]
+    count = max(1, int(count))
+    if count == 1:
+        return placed
+
+    ground = ground_rect(site_spec)
+    rects = footprints(site_spec)
+    z = base[2] if len(base) > 2 else GROUND_Z
+    for _ in range(count - 1):
+        chosen = None
+        for dx, dy in _rings(max_push, step):
+            candidate = (base[0] + dx, base[1] + dy)
+            if math.dist(candidate, base[:2]) < spacing:
+                continue
+            if ground is not None and not outdoors(candidate, ground, rects):
+                continue
+            if any(math.dist(candidate, p[:2]) < spacing for p in placed):
+                continue
+            chosen = candidate
+            break
+        if chosen is None:
+            # Nowhere to put them. Stacking a crew member on someone else is
+            # exactly the failure this exists to prevent, so the crew comes back
+            # short and the caller can say so, rather than shipping a scene that
+            # times out with no shots fired.
+            break
+        placed.append((chosen[0], chosen[1], z))
+    return placed
+
+
+def clear_crew_spawn(site_spec, positions, *, max_push: float = MAX_PUSH,
+                     step: float = PUSH_STEP) -> tuple:
+    """Move the crew spawn out of the band where a navmesh will not exist.
+
+    `WALL_MARGIN` is documented for this and every enemy is already held to it:
+    `footprints()` grows each building rect by it and `place_enemies` rejects
+    any sample that is not `outdoors()` of the grown set. The crew spawn was
+    never tested against the same rects -- it was written wherever
+    `_walk_positions` resolved it.
+
+    Measured 2026-08-09 on `lot_demo_001` candidate 5017: the crew spawn stood
+    0.85 m from `strip_retail_a01`, inside the 1.0 m band. It had floor and no
+    navmesh polygon, so Laser Tag's bot could not path off it -- 132 stuck
+    events at one point across three runs, every run timing out at 180 s, 0%
+    route completion, and the evaluation job blowing its own 900 s budget
+    without ever producing a grade.
+
+    THE CREW SPAWN ONLY. An objective or extraction inside a building is a
+    heist. Whether the crew can reach one is a different question and is not
+    answered here.
+
+    Returns ``(positions, findings)``; ``positions`` is a new dict and the
+    input is left alone.
+    """
+    spawn = positions.get("spawn")
+    if spawn is None:
+        return positions, []
+    rects = footprints(site_spec)
+    ground = ground_rect(site_spec)
+    if ground is None and not rects:
+        # Nothing known to place against. `place_enemies` says the same of the
+        # same site in LOT_SPAWN_PLACEMENT_UNCHECKED; saying it twice for one
+        # site description would read as two problems.
+        return positions, []
+
+    here = (float(spawn[0]), float(spawn[1]))
+    if outdoors(here, ground, rects):
+        return positions, []
+
+    z = float(spawn[2]) if len(spawn) > 2 else GROUND_Z
+    for dx, dy in _rings(max_push, step):
+        candidate = (here[0] + dx, here[1] + dy)
+        if not outdoors(candidate, ground, rects):
+            continue
+        moved = math.hypot(dx, dy)
+        seated = dict(positions)
+        seated["spawn"] = (candidate[0], candidate[1], z)
+        return seated, [{
+            "code": "LOT_CREW_SPAWN_PUSHED",
+            "severity": "minor",
+            "category": "spawn",
+            "message": (
+                f"the crew spawn stood within {WALL_MARGIN:g} m of a building "
+                f"or the site edge, so it was moved {moved:.2f} m to the "
+                f"nearest open ground. Godot erodes the navmesh by the agent "
+                f"radius at every solid, so a spawn inside that band has a "
+                f"floor and no polygon to path from: the bot wedges against "
+                f"the wall it started beside and the run ends in TIMEOUT with "
+                f"0% route completion rather than in a fight."),
+        }]
+
+    return positions, [{
+        "code": "LOT_CREW_SPAWN_WALLED",
+        "severity": "major",
+        "category": "spawn",
+        "message": (
+            f"the crew spawn stands within {WALL_MARGIN:g} m of a building or "
+            f"the site edge and no open ground exists within {max_push:g} m of "
+            f"it, so Lot left it where it was. Moving it further would be a "
+            f"different mission. Laser Tag's bot will have no navmesh polygon "
+            f"under the crew and will report 0% route completion."),
+    }]
+
+
 def place_enemies(site_spec, positions, *, enemy_count: int = 6,
                   lateral: float = 1.5, standoff: float = MIN_STANDOFF,
-                  separation: float = MIN_SEPARATION) -> Placement:
+                  separation: float = MIN_SEPARATION, solids=None) -> Placement:
     """Enemy spawns along the mission route, on ground the crew can walk.
 
     ``positions`` is ``lot._walk_positions``' dict: site-space ``spawn``,
@@ -390,6 +720,13 @@ def place_enemies(site_spec, positions, *, enemy_count: int = 6,
     samples spread along the route, kicked alternately to either side -- and
     what is new is that a sample which lands in a building is pushed
     perpendicular until it clears one, instead of being written where it fell.
+
+    ``solids`` is `site_collision.read_site`'s reading, and it decides what
+    counts as cover when the opening is judged. Without it this falls back to
+    declared footprints, which is what it always did and which admitted an
+    enemy 26.5 m from the crew on `lot_demo_001` seed 5118 -- see
+    `sight_occluders`. The caller has the reading already; both of `lot.py`'s
+    call sites pass it.
     """
     plan = Placement()
     count = max(0, int(enemy_count))
@@ -418,10 +755,47 @@ def place_enemies(site_spec, positions, *, enemy_count: int = 6,
                 "comes back with UNREACHABLE_SPAWN, this is why"),
         })
 
-    # Sight is blocked by the buildings themselves, not by the margin kept
-    # around them for the navmesh. Occluding with the grown rects would credit
-    # a metre of open street on either side of every wall as cover.
-    occluders = footprints(site_spec, margin=0.0)
+    # Sight is blocked by what is actually SOLID, and Lot has read that --
+    # 959 colliders on lot_demo_001 with `complete: true`, sitting in `lot.py`
+    # three lines above this call and handed to `seat_destinations` but not to
+    # here. This occluded with DECLARED FOOTPRINTS instead: brewery_a02's
+    # 42.0 x 30.0 m rect standing in for a shell with doors and open ground,
+    # every square metre of it credited as wall.
+    #
+    # Measured, seed 5118: Enemy_0 stood 26.5 m from the crew and was admitted
+    # because that rect covered 48% of the line. `LT_EnemyBrain` fires only
+    # after a real raycast and only inside 35 m, and it fired at 0.08 s. The
+    # wall was not there. Per `OPENING_RANGE`'s note -- one visible enemy is 0%
+    # route completion by construction -- that single spawn cost 25 traversal
+    # points and 10 pacing points of the 55 the run was missing.
+    #
+    # The margin note that used to live here still holds and now applies to the
+    # fallback: occluding with the GROWN rects would credit a metre of open
+    # street either side of every wall as cover, so the fallback asks for
+    # margin=0.0 exactly as before.
+    occluders, occluder_source = sight_occluders(site_spec, solids)
+    if occluder_source == "footprints" and solids is not None:
+        # Not silent. Falling back quietly would restore the model that
+        # produced the defect, on a site nobody was told about.
+        plan.findings.append({
+            "code": "LOT_OCCLUDERS_DECLARED",
+            "severity": "moderate",
+            "category": "spawn",
+            "message": (
+                "enemy sightlines were checked against DECLARED building "
+                "footprints rather than measured collision, because the site's "
+                "collision reading is incomplete: "
+                + "; ".join(list(getattr(solids, "unread", ()) or ())[:3])
+                + ". A footprint is the extent a building occupies, not the "
+                  "shape of its walls, so an enemy may be admitted into the "
+                  "opening on cover that is not there"),
+        })
+
+    # The crew walks from frame one, so the opening is judged over the metres
+    # it covers rather than the tile it starts on. Same window the distance
+    # branch already allows for, applied to the same route the enemies are
+    # spread along -- both halves of one contract now reading one number.
+    crew_path = crew_reaction_path(route)
 
     placed: list = []
     for i in range(count):
@@ -439,8 +813,10 @@ def place_enemies(site_spec, positions, *, enemy_count: int = 6,
                 continue
             if any(math.dist(candidate, p) < separation for p in placed):
                 continue
-            # The rule the standoff number was standing in for.
-            if not opening_engagement_is_fair(candidate, spawn, occluders):
+            # The rule the standoff number was standing in for, asked of
+            # the ground the crew covers in its first second rather than of
+            # the tile it starts on.
+            if not opening_engagement_is_fair(candidate, crew_path, occluders):
                 continue
             chosen = (candidate, abs(offset), fraction)
             break
@@ -456,7 +832,8 @@ def place_enemies(site_spec, positions, *, enemy_count: int = 6,
         placed.append((cx, cy))
         plan.positions.append((cx, cy, GROUND_Z))
 
-    plan.findings.extend(_findings(plan, count, standoff, spawn, occluders))
+    plan.findings.extend(_findings(plan, count, standoff, spawn, occluders,
+                                   crew_path=crew_path))
     return plan
 
 
@@ -626,7 +1003,7 @@ def nearest_enemy(positions, spawn) -> tuple:
 
 
 def _findings(plan: Placement, requested: int, standoff: float,
-              spawn=None, occluders=None) -> list:
+              spawn=None, occluders=None, *, crew_path=None) -> list:
     out = []
     if plan.dropped:
         out.append({
@@ -681,12 +1058,13 @@ def _findings(plan: Placement, requested: int, standoff: float,
                 f"Distance is the blunt half of the fix; `site_cover` puts "
                 f"something in the ground between them."),
         })
-    out.extend(_opening_findings(plan, spawn, occluders, index, closest))
+    out.extend(_opening_findings(plan, spawn, occluders, index, closest,
+                                 crew_path=crew_path))
     return out
 
 
 def _opening_findings(plan: Placement, spawn, occluders, index: int,
-                      closest: float) -> list:
+                      closest: float, *, crew_path=None) -> list:
     """What the written spawns say about the crew's first second.
 
     Deliberately redundant with the search in `place_enemies`: the search
@@ -709,9 +1087,14 @@ def _opening_findings(plan: Placement, spawn, occluders, index: int,
     out = []
     exposed = []
     if occluders is not None:
+        # The same window the search used. A read-back that asked an easier
+        # question than the search would report a clean opening on exactly the
+        # maps the search had just been too generous about, which is the
+        # failure this function's docstring describes one version of.
+        path = crew_path or [spawn]
         for i, point in enumerate(plan.positions):
             xy = point[:2]
-            if not opening_engagement_is_fair(xy, spawn, occluders):
+            if not opening_engagement_is_fair(xy, path, occluders):
                 exposed.append((i, math.dist(xy, spawn)))
     if exposed:
         worst, distance = min(exposed, key=lambda pair: pair[1])

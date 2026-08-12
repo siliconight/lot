@@ -437,8 +437,42 @@ def _godot_transform(at, rot, z=0.0):
 GROUND_THICK = 0.5
 WALL_THICK = 0.3
 COVER = (1.0, 1.0, 1.0)
-ROAD_COLOR = (0.13, 0.13, 0.14)        # asphalt
-SIDEWALK_COLOR = (0.55, 0.55, 0.57)    # concrete, raised curb
+#: The site's greybox palette. Everything below except the two street colours
+#: was emitting NO material at all: a generated spec produces ground, paths, a
+#: perimeter and cover, and not one of those was a coloured caller.
+#:
+#: Value carries the read that matters outdoors -- can I stand here, or is this
+#: in my way -- and the surfaces answering it are held 0.15 apart in relative
+#: luminance:
+#:
+#:     road 0.131 < ground 0.317 < path 0.478 < DC wall 0.710 < perimeter 0.879
+#:
+#: Anything answering a DIFFERENT question is a marker carried by chroma
+#: instead, which is the convention Deli Counter's palette already uses for
+#: stairs, ladders, doorways and breaches. Value is one-dimensional: solving the
+#: full co-read graph for the largest gap that satisfies every pair returns
+#: 0.140, below the floor, so not every surface can have one. Spending it on the
+#: walk/block question and marking the rest is a choice, and this is where it is
+#: written down. `patch_lot_greybox_palette.py --palette` re-checks these
+#: numbers and refuses to write them if they stop holding.
+#:
+#: The perimeter is bright rather than dark for a reason that is arithmetic
+#: before it is taste: dark would have to clear road's 0.131 by 0.15, which is
+#: below zero. Bright is also the better read -- a uniform chalky boundary is
+#: never mistaken for floor.
+ROAD_COLOR = (0.13, 0.13, 0.14)        # 0.131 -- asphalt
+SIDEWALK_COLOR = (0.55, 0.55, 0.57)    # 0.551 -- concrete, raised curb
+GROUND_COLOR = (0.30, 0.32, 0.34)      # 0.317 -- the plate everything is read against
+PATH_COLOR = (0.53, 0.47, 0.40)        # 0.478 -- a walked surface; warm cast names it
+COURT_COLOR = (0.48, 0.52, 0.55)       # 0.514 -- path's band, cool cast names it apart
+PERIM_COLOR = (0.87, 0.88, 0.90)       # 0.879 -- the edge of the world: bright, flat, dead
+COVER_COLOR = (0.18, 0.55, 0.22)       # 0.448 -- a MARKER: chroma finds it, value is free
+
+#: Warm massing -- reads as a building you can't enter. MOVED from
+#: (0.38, 0.34, 0.30): against the new plate that was 0.03 apart in luminance
+#: and 0.09 in saturation, which is the flat-grey complaint in miniature. Same
+#: intent, enough chroma to carry it.
+BLOCKER_COLOR = (0.46, 0.28, 0.16)     # 0.310
 
 #: The tallest step the contract player walks up with no step-up code.
 STEP_MAX = float(_agent()["clearances"]["unassisted_step_max_m"])
@@ -477,7 +511,8 @@ COURT_THICK = SURFACE_BASE + 2 * SURFACE_TIER
 #: read by slot transforms, opening heights, marker Z and the nav bake, while
 #: nothing anywhere measures against the plate's top face.
 GROUND_SINK = SURFACE_TIER
-BLOCKER_COLOR = (0.38, 0.34, 0.30)     # warm massing -- reads as a building you can't enter
+# BLOCKER_COLOR moved up into the palette block above, where the numbers that
+# constrain it are written down.
 
 
 def _box_node(name, size, at_xyz, color=None):
@@ -793,7 +828,8 @@ def _outdoor_nodes(site_spec, preview=False, self_flooring=None):
                                (x1 - x0, GROUND_THICK - GROUND_SINK, y1 - y0),
                                ((x0 + x1) / 2,
                                 -(GROUND_THICK + GROUND_SINK) / 2,
-                                -(y0 + y1) / 2))
+                                -(y0 + y1) / 2),
+                               GROUND_COLOR)
             body += bl
             sub += sr
 
@@ -812,7 +848,8 @@ def _outdoor_nodes(site_spec, preview=False, self_flooring=None):
         # top face does not move, so every height check reads the same number.
         bl, sr = _yaw_box_node(f"path_{i}",
                                (length, PATH_THICK + GROUND_SINK, w),
-                               (cx, (PATH_THICK - GROUND_SINK) / 2, -cy), -ang)
+                               (cx, (PATH_THICK - GROUND_SINK) / 2, -cy), -ang,
+                               PATH_COLOR)
         body += bl
         sub += sr
 
@@ -821,7 +858,8 @@ def _outdoor_nodes(site_spec, preview=False, self_flooring=None):
         sx, sy = cdef.get("size_x", 10), cdef.get("size_y", 10)
         bl, sr = _box_node(f"courtyard_{i}",
                            (sx, COURT_THICK + GROUND_SINK, sy),
-                           (cx, (COURT_THICK - GROUND_SINK) / 2, -cy))
+                           (cx, (COURT_THICK - GROUND_SINK) / 2, -cy),
+                           COURT_COLOR)
         body += bl
         sub += sr
 
@@ -840,14 +878,15 @@ def _outdoor_nodes(site_spec, preview=False, self_flooring=None):
             ("perim_E", (WALL_THICK, h, gy), (x1, h / 2, -cy)),
             ("perim_W", (WALL_THICK, h, gy), (x0, h / 2, -cy)),
         ]:
-            bl, sr = _box_node(name, size, at_xyz)
+            bl, sr = _box_node(name, size, at_xyz, PERIM_COLOR)
             body += bl
             sub += sr
 
     for i, cv in enumerate(site_spec.get("cover", [])):
         cx, cy = cv["at"]
         sx, sy, sz = cv.get("size", COVER)
-        bl, sr = _box_node(f"cover_{i}", (sx, sy, sz), (cx, sy / 2, -cy))
+        bl, sr = _box_node(f"cover_{i}", (sx, sy, sz), (cx, sy / 2, -cy),
+                           COVER_COLOR)
         body += bl
         sub += sr
 
@@ -1202,17 +1241,41 @@ def _lasertag_hook_nodes(pos, site_spec=None, enemy_count=6, lateral=1.5,
     # is only floored, not moved off whatever it is standing in.
     pos = site_spawns.seat_destinations(
         pos, solids=solids, bounds=bounds)[0]
+    # And then off the wall it is standing against. Seating answers "is there
+    # floor under this point"; this answers "will the bake leave a polygon on
+    # it", which is a different question and the one the bot actually needs.
+    pos = site_spawns.clear_crew_spawn(site_spec or {}, pos)[0]
     route = [pos["spawn"], pos["objective"], pos["extraction"]]
+    # `solids` here for the same reason `seat_destinations` gets it above: the
+    # scene Laser Tag evaluates is written from THIS call, and a placement that
+    # judged cover differently from the one in the site report would make the
+    # report describe a map nobody plays.
     enemies = site_spawns.place_enemies(
         site_spec or {}, pos, enemy_count=enemy_count,
-        lateral=lateral).positions
+        lateral=lateral, solids=solids).positions
 
     def _hook(name, parent, world, lift=0.0):
         return [f'[node name="{name}" type="Node3D" parent="{parent}"]',
                 f'transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, '
                 f'{_v3(world, lift)[8:-1]})', '']
 
-    body = _hook("LT_PlayerSpawn", ".", pos["spawn"], 1.0)
+    # ONE NODE PER CREW MEMBER. This wrote a single `LT_PlayerSpawn` and
+    # `LT_MapEvalHarness.spawn_players` puts every crew member on
+    # `player_spawns[i % size()]` -- so a crew of four landed four capsules on
+    # one coordinate, interpenetrating, and `lot_demo_001` graded 10/BROKEN with
+    # 116 stuck events and not one shot fired in 25 runs.
+    #
+    # The harness matches these with `begins_with`, so the suffixed names are
+    # found with no change to Laser Tag. Index 0 keeps the bare name and the
+    # position `clear_crew_spawn` chose: `_sort_by_name` puts it first, and it
+    # is still the mission's spawn.
+    crew = site_spawns.crew_spawns(
+        site_spec or {}, pos["spawn"],
+        int((site_spec or {}).get("crew_size", 1) or 1))
+    body = []
+    for i, member in enumerate(crew):
+        body += _hook("LT_PlayerSpawn" if i == 0 else f"LT_PlayerSpawn_{i}",
+                      ".", member, 1.0)
     body += ['[node name="LT_EnemySpawnPoints" type="Node3D" parent="."]', '']
     for i, e in enumerate(enemies):
         body += _hook(f"Enemy_{i}", "LT_EnemySpawnPoints", e, 1.0)
@@ -1345,6 +1408,10 @@ def write_walk_scene(site_spec, merged, walk_out, site_tscn_base,
     # problems.
     pos = site_spawns.seat_destinations(
         raw, solids=solids, bounds=_destination_bounds(merged, raw))[0]
+    # Same push the hook nodes get, on the same inputs, so the walk scene and
+    # the evaluated scene put the crew in the same place. Two answers for one
+    # spawn is the defect the comment above this one is about.
+    pos = site_spawns.clear_crew_spawn(site_spec or {}, pos)[0]
     _p = "" if portable else "res://"
     _a = "" if portable else addon_dir + "/"
     ladder_body, ladder_subs = _ladder_volume_nodes(merged)
@@ -1637,8 +1704,23 @@ def write_navqa_scene(site_spec, merged, navqa_out, site_tscn_base,
 # ---------------------------------------------------------------------------
 # top-level assemble
 # ---------------------------------------------------------------------------
-def assemble(site_spec_path, out_dir=None, walkable=False, navqa=False, preview=False):
-    """Read a site spec, write <name>.site.gameplay.json and <name>.tscn."""
+def assemble(site_spec_path, out_dir=None, walkable=False, navqa=False,
+             preview=False, portable=False):
+    """Read a site spec, write <name>.site.gameplay.json and <name>.tscn.
+
+    With portable=True the SHIPPED scenes (the site scene and, with
+    --walkable, the walk scene) reference their contents relative to
+    themselves rather than through res://, so the out dir is a folder a
+    consumer can drop anywhere in their own project. res:// is rooted at
+    the project directory, so a res:// ref only resolves for a consumer
+    who reproduces this layout at their own root -- and an ABSOLUTE path
+    behind res:// (res://C:/...) asks for a folder named 'C:' inside the
+    project and resolves nowhere at all.
+
+    The nav-QA scene is deliberately excluded: it is consumed by Lot's
+    own walktest harness, which supplies addons/lot/ and resolves the
+    res:// form today.
+    """
     base_dir = os.path.dirname(os.path.abspath(site_spec_path))
     out_dir = out_dir or base_dir
     os.makedirs(out_dir, exist_ok=True)
@@ -1746,7 +1828,10 @@ def assemble(site_spec_path, out_dir=None, walkable=False, navqa=False, preview=
     walk_pos, seat_findings = site_spawns.seat_destinations(
         raw_pos, solids=solids,
         bounds=_destination_bounds(merged, raw_pos))
-    spawn_plan = site_spawns.place_enemies(site_spec, walk_pos)
+    # The collision reading read four lines up. It was already going to
+    # `seat_destinations`; the enemies are placed against sightlines and had
+    # been getting declared footprints instead.
+    spawn_plan = site_spawns.place_enemies(site_spec, walk_pos, solids=solids)
 
     # Something to hide behind, before the scene is written.
     #
@@ -1843,7 +1928,7 @@ def assemble(site_spec_path, out_dir=None, walkable=False, navqa=False, preview=
 
     tscn_out = os.path.join(out_dir, f"{site_spec['name']}.tscn")
     write_godot_scene(site_spec, merged, tscn_out, preview=preview,
-                      self_flooring=self_flooring)
+                      portable=portable, self_flooring=self_flooring)
 
     # Site-level step gate, read back off the scene just WRITTEN rather than
     # re-derived from the constants that produced it. A capsule walks up a step
@@ -1900,7 +1985,8 @@ def assemble(site_spec_path, out_dir=None, walkable=False, navqa=False, preview=
     if walkable:
         walk_out = os.path.join(out_dir, f"{site_spec['name']}_walk.tscn")
         result["walk_positions"] = write_walk_scene(
-            site_spec, merged, walk_out, site_spec["name"], solids=solids)
+            site_spec, merged, walk_out, site_spec["name"], solids=solids,
+            portable=portable)
         result["walk_scene"] = walk_out
 
     if navqa:
@@ -1918,13 +2004,15 @@ if __name__ == "__main__":
     walkable = "--walkable" in sys.argv
     navqa = "--navqa" in sys.argv
     preview = "--preview" in sys.argv
+    portable = "--portable" in sys.argv
     if not args:
         print("usage: python lot.py <site_spec.json> [out_dir] "
-              "[--walkable] [--navqa] [--preview]")
+              "[--walkable] [--navqa] [--preview] [--portable]")
         raise SystemExit(2)
     out = args[1] if len(args) > 1 else None
     try:
-        r = assemble(args[0], out, walkable=walkable, navqa=navqa, preview=preview)
+        r = assemble(args[0], out, walkable=walkable, navqa=navqa,
+                     preview=preview, portable=portable)
     except Exception as e:
         # site_tactical.SiteTacticalError and friends: fail loudly, like a gate
         print(f"[lot] BUILD FAILED: {e}")
