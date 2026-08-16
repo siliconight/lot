@@ -641,8 +641,26 @@ def plan_cover(points: dict, rects, ground, *, opening_range: float,
     refused: set = set()
 
     def outstanding():
-        return [line for line in open_sightlines(points, measured, limit=opening_range)
-                if (line[0], line[1]) not in refused]
+        lines = [line for line in open_sightlines(points, measured,
+                                                  limit=opening_range)
+                 if (line[0], line[1]) not in refused]
+        # THE CREW'S LINES FIRST. `open_sightlines` returns longest first, on
+        # the reasoning that the worst line's fix usually shortens three
+        # others -- which is sound and is kept, INSIDE each group, because
+        # sorting stably on one boolean leaves the existing order alone.
+        #
+        # Longest-first ALONE spent this site's whole 12-piece opening budget
+        # without placing one piece on a line the crew stands on. Measured on
+        # the `test_site_cover` yard: 12 pieces, 0 involving the crew, 6 of
+        # them breaking enemy-to-enemy lines -- cover so one enemy cannot see
+        # another, which says nothing about who opens fire on the crew -- and
+        # the shipped scene left a clear 51.9 m lane from the crew spawn to
+        # the nearest enemy. `unbreakable` was 0 the whole time, so a spot
+        # existed and the budget had simply gone elsewhere.
+        #
+        # The opening engagement is who can shoot the CREW at t=0. With the
+        # same budget, three pieces now close all seven of its lines.
+        return sorted(lines, key=lambda line: crew not in (line[0], line[1]))
 
     remaining = outstanding()
     while remaining and len(plan.cover) < limit:

@@ -1,3 +1,77 @@
+## [0.42.0] - the cover was planned for a crew standing somewhere else
+
+`lot`'s own suite had been red through every certification this month -- 328
+passed, 8 failed. Three defects, and the two that mattered were both one tool
+re-deriving another's inputs instead of asking for them.
+
+**The cover was planned from a crew spawn the scene does not ship.** `assemble`
+seated the mission points and never cleared the crew spawn, so it planned cover
+from (-70.0, 30.0) -- the dead centre of a 16 x 16 shell -- while
+`write_walk_scene` cleared it to (-60.5, 30.0) and shipped that. From inside a
+building almost every sightline reads as already broken, so `plan_cover`
+reported `open_lines=0`: it believed it had covered a map it had never
+correctly measured, and the shipped scene opened with a clear 51.9 m lane to
+the nearest enemy.
+
+That also explains a disagreement that looked like a broken instrument. Two
+`place_enemies` calls fire inside one `assemble` -- one for the cover plan, one
+for the scene -- and they returned different six-enemy sets, both numbered from
+zero. Nothing was mismeasured. There were two different `Enemy_5`s.
+
+**And then the opening cover budget never reached the crew.** With the inputs
+corrected the planner became honest -- `open_lines` 0 -> 1 -- and the real
+defect showed. `open_sightlines` returns every marker pair over the opening
+range, longest first, and `plan_cover` takes twelve. On the test yard, ZERO of
+those twelve involved the crew spawn and SIX broke enemy-to-enemy sightlines --
+cover so one enemy cannot see another, which says nothing about who opens fire
+on the crew, since they are the same team. The crew had seven open lines
+(130.5, 115.9, 106.4, 77.3, 67.8, 53.9, 51.9 m) and got none of the budget.
+`unbreakable` was 0 throughout, so a placeable spot existed the whole time.
+
+Serving the crew's lines first fixes it on the SAME budget. The longest-first
+heuristic is kept inside each group by sorting stably on one boolean:
+
+                        opening pieces  touching crew  total  open_lines
+    longest first                   12              0     23           1
+    crew lines first                12              3     23           0
+
+Three pieces close all seven crew lines.
+
+### What else is in here
+
+`_lasertag_hook_plan` returns the positions, route and enemies the walk scene
+is written from. `_lasertag_hook_nodes` did its own seating and clearing and
+returned only the scene body, so the one question worth asking of it -- are the
+positions in the scene the positions that were planned -- could be asked only
+by re-running its derivation by hand. `tests/test_site_spawns.py` did exactly
+that, drifted, and reported an 18.5 m gap as the scene losing the plan. The
+scene had carried its plan exactly, to 0 of 18 failing coordinate pairs; the
+plan the test held was of a route the tool never uses. The scene body is
+unchanged by the refactor, asserted by executing both versions and comparing.
+
+Six tests were still passing a spawn POINT where `opening_engagement_is_fair`
+now requires a crew PATH. The predicate's refusal to default that parameter
+worked exactly as designed; only the follow-through was missing.
+
+### What this did not fix, which is worth recording
+
+`assemble` and `write_walk_scene` still derive the mission points twice,
+independently. This makes the two agree; it does not make there be one.
+
+Enemy-to-enemy pairs still consume opening budget once the crew is served.
+Excluding them outright measured 7 opening pieces and 18 total -- fewer pieces
+for the same zero open lines -- and is a separate decision about what
+`open_sightlines` should return at all.
+
+Cover planning still derives its priorities from `place_enemies`. That is
+awkward if enemy placement is leaving this pipeline for the gameplay layer,
+because `plan_cover` would lose the input it currently ranks everything by.
+
+Every measurement above is from a two-building yard fixture. `lot_demo_001`
+has not been re-exported under any of this.
+
+Suite: 328 passed / 8 failed -> 336 passed / 0 failed.
+
 ## [0.41.0] - the ground plate and the ground floor were the same plane
 
 Every per-building z-fight gate ran clean and the composed site still reported

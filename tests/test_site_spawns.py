@@ -35,6 +35,21 @@ def route(spawn=(51.0, -5.0, 0.0), objective=(35.0, -17.0, 0.9),
     return {"spawn": spawn, "objective": objective, "extraction": extraction}
 
 
+def crew_path(positions):
+    """The window the opening is judged over, derived the way the search does.
+
+    `opening_engagement_is_fair` takes the stretch of route the crew covers in
+    its first second, not the tile it starts on, and `place_enemies` builds
+    that with `crew_reaction_path` off the same route it spreads the enemies
+    along. A read-back that passed `[spawn]` instead would ask an easier
+    question than the search did, and would therefore report a clean opening on
+    exactly the maps the search had just been too generous about -- which is
+    the one class of defect these read-back tests exist to catch.
+    """
+    return site_spawns.crew_reaction_path(
+        [positions[k] for k in ("spawn", "objective", "extraction")])
+
+
 #: The real seed the module was written for: four shells along the main axis,
 #: the crew starting inside the second one, the objective inside the first.
 BAIE_DORE = site([building("b0", (6.0, -10.0), rot=180),
@@ -194,12 +209,12 @@ def test_an_enemy_down_an_open_street_inside_sight_range_is_not_fair():
     is 35 m, so first contact landed at 0.02 s and 21 of 25 runs ended in a team
     wipe inside ten seconds. Eight metres of MIN_STANDOFF never had a chance."""
     assert not site_spawns.opening_engagement_is_fair(
-        (23.0, 0.0), (0.0, 0.0), [])
+        (23.0, 0.0), [(0.0, 0.0)], [])
 
 
 def test_the_same_enemy_behind_a_building_is_fair():
     assert site_spawns.opening_engagement_is_fair(
-        (23.0, 0.0), (0.0, 0.0), [(10.0, -5.0, 14.0, 5.0)])
+        (23.0, 0.0), [(0.0, 0.0)], [(10.0, -5.0, 14.0, 5.0)])
 
 
 def test_and_so_is_one_further_off_than_either_side_can_open_fire():
@@ -213,9 +228,9 @@ def test_and_so_is_one_further_off_than_either_side_can_open_fire():
     the first shot by either side.
     """
     assert not site_spawns.opening_engagement_is_fair(
-        (40.0, 0.0), (0.0, 0.0), [])
+        (40.0, 0.0), [(0.0, 0.0)], [])
     assert site_spawns.opening_engagement_is_fair(
-        (52.0, 0.0), (0.0, 0.0), [])
+        (52.0, 0.0), [(0.0, 0.0)], [])
 
 
 def test_the_sight_range_itself_is_not_a_standoff():
@@ -227,10 +242,10 @@ def test_the_sight_range_itself_is_not_a_standoff():
     is being given" -- ``LT_BotPlayerController.move_speed = 4.5``, so 4.5 m.
     """
     assert not site_spawns.opening_engagement_is_fair(
-        (site_spawns.OPENING_RANGE, 0.0), (0.0, 0.0), [])
+        (site_spawns.OPENING_RANGE, 0.0), [(0.0, 0.0)], [])
     assert site_spawns.opening_engagement_is_fair(
         (site_spawns.OPENING_RANGE + site_spawns.OPENING_CLEARANCE, 0.0),
-        (0.0, 0.0), [])
+        [(0.0, 0.0)], [])
     assert site_spawns.OPENING_CLEARANCE == (
         site_spawns.CREW_SPEED * site_spawns.REACTION_SECONDS)
 
@@ -239,10 +254,13 @@ def test_no_enemy_can_shoot_the_crew_before_it_has_moved():
     """The whole rule, on the site it was written for."""
     plan = site_spawns.place_enemies(BAIE_DORE, route())
     spawn = route()["spawn"][:2]
+    # The window the search used, not the tile. `spawn` is kept because the
+    # failure message measures distance from it.
+    path = crew_path(route())
     occluders = site_spawns.footprints(BAIE_DORE, margin=0.0)
     assert len(plan.positions) == 6
     for i, (x, y, _z) in enumerate(plan.positions):
-        assert site_spawns.opening_engagement_is_fair((x, y), spawn, occluders), (
+        assert site_spawns.opening_engagement_is_fair((x, y), path, occluders), (
             f"Enemy_{i} at ({x:.1f}, {y:.1f}) has the crew in the open "
             f"{math.dist((x, y), spawn):.1f} m away")
 
@@ -339,11 +357,14 @@ def test_the_written_positions_are_read_back_and_not_taken_on_trust():
     """
     plan = site_spawns.place_enemies(SEED_5320, SEED_5320_ROUTE)
     spawn = SEED_5320_ROUTE["spawn"][:2]
+    # Same window the search judged these candidates against, so this reads
+    # back the question that was asked rather than an easier one.
+    path = crew_path(SEED_5320_ROUTE)
     occluders = site_spawns.footprints(SEED_5320, margin=0.0)
     assert plan.positions
     for i, point in enumerate(plan.positions):
         assert site_spawns.opening_engagement_is_fair(
-            point[:2], spawn, occluders), (
+            point[:2], path, occluders), (
             f"Enemy_{i} at {point[:2]} is "
             f"{math.dist(point[:2], spawn):.1f} m from the crew in the open")
     assert "LOT_ENEMY_SPAWN_IN_THE_OPEN" not in [
@@ -444,7 +465,13 @@ def test_the_walk_scene_carries_the_placed_positions(tmp_path):
     body = lot._lasertag_hook_nodes(route(), BAIE_DORE)
     text = "\n".join(body)
     written = _enemy_vectors(text)
-    planned = site_spawns.place_enemies(BAIE_DORE, route()).positions
+    # The plan the TOOL used, asked of the tool. Planning from `route()` here
+    # planned against a route `_lasertag_hook_nodes` never uses: it seats the
+    # hooks and clears the crew spawn first, and on BAIE_DORE that moves the
+    # spawn 23.5 m out of the shell it starts inside, taking all six enemies
+    # with it. The 18.5 m disagreement that followed read as the scene losing
+    # the plan, and was this line.
+    planned = lot._lasertag_hook_plan(route(), BAIE_DORE)["enemies"]
     assert len(written) == len(planned) == 6
     for (gx, gy, gz), (sx, sy, sz) in zip(written, planned):
         # lot._v3 maps site (x, y, z) -> Godot (x, z + lift, -y), lift 1.0 for

@@ -1212,6 +1212,56 @@ def _node_name(raw):
     return "".join("_" if c in _GODOT_BAD_NAME_CHARS else c for c in str(raw))
 
 
+def _lasertag_hook_plan(pos, site_spec=None, enemy_count=6, lateral=1.5,
+                        solids=None, bounds=None) -> dict:
+    """The positions the walk scene will be written from, before it is written.
+
+    `_lasertag_hook_nodes` does not place anything where its caller pointed. It
+    seats the nav hooks onto floor, clears the crew spawn off the wall it is
+    standing against, and only then spreads the enemies along the route those
+    two steps produced. That is correct and stays. What was wrong is that it
+    returned only the scene body, so the one question worth asking of it --
+    "are the positions in the scene the positions that were planned" -- could
+    be asked only by re-running the derivation by hand.
+
+    `tests/test_site_spawns.py` did exactly that and drifted. It planned from
+    the RAW route dict, and on `BAIE_DORE`, whose crew spawn sits at the dead
+    centre of a 44 x 44 shell, `clear_crew_spawn` moves the spawn 23.5 m and
+    every enemy spread along the route with it -- 19.242 planned against 37.735
+    written on the first pair, all six disagreeing. Read as the scene losing
+    the plan, filed as roadmap 48's family. The scene carried its own plan to
+    0 of 18 failing pairs at `abs_tol=1e-3`; the plan the test held was of a
+    route this tool never uses.
+
+    Returning the resolved values is what stops that recurring: a caller
+    checking the scene against the plan asks which plan was used instead of
+    reproducing how it was derived, so a THIRD preprocessing step added here
+    cannot silently desync anybody.
+    """
+    import site_spawns
+
+    # The nav hooks first: a destination on top of a counter has no route to
+    # it, and every point below is derived from these three. `solids` is the
+    # site's collision reading when the caller has one -- without it the hook
+    # is only floored, not moved off whatever it is standing in.
+    pos = site_spawns.seat_destinations(
+        pos, solids=solids, bounds=bounds)[0]
+    # And then off the wall it is standing against. Seating answers "is there
+    # floor under this point"; this answers "will the bake leave a polygon on
+    # it", which is a different question and the one the bot actually needs.
+    pos = site_spawns.clear_crew_spawn(site_spec or {}, pos)[0]
+    # `solids` here for the same reason `seat_destinations` gets it above: the
+    # scene Laser Tag evaluates is written from THIS call, and a placement that
+    # judged cover differently from the one in the site report would make the
+    # report describe a map nobody plays.
+    enemies = site_spawns.place_enemies(
+        site_spec or {}, pos, enemy_count=enemy_count,
+        lateral=lateral, solids=solids).positions
+    return {"positions": pos,
+            "route": [pos["spawn"], pos["objective"], pos["extraction"]],
+            "enemies": enemies}
+
+
 def _lasertag_hook_nodes(pos, site_spec=None, enemy_count=6, lateral=1.5,
                          solids=None, bounds=None):
     """Lot's half of the LaserTag map contract (LaserTag TDD 8).
@@ -1235,24 +1285,14 @@ def _lasertag_hook_nodes(pos, site_spec=None, enemy_count=6, lateral=1.5,
     """
     import site_spawns
 
-    # The nav hooks first: a destination on top of a counter has no route to
-    # it, and every point below is derived from these three. `solids` is the
-    # site's collision reading when the caller has one -- without it the hook
-    # is only floored, not moved off whatever it is standing in.
-    pos = site_spawns.seat_destinations(
-        pos, solids=solids, bounds=bounds)[0]
-    # And then off the wall it is standing against. Seating answers "is there
-    # floor under this point"; this answers "will the bake leave a polygon on
-    # it", which is a different question and the one the bot actually needs.
-    pos = site_spawns.clear_crew_spawn(site_spec or {}, pos)[0]
-    route = [pos["spawn"], pos["objective"], pos["extraction"]]
-    # `solids` here for the same reason `seat_destinations` gets it above: the
-    # scene Laser Tag evaluates is written from THIS call, and a placement that
-    # judged cover differently from the one in the site report would make the
-    # report describe a map nobody plays.
-    enemies = site_spawns.place_enemies(
-        site_spec or {}, pos, enemy_count=enemy_count,
-        lateral=lateral, solids=solids).positions
+    # Every position this scene is written from, resolved by the tool rather
+    # than by whoever is reading it afterwards. `_lasertag_hook_plan` carries
+    # why that distinction is worth a function.
+    _plan = _lasertag_hook_plan(pos, site_spec, enemy_count=enemy_count,
+                                lateral=lateral, solids=solids, bounds=bounds)
+    pos = _plan["positions"]
+    route = _plan["route"]
+    enemies = _plan["enemies"]
 
     def _hook(name, parent, world, lift=0.0):
         return [f'[node name="{name}" type="Node3D" parent="{parent}"]',
@@ -1828,6 +1868,22 @@ def assemble(site_spec_path, out_dir=None, walkable=False, navqa=False,
     walk_pos, seat_findings = site_spawns.seat_destinations(
         raw_pos, solids=solids,
         bounds=_destination_bounds(merged, raw_pos))
+    # ...and then off the wall, BEFORE anything is planned against where the
+    # crew stands. `write_walk_scene` clears the crew spawn and ships the
+    # cleared one; this did not, so the cover was planned for a crew standing
+    # where the scene does not put it. On the `test_site_cover` fixture that is
+    # (-70.0, 30.0), the dead centre of `b0` -- from inside a shell almost every
+    # sightline reads as already broken, `plan_cover` returned open_lines=0,
+    # and the shipped scene still opened with 51.9 m of clear ground to
+    # Enemy_5. `clear_crew_spawn` returns a new dict and leaves its input
+    # alone, and seat+clear is idempotent, so the shipped spawn does not move --
+    # only what gets planned against it.
+    #
+    # The findings ARE reported here: `write_walk_scene` drops them on the
+    # stated grounds that "assemble runs the same call on the same inputs and
+    # reports them", and until this line existed assemble did not make the
+    # call, so a pushed crew spawn was reported by nobody.
+    walk_pos, clear_findings = site_spawns.clear_crew_spawn(site_spec, walk_pos)
     # The collision reading read four lines up. It was already going to
     # `seat_destinations`; the enemies are placed against sightlines and had
     # been getting declared footprints instead.
@@ -1883,7 +1939,8 @@ def assemble(site_spec_path, out_dir=None, walkable=False, navqa=False,
 
     cover_findings = site_cover.findings(
         cover_plan, opening_range=site_spawns.OPENING_RANGE)
-    for f_ in seat_findings + spawn_plan.findings + cover_findings:
+    for f_ in (seat_findings + clear_findings + spawn_plan.findings
+               + cover_findings):
         tactical_report.setdefault("findings", []).append(f_)
         print(f"[lot] {f_['code']}: {f_['message']}")
 
