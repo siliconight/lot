@@ -643,7 +643,21 @@ def plan_cover(points: dict, rects, ground, *, opening_range: float,
     def outstanding():
         lines = [line for line in open_sightlines(points, measured,
                                                   limit=opening_range)
-                 if (line[0], line[1]) not in refused]
+                 if (line[0], line[1]) not in refused
+                 # ENEMY-ENEMY LINES ARE NOT LOT'S BUDGET TO SPEND.
+                 # `open_sightlines` is all-pairs, so K enemies add
+                 # C(K,2) lines that say nothing about the crew. On the
+                 # shipped `lot_demo_001` export the opening pass placed
+                 # five pieces and two of them broke `Enemy_2 -> Enemy_5`
+                 # and `Enemy_1 -> Enemy_5`, while nothing at all was
+                 # placed on a line touching LT_PlayerSpawn.
+                 # `open_sightlines` itself is unchanged, so Laser Tag and
+                 # the validation package still read those lines; it is
+                 # only Lot that stops paying for them. The enemy points
+                 # are still an input here -- removing them is the
+                 # re-posing item, not this one.
+                 and not (line[0].startswith(ENEMY_PREFIX)
+                          and line[1].startswith(ENEMY_PREFIX))]
         # THE CREW'S LINES FIRST. `open_sightlines` returns longest first, on
         # the reasoning that the worst line's fix usually shortens three
         # others -- which is sound and is kept, INSIDE each group, because

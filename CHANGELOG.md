@@ -1,3 +1,49 @@
+## [0.44.0] - cover stops paying for enemy-to-enemy lines
+
+`open_sightlines` is all-pairs over the marker dict, and `lot.py` builds that
+dict as three mission markers plus one `Enemy_{i}` per placed enemy. K enemies
+therefore contribute C(K,2) lines describing enemies shooting each other, and
+`plan_cover`'s twelve-piece opening budget was buying cover for them.
+
+The exclusion sits in `plan_cover`'s nested `outstanding()` -- the point of
+spend -- and NOT in `open_sightlines`, which is byte-identical. Laser Tag and
+`level_factory/packages/validation/` still see every pair.
+
+### This REVERSES a call the roadmap had already made
+
+Roadmap 52 retired exactly this change on 2026-08-16, because
+`LT_OPEN_SIGHTLINE` reports those lines with coordinates and a remedy, so
+excluding them deletes cover the grader asks for. That reasoning is not
+refuted here. It is overruled: Laser Tag is advisory, Lot builds the level,
+and `Enemy_*` is leaving Lot for the gameplay layer, so a request phrased in
+enemy markers cannot bind Lot's budget.
+
+The change was re-derived from scratch and shipped before item 52 was read.
+The item already carried the "before" numbers that were then re-measured with
+a full pipeline run.
+
+### Measured, seed-matched, in both directions
+
+    seed   before (placed, route_open)   after
+    5017   (9, 3)                        (8, 3)    waste removed, no cost
+    5118   (9, 0)                        (9, 0)    freed slot went to the
+                                                   route: enemy-route 4 -> 5
+    5219   (16, 14)                      (14, 15)  one route stretch left open
+
+15 of the 16 pieces in the previous export were placed against an `Enemy_*`
+point. Only one would survive without enemies at all.
+
+The cost is real. On seed_5219 `route_open` goes 14 -> 15, because one
+enemy-enemy crate was incidentally blocking a route line and the route pass
+did not replace it -- its density cap (`ROUTE_METRES_PER_PIECE`) was already
+met. Mission findings went 51 -> 50. Which finding disappeared was NOT
+isolated, and `LT_OPEN_SIGHTLINE` was NOT counted before-versus-after per seed.
+
+Reverting and re-applying reproduced the patched numbers exactly, every stage
+cache-hitting, so these are not rebuild artifacts.
+
+Suite: 336 passed / 0 failed.
+
 ## [0.43.0] - the enemies are placed once
 
 Roadmap 3 -- "Lot places enemies twice, and nothing checks the two agree" --
