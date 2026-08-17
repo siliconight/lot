@@ -1213,7 +1213,7 @@ def _node_name(raw):
 
 
 def _lasertag_hook_plan(pos, site_spec=None, enemy_count=6, lateral=1.5,
-                        solids=None, bounds=None) -> dict:
+                        solids=None, bounds=None, enemies=None) -> dict:
     """The positions the walk scene will be written from, before it is written.
 
     `_lasertag_hook_nodes` does not place anything where its caller pointed. It
@@ -1250,20 +1250,33 @@ def _lasertag_hook_plan(pos, site_spec=None, enemy_count=6, lateral=1.5,
     # floor under this point"; this answers "will the bake leave a polygon on
     # it", which is a different question and the one the bot actually needs.
     pos = site_spawns.clear_crew_spawn(site_spec or {}, pos)[0]
-    # `solids` here for the same reason `seat_destinations` gets it above: the
-    # scene Laser Tag evaluates is written from THIS call, and a placement that
-    # judged cover differently from the one in the site report would make the
-    # report describe a map nobody plays.
-    enemies = site_spawns.place_enemies(
-        site_spec or {}, pos, enemy_count=enemy_count,
-        lateral=lateral, solids=solids).positions
+    # PLACED ONCE, HERE OR ABOVE, NEVER BOTH. `assemble` places the enemies
+    # before its site report closes -- a placement Lot could not honour has to
+    # travel with the site rather than sit in a .tscn nobody diffs -- and then
+    # hands the result down. Roadmap 3 asked for exactly this: "place once,
+    # thread the result through, or assert the two agree". An assertion would
+    # detect a disagreement; threading makes one impossible to express, because
+    # there is no second call left to drift.
+    #
+    # `enemies=None` still places, so the standalone callers in
+    # `tests/test_site_spawns.py` behave as they always have.
+    #
+    # `solids` matters for the same reason `seat_destinations` gets it above:
+    # a placement that judged cover differently from the one in the site report
+    # would make the report describe a map nobody plays. Threading removes that
+    # risk rather than managing it.
+    if enemies is None:
+        enemies = site_spawns.place_enemies(
+            site_spec or {}, pos, enemy_count=enemy_count,
+            lateral=lateral, solids=solids).positions
+    enemies = [tuple(e) for e in enemies]
     return {"positions": pos,
             "route": [pos["spawn"], pos["objective"], pos["extraction"]],
             "enemies": enemies}
 
 
 def _lasertag_hook_nodes(pos, site_spec=None, enemy_count=6, lateral=1.5,
-                         solids=None, bounds=None):
+                         solids=None, bounds=None, enemies=None):
     """Lot's half of the LaserTag map contract (LaserTag TDD 8).
 
     LaserTag's evaluator discovers its fixtures by node name -- LT_PlayerSpawn,
@@ -1289,7 +1302,8 @@ def _lasertag_hook_nodes(pos, site_spec=None, enemy_count=6, lateral=1.5,
     # than by whoever is reading it afterwards. `_lasertag_hook_plan` carries
     # why that distinction is worth a function.
     _plan = _lasertag_hook_plan(pos, site_spec, enemy_count=enemy_count,
-                                lateral=lateral, solids=solids, bounds=bounds)
+                                lateral=lateral, solids=solids, bounds=bounds,
+                                enemies=enemies)
     pos = _plan["positions"]
     route = _plan["route"]
     enemies = _plan["enemies"]
@@ -1431,7 +1445,8 @@ def _player_metric(key, fallback):
 
 
 def write_walk_scene(site_spec, merged, walk_out, site_tscn_base,
-                     addon_dir="addons/lot", portable=False, solids=None):
+                     addon_dir="addons/lot", portable=False, solids=None,
+                     enemies=None):
     """Emit <name>_walk.tscn: instances the composed site under a baked
     NavigationRegion3D, spawns a first-person player at the crew start, and
     beacons the objective + extraction. Reuses godot/addons/lot scripts."""
@@ -1457,7 +1472,7 @@ def write_walk_scene(site_spec, merged, walk_out, site_tscn_base,
     ladder_body, ladder_subs = _ladder_volume_nodes(merged)
     lt_body = _lasertag_hook_nodes(
         pos, site_spec, solids=solids,
-        bounds=_destination_bounds(merged, pos))
+        bounds=_destination_bounds(merged, pos), enemies=enemies)
     sx, sy, sz = pos["spawn"]
     player_godot = f"{sx:g}, {sz + 1.0:g}, {-sy:g}"   # eye/capsule lift
 
@@ -2041,9 +2056,13 @@ def assemble(site_spec_path, out_dir=None, walkable=False, navqa=False,
 
     if walkable:
         walk_out = os.path.join(out_dir, f"{site_spec['name']}_walk.tscn")
+        # The enemies this report already carries. Placing them again here
+        # would be a second answer to a question already answered, which is
+        # roadmap 3 and which cost a whole level's cover being planned against
+        # a set the scene did not contain.
         result["walk_positions"] = write_walk_scene(
             site_spec, merged, walk_out, site_spec["name"], solids=solids,
-            portable=portable)
+            portable=portable, enemies=spawn_plan.positions)
         result["walk_scene"] = walk_out
 
     if navqa:
