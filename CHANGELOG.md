@@ -1,3 +1,46 @@
+## [0.43.0] - the enemies are placed once
+
+Roadmap 3 -- "Lot places enemies twice, and nothing checks the two agree" --
+asked for one of two things: place once and thread the result through, or
+assert the two agree. Neither had been done. 0.42.0 made the two calls agree by
+handing them identical inputs, which restored the "same inputs, same answer"
+claim the item calls untested rather than removing it.
+
+`place_enemies` now runs ONCE, in `assemble`, before the site report closes.
+The result is handed down through `write_walk_scene` -> `_lasertag_hook_nodes`
+-> `_lasertag_hook_plan`, which places only when `enemies=None` so the
+standalone callers behave as they always have. There is no second call left to
+drift, which is a stronger guarantee than an assertion that a drift occurred.
+
+The ordering constraint that justified the second placement is intact.
+`lot.py`'s own comment says the walk scene is written after the report closes,
+and a placement Lot could not honour has to travel with the site rather than
+sit in a `.tscn` nobody diffs. The placement still happens in `assemble`. Only
+the re-placement is gone.
+
+### Verified on the artifact, not the fixture
+
+A fixture licenses nothing about a mission. `lot_demo_001` was re-run under
+this build and its three navqa scenes hashed against the pre-threading run:
+
+    5017  e9177e9be4c3d78ad4634aad99517473e25c29fb95bd156f6c55d09023a8af23
+    5118  25bdce90e97acfade19b9b0f5554df3b4c374ab56bc7d23daaa5bba831a644e7
+    5219  b3bd2815f3f57a735014d0adde87237ba128339d468357485ee694b8b4f6f773
+
+All three identical. `seed_5219`'s cover plan unchanged at `placed 16,
+route_open 14, unbreakable 0, pinches 0`, and `laser_tag_evaluate` cache-hit on
+all three candidates -- the correct answer when the inputs did not move.
+
+Suite: 336 passed / 0 failed.
+
+### What this did not change, which is worth recording
+
+`walktest_navqa` re-executed on all three candidates despite byte-identical
+input, while `laser_tag_evaluate` cached. Same unchanged upstream, two
+different answers. Wasted work rather than wrong output, and another face of
+roadmap 39's `upstream_artifact_hashes` -- a field in the build fingerprint
+that nothing populates.
+
 ## [0.42.0] - the cover was planned for a crew standing somewhere else
 
 `lot`'s own suite had been red through every certification this month -- 328
