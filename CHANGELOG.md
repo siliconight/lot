@@ -1,3 +1,124 @@
+## [0.47.0] - site_surfaces reads footprints, so wall bases get dressed
+
+`site_surfaces` reported `LOT_SURFACE_FOOTPRINT_UNKNOWN` for every building on
+every real spec, and emitted zero wall_base zones. The guide says the wall seam
+is where dressing density should be HIGHEST; it was the one band getting
+nothing.
+
+### Fixed
+- **`annotate_footprints()` and `--base-dir`.** `merge_gameplay` writes
+  `b["_footprint"]` onto the spec IN MEMORY during a Lot run and nothing
+  persists the annotated spec, so a spec read off disk never has footprints
+  and `rotated_footprint` returns None for every building. `site_surfaces`
+  now calls Lot's own function to fill them in before computing zones.
+  `--base-dir` defaults to the spec's own directory, which is where the
+  gameplay files sit for every spec in `lot/specs`, so the common case needs
+  no flag; pass an empty string to skip the merge.
+
+  Measured on `coldrun_pawn_job` end to end: 79 zones and 0 wall bases before,
+  82 zones and 4 after, and the plan goes from 3,745 placements with no wall
+  seams to 4,374 with 1,033 of them carrying `anchor_cause: "wall base"`.
+
+### Found while doing it
+- **`merge_gameplay` is all-or-nothing on a spec.** It raises ValueError on
+  the first building declaring no `glb` or `scene` -- reasonable for its own
+  job, since it is assembling geometry -- and every building AFTER that one
+  goes unannotated. Measured on a four-building spec with one geometry-less
+  entry: the first building annotated, then a raise, then three left bare,
+  which reads on the output as a site whose walls mostly do not exist.
+
+  `annotate_footprints` therefore merges each building through its own
+  single-entry spec, so a refusal costs only the building that caused it and
+  says which. `merge_gameplay` itself is UNCHANGED -- being strict about
+  geometry is right for what it is for, and this is a different caller wanting
+  a different thing from it.
+
+## [0.46.0] - site_surfaces has a command line
+
+level_factory adapters invoke tools as COMMANDS. A module the pipeline needs
+to run has to be one, and `site_surfaces` was importable only.
+
+### Added
+- **`python site_surfaces.py <spec> --out <surfaces.json>`**, with
+  `--radius-m` / `--floor-max-angle-deg` for a different agent contract,
+  `--nav-bake` for the real agent radius, and `--strict`.
+- **`--strict`** turns findings into an exit code. Unreadable building
+  footprints stay a warn by default -- a raw site spec legitimately has none,
+  the annotation comes from `merge_gameplay` -- but inside a pipeline that
+  warn means every wall seam silently went undressed, and silence is what this
+  module exists to avoid. 3 CLI tests, 32 in the file.
+
+## [0.45.0] - Lot says where dressing may go
+
+Layer 3 surface dressing needs to know which regions of an assembled site are
+dressable, how much of each must stay legible, and what is off limits. The
+schema (`level_factory/schemas/surface_dressing.v1.json`) is explicit that Lot
+answers: zones are "semantic regions from Deli Counter / Lot -- not invented
+here", `traversed` is "taken from Lot's walkable surfaces, not asserted by the
+dressing planner", and "an exclusion nobody declared is a preference".
+
+### Added
+- **`site_surfaces.py`** — dressable zones and exclusions for a site spec.
+  Every zone traces to a spec key and every number to a module that already
+  derived it; nothing here invents a fact about the site.
+
+      spec key      becomes
+      ------------  ------------------------------------------------------
+      ground        open ground, via site_extent.resolve (the module that
+                    decides the real plate rect, because five places used
+                    to assume it was centred and all five were wrong)
+      paths         a gameplay_path corridor per path, at its own width
+      courtyards    a play_space zone each, at their own size
+      buildings     a wall_base band around each footprint, one agent
+                    radius wide -- read from the nav bake, not chosen
+      perimeter     everything outside site_extent.required_rect, which is
+                    by definition content plus clearance
+      cover         cover_edge exclusions at site_cover.MARKER_CLEARANCE
+      spawn /       spawn and objective exclusions on the named buildings
+      objective /
+      extraction
+
+  `capsule_block()` carries `unassisted_step_max` from
+  `site_steps.unassisted_step_max_m` so a later gate checks the honesty rule
+  without re-deriving it, and a plan made for one body is obviously a plan for
+  that body when someone changes the capsule. Zone boxes are capped at exactly
+  that height.
+
+  `zone_for()` resolves overlap by a documented precedence (path, wall_base,
+  courtyard, perimeter, open) and lives beside the data, so the planner and
+  any later gate cannot disagree about which budget a placement counts
+  against. `excluded()` returns the tags it tested, so a caller can record
+  `cleared_exclusions` honestly — the schema warns that an empty array means
+  untested, not clean.
+
+- **`tests/test_site_surfaces.py`** — 29 tests on the real
+  `coldrun_pawn_job` shape.
+
+### Notes
+- **A corridor is not a box, and being conservative is not free.** The first
+  version emitted one AABB per path. On the fixture, three diagonal 5 m paths
+  produced boxes of 1,935 m2 each — 12% of a 16,500 m2 site apiece — so
+  nearly every square metre came back `gameplay_path`, the strictest
+  visibility class, and the density variation the guide asks for (sidewalk
+  centre low, wall seam high, abandoned corner very high) collapsed into one
+  uniform sparse scatter. Corridors now ship as `width x width` boxes stepped
+  along the centreline at half a width. `test_a_diagonal_path_does_not_
+  swallow_the_site` caps a path zone at 1% of the site and fails the old
+  construction outright.
+- The perimeter is an annulus and ships as the four strips it is made of, for
+  the same reason: emitting the whole plate would have made very_high density
+  the reading for the entire site.
+- Unreadable building footprints are REPORTED
+  (`LOT_SURFACE_FOOTPRINT_UNKNOWN`), not skipped. A raw site spec carries no
+  footprint — the annotation comes from `merge_gameplay` — and silently
+  emitting no wall bases looks exactly like a site with no walls.
+- Path segments are built in SPEC space here, deliberately not via
+  `site_steps.routes`, which negates y because its caller works in Godot
+  space. The manifest declares `spec/Blender Z-up raw coords` and mixing the
+  two is a bug this repo has already paid for.
+- This module places nothing. Patina's planner, the level_factory job and the
+  Presentation consumer are still to come (`docs/SURFACE_DRESSING.md` section 2).
+
 ## [0.44.0] - cover stops paying for enemy-to-enemy lines
 
 `open_sightlines` is all-pairs over the marker dict, and `lot.py` builds that
