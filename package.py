@@ -155,6 +155,10 @@ building id ({n_mark} markers, {n_obj} objectives, {n_loot} loot spawns):
 - `objectives` / `loot` / `zones` — the heist beats (zones include extraction)
 - `openings`   — every door/window/breach with world position, dims, tags,
                  breach_class, and (when set) the building's rarity + colour
+- `interactives` — the replicable state machines (INTERACTIVES.md): stable
+                 `id`, `states`, `default`, `transitions`, world `transform`.
+                 The netcode's input — one replicated node per `id`; ids are
+                 carried verbatim from the building's gameplay.json
 - `site_markers` — site-level crew_spawn, extraction, responder/horde spawns
 - `buildings[]` — placement (`at`, `rot`) and per-building `rarity` +
                  `rarity_color` (this pack: {rline})

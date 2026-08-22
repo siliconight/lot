@@ -1,3 +1,27 @@
+## [0.48.0] - the interactives finally leave the building
+
+Roadmap item 46, step 1. Deli Counter emits one replicable state machine per
+interactive fixture (INTERACTIVES.md); `merge_gameplay` carried markers,
+rooms, objectives, loot, zones, vertical_links, openings and surfaces -- and
+dropped `interactives`, so the shipped site never contained the netcode's
+input. "The key is simply absent" is fixed at the seam it named.
+
+### Added
+- `merge_gameplay` carries `interactives`: ids VERBATIM (they are the network
+  handle, already globally unique as `<building>:if:<hash>` -- a
+  concatenation, not a merge; namespacing would break the correlation with
+  slots.json and the composed scene's `metadata/interactive_id`), the
+  building tag added, `slot_ref` left building-local, and transforms offset
+  to world space exactly like markers (Z-up yaw + translate; `rot_y`
+  accumulates the placement rotation). The site key exists even when every
+  building lacked one -- absent-vs-empty is the ambiguity item 46 exists to
+  kill.
+- Run summary and `[lot] assembled` line report the interactive count.
+- Package README documents `interactives` in the integration contract.
+- `tests/test_interactives_carry.py`: ids verbatim, marker-law transforms,
+  no-transform and no-key cases. Proven end-to-end on cr_deli's real
+  gameplay.json: 23/23 carried, byte-identical machines.
+
 ## [0.47.0] - site_surfaces reads footprints, so wall bases get dressed
 
 `site_surfaces` reported `LOT_SURFACE_FOOTPRINT_UNKNOWN` for every building on

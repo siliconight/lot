@@ -171,6 +171,7 @@ def merge_gameplay(site_spec, base_dir):
         "zones": [],
         "vertical_links": [],
         "openings": [],
+        "interactives": [],
         "surfaces": [],
         "surface_roles": {},
         "site_markers": site_spec.get("site_markers", []),
@@ -259,6 +260,27 @@ def merge_gameplay(site_spec, base_dir):
                 wi = dict(item)
                 wi["building"] = bid
                 site[key].append(wi)
+
+        # interactives: the replicable state machines DC emits (one per
+        # interactive fixture, docs/INTERACTIVES.md). Ids are already globally
+        # unique ("<building>:if:<hash>") and are the network handle every
+        # client, snapshot and saved game references -- so they are carried
+        # VERBATIM (a concatenation, not a merge; namespacing them would break
+        # the correlation with slots.json and the composed scene's
+        # metadata/interactive_id). slot_ref stays building-local for the same
+        # reason; the building tag says whose slots.json it names. Transforms
+        # are offset to world space exactly like markers: Z-up yaw + translate.
+        for item in gp.get("interactives", []):
+            wi = dict(item)
+            wi["building"] = bid
+            tf = dict(wi.get("transform") or {})
+            if tf.get("translation"):
+                tr = tf["translation"]
+                tf["translation"] = _place_point(tr[0], tr[1], tr[2], placement)
+                if "rot_y" in tf:
+                    tf["rot_y"] = (tf["rot_y"] + placement["rot"]) % 360
+                wi["transform"] = tf
+            site["interactives"].append(wi)
 
         # surfaces (acoustic) + surface_roles: namespace node names so the
         # site-wide maps stay unambiguous across buildings
@@ -2049,6 +2071,7 @@ def assemble(site_spec_path, out_dir=None, walkable=False, navqa=False,
         "buildings": len(site_spec["buildings"]),
         "markers": len(merged["markers"]),
         "rooms": len(merged["rooms"]),
+        "interactives": len(merged["interactives"]),
         "tactical": tactical_report,
         "steps": result_steps,
         "pacing": merged["pacing"],
@@ -2095,7 +2118,7 @@ if __name__ == "__main__":
         raise SystemExit(1)
     print(f"[lot] assembled '{os.path.basename(args[0])}': "
           f"{r['buildings']} buildings, {r['markers']} markers, "
-          f"{r['rooms']} rooms")
+          f"{r['rooms']} rooms, {r['interactives']} interactives")
     t = r["tactical"]
     if t.get("mode"):
         print(f"[lot]   mode: {t['mode']} (gates passed)")
