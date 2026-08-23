@@ -71,11 +71,26 @@ def test_outdoor_nodes():
     assert 'name="courtyard_0"' in txt, "missing courtyard"
     assert txt.count('name="perim_') == 4, "expected 4 perimeter walls"
     assert txt.count('type="StaticBody3D"') >= 8, "missing outdoor bodies"
-    # each box has a BoxMesh + BoxShape3D sub_resource
+    # Each body has EXACTLY ONE BoxShape3D and AT LEAST one BoxMesh: the
+    # visual is tiled to lot.MESH_TILE (roadmap 54 -- one mesh per light
+    # budget), while the collider stays the one shape it always was. The old
+    # 1:1 mesh:shape assertion was the room-spanning-mesh defect stated as
+    # an invariant.
     n_mesh = sum(1 for ln in sub if ln.startswith('[sub_resource type="BoxMesh"'))
     n_shape = sum(1 for ln in sub if ln.startswith('[sub_resource type="BoxShape3D"'))
-    assert n_mesh == n_shape and n_mesh >= 8, (n_mesh, n_shape)
-    print("  outdoor nodes: OK (ground/path/courtyard/perimeter/cover)")
+    assert n_shape >= 8 and n_mesh >= n_shape, (n_mesh, n_shape)
+    assert n_shape == txt.count('type="CollisionShape3D"'), "one shape per body"
+    # and no BoxMesh anywhere is wider than the tile on either horizontal axis
+    import re
+    for decl, size_ln in zip(sub, sub[1:]):
+        if not decl.startswith('[sub_resource type="BoxMesh"'):
+            continue
+        m = re.match(r'size = Vector3\(([-\d.]+), [-\d.]+, ([-\d.]+)\)', size_ln)
+        assert m, size_ln
+        assert float(m.group(1)) <= lot.MESH_TILE + 1e-3, (decl, size_ln)
+        assert float(m.group(2)) <= lot.MESH_TILE + 1e-3, (decl, size_ln)
+    print("  outdoor nodes: OK (ground/path/courtyard/perimeter/cover, "
+          "meshes tiled, one shape per body)")
 
 
 def test_path_geometry():

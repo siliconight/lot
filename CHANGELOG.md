@@ -1,3 +1,45 @@
+## [0.49.0] - one path was one light budget for sixty-five metres
+
+Roadmap item 54, the Lot half. Godot's GL Compatibility renderer budgets
+positional lights PER MESH (`max_lights_per_object`, engine default 8), and
+the first honest per-mesh census (2026-08-23, `tools/mesh_light_census.py`
+on lot_demo_001's walk preview) put `path_0/mesh` -- one 65 x 8 m BoxMesh --
+under 58 lights, `path_1` under 52, `path_3` under 44. Ground plates, paths,
+roads and perimeter walls are the same room-spanning plates Zoo 0.49.0 and
+Deli Counter 0.96.0 just tiled, drawn by Lot instead.
+
+### Changed
+- `_box_node` / `_yaw_box_node` emit their VISUAL as `MeshInstance3D` tiles
+  no wider than `MESH_TILE` (8 m; same law as zoo `core.arch.PLATE_TILE`
+  and deli_counter `floors.SLAB_TILE`, duplicated deliberately across pure
+  repos and cross-named). Tiling lives in `_mesh_tiles` + one shared child
+  emitter so the two writers cannot drift: equal-cell division (no sliver
+  tiles -- item 41's counter-pressure), millimetre-snapped interior cuts so
+  abutting tiles meet at one coordinate, and a body already inside the tile
+  emits byte-identical output -- every kerb, cover box and crossing is
+  untouched, proven by exact-lines tests. The yaw'd writer tiles in the
+  body's LOCAL frame, so the parent transform carries the rotation and a
+  65 m path becomes nine ~7.2 m meshes lying exactly where the one lay.
+  COLLISION IS NOT TILED: the `BoxShape3D` stays one shape -- a collider
+  has no light budget, and every height/step check reads the shape.
+- `tests/test_lot.py::test_outdoor_nodes`: the old `n_mesh == n_shape`
+  assertion was the room-spanning-mesh defect stated as an invariant; it
+  now asserts one shape per body, at least one mesh per shape, and no
+  BoxMesh wider than the tile on either horizontal axis.
+- `LOT_VERSION` re-coupled to the release number in BOTH copies (lot.py had
+  0.17.2, version.py -- the one `package.py` stamps into every pack
+  manifest -- had 0.18.0, the VERSION file said 0.48.0: three answers to
+  one question). Same re-coupling deli_counter's `KIT_VERSION` got.
+
+### Added
+- `tests/test_mesh_tiles.py`: the tile law (measured 65 x 8 path -> nine
+  budget-sized meshes, exact reassembly, no slivers, deterministic
+  suffixes), byte-identity for small boxes on both writers, one-full-size-
+  shape-per-body, local-frame tiling under yaw.
+
+The item closes when the census re-reads zero meshes over 8 on a recomposed
+package and level_factory deletes `PER_OBJECT_CEILING`.
+
 ## [0.48.0] - the interactives finally leave the building
 
 Roadmap item 46, step 1. Deli Counter emits one replicable state machine per

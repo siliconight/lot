@@ -106,7 +106,11 @@ def _agent():
     return merged
 
 
-LOT_VERSION = "0.17.2"
+# Re-coupled to the release number at 0.49.0 (it had sat at 0.17.2 while the
+# VERSION file reached 0.48.0, and version.py said 0.18.0 -- three answers to
+# one question). Nothing imports this one, but a wrong constant is a lie at
+# rest; version.py is the copy package.py stamps with.
+LOT_VERSION = "0.49.0"
 
 
 # ---------------------------------------------------------------------------
@@ -537,31 +541,103 @@ GROUND_SINK = SURFACE_TIER
 # constrain it are written down.
 
 
+#: Largest edge a Lot-drawn VISUAL mesh may have, in metres (roadmap item 54).
+#: Godot's GL Compatibility renderer budgets positional lights PER MESH
+#: (`max_lights_per_object`, engine default 8), and the first honest per-mesh
+#: census (2026-08-23, lot_demo_001's walk preview) put `path_0/mesh` -- one
+#: 65 x 8 m BoxMesh -- under 58 lights, with `path_1` at 52 and `path_3` at
+#: 44. Ground plates, paths, roads and perimeter walls are exactly the
+#: room-spanning plates that item names, drawn by Lot instead of Zoo or Deli
+#: Counter. Same law as zoo `core.arch.PLATE_TILE` and deli_counter
+#: `floors.SLAB_TILE`; duplicated deliberately across repos (each is pure and
+#: imports none of the others) and cross-named so the trio is findable if any
+#: of them changes. COLLISION IS NOT TILED: the BoxShape3D stays one shape,
+#: because a collider has no light budget and every height/step check reads
+#: the shape, not the mesh.
+MESH_TILE = 8.0
+
+
+def _mesh_tiles(sx, sz, tile=MESH_TILE):
+    """Cut an sx (local x) by sz (local z) mesh footprint into <=tile cells.
+
+    Returns ``[(suffix, dx, dz, tx, tz)]`` -- child-node suffix, LOCAL offset
+    from the body's origin, cell size. A footprint inside the tile on both
+    axes is the single ``("", 0, 0, sx, sz)`` entry, so the emitted node is
+    byte-identical to what these writers always produced -- every kerb, cover
+    box and crossing is untouched. Equal division per axis (``ceil`` cells,
+    never fixed strides), so there is no sliver cell at an edge -- item 41's
+    fragmentation counter-pressure, answered rather than traded into.
+    Interior cut lines snap to whole millimetres so abutting cells meet at
+    the same coordinate.
+    """
+    eps = 1e-6
+    nx = int((sx - eps) // tile) + 1 if sx > tile + eps else 1
+    nz = int((sz - eps) // tile) + 1 if sz > tile + eps else 1
+    if nx == 1 and nz == 1:
+        return [("", 0.0, 0.0, sx, sz)]
+
+    def edges(extent, n):
+        lo = -extent / 2.0
+        return ([lo] + [round(lo + extent * k / n, 3) for k in range(1, n)]
+                + [lo + extent])
+
+    xe, ze = edges(sx, nx), edges(sz, nz)
+    out = []
+    for j in range(nz):
+        for i in range(nx):
+            out.append((f"_t{j}_{i}",
+                        round((xe[i] + xe[i + 1]) / 2.0, 6),
+                        round((ze[j] + ze[j + 1]) / 2.0, 6),
+                        round(xe[i + 1] - xe[i], 6),
+                        round(ze[j + 1] - ze[j], 6)))
+    return out
+
+
+def _mesh_child_lines(name, size, color):
+    """The MeshInstance3D children and their BoxMesh sub_resources for one
+    StaticBody3D, tiled to MESH_TILE. Shared by `_box_node` and
+    `_yaw_box_node` so the law cannot drift between them. Children sit in the
+    body's LOCAL frame, so the yaw'd writer needs no rotation math here --
+    the parent's transform carries it."""
+    sx, sy, sz = size
+    body, sub = [], []
+    for suffix, dx, dz, tx, tz in _mesh_tiles(sx, sz):
+        body.append(f'[node name="mesh{suffix}" type="MeshInstance3D" '
+                    f'parent="./{name}"]')
+        if suffix:
+            body.append('transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, '
+                        f'{dx:g}, 0, {dz:g})')
+        body.append(f'mesh = SubResource("BoxMesh_{name}{suffix}")')
+        if color:
+            body.append(f'material_override = SubResource("Mat_{name}")')
+        body.append('')
+        sub += [
+            f'[sub_resource type="BoxMesh" id="BoxMesh_{name}{suffix}"]',
+            f'size = Vector3({tx:g}, {sy:g}, {tz:g})', '',
+        ]
+    return body, sub
+
+
 def _box_node(name, size, at_xyz, color=None):
     """(body_lines, subres_lines) for an axis-aligned StaticBody3D box with a
     BoxMesh + BoxShape3D, at Godot-frame (x, y_height, z). color: optional
-    (r,g,b[,a]) -> a StandardMaterial3D override."""
+    (r,g,b[,a]) -> a StandardMaterial3D override. The VISUAL is tiled to
+    MESH_TILE (see `_mesh_tiles`); the shape is one box, as it always was."""
     sx, sy, sz = size
     x, yh, z = at_xyz
-    mat_line = f'material_override = SubResource("Mat_{name}")' if color else ''
+    mesh_body, mesh_sub = _mesh_child_lines(name, size, color)
     body = [
         f'[node name="{name}" type="StaticBody3D" parent="."]',
         f'transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, {x:g}, {yh:g}, {z:g})',
         '',
-        f'[node name="mesh" type="MeshInstance3D" parent="./{name}"]',
-        f'mesh = SubResource("BoxMesh_{name}")',
     ]
-    if mat_line:
-        body.append(mat_line)
+    body += mesh_body
     body += [
-        '',
         f'[node name="col" type="CollisionShape3D" parent="./{name}"]',
         f'shape = SubResource("BoxShape_{name}")',
         '',
     ]
-    sub = [
-        f'[sub_resource type="BoxMesh" id="BoxMesh_{name}"]',
-        f'size = Vector3({sx:g}, {sy:g}, {sz:g})', '',
+    sub = list(mesh_sub) + [
         f'[sub_resource type="BoxShape3D" id="BoxShape_{name}"]',
         f'size = Vector3({sx:g}, {sy:g}, {sz:g})', '',
     ]
@@ -571,31 +647,28 @@ def _box_node(name, size, at_xyz, color=None):
 
 def _yaw_box_node(name, size, center_godot, yaw_deg, color=None):
     """Like _box_node but yaw'd about Godot-Y (for paths/roads between buildings).
-    color: optional (r,g,b[,a]) -> a StandardMaterial3D override."""
+    color: optional (r,g,b[,a]) -> a StandardMaterial3D override. The VISUAL
+    is tiled to MESH_TILE in the body's LOCAL frame -- the parent transform
+    carries the yaw, so the tiles need no rotation math and a 65 m path
+    becomes nine ~7 m meshes lying exactly where the one mesh lay."""
     sx, sy, sz = size
     x, yh, z = center_godot
     r = math.radians(yaw_deg)
     c, s = math.cos(r), math.sin(r)
     xform = (f"{c:g}, 0, {s:g}, 0, 1, 0, {-s:g}, 0, {c:g}, {x:g}, {yh:g}, {z:g}")
-    mat_line = f'material_override = SubResource("Mat_{name}")' if color else ''
+    mesh_body, mesh_sub = _mesh_child_lines(name, size, color)
     body = [
         f'[node name="{name}" type="StaticBody3D" parent="."]',
         f'transform = Transform3D({xform})',
         '',
-        f'[node name="mesh" type="MeshInstance3D" parent="./{name}"]',
-        f'mesh = SubResource("BoxMesh_{name}")',
     ]
-    if mat_line:
-        body.append(mat_line)
+    body += mesh_body
     body += [
-        '',
         f'[node name="col" type="CollisionShape3D" parent="./{name}"]',
         f'shape = SubResource("BoxShape_{name}")',
         '',
     ]
-    sub = [
-        f'[sub_resource type="BoxMesh" id="BoxMesh_{name}"]',
-        f'size = Vector3({sx:g}, {sy:g}, {sz:g})', '',
+    sub = list(mesh_sub) + [
         f'[sub_resource type="BoxShape3D" id="BoxShape_{name}"]',
         f'size = Vector3({sx:g}, {sy:g}, {sz:g})', '',
     ]
