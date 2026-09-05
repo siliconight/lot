@@ -1,3 +1,45 @@
+## [0.51.0] - two implementations of one overlay, and the export layer wins
+
+0.50.0 gave the walk harness its own position readout, not knowing Level
+Factory had shipped a better one since 2026-08-08 in
+`assets/godot/debug_overlay.gd`. Two implementations of the same idea is worse
+than either, and Level Factory is the dominant export layer -- the walk project
+is a scratch preview, and a preview should show what the export shows.
+
+### Removed
+- The `x y z` / facing / beacon-range readout added in 0.50.0. `walk_themed.py`
+  now carries LF's `debug_overlay.gd` into the walk project instead, which says
+  strictly more: position, the instanced BUILDING under the crosshair by its own
+  `scene_file_path`, and the COLLIDER being looked at with its distance -- so a
+  screenshot of a defect names the building and the surface, not just a point in
+  space. It also toggles on F3 and paints its own light plate, which 0.50.0's
+  green-on-sky text did not.
+
+  The HUD's four control lines stay here. Those are about the harness, and the
+  harness is Lot's.
+
+## [0.50.0] - you could see the problem and not say where it was
+
+Roadmap items 74-79, the part that was slowing all of them down. Every finding
+this week arrived as a screenshot and had to be argued back to a place -- and
+"the seam on the left" is not somewhere a second person can stand, nor
+somewhere the same person can stand again tomorrow.
+
+### Added
+- The walk HUD carries a position readout: `x y z`, facing in degrees, and
+  range to the objective and extraction beacons. The Label and the Player are
+  resolved once in `_hud()` and held as members, so `_process` does no
+  per-frame scene lookup.
+
+  Facing is read from the BODY, not the camera. `lot_player.gd` writes look yaw
+  straight onto `rotation.y` and leaves only pitch on the Camera3D, so the
+  body's yaw IS the facing; reading the camera would report pitch-coupled
+  nonsense.
+
+  Costs the instruments nothing. `look_shots.py` hides every non-Lux
+  CanvasLayer before it measures -- white HUD text clips and biases every
+  exposure statistic -- so the measured shots are unchanged.
+
 ## [0.49.0] - one path was one light budget for sixty-five metres
 
 Roadmap item 54, the Lot half. Godot's GL Compatibility renderer budgets

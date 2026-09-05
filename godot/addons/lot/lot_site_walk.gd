@@ -15,6 +15,7 @@ extends Node3D
 @export var site_title := "SITE WALK"        # baked in by Lot (the site name)
 
 
+
 func _ready() -> void:
 	_bake_nav()
 	_waypoint("OBJECTIVE", objective_pos, Color(1.0, 0.55, 0.1))
