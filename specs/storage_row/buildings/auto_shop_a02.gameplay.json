@@ -665,6 +665,24 @@
       }
     },
     {
+      "node": "ext_col_0_N_seg14",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_N_seg15",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
       "node": "ext_col_0_S_seg0",
       "material": {
         "id": "metal",
@@ -783,6 +801,24 @@
     },
     {
       "node": "ext_col_0_S_seg11",
+      "material": {
+        "id": "metal",
+        "acoustic": "Metal",
+        "absorption": 0.35,
+        "damping": 0.25
+      }
+    },
+    {
+      "node": "ext_col_0_S_seg12",
+      "material": {
+        "id": "metal",
+        "acoustic": "Metal",
+        "absorption": 0.35,
+        "damping": 0.25
+      }
+    },
+    {
+      "node": "ext_col_0_S_seg13",
       "material": {
         "id": "metal",
         "acoustic": "Metal",
@@ -1160,6 +1196,24 @@
       }
     },
     {
+      "node": "ext_col_1_N_seg14",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_N_seg15",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
       "node": "ext_col_1_S_seg0",
       "material": {
         "id": "concrete",
@@ -1323,6 +1377,24 @@
     },
     {
       "node": "ext_col_1_S_seg12",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_S_seg13",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_S_seg14",
       "material": {
         "id": "concrete",
         "acoustic": "Concrete",
@@ -1862,6 +1934,8 @@
       ],
       "source": "inferred",
       "reversible": false,
+      "material": "drywall",
+      "breach_class": "soft_wall",
       "building": "auto_shop_a02"
     },
     {
@@ -1890,6 +1964,8 @@
       ],
       "source": "inferred",
       "reversible": false,
+      "material": "drywall",
+      "breach_class": "soft_wall",
       "building": "auto_shop_a02"
     },
     {
@@ -2017,6 +2093,8 @@
       ],
       "source": "inferred",
       "reversible": false,
+      "material": "drywall",
+      "breach_class": "soft_wall",
       "building": "auto_shop_a02"
     },
     {
@@ -2683,9 +2761,78 @@
   "platforms": [],
   "fire_escapes": [],
   "surface_roles": {
-    "slab_0": "floor",
-    "slab_1": "floor",
-    "slab_2": "ceiling",
+    "slab_0_t0_0": "floor",
+    "slab_0_t0_1": "floor",
+    "slab_0_t0_2": "floor",
+    "slab_0_t0_3": "floor",
+    "slab_0_t0_4": "floor",
+    "slab_0_t0_5": "floor",
+    "slab_0_t1_0": "floor",
+    "slab_0_t1_1": "floor",
+    "slab_0_t1_2": "floor",
+    "slab_0_t1_3": "floor",
+    "slab_0_t1_4": "floor",
+    "slab_0_t1_5": "floor",
+    "slab_0_t2_0": "floor",
+    "slab_0_t2_1": "floor",
+    "slab_0_t2_2": "floor",
+    "slab_0_t2_3": "floor",
+    "slab_0_t2_4": "floor",
+    "slab_0_t2_5": "floor",
+    "slab_0_t3_0": "floor",
+    "slab_0_t3_1": "floor",
+    "slab_0_t3_2": "floor",
+    "slab_0_t3_3": "floor",
+    "slab_0_t3_4": "floor",
+    "slab_0_t3_5": "floor",
+    "slab_1_t0_0": "floor",
+    "slab_1_t0_1": "floor",
+    "slab_1_t0_2": "floor",
+    "slab_1_t0_3": "floor",
+    "slab_1_t0_4": "floor",
+    "slab_1_t0_5": "floor",
+    "slab_1_t1_0": "floor",
+    "slab_1_t1_1": "floor",
+    "slab_1_t1_2": "floor",
+    "slab_1_t1_3": "floor",
+    "slab_1_t1_4": "floor",
+    "slab_1_t1_5": "floor",
+    "slab_1_t2_0": "floor",
+    "slab_1_t2_1": "floor",
+    "slab_1_t2_2": "floor",
+    "slab_1_t2_3": "floor",
+    "slab_1_t2_4": "floor",
+    "slab_1_t2_5": "floor",
+    "slab_1_t3_0": "floor",
+    "slab_1_t3_1": "floor",
+    "slab_1_t3_2": "floor",
+    "slab_1_t3_3": "floor",
+    "slab_1_t3_4": "floor",
+    "slab_1_t3_5": "floor",
+    "slab_2_t0_0": "ceiling",
+    "slab_2_t0_1": "ceiling",
+    "slab_2_t0_2": "ceiling",
+    "slab_2_t0_3": "ceiling",
+    "slab_2_t0_4": "ceiling",
+    "slab_2_t0_5": "ceiling",
+    "slab_2_t1_0": "ceiling",
+    "slab_2_t1_1": "ceiling",
+    "slab_2_t1_2": "ceiling",
+    "slab_2_t1_3": "ceiling",
+    "slab_2_t1_4": "ceiling",
+    "slab_2_t1_5": "ceiling",
+    "slab_2_t2_0": "ceiling",
+    "slab_2_t2_1": "ceiling",
+    "slab_2_t2_2": "ceiling",
+    "slab_2_t2_3": "ceiling",
+    "slab_2_t2_4": "ceiling",
+    "slab_2_t2_5": "ceiling",
+    "slab_2_t3_0": "ceiling",
+    "slab_2_t3_1": "ceiling",
+    "slab_2_t3_2": "ceiling",
+    "slab_2_t3_3": "ceiling",
+    "slab_2_t3_4": "ceiling",
+    "slab_2_t3_5": "ceiling",
     "ext_0_N_seg0": "wall",
     "ext_0_N_seg1": "wall",
     "ext_0_N_seg2": "wall",
@@ -2704,6 +2851,8 @@
     "ext_0_N_seg11": "wall",
     "ext_0_N_seg12": "wall",
     "ext_0_N_seg13": "wall",
+    "ext_0_N_seg14": "wall",
+    "ext_0_N_seg15": "wall",
     "ext_0_S_seg0": "wall",
     "ext_0_S_seg1": "wall",
     "ext_0_S_seg2": "wall",
@@ -2718,6 +2867,8 @@
     "ext_0_S_open1_lintel": "doorway",
     "ext_0_S_seg10": "wall",
     "ext_0_S_seg11": "wall",
+    "ext_0_S_seg12": "wall",
+    "ext_0_S_seg13": "wall",
     "ext_0_E_seg0": "wall",
     "ext_0_E_seg1": "wall",
     "ext_0_E_open0_lintel": "doorway",
@@ -2759,6 +2910,8 @@
     "ext_1_N_seg11": "wall",
     "ext_1_N_seg12": "wall",
     "ext_1_N_seg13": "wall",
+    "ext_1_N_seg14": "wall",
+    "ext_1_N_seg15": "wall",
     "ext_1_S_seg0": "wall",
     "ext_1_S_seg1": "wall",
     "ext_1_S_seg2": "wall",
@@ -2778,6 +2931,8 @@
     "ext_1_S_seg10": "wall",
     "ext_1_S_seg11": "wall",
     "ext_1_S_seg12": "wall",
+    "ext_1_S_seg13": "wall",
+    "ext_1_S_seg14": "wall",
     "ext_1_E_seg0": "wall",
     "ext_1_E_seg1": "wall",
     "ext_1_E_seg2": "wall",
@@ -2881,9 +3036,25 @@
     "parts_rack": "prop",
     "tool_bench": "prop",
     "office_desk": "prop",
-    "parapet_N": "wall",
-    "parapet_S": "wall",
-    "parapet_E": "wall",
-    "parapet_W": "wall"
+    "parapet_N_t0_0": "wall",
+    "parapet_N_t0_1": "wall",
+    "parapet_N_t0_2": "wall",
+    "parapet_N_t0_3": "wall",
+    "parapet_N_t0_4": "wall",
+    "parapet_N_t0_5": "wall",
+    "parapet_S_t0_0": "wall",
+    "parapet_S_t0_1": "wall",
+    "parapet_S_t0_2": "wall",
+    "parapet_S_t0_3": "wall",
+    "parapet_S_t0_4": "wall",
+    "parapet_S_t0_5": "wall",
+    "parapet_E_t0_0": "wall",
+    "parapet_E_t1_0": "wall",
+    "parapet_E_t2_0": "wall",
+    "parapet_E_t3_0": "wall",
+    "parapet_W_t0_0": "wall",
+    "parapet_W_t1_0": "wall",
+    "parapet_W_t2_0": "wall",
+    "parapet_W_t3_0": "wall"
   }
 }

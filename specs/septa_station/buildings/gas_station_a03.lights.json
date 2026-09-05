@@ -2,7 +2,7 @@
   "light_manifest_version": "1.1.0",
   "building_id": "gas_station_a03",
   "theme": "greybox",
-  "space": "Blender Z-up, meters; rot_y = degrees about up; pos is the fixture location",
+  "space": "Blender Z-up, meters; rot_y = degrees about up; pos is the fixture location -- for a ceiling row, hung below the slab's underside, not below the floor above",
   "rig_library": "lux",
   "anchors": [
     {
@@ -12,7 +12,7 @@
       "pos": [
         0.0,
         -2.25,
-        3.5
+        3.2
       ],
       "rot_y": 0.0,
       "room": "sales_floor",
@@ -20,23 +20,25 @@
         "count": 5,
         "spacing": 4.4
       },
+      "drop": 3.2,
       "reacts_to_alarm": true
     },
     {
-      "id": "walkin_cooler_ceiling",
-      "type": "fluorescent",
+      "id": "walkin_cooler_bulbs",
+      "type": "pendant",
       "source": "derived",
       "pos": [
         6.5,
         5.75,
-        3.5
+        2.6
       ],
       "rot_y": 0.0,
       "room": "walkin_cooler",
       "row": {
-        "count": 3,
-        "spacing": 3.0
+        "count": 2,
+        "spacing": 4.5
       },
+      "drop": 2.6,
       "reacts_to_alarm": true
     },
     {
@@ -46,7 +48,7 @@
       "pos": [
         -1.5,
         5.75,
-        3.5
+        3.2
       ],
       "rot_y": 0.0,
       "room": "stockroom",
@@ -54,6 +56,7 @@
         "count": 2,
         "spacing": 3.5
       },
+      "drop": 3.2,
       "reacts_to_alarm": true
     },
     {
@@ -63,7 +66,7 @@
       "pos": [
         -8.0,
         5.75,
-        3.5
+        3.2
       ],
       "rot_y": 0.0,
       "room": "back_hall",
@@ -71,6 +74,7 @@
         "count": 2,
         "spacing": 3.0
       },
+      "drop": 3.2,
       "reacts_to_alarm": true
     },
     {

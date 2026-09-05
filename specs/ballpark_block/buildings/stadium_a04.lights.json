@@ -2,7 +2,7 @@
   "light_manifest_version": "1.1.0",
   "building_id": "stadium_a04",
   "theme": "greybox",
-  "space": "Blender Z-up, meters; rot_y = degrees about up; pos is the fixture location",
+  "space": "Blender Z-up, meters; rot_y = degrees about up; pos is the fixture location -- for a ceiling row, hung below the slab's underside, not below the floor above",
   "rig_library": "lux",
   "anchors": [
     {
@@ -10,16 +10,17 @@
       "type": "fluorescent",
       "source": "derived",
       "pos": [
-        0.0,
+        5.2,
         -5.55,
-        4.9
+        4.6
       ],
       "rot_y": 0.0,
       "room": "club_lobby",
       "row": {
-        "count": 5,
+        "count": 4,
         "spacing": 10.4
       },
+      "drop": 4.6,
       "reacts_to_alarm": true
     },
     {
@@ -29,7 +30,7 @@
       "pos": [
         0.0,
         11.45,
-        4.9
+        4.6
       ],
       "rot_y": 0.0,
       "room": "ops_band",
@@ -37,6 +38,7 @@
         "count": 5,
         "spacing": 10.4
       },
+      "drop": 4.6,
       "reacts_to_alarm": true
     },
     {
@@ -46,7 +48,7 @@
       "pos": [
         0.0,
         -8.5,
-        9.9
+        9.6
       ],
       "rot_y": 0.0,
       "room": "upper_ring",
@@ -54,6 +56,7 @@
         "count": 5,
         "spacing": 10.4
       },
+      "drop": 4.6,
       "reacts_to_alarm": true
     },
     {
@@ -63,7 +66,7 @@
       "pos": [
         -8.45,
         8.5,
-        9.9
+        9.6
       ],
       "rot_y": 0.0,
       "room": "upper_west",
@@ -71,23 +74,25 @@
         "count": 5,
         "spacing": 7.02
       },
+      "drop": 4.6,
       "reacts_to_alarm": true
     },
     {
-      "id": "premium_suite_ceiling",
-      "type": "fluorescent",
+      "id": "premium_suite_bulbs",
+      "type": "pendant",
       "source": "derived",
       "pos": [
         17.55,
         8.5,
-        9.9
+        9.0
       ],
       "rot_y": 90.0,
       "room": "premium_suite",
       "row": {
-        "count": 5,
-        "spacing": 3.4
+        "count": 4,
+        "spacing": 4.25
       },
+      "drop": 4.0,
       "reacts_to_alarm": true
     },
     {

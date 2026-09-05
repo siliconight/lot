@@ -1,11 +1,11 @@
 {
   "glb": "market_hall_a02.glb",
-  "glb_sha256": "cfd327c3d65164625a8b9dd4b78b5280876f8cd4ad562ae715b1378e696fce92",
-  "glb_bytes": 193992,
+  "glb_sha256": "7877d19d5a58a970e6a2896b881672da727d92b5a3bd3c2f15841efb95d88c39",
+  "glb_bytes": 392976,
   "spec": "market_hall_a02.json",
   "spec_sha256": "753722efaeeca58e1365de1eae7aaee7291766af59bbdc42ae805dcf7a5bb5bd",
-  "builder_sha256": "753ed496b12e2db450c12b9fd52a4c05379b62cf2df0266c0ff54aeba41ab15e",
-  "builder_files": 69,
-  "deli_counter_version": "Deli Counter 0.88.0",
-  "stamped_utc": "2026-08-01T19:14:42Z"
+  "builder_sha256": "37c63a83535fc5b25b9da6891232639bab31eec98427fb1963b34507bd9d18ab",
+  "builder_files": 78,
+  "deli_counter_version": "Deli Counter 0.102.1",
+  "stamped_utc": "2026-08-26T00:37:12Z"
 }

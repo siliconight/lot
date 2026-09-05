@@ -2,7 +2,7 @@
   "light_manifest_version": "1.1.0",
   "building_id": "large_warehouse_a03",
   "theme": "greybox",
-  "space": "Blender Z-up, meters; rot_y = degrees about up; pos is the fixture location",
+  "space": "Blender Z-up, meters; rot_y = degrees about up; pos is the fixture location -- for a ceiling row, hung below the slab's underside, not below the floor above",
   "rig_library": "lux",
   "anchors": [
     {
@@ -10,9 +10,9 @@
       "type": "fluorescent",
       "source": "derived",
       "pos": [
-        0.0,
+        -0.0,
         -5.0,
-        4.9
+        4.6
       ],
       "rot_y": 0.0,
       "room": "main_floor",
@@ -20,6 +20,7 @@
         "count": 5,
         "spacing": 11.2
       },
+      "drop": 4.6,
       "reacts_to_alarm": true
     },
     {
@@ -27,9 +28,9 @@
       "type": "fluorescent",
       "source": "derived",
       "pos": [
-        0.0,
+        -0.0,
         12.0,
-        4.9
+        4.6
       ],
       "rot_y": 0.0,
       "room": "north_stock",
@@ -37,6 +38,7 @@
         "count": 5,
         "spacing": 11.2
       },
+      "drop": 4.6,
       "reacts_to_alarm": true
     },
     {
@@ -44,9 +46,9 @@
       "type": "fluorescent",
       "source": "derived",
       "pos": [
-        0.0,
+        -0.0,
         -7.5,
-        9.9
+        9.6
       ],
       "rot_y": 0.0,
       "room": "mezz_offices",
@@ -54,6 +56,7 @@
         "count": 5,
         "spacing": 11.2
       },
+      "drop": 4.6,
       "reacts_to_alarm": true
     },
     {
@@ -61,9 +64,9 @@
       "type": "fluorescent",
       "source": "derived",
       "pos": [
-        0.0,
+        -0.0,
         9.5,
-        9.9
+        9.6
       ],
       "rot_y": 0.0,
       "room": "mezz_stock",
@@ -71,16 +74,17 @@
         "count": 5,
         "spacing": 11.2
       },
+      "drop": 4.6,
       "reacts_to_alarm": true
     },
     {
-      "id": "archive_hall_ceiling",
-      "type": "fluorescent",
+      "id": "archive_hall_bulbs",
+      "type": "pendant",
       "source": "derived",
       "pos": [
         -12.0,
-        0.0,
-        -0.1
+        -0.0,
+        -1.0
       ],
       "rot_y": 90.0,
       "room": "archive_hall",
@@ -88,16 +92,17 @@
         "count": 5,
         "spacing": 6.8
       },
+      "drop": 4.0,
       "reacts_to_alarm": true
     },
     {
-      "id": "bonded_archive_ceiling",
-      "type": "fluorescent",
+      "id": "bonded_archive_bulbs",
+      "type": "pendant",
       "source": "derived",
       "pos": [
         16.0,
-        0.0,
-        -0.1
+        -0.0,
+        -1.0
       ],
       "rot_y": 90.0,
       "room": "bonded_archive",
@@ -105,6 +110,7 @@
         "count": 5,
         "spacing": 6.8
       },
+      "drop": 4.0,
       "reacts_to_alarm": true
     },
     {

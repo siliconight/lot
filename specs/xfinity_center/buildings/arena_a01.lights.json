@@ -2,7 +2,7 @@
   "light_manifest_version": "1.1.0",
   "building_id": "arena_a01",
   "theme": "greybox",
-  "space": "Blender Z-up, meters; rot_y = degrees about up; pos is the fixture location",
+  "space": "Blender Z-up, meters; rot_y = degrees about up; pos is the fixture location -- for a ceiling row, hung below the slab's underside, not below the floor above",
   "rig_library": "lux",
   "anchors": [
     {
@@ -12,7 +12,7 @@
       "pos": [
         0.0,
         -5.85,
-        5.9
+        5.6
       ],
       "rot_y": 0.0,
       "room": "event_floor",
@@ -20,6 +20,7 @@
         "count": 5,
         "spacing": 10.8
       },
+      "drop": 5.6,
       "reacts_to_alarm": true
     },
     {
@@ -29,7 +30,7 @@
       "pos": [
         0.0,
         12.15,
-        5.9
+        5.6
       ],
       "rot_y": 0.0,
       "room": "back_of_house",
@@ -37,16 +38,17 @@
         "count": 5,
         "spacing": 10.8
       },
+      "drop": 5.6,
       "reacts_to_alarm": true
     },
     {
-      "id": "under_hall_ceiling",
-      "type": "fluorescent",
+      "id": "under_hall_bulbs",
+      "type": "pendant",
       "source": "derived",
       "pos": [
         -13.5,
         0.0,
-        -0.1
+        -1.0
       ],
       "rot_y": 90.0,
       "room": "under_hall",
@@ -54,16 +56,17 @@
         "count": 5,
         "spacing": 7.2
       },
+      "drop": 5.0,
       "reacts_to_alarm": true
     },
     {
-      "id": "vault_room_ceiling",
-      "type": "fluorescent",
+      "id": "vault_room_bulbs",
+      "type": "pendant",
       "source": "derived",
       "pos": [
         13.5,
         0.0,
-        -0.1
+        -1.0
       ],
       "rot_y": 90.0,
       "room": "vault_room",
@@ -71,6 +74,7 @@
         "count": 5,
         "spacing": 7.2
       },
+      "drop": 5.0,
       "reacts_to_alarm": true
     },
     {

@@ -1,11 +1,11 @@
 {
   "glb": "freight_terminal_a03.glb",
-  "glb_sha256": "452d2147a39611521174d6d96505a8e7c6dd9453310af9379794704fee869bac",
-  "glb_bytes": 167852,
+  "glb_sha256": "0e9e3695eb455a2ff849e773c0536789c791b483cc15a95cadd6a28da5522fd4",
+  "glb_bytes": 389284,
   "spec": "freight_terminal_a03.json",
   "spec_sha256": "fd904986361d2df3674839dc18e3fa0940cb13408d3057555e5c8f81dd6612d7",
-  "builder_sha256": "753ed496b12e2db450c12b9fd52a4c05379b62cf2df0266c0ff54aeba41ab15e",
-  "builder_files": 69,
-  "deli_counter_version": "Deli Counter 0.88.0",
-  "stamped_utc": "2026-08-01T19:14:21Z"
+  "builder_sha256": "37c63a83535fc5b25b9da6891232639bab31eec98427fb1963b34507bd9d18ab",
+  "builder_files": 78,
+  "deli_counter_version": "Deli Counter 0.102.1",
+  "stamped_utc": "2026-08-26T00:36:38Z"
 }

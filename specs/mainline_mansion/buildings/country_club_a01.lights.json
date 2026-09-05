@@ -2,7 +2,7 @@
   "light_manifest_version": "1.1.0",
   "building_id": "country_club_a01",
   "theme": "greybox",
-  "space": "Blender Z-up, meters; rot_y = degrees about up; pos is the fixture location",
+  "space": "Blender Z-up, meters; rot_y = degrees about up; pos is the fixture location -- for a ceiling row, hung below the slab's underside, not below the floor above",
   "rig_library": "lux",
   "anchors": [
     {
@@ -12,7 +12,7 @@
       "pos": [
         0.0,
         -5.5,
-        3.7
+        3.4
       ],
       "rot_y": 0.0,
       "room": "grand_lounge",
@@ -20,6 +20,7 @@
         "count": 5,
         "spacing": 8.0
       },
+      "drop": 3.4,
       "reacts_to_alarm": true
     },
     {
@@ -29,7 +30,7 @@
       "pos": [
         0.0,
         8.5,
-        3.7
+        3.4
       ],
       "rot_y": 0.0,
       "room": "dining_wing",
@@ -37,16 +38,17 @@
         "count": 5,
         "spacing": 8.0
       },
+      "drop": 3.4,
       "reacts_to_alarm": true
     },
     {
-      "id": "cellar_hall_ceiling",
-      "type": "fluorescent",
+      "id": "cellar_hall_bulbs",
+      "type": "pendant",
       "source": "derived",
       "pos": [
         -10.0,
-        0.0,
-        -0.1
+        -0.0,
+        -1.0
       ],
       "rot_y": 90.0,
       "room": "cellar_hall",
@@ -54,16 +56,17 @@
         "count": 5,
         "spacing": 5.6
       },
+      "drop": 2.8,
       "reacts_to_alarm": true
     },
     {
-      "id": "wine_cellar_ceiling",
-      "type": "fluorescent",
+      "id": "wine_cellar_bulbs",
+      "type": "pendant",
       "source": "derived",
       "pos": [
         10.0,
-        0.0,
-        -0.1
+        -0.0,
+        -1.0
       ],
       "rot_y": 90.0,
       "room": "wine_cellar",
@@ -71,6 +74,7 @@
         "count": 5,
         "spacing": 5.6
       },
+      "drop": 2.8,
       "reacts_to_alarm": true
     },
     {

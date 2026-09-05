@@ -1,11 +1,11 @@
 {
   "glb": "supermarket_a03.glb",
-  "glb_sha256": "6fa8aecf7749adbb428563236bf677eb3a69277e94916d1270accc281095052b",
-  "glb_bytes": 155256,
+  "glb_sha256": "97e3a583eca151f46e7c2c04124c7dd37ba2aba0d232a13c4bff6003516ec84f",
+  "glb_bytes": 327468,
   "spec": "supermarket_a03.json",
   "spec_sha256": "ac4568fa10841e23d56dc089c3c57758485f54aa75947a271c9d96a934f58afe",
-  "builder_sha256": "753ed496b12e2db450c12b9fd52a4c05379b62cf2df0266c0ff54aeba41ab15e",
-  "builder_files": 69,
-  "deli_counter_version": "Deli Counter 0.88.0",
-  "stamped_utc": "2026-08-01T19:15:10Z"
+  "builder_sha256": "37c63a83535fc5b25b9da6891232639bab31eec98427fb1963b34507bd9d18ab",
+  "builder_files": 78,
+  "deli_counter_version": "Deli Counter 0.102.1",
+  "stamped_utc": "2026-08-26T00:37:57Z"
 }

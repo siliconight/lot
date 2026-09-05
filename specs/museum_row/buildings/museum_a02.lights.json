@@ -2,7 +2,7 @@
   "light_manifest_version": "1.1.0",
   "building_id": "museum_a02",
   "theme": "greybox",
-  "space": "Blender Z-up, meters; rot_y = degrees about up; pos is the fixture location",
+  "space": "Blender Z-up, meters; rot_y = degrees about up; pos is the fixture location -- for a ceiling row, hung below the slab's underside, not below the floor above",
   "rig_library": "lux",
   "anchors": [
     {
@@ -12,7 +12,7 @@
       "pos": [
         0.0,
         -5.0,
-        4.9
+        4.6
       ],
       "rot_y": 0.0,
       "room": "galleries",
@@ -20,6 +20,7 @@
         "count": 5,
         "spacing": 8.8
       },
+      "drop": 4.6,
       "reacts_to_alarm": true
     },
     {
@@ -29,7 +30,7 @@
       "pos": [
         0.0,
         12.0,
-        4.9
+        4.6
       ],
       "rot_y": 0.0,
       "room": "north_wing",
@@ -37,16 +38,17 @@
         "count": 5,
         "spacing": 8.8
       },
+      "drop": 4.6,
       "reacts_to_alarm": true
     },
     {
-      "id": "archive_hall_ceiling",
-      "type": "fluorescent",
+      "id": "archive_hall_bulbs",
+      "type": "pendant",
       "source": "derived",
       "pos": [
         -11.0,
-        0.0,
-        -0.1
+        -0.0,
+        -1.0
       ],
       "rot_y": 90.0,
       "room": "archive_hall",
@@ -54,16 +56,17 @@
         "count": 5,
         "spacing": 6.8
       },
+      "drop": 4.0,
       "reacts_to_alarm": true
     },
     {
-      "id": "art_storage_ceiling",
-      "type": "fluorescent",
+      "id": "art_storage_bulbs",
+      "type": "pendant",
       "source": "derived",
       "pos": [
         11.0,
-        0.0,
-        -0.1
+        -0.0,
+        -1.0
       ],
       "rot_y": 90.0,
       "room": "art_storage",
@@ -71,6 +74,7 @@
         "count": 5,
         "spacing": 6.8
       },
+      "drop": 4.0,
       "reacts_to_alarm": true
     },
     {

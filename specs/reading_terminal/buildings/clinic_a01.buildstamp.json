@@ -1,11 +1,11 @@
 {
   "glb": "clinic_a01.glb",
-  "glb_sha256": "becf5de5cbe5ba75161898ca8721c34fc4c7c1e59f24e3b621d8433bb02c6dfc",
-  "glb_bytes": 86704,
+  "glb_sha256": "e25a6ed8e87e17b381fb26e49226c017bc639f51745a831099b642febfa63b82",
+  "glb_bytes": 159516,
   "spec": "clinic_a01.json",
   "spec_sha256": "e865ab2ec138015d354aca0e820ee7fbb942efb4d274a9a018be16ab3b0648c6",
-  "builder_sha256": "753ed496b12e2db450c12b9fd52a4c05379b62cf2df0266c0ff54aeba41ab15e",
-  "builder_files": 69,
-  "deli_counter_version": "Deli Counter 0.88.0",
-  "stamped_utc": "2026-08-01T19:14:00Z"
+  "builder_sha256": "37c63a83535fc5b25b9da6891232639bab31eec98427fb1963b34507bd9d18ab",
+  "builder_files": 78,
+  "deli_counter_version": "Deli Counter 0.102.1",
+  "stamped_utc": "2026-08-26T00:36:03Z"
 }

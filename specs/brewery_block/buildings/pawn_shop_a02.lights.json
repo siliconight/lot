@@ -2,7 +2,7 @@
   "light_manifest_version": "1.1.0",
   "building_id": "pawn_shop_a02",
   "theme": "greybox",
-  "space": "Blender Z-up, meters; rot_y = degrees about up; pos is the fixture location",
+  "space": "Blender Z-up, meters; rot_y = degrees about up; pos is the fixture location -- for a ceiling row, hung below the slab's underside, not below the floor above",
   "rig_library": "lux",
   "anchors": [
     {
@@ -12,14 +12,15 @@
       "pos": [
         0.0,
         -2.5,
-        3.1
+        2.8
       ],
       "rot_y": 0.0,
       "room": "shop_floor",
       "row": {
-        "count": 5,
-        "spacing": 3.6
+        "count": 4,
+        "spacing": 4.5
       },
+      "drop": 2.8,
       "reacts_to_alarm": true
     },
     {
@@ -27,16 +28,17 @@
       "type": "fluorescent",
       "source": "derived",
       "pos": [
-        0.0,
         4.5,
-        3.1
+        4.5,
+        2.8
       ],
       "rot_y": 0.0,
       "room": "back_room",
       "row": {
-        "count": 5,
-        "spacing": 3.6
+        "count": 2,
+        "spacing": 4.5
       },
+      "drop": 2.8,
       "reacts_to_alarm": true
     },
     {
@@ -46,14 +48,15 @@
       "pos": [
         0.0,
         -3.5,
-        6.3
+        6.0
       ],
       "rot_y": 0.0,
       "room": "upper_hall",
       "row": {
-        "count": 5,
-        "spacing": 3.6
+        "count": 4,
+        "spacing": 4.5
       },
+      "drop": 2.8,
       "reacts_to_alarm": true
     },
     {
@@ -63,31 +66,33 @@
       "pos": [
         -4.0,
         3.5,
-        6.3
+        6.0
       ],
       "rot_y": 0.0,
       "room": "upper_flat",
       "row": {
-        "count": 3,
-        "spacing": 3.333
+        "count": 2,
+        "spacing": 5.0
       },
+      "drop": 2.8,
       "reacts_to_alarm": true
     },
     {
-      "id": "lockup_ceiling",
-      "type": "fluorescent",
+      "id": "lockup_bulbs",
+      "type": "pendant",
       "source": "derived",
       "pos": [
         5.0,
         3.5,
-        6.3
+        5.4
       ],
       "rot_y": 0.0,
       "room": "lockup",
       "row": {
-        "count": 3,
-        "spacing": 2.667
+        "count": 2,
+        "spacing": 4.0
       },
+      "drop": 2.2,
       "reacts_to_alarm": true
     },
     {
@@ -161,7 +166,7 @@
       "source": "derived",
       "pos": [
         9.15,
-        2.8,
+        2.975,
         2.45
       ],
       "rot_y": 0.0,

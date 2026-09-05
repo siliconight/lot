@@ -2,7 +2,7 @@
   "light_manifest_version": "1.1.0",
   "building_id": "bank_tower_a01",
   "theme": "greybox",
-  "space": "Blender Z-up, meters; rot_y = degrees about up; pos is the fixture location",
+  "space": "Blender Z-up, meters; rot_y = degrees about up; pos is the fixture location -- for a ceiling row, hung below the slab's underside, not below the floor above",
   "rig_library": "lux",
   "anchors": [
     {
@@ -10,9 +10,9 @@
       "type": "fluorescent",
       "source": "derived",
       "pos": [
-        0.0,
+        -0.0,
         -4.55,
-        4.5
+        4.2
       ],
       "rot_y": 0.0,
       "room": "banking_hall",
@@ -20,6 +20,7 @@
         "count": 5,
         "spacing": 7.6
       },
+      "drop": 4.2,
       "reacts_to_alarm": true
     },
     {
@@ -27,9 +28,9 @@
       "type": "fluorescent",
       "source": "derived",
       "pos": [
-        0.0,
+        -0.0,
         9.45,
-        4.5
+        4.2
       ],
       "rot_y": 0.0,
       "room": "teller_band",
@@ -37,16 +38,17 @@
         "count": 5,
         "spacing": 7.6
       },
+      "drop": 4.2,
       "reacts_to_alarm": true
     },
     {
-      "id": "under_hall_ceiling",
-      "type": "fluorescent",
+      "id": "under_hall_bulbs",
+      "type": "pendant",
       "source": "derived",
       "pos": [
         -9.5,
-        0.0,
-        -0.1
+        -0.0,
+        -1.0
       ],
       "rot_y": 90.0,
       "room": "under_hall",
@@ -54,16 +56,17 @@
         "count": 5,
         "spacing": 5.6
       },
+      "drop": 3.6,
       "reacts_to_alarm": true
     },
     {
-      "id": "main_vault_ceiling",
-      "type": "fluorescent",
+      "id": "main_vault_bulbs",
+      "type": "pendant",
       "source": "derived",
       "pos": [
         9.5,
-        0.0,
-        -0.1
+        -0.0,
+        -1.0
       ],
       "rot_y": 90.0,
       "room": "main_vault",
@@ -71,6 +74,7 @@
         "count": 5,
         "spacing": 5.6
       },
+      "drop": 3.6,
       "reacts_to_alarm": true
     },
     {

@@ -2,7 +2,7 @@
   "light_manifest_version": "1.1.0",
   "building_id": "construction_site_a01",
   "theme": "greybox",
-  "space": "Blender Z-up, meters; rot_y = degrees about up; pos is the fixture location",
+  "space": "Blender Z-up, meters; rot_y = degrees about up; pos is the fixture location -- for a ceiling row, hung below the slab's underside, not below the floor above",
   "rig_library": "lux",
   "anchors": [
     {
@@ -12,7 +12,7 @@
       "pos": [
         0.0,
         -4.5,
-        3.5
+        3.2
       ],
       "rot_y": 0.0,
       "room": "ground_works",
@@ -20,23 +20,25 @@
         "count": 5,
         "spacing": 8.4
       },
+      "drop": 3.2,
       "reacts_to_alarm": true
     },
     {
-      "id": "site_office_ceiling",
-      "type": "fluorescent",
+      "id": "site_office_bulbs",
+      "type": "pendant",
       "source": "derived",
       "pos": [
         -16.0,
         10.5,
-        3.5
+        2.6
       ],
       "rot_y": 0.0,
       "room": "site_office",
       "row": {
-        "count": 3,
-        "spacing": 3.333
+        "count": 2,
+        "spacing": 5.0
       },
+      "drop": 2.6,
       "reacts_to_alarm": true
     },
     {
@@ -46,7 +48,7 @@
       "pos": [
         5.0,
         10.5,
-        3.5
+        3.2
       ],
       "rot_y": 0.0,
       "room": "material_bay",
@@ -54,6 +56,7 @@
         "count": 5,
         "spacing": 6.4
       },
+      "drop": 3.2,
       "reacts_to_alarm": true
     },
     {
@@ -63,7 +66,7 @@
       "pos": [
         0.0,
         -7.5,
-        7.1
+        6.8
       ],
       "rot_y": 0.0,
       "room": "upper_frame_s",
@@ -71,6 +74,7 @@
         "count": 5,
         "spacing": 8.4
       },
+      "drop": 3.2,
       "reacts_to_alarm": true
     },
     {
@@ -80,7 +84,7 @@
       "pos": [
         0.0,
         7.5,
-        7.1
+        6.8
       ],
       "rot_y": 0.0,
       "room": "upper_frame_n",
@@ -88,6 +92,7 @@
         "count": 5,
         "spacing": 8.4
       },
+      "drop": 3.2,
       "reacts_to_alarm": true
     },
     {

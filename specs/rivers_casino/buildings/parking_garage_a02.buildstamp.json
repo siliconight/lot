@@ -1,11 +1,11 @@
 {
   "glb": "parking_garage_a02.glb",
-  "glb_sha256": "91d2ef61477b1d988b683eb68b587389f9243d2702f10f3fc6108b054687c121",
-  "glb_bytes": 183928,
+  "glb_sha256": "dd7b14e708debf1c7a67702ca352deceac8acbf20ac273f08b7ea35c6bccac51",
+  "glb_bytes": 355044,
   "spec": "parking_garage_a02.json",
-  "spec_sha256": "d58931e86cf298c88737f5c8871f0c68e26c600d7b484ec900d20852d1b5996b",
-  "builder_sha256": "753ed496b12e2db450c12b9fd52a4c05379b62cf2df0266c0ff54aeba41ab15e",
-  "builder_files": 69,
-  "deli_counter_version": "Deli Counter 0.88.0",
-  "stamped_utc": "2026-08-01T19:14:48Z"
+  "spec_sha256": "9e8c80384e72288014178a06482bb09490b677aecb381bf65d2b5fad1f4334f7",
+  "builder_sha256": "37c63a83535fc5b25b9da6891232639bab31eec98427fb1963b34507bd9d18ab",
+  "builder_files": 78,
+  "deli_counter_version": "Deli Counter 0.102.1",
+  "stamped_utc": "2026-08-26T00:37:22Z"
 }

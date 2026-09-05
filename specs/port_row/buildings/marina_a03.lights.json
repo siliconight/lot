@@ -2,7 +2,7 @@
   "light_manifest_version": "1.1.0",
   "building_id": "marina_a03",
   "theme": "greybox",
-  "space": "Blender Z-up, meters; rot_y = degrees about up; pos is the fixture location",
+  "space": "Blender Z-up, meters; rot_y = degrees about up; pos is the fixture location -- for a ceiling row, hung below the slab's underside, not below the floor above",
   "rig_library": "lux",
   "anchors": [
     {
@@ -12,7 +12,7 @@
       "pos": [
         0.0,
         -5.0,
-        3.9
+        3.6
       ],
       "rot_y": 0.0,
       "room": "sales_floor",
@@ -20,6 +20,7 @@
         "count": 5,
         "spacing": 7.2
       },
+      "drop": 3.6,
       "reacts_to_alarm": true
     },
     {
@@ -29,7 +30,7 @@
       "pos": [
         -6.0,
         7.0,
-        3.9
+        3.6
       ],
       "rot_y": 0.0,
       "room": "gear_hall",
@@ -37,23 +38,25 @@
         "count": 5,
         "spacing": 4.8
       },
+      "drop": 3.6,
       "reacts_to_alarm": true
     },
     {
-      "id": "bonded_locker_ceiling",
-      "type": "fluorescent",
+      "id": "bonded_locker_bulbs",
+      "type": "pendant",
       "source": "derived",
       "pos": [
         12.0,
         7.0,
-        3.9
+        3.0
       ],
       "rot_y": 0.0,
       "room": "bonded_locker",
       "row": {
-        "count": 4,
-        "spacing": 3.0
+        "count": 3,
+        "spacing": 4.0
       },
+      "drop": 3.0,
       "reacts_to_alarm": true
     },
     {
@@ -124,7 +127,7 @@
       "source": "derived",
       "pos": [
         -18.15,
-        0.0,
+        -0.15,
         3.25
       ],
       "rot_y": 180.0,

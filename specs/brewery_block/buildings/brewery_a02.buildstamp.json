@@ -1,11 +1,11 @@
 {
   "glb": "brewery_a02.glb",
-  "glb_sha256": "df824853a87b9dbb6239549b3552c7cd3f45f1a94954d570af4323b234a9835f",
-  "glb_bytes": 172256,
+  "glb_sha256": "47148564eb24890a3cb17137a9f2e338ee1bf6d907f81d39218537db079b67d0",
+  "glb_bytes": 373064,
   "spec": "brewery_a02.json",
   "spec_sha256": "ff5f0e1f7d0326d14410e06619d779ea84468fb8180378e1a6b635496bd774af",
-  "builder_sha256": "753ed496b12e2db450c12b9fd52a4c05379b62cf2df0266c0ff54aeba41ab15e",
-  "builder_files": 69,
-  "deli_counter_version": "Deli Counter 0.88.0",
-  "stamped_utc": "2026-08-01T19:13:54Z"
+  "builder_sha256": "37c63a83535fc5b25b9da6891232639bab31eec98427fb1963b34507bd9d18ab",
+  "builder_files": 78,
+  "deli_counter_version": "Deli Counter 0.102.1",
+  "stamped_utc": "2026-08-26T00:35:55Z"
 }

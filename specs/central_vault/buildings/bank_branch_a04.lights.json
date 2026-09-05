@@ -2,7 +2,7 @@
   "light_manifest_version": "1.1.0",
   "building_id": "bank_branch_a04",
   "theme": "greybox",
-  "space": "Blender Z-up, meters; rot_y = degrees about up; pos is the fixture location",
+  "space": "Blender Z-up, meters; rot_y = degrees about up; pos is the fixture location -- for a ceiling row, hung below the slab's underside, not below the floor above",
   "rig_library": "lux",
   "anchors": [
     {
@@ -12,7 +12,7 @@
       "pos": [
         0.0,
         -6.0,
-        4.1
+        3.8
       ],
       "rot_y": 0.0,
       "room": "grand_lobby",
@@ -20,23 +20,43 @@
         "count": 5,
         "spacing": 8.0
       },
+      "drop": 3.8,
       "reacts_to_alarm": true
     },
     {
-      "id": "teller_line_ceiling",
+      "id": "teller_line_ceiling_0",
       "type": "fluorescent",
       "source": "derived",
       "pos": [
-        -7.0,
+        -17.4,
         9.0,
-        4.1
+        3.8
       ],
       "rot_y": 0.0,
       "room": "teller_line",
       "row": {
-        "count": 5,
+        "count": 1,
+        "spacing": 0.0
+      },
+      "drop": 3.8,
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "teller_line_ceiling_1",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        -1.8,
+        9.0,
+        3.8
+      ],
+      "rot_y": 0.0,
+      "room": "teller_line",
+      "row": {
+        "count": 3,
         "spacing": 5.2
       },
+      "drop": 3.8,
       "reacts_to_alarm": true
     },
     {
@@ -46,14 +66,15 @@
       "pos": [
         13.0,
         9.0,
-        4.1
+        3.8
       ],
       "rot_y": 0.0,
       "room": "security_office",
       "row": {
-        "count": 5,
-        "spacing": 2.8
+        "count": 4,
+        "spacing": 3.5
       },
+      "drop": 3.8,
       "reacts_to_alarm": true
     },
     {
@@ -63,7 +84,7 @@
       "pos": [
         0.0,
         -7.5,
-        8.3
+        8.0
       ],
       "rot_y": 0.0,
       "room": "mezzanine",
@@ -71,6 +92,7 @@
         "count": 5,
         "spacing": 8.0
       },
+      "drop": 3.8,
       "reacts_to_alarm": true
     },
     {
@@ -80,7 +102,7 @@
       "pos": [
         0.0,
         7.5,
-        8.3
+        8.0
       ],
       "rot_y": 0.0,
       "room": "boardroom",
@@ -88,16 +110,17 @@
         "count": 5,
         "spacing": 8.0
       },
+      "drop": 3.8,
       "reacts_to_alarm": true
     },
     {
-      "id": "vault_antechamber_ceiling",
-      "type": "fluorescent",
+      "id": "vault_antechamber_bulbs",
+      "type": "pendant",
       "source": "derived",
       "pos": [
         0.0,
         -6.5,
-        -0.1
+        -1.0
       ],
       "rot_y": 0.0,
       "room": "vault_antechamber",
@@ -105,16 +128,17 @@
         "count": 5,
         "spacing": 8.0
       },
+      "drop": 3.2,
       "reacts_to_alarm": true
     },
     {
-      "id": "vault_room_ceiling",
-      "type": "fluorescent",
+      "id": "vault_room_bulbs",
+      "type": "pendant",
       "source": "derived",
       "pos": [
         0.0,
         8.5,
-        -0.1
+        -1.0
       ],
       "rot_y": 0.0,
       "room": "vault_room",
@@ -122,6 +146,7 @@
         "count": 5,
         "spacing": 8.0
       },
+      "drop": 3.2,
       "reacts_to_alarm": true
     },
     {

@@ -2,7 +2,7 @@
   "light_manifest_version": "1.1.0",
   "building_id": "mansion_a03",
   "theme": "greybox",
-  "space": "Blender Z-up, meters; rot_y = degrees about up; pos is the fixture location",
+  "space": "Blender Z-up, meters; rot_y = degrees about up; pos is the fixture location -- for a ceiling row, hung below the slab's underside, not below the floor above",
   "rig_library": "lux",
   "anchors": [
     {
@@ -10,9 +10,9 @@
       "type": "fluorescent",
       "source": "derived",
       "pos": [
-        0.0,
+        -0.0,
         -5.5,
-        3.7
+        3.4
       ],
       "rot_y": 0.0,
       "room": "grand_foyer",
@@ -20,6 +20,7 @@
         "count": 5,
         "spacing": 7.6
       },
+      "drop": 3.4,
       "reacts_to_alarm": true
     },
     {
@@ -29,7 +30,7 @@
       "pos": [
         -5.5,
         8.5,
-        3.7
+        3.4
       ],
       "rot_y": 0.0,
       "room": "gallery_wing",
@@ -37,6 +38,7 @@
         "count": 5,
         "spacing": 5.4
       },
+      "drop": 3.4,
       "reacts_to_alarm": true
     },
     {
@@ -46,14 +48,15 @@
       "pos": [
         13.5,
         8.5,
-        3.7
+        3.4
       ],
       "rot_y": 0.0,
       "room": "study",
       "row": {
-        "count": 4,
-        "spacing": 2.75
+        "count": 3,
+        "spacing": 3.667
       },
+      "drop": 3.4,
       "reacts_to_alarm": true
     },
     {
@@ -61,9 +64,9 @@
       "type": "fluorescent",
       "source": "derived",
       "pos": [
-        0.0,
+        -0.0,
         -7.0,
-        7.5
+        7.2
       ],
       "rot_y": 0.0,
       "room": "upper_hall",
@@ -71,6 +74,7 @@
         "count": 5,
         "spacing": 7.6
       },
+      "drop": 3.4,
       "reacts_to_alarm": true
     },
     {
@@ -78,9 +82,9 @@
       "type": "fluorescent",
       "source": "derived",
       "pos": [
-        0.0,
+        -0.0,
         7.0,
-        7.5
+        7.2
       ],
       "rot_y": 0.0,
       "room": "private_wing",
@@ -88,16 +92,17 @@
         "count": 5,
         "spacing": 7.6
       },
+      "drop": 3.4,
       "reacts_to_alarm": true
     },
     {
-      "id": "panic_approach_ceiling",
-      "type": "fluorescent",
+      "id": "panic_approach_bulbs",
+      "type": "pendant",
       "source": "derived",
       "pos": [
         -7.5,
-        0.0,
-        -0.1
+        -0.0,
+        -1.0
       ],
       "rot_y": 90.0,
       "room": "panic_approach",
@@ -105,16 +110,17 @@
         "count": 5,
         "spacing": 5.6
       },
+      "drop": 2.8,
       "reacts_to_alarm": true
     },
     {
-      "id": "panic_room_ceiling",
-      "type": "fluorescent",
+      "id": "panic_room_bulbs",
+      "type": "pendant",
       "source": "derived",
       "pos": [
         11.5,
-        0.0,
-        -0.1
+        -0.0,
+        -1.0
       ],
       "rot_y": 90.0,
       "room": "panic_room",
@@ -122,6 +128,7 @@
         "count": 5,
         "spacing": 5.6
       },
+      "drop": 2.8,
       "reacts_to_alarm": true
     },
     {

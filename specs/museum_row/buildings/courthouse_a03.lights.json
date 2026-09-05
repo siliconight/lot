@@ -2,7 +2,7 @@
   "light_manifest_version": "1.1.0",
   "building_id": "courthouse_a03",
   "theme": "greybox",
-  "space": "Blender Z-up, meters; rot_y = degrees about up; pos is the fixture location",
+  "space": "Blender Z-up, meters; rot_y = degrees about up; pos is the fixture location -- for a ceiling row, hung below the slab's underside, not below the floor above",
   "rig_library": "lux",
   "anchors": [
     {
@@ -12,7 +12,7 @@
       "pos": [
         0.0,
         -7.0,
-        4.9
+        4.6
       ],
       "rot_y": 0.0,
       "room": "public_hall",
@@ -20,6 +20,7 @@
         "count": 5,
         "spacing": 8.8
       },
+      "drop": 4.6,
       "reacts_to_alarm": true
     },
     {
@@ -29,7 +30,7 @@
       "pos": [
         -7.0,
         9.0,
-        4.9
+        4.6
       ],
       "rot_y": 0.0,
       "room": "main_courtroom",
@@ -37,23 +38,25 @@
         "count": 5,
         "spacing": 6.0
       },
+      "drop": 4.6,
       "reacts_to_alarm": true
     },
     {
-      "id": "judges_chambers_ceiling",
-      "type": "fluorescent",
+      "id": "judges_chambers_bulbs",
+      "type": "pendant",
       "source": "derived",
       "pos": [
         15.0,
         9.0,
-        4.9
+        4.0
       ],
       "rot_y": 0.0,
       "room": "judges_chambers",
       "row": {
-        "count": 5,
-        "spacing": 2.8
+        "count": 4,
+        "spacing": 3.5
       },
+      "drop": 4.0,
       "reacts_to_alarm": true
     },
     {

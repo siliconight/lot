@@ -207,7 +207,7 @@
       "sill": 0.9,
       "tag": null,
       "breach_class": null,
-      "material": null,
+      "material": "glass",
       "vaultable": false,
       "reinforceable": false,
       "building": "strip_retail_a02"
@@ -224,7 +224,7 @@
       "sill": 1.5,
       "tag": null,
       "breach_class": null,
-      "material": null,
+      "material": "glass",
       "vaultable": false,
       "reinforceable": false,
       "building": "strip_retail_a02"
@@ -443,6 +443,24 @@
       }
     },
     {
+      "node": "ext_col_0_N_seg9",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_N_seg10",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
       "node": "ext_col_0_S_seg0",
       "material": {
         "id": "glass",
@@ -552,6 +570,24 @@
     },
     {
       "node": "ext_col_0_S_seg8",
+      "material": {
+        "id": "glass",
+        "acoustic": "Glass",
+        "absorption": 0.1,
+        "damping": 0.05
+      }
+    },
+    {
+      "node": "ext_col_0_S_seg9",
+      "material": {
+        "id": "glass",
+        "acoustic": "Glass",
+        "absorption": 0.1,
+        "damping": 0.05
+      }
+    },
+    {
+      "node": "ext_col_0_S_seg10",
       "material": {
         "id": "glass",
         "acoustic": "Glass",
@@ -953,6 +989,8 @@
       ],
       "source": "inferred",
       "reversible": false,
+      "material": "drywall",
+      "breach_class": "soft_wall",
       "building": "strip_retail_a02"
     },
     {
@@ -1113,6 +1151,8 @@
       ],
       "source": "inferred",
       "reversible": false,
+      "material": "drywall",
+      "breach_class": "soft_wall",
       "building": "strip_retail_a02"
     }
   ],
@@ -1134,8 +1174,30 @@
   "platforms": [],
   "fire_escapes": [],
   "surface_roles": {
-    "slab_0": "floor",
-    "slab_1": "ceiling",
+    "slab_0_t0_0": "floor",
+    "slab_0_t0_1": "floor",
+    "slab_0_t0_2": "floor",
+    "slab_0_t0_3": "floor",
+    "slab_0_t1_0": "floor",
+    "slab_0_t1_1": "floor",
+    "slab_0_t1_2": "floor",
+    "slab_0_t1_3": "floor",
+    "slab_0_t2_0": "floor",
+    "slab_0_t2_1": "floor",
+    "slab_0_t2_2": "floor",
+    "slab_0_t2_3": "floor",
+    "slab_1_t0_0": "ceiling",
+    "slab_1_t0_1": "ceiling",
+    "slab_1_t0_2": "ceiling",
+    "slab_1_t0_3": "ceiling",
+    "slab_1_t1_0": "ceiling",
+    "slab_1_t1_1": "ceiling",
+    "slab_1_t1_2": "ceiling",
+    "slab_1_t1_3": "ceiling",
+    "slab_1_t2_0": "ceiling",
+    "slab_1_t2_1": "ceiling",
+    "slab_1_t2_2": "ceiling",
+    "slab_1_t2_3": "ceiling",
     "ext_0_N_seg0": "wall",
     "ext_0_N_seg1": "wall",
     "ext_0_N_open0_lintel": "breach",
@@ -1148,6 +1210,8 @@
     "ext_0_N_open1_lintel": "doorway",
     "ext_0_N_seg7": "wall",
     "ext_0_N_seg8": "wall",
+    "ext_0_N_seg9": "wall",
+    "ext_0_N_seg10": "wall",
     "ext_0_S_seg0": "wall",
     "ext_0_S_open0_lintel": "window",
     "ext_0_S_open0_sill": "window",
@@ -1161,6 +1225,8 @@
     "ext_0_S_seg6": "wall",
     "ext_0_S_seg7": "wall",
     "ext_0_S_seg8": "wall",
+    "ext_0_S_seg9": "wall",
+    "ext_0_S_seg10": "wall",
     "ext_0_E_seg0": "wall",
     "ext_0_E_seg1": "wall",
     "ext_0_E_seg2": "wall",

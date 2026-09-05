@@ -1,11 +1,11 @@
 {
   "glb": "construction_site_a01.glb",
-  "glb_sha256": "537671075912e392f04b95fcb96432667bf8d9bc9592183b28b7ce6b20954448",
-  "glb_bytes": 142824,
+  "glb_sha256": "51ddb492e3178e1f6c44e34c8bdc2cc59a5b61319bafe88cc6fee1b9b9f2f3f8",
+  "glb_bytes": 346460,
   "spec": "construction_site_a01.json",
   "spec_sha256": "13b1180ecb5fef10f8146fd2834fe141c355fc1542ed832804cf4c7ecef48752",
-  "builder_sha256": "753ed496b12e2db450c12b9fd52a4c05379b62cf2df0266c0ff54aeba41ab15e",
-  "builder_files": 69,
-  "deli_counter_version": "Deli Counter 0.88.0",
-  "stamped_utc": "2026-08-01T19:14:01Z"
+  "builder_sha256": "37c63a83535fc5b25b9da6891232639bab31eec98427fb1963b34507bd9d18ab",
+  "builder_files": 78,
+  "deli_counter_version": "Deli Counter 0.102.1",
+  "stamped_utc": "2026-08-26T00:36:06Z"
 }

@@ -1,11 +1,11 @@
 {
   "glb": "strip_retail_a01.glb",
-  "glb_sha256": "bfcc41b66c82971eb046103fa5813a6c6f5c8a32156d40fb9813f81356183771",
-  "glb_bytes": 315660,
+  "glb_sha256": "d53173c373f70d7a789a27ae7677bb93bea4fa815e8103b8cb42081189426870",
+  "glb_bytes": 398032,
   "spec": "strip_retail_a01.json",
-  "spec_sha256": "445400cdba97e14dc1e3e2031c150b5affc60f3099d0d61c9b73bb57582538da",
-  "builder_sha256": "753ed496b12e2db450c12b9fd52a4c05379b62cf2df0266c0ff54aeba41ab15e",
-  "builder_files": 69,
-  "deli_counter_version": "Deli Counter 0.88.0",
-  "stamped_utc": "2026-08-01T19:15:06Z"
+  "spec_sha256": "0dd01a01240711ef52723b792e84a92b41d0c725369bdcb764848b12d4a1d9b7",
+  "builder_sha256": "37c63a83535fc5b25b9da6891232639bab31eec98427fb1963b34507bd9d18ab",
+  "builder_files": 78,
+  "deli_counter_version": "Deli Counter 0.102.1",
+  "stamped_utc": "2026-08-26T00:37:51Z"
 }

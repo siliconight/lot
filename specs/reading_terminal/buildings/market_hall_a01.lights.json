@@ -2,7 +2,7 @@
   "light_manifest_version": "1.1.0",
   "building_id": "market_hall_a01",
   "theme": "greybox",
-  "space": "Blender Z-up, meters; rot_y = degrees about up; pos is the fixture location",
+  "space": "Blender Z-up, meters; rot_y = degrees about up; pos is the fixture location -- for a ceiling row, hung below the slab's underside, not below the floor above",
   "rig_library": "lux",
   "anchors": [
     {
@@ -10,9 +10,9 @@
       "type": "fluorescent",
       "source": "derived",
       "pos": [
-        0.0,
+        -0.0,
         -5.2,
-        6.4
+        6.1
       ],
       "rot_y": 0.0,
       "room": "stall_floor",
@@ -20,23 +20,25 @@
         "count": 5,
         "spacing": 9.6
       },
+      "drop": 6.1,
       "reacts_to_alarm": true
     },
     {
-      "id": "deposit_cage_ceiling",
-      "type": "fluorescent",
+      "id": "deposit_cage_bulbs",
+      "type": "pendant",
       "source": "derived",
       "pos": [
         -18.72,
         10.8,
-        6.4
+        5.5
       ],
       "rot_y": 0.0,
       "room": "deposit_cage",
       "row": {
-        "count": 4,
-        "spacing": 2.64
+        "count": 3,
+        "spacing": 3.52
       },
+      "drop": 5.5,
       "reacts_to_alarm": true
     },
     {
@@ -46,7 +48,7 @@
       "pos": [
         5.28,
         10.8,
-        6.4
+        6.1
       ],
       "rot_y": 0.0,
       "room": "loading_band",
@@ -54,6 +56,7 @@
         "count": 5,
         "spacing": 7.488
       },
+      "drop": 6.1,
       "reacts_to_alarm": true
     },
     {

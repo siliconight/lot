@@ -1,11 +1,11 @@
 {
   "glb": "mansion_a03.glb",
-  "glb_sha256": "f1ad9cd55e554cf1d5596e518e123791eb73e55c86d360e7eb9b5d416b08aad8",
-  "glb_bytes": 213748,
+  "glb_sha256": "8a82202a0d81aa531c65b3fbfbff48521be3763ce30f28c736c764f9be87c049",
+  "glb_bytes": 451804,
   "spec": "mansion_a03.json",
   "spec_sha256": "8f727d7a909c0d8a8d3185d2af271272742bdeba5d14faa25dad14ee99f811cc",
-  "builder_sha256": "753ed496b12e2db450c12b9fd52a4c05379b62cf2df0266c0ff54aeba41ab15e",
-  "builder_files": 69,
-  "deli_counter_version": "Deli Counter 0.88.0",
-  "stamped_utc": "2026-08-01T19:14:37Z"
+  "builder_sha256": "37c63a83535fc5b25b9da6891232639bab31eec98427fb1963b34507bd9d18ab",
+  "builder_files": 78,
+  "deli_counter_version": "Deli Counter 0.102.1",
+  "stamped_utc": "2026-08-26T00:37:04Z"
 }

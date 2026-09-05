@@ -460,7 +460,7 @@
       "wall": "ext_0_N",
       "kind": "garage",
       "story": 0,
-      "x": -9.5,
+      "x": -9.95,
       "y": 14.0,
       "z": 1.35,
       "width": 3.2,
@@ -580,7 +580,7 @@
       "kind": "door",
       "story": 0,
       "x": -19.0,
-      "y": 5.04,
+      "y": 4.95,
       "z": 1.1,
       "width": 1.4,
       "height": 2.2,
@@ -1124,6 +1124,24 @@
       }
     },
     {
+      "node": "ext_col_-1_N_seg19",
+      "material": {
+        "id": "brick_ext",
+        "acoustic": "Concrete",
+        "absorption": 0.72,
+        "damping": 0.62
+      }
+    },
+    {
+      "node": "ext_col_-1_N_seg20",
+      "material": {
+        "id": "brick_ext",
+        "acoustic": "Concrete",
+        "absorption": 0.72,
+        "damping": 0.62
+      }
+    },
+    {
       "node": "ext_col_-1_S_seg0",
       "material": {
         "id": "brick_ext",
@@ -1287,6 +1305,24 @@
     },
     {
       "node": "ext_col_-1_S_seg18",
+      "material": {
+        "id": "brick_ext",
+        "acoustic": "Concrete",
+        "absorption": 0.72,
+        "damping": 0.62
+      }
+    },
+    {
+      "node": "ext_col_-1_S_seg19",
+      "material": {
+        "id": "brick_ext",
+        "acoustic": "Concrete",
+        "absorption": 0.72,
+        "damping": 0.62
+      }
+    },
+    {
+      "node": "ext_col_-1_S_seg20",
       "material": {
         "id": "brick_ext",
         "acoustic": "Concrete",
@@ -1727,6 +1763,24 @@
       }
     },
     {
+      "node": "ext_col_0_N_seg18",
+      "material": {
+        "id": "brick_ext",
+        "acoustic": "Concrete",
+        "absorption": 0.72,
+        "damping": 0.62
+      }
+    },
+    {
+      "node": "ext_col_0_N_seg19",
+      "material": {
+        "id": "brick_ext",
+        "acoustic": "Concrete",
+        "absorption": 0.72,
+        "damping": 0.62
+      }
+    },
+    {
       "node": "ext_col_0_S_seg0",
       "material": {
         "id": "brick_ext",
@@ -1935,6 +1989,24 @@
     },
     {
       "node": "ext_col_0_S_seg17",
+      "material": {
+        "id": "brick_ext",
+        "acoustic": "Concrete",
+        "absorption": 0.72,
+        "damping": 0.62
+      }
+    },
+    {
+      "node": "ext_col_0_S_seg18",
+      "material": {
+        "id": "brick_ext",
+        "acoustic": "Concrete",
+        "absorption": 0.72,
+        "damping": 0.62
+      }
+    },
+    {
+      "node": "ext_col_0_S_seg19",
       "material": {
         "id": "brick_ext",
         "acoustic": "Concrete",
@@ -2510,6 +2582,24 @@
       }
     },
     {
+      "node": "ext_col_1_N_seg19",
+      "material": {
+        "id": "brick_ext",
+        "acoustic": "Concrete",
+        "absorption": 0.72,
+        "damping": 0.62
+      }
+    },
+    {
+      "node": "ext_col_1_N_seg20",
+      "material": {
+        "id": "brick_ext",
+        "acoustic": "Concrete",
+        "absorption": 0.72,
+        "damping": 0.62
+      }
+    },
+    {
       "node": "ext_col_1_S_seg0",
       "material": {
         "id": "brick_ext",
@@ -2718,6 +2808,24 @@
     },
     {
       "node": "ext_col_1_S_seg17",
+      "material": {
+        "id": "brick_ext",
+        "acoustic": "Concrete",
+        "absorption": 0.72,
+        "damping": 0.62
+      }
+    },
+    {
+      "node": "ext_col_1_S_seg18",
+      "material": {
+        "id": "brick_ext",
+        "acoustic": "Concrete",
+        "absorption": 0.72,
+        "damping": 0.62
+      }
+    },
+    {
+      "node": "ext_col_1_S_seg19",
       "material": {
         "id": "brick_ext",
         "acoustic": "Concrete",
@@ -4204,12 +4312,12 @@
   ],
   "interactives": [
     {
-      "id": "deli_a02:if:81033228",
+      "id": "deli_a02:if:bcff6b97",
       "kind": "door",
       "slot_ref": "ext_0_N_open0",
       "transform": {
         "translation": [
-          -9.5,
+          -9.95,
           14.0,
           1.35
         ],
@@ -4328,16 +4436,18 @@
       ],
       "source": "inferred",
       "reversible": false,
+      "material": "drywall",
+      "breach_class": "soft_wall",
       "building": "deli_a02"
     },
     {
-      "id": "deli_a02:if:e5246b5d",
+      "id": "deli_a02:if:bbec7d4e",
       "kind": "door",
       "slot_ref": "ext_0_W_open1",
       "transform": {
         "translation": [
           -19.0,
-          5.04,
+          4.95,
           1.1
         ],
         "rot_y": 270
@@ -4389,6 +4499,8 @@
       ],
       "source": "inferred",
       "reversible": false,
+      "material": "drywall",
+      "breach_class": "soft_wall",
       "building": "deli_a02"
     },
     {
@@ -4417,6 +4529,8 @@
       ],
       "source": "inferred",
       "reversible": false,
+      "material": "drywall",
+      "breach_class": "soft_wall",
       "building": "deli_a02"
     },
     {
@@ -4478,6 +4592,8 @@
       ],
       "source": "inferred",
       "reversible": false,
+      "material": "drywall",
+      "breach_class": "soft_wall",
       "building": "deli_a02"
     },
     {
@@ -4638,6 +4754,8 @@
       ],
       "source": "inferred",
       "reversible": false,
+      "material": "drywall",
+      "breach_class": "soft_wall",
       "building": "deli_a02"
     },
     {
@@ -4699,6 +4817,8 @@
       ],
       "source": "inferred",
       "reversible": false,
+      "material": "drywall",
+      "breach_class": "soft_wall",
       "building": "deli_a02"
     },
     {
@@ -4760,6 +4880,8 @@
       ],
       "source": "inferred",
       "reversible": false,
+      "material": "brick_ext",
+      "breach_class": "reinforceable",
       "building": "deli_a02"
     },
     {
@@ -4821,6 +4943,8 @@
       ],
       "source": "inferred",
       "reversible": false,
+      "material": "brick_ext",
+      "breach_class": "reinforceable",
       "building": "deli_a02"
     }
   ],
@@ -4979,8 +5103,8 @@
           "floor": 0,
           "kind": "garage",
           "wall": "ext_0_N",
-          "pos": -0.25,
-          "interactive": "deli_a02:if:81033228",
+          "pos": -0.261842,
+          "interactive": "deli_a02:if:bcff6b97",
           "default_state": "closed",
           "connects_from": "exterior",
           "discharge_door": true
@@ -5135,8 +5259,8 @@
           "floor": 0,
           "kind": "garage",
           "wall": "ext_0_N",
-          "pos": -0.25,
-          "interactive": "deli_a02:if:81033228",
+          "pos": -0.261842,
+          "interactive": "deli_a02:if:bcff6b97",
           "default_state": "closed",
           "connects_from": "exterior",
           "discharge_door": true
@@ -5569,10 +5693,198 @@
   "platforms": [],
   "fire_escapes": [],
   "surface_roles": {
-    "slab_-1": "floor",
-    "slab_0": "floor",
-    "slab_1": "floor",
-    "slab_2": "ceiling",
+    "slab_-1_t0_0": "floor",
+    "slab_-1_t0_1": "floor",
+    "slab_-1_t0_2": "floor",
+    "slab_-1_t0_3": "floor",
+    "slab_-1_t0_4": "floor",
+    "slab_-1_t0_5": "floor",
+    "slab_-1_t0_6": "floor",
+    "slab_-1_t0_7": "floor",
+    "slab_-1_t1_0": "floor",
+    "slab_-1_t1_1": "floor",
+    "slab_-1_t1_2": "floor",
+    "slab_-1_t1_3": "floor",
+    "slab_-1_t1_4": "floor",
+    "slab_-1_t1_5": "floor",
+    "slab_-1_t1_6": "floor",
+    "slab_-1_t1_7": "floor",
+    "slab_-1_t2_0": "floor",
+    "slab_-1_t2_1": "floor",
+    "slab_-1_t2_2": "floor",
+    "slab_-1_t2_3": "floor",
+    "slab_-1_t2_4": "floor",
+    "slab_-1_t2_5": "floor",
+    "slab_-1_t2_6": "floor",
+    "slab_-1_t2_7": "floor",
+    "slab_-1_t3_0": "floor",
+    "slab_-1_t3_1": "floor",
+    "slab_-1_t3_2": "floor",
+    "slab_-1_t3_3": "floor",
+    "slab_-1_t3_4": "floor",
+    "slab_-1_t3_5": "floor",
+    "slab_-1_t3_6": "floor",
+    "slab_-1_t3_7": "floor",
+    "slab_-1_t4_0": "floor",
+    "slab_-1_t4_1": "floor",
+    "slab_-1_t4_2": "floor",
+    "slab_-1_t4_3": "floor",
+    "slab_-1_t4_4": "floor",
+    "slab_-1_t4_5": "floor",
+    "slab_-1_t4_6": "floor",
+    "slab_-1_t4_7": "floor",
+    "slab_-1_t5_0": "floor",
+    "slab_-1_t5_1": "floor",
+    "slab_-1_t5_2": "floor",
+    "slab_-1_t5_3": "floor",
+    "slab_-1_t5_4": "floor",
+    "slab_-1_t5_5": "floor",
+    "slab_-1_t5_6": "floor",
+    "slab_-1_t5_7": "floor",
+    "slab_0_t0_0": "floor",
+    "slab_0_t0_1": "floor",
+    "slab_0_t0_2": "floor",
+    "slab_0_t0_3": "floor",
+    "slab_0_t0_4": "floor",
+    "slab_0_t0_5": "floor",
+    "slab_0_t0_6": "floor",
+    "slab_0_t0_7": "floor",
+    "slab_0_t1_0": "floor",
+    "slab_0_t1_1": "floor",
+    "slab_0_t1_2": "floor",
+    "slab_0_t1_3": "floor",
+    "slab_0_t1_4": "floor",
+    "slab_0_t1_5": "floor",
+    "slab_0_t1_6": "floor",
+    "slab_0_t1_7": "floor",
+    "slab_0_t2_0": "floor",
+    "slab_0_t2_1": "floor",
+    "slab_0_t2_2": "floor",
+    "slab_0_t2_3": "floor",
+    "slab_0_t2_4": "floor",
+    "slab_0_t2_5": "floor",
+    "slab_0_t2_6": "floor",
+    "slab_0_t2_7": "floor",
+    "slab_0_t3_0": "floor",
+    "slab_0_t3_1": "floor",
+    "slab_0_t3_2": "floor",
+    "slab_0_t3_3": "floor",
+    "slab_0_t3_4": "floor",
+    "slab_0_t3_5": "floor",
+    "slab_0_t3_6": "floor",
+    "slab_0_t3_7": "floor",
+    "slab_0_t4_0": "floor",
+    "slab_0_t4_1": "floor",
+    "slab_0_t4_2": "floor",
+    "slab_0_t4_3": "floor",
+    "slab_0_t4_4": "floor",
+    "slab_0_t4_5": "floor",
+    "slab_0_t4_6": "floor",
+    "slab_0_t4_7": "floor",
+    "slab_0_t5_0": "floor",
+    "slab_0_t5_1": "floor",
+    "slab_0_t5_2": "floor",
+    "slab_0_t5_3": "floor",
+    "slab_0_t5_4": "floor",
+    "slab_0_t5_5": "floor",
+    "slab_0_t5_6": "floor",
+    "slab_0_t5_7": "floor",
+    "slab_1_t0_0": "floor",
+    "slab_1_t0_1": "floor",
+    "slab_1_t0_2": "floor",
+    "slab_1_t0_3": "floor",
+    "slab_1_t0_4": "floor",
+    "slab_1_t0_5": "floor",
+    "slab_1_t0_6": "floor",
+    "slab_1_t0_7": "floor",
+    "slab_1_t1_0": "floor",
+    "slab_1_t1_1": "floor",
+    "slab_1_t1_2": "floor",
+    "slab_1_t1_3": "floor",
+    "slab_1_t1_4": "floor",
+    "slab_1_t1_5": "floor",
+    "slab_1_t1_6": "floor",
+    "slab_1_t1_7": "floor",
+    "slab_1_t2_0": "floor",
+    "slab_1_t2_1": "floor",
+    "slab_1_t2_2": "floor",
+    "slab_1_t2_3": "floor",
+    "slab_1_t2_4": "floor",
+    "slab_1_t2_5": "floor",
+    "slab_1_t2_6": "floor",
+    "slab_1_t2_7": "floor",
+    "slab_1_t3_0": "floor",
+    "slab_1_t3_1": "floor",
+    "slab_1_t3_2": "floor",
+    "slab_1_t3_3": "floor",
+    "slab_1_t3_4": "floor",
+    "slab_1_t3_5": "floor",
+    "slab_1_t3_6": "floor",
+    "slab_1_t3_7": "floor",
+    "slab_1_t4_0": "floor",
+    "slab_1_t4_1": "floor",
+    "slab_1_t4_2": "floor",
+    "slab_1_t4_3": "floor",
+    "slab_1_t4_4": "floor",
+    "slab_1_t4_5": "floor",
+    "slab_1_t4_6": "floor",
+    "slab_1_t4_7": "floor",
+    "slab_1_t5_0": "floor",
+    "slab_1_t5_1": "floor",
+    "slab_1_t5_2": "floor",
+    "slab_1_t5_3": "floor",
+    "slab_1_t5_4": "floor",
+    "slab_1_t5_5": "floor",
+    "slab_1_t5_6": "floor",
+    "slab_1_t5_7": "floor",
+    "slab_2_t0_0": "ceiling",
+    "slab_2_t0_1": "ceiling",
+    "slab_2_t0_2": "ceiling",
+    "slab_2_t0_3": "ceiling",
+    "slab_2_t0_4": "ceiling",
+    "slab_2_t0_5": "ceiling",
+    "slab_2_t0_6": "ceiling",
+    "slab_2_t0_7": "ceiling",
+    "slab_2_t1_0": "ceiling",
+    "slab_2_t1_1": "ceiling",
+    "slab_2_t1_2": "ceiling",
+    "slab_2_t1_3": "ceiling",
+    "slab_2_t1_4": "ceiling",
+    "slab_2_t1_5": "ceiling",
+    "slab_2_t1_6": "ceiling",
+    "slab_2_t1_7": "ceiling",
+    "slab_2_t2_0": "ceiling",
+    "slab_2_t2_1": "ceiling",
+    "slab_2_t2_2": "ceiling",
+    "slab_2_t2_3": "ceiling",
+    "slab_2_t2_4": "ceiling",
+    "slab_2_t2_5": "ceiling",
+    "slab_2_t2_6": "ceiling",
+    "slab_2_t2_7": "ceiling",
+    "slab_2_t3_0": "ceiling",
+    "slab_2_t3_1": "ceiling",
+    "slab_2_t3_2": "ceiling",
+    "slab_2_t3_3": "ceiling",
+    "slab_2_t3_4": "ceiling",
+    "slab_2_t3_5": "ceiling",
+    "slab_2_t3_6": "ceiling",
+    "slab_2_t3_7": "ceiling",
+    "slab_2_t4_0": "ceiling",
+    "slab_2_t4_1": "ceiling",
+    "slab_2_t4_2": "ceiling",
+    "slab_2_t4_3": "ceiling",
+    "slab_2_t4_4": "ceiling",
+    "slab_2_t4_5": "ceiling",
+    "slab_2_t4_6": "ceiling",
+    "slab_2_t4_7": "ceiling",
+    "slab_2_t5_0": "ceiling",
+    "slab_2_t5_1": "ceiling",
+    "slab_2_t5_2": "ceiling",
+    "slab_2_t5_3": "ceiling",
+    "slab_2_t5_4": "ceiling",
+    "slab_2_t5_5": "ceiling",
+    "slab_2_t5_6": "ceiling",
+    "slab_2_t5_7": "ceiling",
     "ext_-1_N_seg0": "wall",
     "ext_-1_N_seg1": "wall",
     "ext_-1_N_seg2": "wall",
@@ -5592,6 +5904,8 @@
     "ext_-1_N_seg16": "wall",
     "ext_-1_N_seg17": "wall",
     "ext_-1_N_seg18": "wall",
+    "ext_-1_N_seg19": "wall",
+    "ext_-1_N_seg20": "wall",
     "ext_-1_S_seg0": "wall",
     "ext_-1_S_seg1": "wall",
     "ext_-1_S_seg2": "wall",
@@ -5611,6 +5925,8 @@
     "ext_-1_S_seg16": "wall",
     "ext_-1_S_seg17": "wall",
     "ext_-1_S_seg18": "wall",
+    "ext_-1_S_seg19": "wall",
+    "ext_-1_S_seg20": "wall",
     "ext_-1_E_seg0": "wall",
     "ext_-1_E_seg1": "wall",
     "ext_-1_E_seg2": "wall",
@@ -5659,6 +5975,8 @@
     "ext_0_N_seg15": "wall",
     "ext_0_N_seg16": "wall",
     "ext_0_N_seg17": "wall",
+    "ext_0_N_seg18": "wall",
+    "ext_0_N_seg19": "wall",
     "ext_0_S_seg0": "wall",
     "ext_0_S_seg1": "wall",
     "ext_0_S_seg2": "wall",
@@ -5683,6 +6001,8 @@
     "ext_0_S_seg15": "wall",
     "ext_0_S_seg16": "wall",
     "ext_0_S_seg17": "wall",
+    "ext_0_S_seg18": "wall",
+    "ext_0_S_seg19": "wall",
     "ext_0_E_seg0": "wall",
     "ext_0_E_seg1": "wall",
     "ext_0_E_seg2": "wall",
@@ -5746,6 +6066,8 @@
     "ext_1_N_seg16": "wall",
     "ext_1_N_seg17": "wall",
     "ext_1_N_seg18": "wall",
+    "ext_1_N_seg19": "wall",
+    "ext_1_N_seg20": "wall",
     "ext_1_S_seg0": "wall",
     "ext_1_S_seg1": "wall",
     "ext_1_S_seg2": "wall",
@@ -5770,6 +6092,8 @@
     "ext_1_S_seg15": "wall",
     "ext_1_S_seg16": "wall",
     "ext_1_S_seg17": "wall",
+    "ext_1_S_seg18": "wall",
+    "ext_1_S_seg19": "wall",
     "ext_1_E_seg0": "wall",
     "ext_1_E_seg1": "wall",
     "ext_1_E_seg2": "wall",
@@ -6007,9 +6331,33 @@
     "planter_box_upper_hall_1": "prop",
     "counter_island_upper_hall_2": "prop",
     "planter_box_upper_hall_3": "prop",
-    "parapet_N": "wall",
-    "parapet_S": "wall",
-    "parapet_E": "wall",
-    "parapet_W": "wall"
+    "parapet_N_t0_0": "wall",
+    "parapet_N_t0_1": "wall",
+    "parapet_N_t0_2": "wall",
+    "parapet_N_t0_3": "wall",
+    "parapet_N_t0_4": "wall",
+    "parapet_N_t0_5": "wall",
+    "parapet_N_t0_6": "wall",
+    "parapet_N_t0_7": "wall",
+    "parapet_S_t0_0": "wall",
+    "parapet_S_t0_1": "wall",
+    "parapet_S_t0_2": "wall",
+    "parapet_S_t0_3": "wall",
+    "parapet_S_t0_4": "wall",
+    "parapet_S_t0_5": "wall",
+    "parapet_S_t0_6": "wall",
+    "parapet_S_t0_7": "wall",
+    "parapet_E_t0_0": "wall",
+    "parapet_E_t1_0": "wall",
+    "parapet_E_t2_0": "wall",
+    "parapet_E_t3_0": "wall",
+    "parapet_E_t4_0": "wall",
+    "parapet_E_t5_0": "wall",
+    "parapet_W_t0_0": "wall",
+    "parapet_W_t1_0": "wall",
+    "parapet_W_t2_0": "wall",
+    "parapet_W_t3_0": "wall",
+    "parapet_W_t4_0": "wall",
+    "parapet_W_t5_0": "wall"
   }
 }

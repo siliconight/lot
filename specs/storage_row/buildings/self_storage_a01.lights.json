@@ -2,7 +2,7 @@
   "light_manifest_version": "1.1.0",
   "building_id": "self_storage_a01",
   "theme": "greybox",
-  "space": "Blender Z-up, meters; rot_y = degrees about up; pos is the fixture location",
+  "space": "Blender Z-up, meters; rot_y = degrees about up; pos is the fixture location -- for a ceiling row, hung below the slab's underside, not below the floor above",
   "rig_library": "lux",
   "anchors": [
     {
@@ -12,7 +12,7 @@
       "pos": [
         0.0,
         -10.0,
-        3.1
+        2.8
       ],
       "rot_y": 0.0,
       "room": "south_aisle",
@@ -20,6 +20,7 @@
         "count": 5,
         "spacing": 8.0
       },
+      "drop": 2.8,
       "reacts_to_alarm": true
     },
     {
@@ -29,7 +30,7 @@
       "pos": [
         0.0,
         0.0,
-        3.1
+        2.8
       ],
       "rot_y": 0.0,
       "room": "mid_aisle",
@@ -37,23 +38,25 @@
         "count": 5,
         "spacing": 8.0
       },
+      "drop": 2.8,
       "reacts_to_alarm": true
     },
     {
-      "id": "vault_unit_ceiling",
-      "type": "fluorescent",
+      "id": "vault_unit_bulbs",
+      "type": "pendant",
       "source": "derived",
       "pos": [
         -16.0,
         10.0,
-        3.1
+        2.2
       ],
       "rot_y": 0.0,
       "room": "vault_unit",
       "row": {
-        "count": 3,
-        "spacing": 2.667
+        "count": 2,
+        "spacing": 4.0
       },
+      "drop": 2.2,
       "reacts_to_alarm": true
     },
     {
@@ -63,7 +66,7 @@
       "pos": [
         4.0,
         10.0,
-        3.1
+        2.8
       ],
       "rot_y": 0.0,
       "room": "north_aisle",
@@ -71,6 +74,7 @@
         "count": 5,
         "spacing": 6.4
       },
+      "drop": 2.8,
       "reacts_to_alarm": true
     },
     {

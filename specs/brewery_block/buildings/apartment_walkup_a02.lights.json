@@ -2,7 +2,7 @@
   "light_manifest_version": "1.1.0",
   "building_id": "apartment_walkup_a02",
   "theme": "greybox",
-  "space": "Blender Z-up, meters; rot_y = degrees about up; pos is the fixture location",
+  "space": "Blender Z-up, meters; rot_y = degrees about up; pos is the fixture location -- for a ceiling row, hung below the slab's underside, not below the floor above",
   "rig_library": "lux",
   "anchors": [
     {
@@ -10,16 +10,17 @@
       "type": "fluorescent",
       "source": "derived",
       "pos": [
-        0.0,
+        2.0,
         -3.5,
-        3.1
+        2.8
       ],
       "rot_y": 0.0,
       "room": "parlor",
       "row": {
-        "count": 5,
+        "count": 4,
         "spacing": 4.0
       },
+      "drop": 2.8,
       "reacts_to_alarm": true
     },
     {
@@ -29,7 +30,7 @@
       "pos": [
         0.0,
         4.5,
-        3.1
+        2.8
       ],
       "rot_y": 0.0,
       "room": "kitchen",
@@ -37,6 +38,7 @@
         "count": 5,
         "spacing": 4.0
       },
+      "drop": 2.8,
       "reacts_to_alarm": true
     },
     {
@@ -46,7 +48,7 @@
       "pos": [
         0.0,
         -4.0,
-        6.3
+        6.0
       ],
       "rot_y": 0.0,
       "room": "landing",
@@ -54,6 +56,7 @@
         "count": 5,
         "spacing": 4.0
       },
+      "drop": 2.8,
       "reacts_to_alarm": true
     },
     {
@@ -63,31 +66,33 @@
       "pos": [
         -4.0,
         4.0,
-        6.3
+        6.0
       ],
       "rot_y": 0.0,
       "room": "front_flat",
       "row": {
-        "count": 4,
-        "spacing": 3.0
+        "count": 3,
+        "spacing": 4.0
       },
+      "drop": 2.8,
       "reacts_to_alarm": true
     },
     {
-      "id": "safe_flat_ceiling",
-      "type": "fluorescent",
+      "id": "safe_flat_bulbs",
+      "type": "pendant",
       "source": "derived",
       "pos": [
         6.0,
         4.0,
-        6.3
+        5.4
       ],
       "rot_y": 0.0,
       "room": "safe_flat",
       "row": {
-        "count": 3,
-        "spacing": 2.667
+        "count": 2,
+        "spacing": 4.0
       },
+      "drop": 2.2,
       "reacts_to_alarm": true
     },
     {

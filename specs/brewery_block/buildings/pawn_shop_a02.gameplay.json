@@ -228,7 +228,7 @@
       "sill": 0.9,
       "tag": null,
       "breach_class": null,
-      "material": null,
+      "material": "glass",
       "vaultable": true,
       "reinforceable": false,
       "building": "pawn_shop_a02"
@@ -238,7 +238,7 @@
       "kind": "door",
       "story": 0,
       "x": 9.0,
-      "y": 2.8,
+      "y": 2.975,
       "z": 1.1,
       "width": 1.25,
       "height": 2.2,
@@ -262,7 +262,7 @@
       "sill": 0.9,
       "tag": null,
       "breach_class": null,
-      "material": null,
+      "material": "glass",
       "vaultable": true,
       "reinforceable": false,
       "building": "pawn_shop_a02"
@@ -279,7 +279,7 @@
       "sill": 0.9,
       "tag": null,
       "breach_class": null,
-      "material": null,
+      "material": "glass",
       "vaultable": true,
       "reinforceable": false,
       "building": "pawn_shop_a02"
@@ -532,6 +532,24 @@
       }
     },
     {
+      "node": "ext_col_0_N_seg10",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_N_seg11",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
       "node": "ext_col_0_S_seg0",
       "material": {
         "id": "glass",
@@ -632,6 +650,24 @@
     },
     {
       "node": "ext_col_0_S_seg7",
+      "material": {
+        "id": "glass",
+        "acoustic": "Glass",
+        "absorption": 0.1,
+        "damping": 0.05
+      }
+    },
+    {
+      "node": "ext_col_0_S_seg8",
+      "material": {
+        "id": "glass",
+        "acoustic": "Glass",
+        "absorption": 0.1,
+        "damping": 0.05
+      }
+    },
+    {
+      "node": "ext_col_0_S_seg9",
       "material": {
         "id": "glass",
         "acoustic": "Glass",
@@ -856,6 +892,24 @@
       }
     },
     {
+      "node": "ext_col_1_N_seg9",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_N_seg10",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
       "node": "ext_col_1_S_seg0",
       "material": {
         "id": "concrete",
@@ -983,6 +1037,24 @@
     },
     {
       "node": "ext_col_1_S_seg8",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_S_seg9",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_1_S_seg10",
       "material": {
         "id": "concrete",
         "acoustic": "Concrete",
@@ -1387,6 +1459,8 @@
       ],
       "source": "inferred",
       "reversible": false,
+      "material": "drywall",
+      "breach_class": "soft_wall",
       "building": "pawn_shop_a02"
     },
     {
@@ -1423,13 +1497,13 @@
       "building": "pawn_shop_a02"
     },
     {
-      "id": "pawn_shop_a02:if:066fcf84",
+      "id": "pawn_shop_a02:if:706acd08",
       "kind": "door",
       "slot_ref": "ext_0_E_open0",
       "transform": {
         "translation": [
           9.0,
-          2.8,
+          2.975,
           1.1
         ],
         "rot_y": 90
@@ -1646,6 +1720,8 @@
       ],
       "source": "inferred",
       "reversible": false,
+      "material": "drywall",
+      "breach_class": "soft_wall",
       "building": "pawn_shop_a02"
     }
   ],
@@ -1784,8 +1860,8 @@
           "floor": 0,
           "kind": "door",
           "wall": "ext_0_E",
-          "pos": 0.2,
-          "interactive": "pawn_shop_a02:if:066fcf84",
+          "pos": 0.2125,
+          "interactive": "pawn_shop_a02:if:706acd08",
           "default_state": "closed",
           "connects_from": "exterior",
           "discharge_door": true
@@ -1873,9 +1949,42 @@
   "platforms": [],
   "fire_escapes": [],
   "surface_roles": {
-    "slab_0": "floor",
-    "slab_1": "floor",
-    "slab_2": "ceiling",
+    "slab_0_t0_0": "floor",
+    "slab_0_t0_1": "floor",
+    "slab_0_t0_2": "floor",
+    "slab_0_t0_3": "floor",
+    "slab_0_t1_0": "floor",
+    "slab_0_t1_1": "floor",
+    "slab_0_t1_2": "floor",
+    "slab_0_t1_3": "floor",
+    "slab_0_t2_0": "floor",
+    "slab_0_t2_1": "floor",
+    "slab_0_t2_2": "floor",
+    "slab_0_t2_3": "floor",
+    "slab_1_t0_0": "floor",
+    "slab_1_t0_1": "floor",
+    "slab_1_t0_2": "floor",
+    "slab_1_t0_3": "floor",
+    "slab_1_t1_0": "floor",
+    "slab_1_t1_1": "floor",
+    "slab_1_t1_2": "floor",
+    "slab_1_t1_3": "floor",
+    "slab_1_t2_0": "floor",
+    "slab_1_t2_1": "floor",
+    "slab_1_t2_2": "floor",
+    "slab_1_t2_3": "floor",
+    "slab_2_t0_0": "ceiling",
+    "slab_2_t0_1": "ceiling",
+    "slab_2_t0_2": "ceiling",
+    "slab_2_t0_3": "ceiling",
+    "slab_2_t1_0": "ceiling",
+    "slab_2_t1_1": "ceiling",
+    "slab_2_t1_2": "ceiling",
+    "slab_2_t1_3": "ceiling",
+    "slab_2_t2_0": "ceiling",
+    "slab_2_t2_1": "ceiling",
+    "slab_2_t2_2": "ceiling",
+    "slab_2_t2_3": "ceiling",
     "ext_0_N_seg0": "wall",
     "ext_0_N_seg1": "wall",
     "ext_0_N_seg2": "wall",
@@ -1888,6 +1997,8 @@
     "ext_0_N_seg7": "wall",
     "ext_0_N_seg8": "wall",
     "ext_0_N_seg9": "wall",
+    "ext_0_N_seg10": "wall",
+    "ext_0_N_seg11": "wall",
     "ext_0_S_seg0": "wall",
     "ext_0_S_seg1": "wall",
     "ext_0_S_seg2": "wall",
@@ -1900,6 +2011,8 @@
     "ext_0_S_open1_sill": "window",
     "ext_0_S_open1_pane": "window",
     "ext_0_S_seg7": "wall",
+    "ext_0_S_seg8": "wall",
+    "ext_0_S_seg9": "wall",
     "ext_0_E_seg0": "wall",
     "ext_0_E_seg1": "wall",
     "ext_0_E_seg2": "wall",
@@ -1924,6 +2037,8 @@
     "ext_1_N_seg6": "wall",
     "ext_1_N_seg7": "wall",
     "ext_1_N_seg8": "wall",
+    "ext_1_N_seg9": "wall",
+    "ext_1_N_seg10": "wall",
     "ext_1_S_seg0": "wall",
     "ext_1_S_seg1": "wall",
     "ext_1_S_open0_lintel": "window",
@@ -1939,6 +2054,8 @@
     "ext_1_S_open1_pane": "window",
     "ext_1_S_seg7": "wall",
     "ext_1_S_seg8": "wall",
+    "ext_1_S_seg9": "wall",
+    "ext_1_S_seg10": "wall",
     "ext_1_E_seg0": "wall",
     "ext_1_E_seg1": "wall",
     "ext_1_E_seg2": "wall",

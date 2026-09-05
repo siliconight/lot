@@ -2,7 +2,7 @@
   "light_manifest_version": "1.1.0",
   "building_id": "airport_terminal_a02",
   "theme": "greybox",
-  "space": "Blender Z-up, meters; rot_y = degrees about up; pos is the fixture location",
+  "space": "Blender Z-up, meters; rot_y = degrees about up; pos is the fixture location -- for a ceiling row, hung below the slab's underside, not below the floor above",
   "rig_library": "lux",
   "anchors": [
     {
@@ -12,7 +12,7 @@
       "pos": [
         0.0,
         -5.2,
-        5.9
+        5.6
       ],
       "rot_y": 0.0,
       "room": "checkin_hall",
@@ -20,6 +20,7 @@
         "count": 5,
         "spacing": 10.8
       },
+      "drop": 5.6,
       "reacts_to_alarm": true
     },
     {
@@ -29,7 +30,7 @@
       "pos": [
         0.0,
         10.8,
-        5.9
+        5.6
       ],
       "rot_y": 0.0,
       "room": "baggage_band",
@@ -37,16 +38,17 @@
         "count": 5,
         "spacing": 10.8
       },
+      "drop": 5.6,
       "reacts_to_alarm": true
     },
     {
-      "id": "under_hall_ceiling",
-      "type": "fluorescent",
+      "id": "under_hall_bulbs",
+      "type": "pendant",
       "source": "derived",
       "pos": [
         -13.5,
         0.0,
-        -0.1
+        -1.0
       ],
       "rot_y": 90.0,
       "room": "under_hall",
@@ -54,16 +56,17 @@
         "count": 5,
         "spacing": 6.4
       },
+      "drop": 5.0,
       "reacts_to_alarm": true
     },
     {
-      "id": "bond_store_ceiling",
-      "type": "fluorescent",
+      "id": "bond_store_bulbs",
+      "type": "pendant",
       "source": "derived",
       "pos": [
         13.5,
         0.0,
-        -0.1
+        -1.0
       ],
       "rot_y": 90.0,
       "room": "bond_store",
@@ -71,6 +74,7 @@
         "count": 5,
         "spacing": 6.4
       },
+      "drop": 5.0,
       "reacts_to_alarm": true
     },
     {

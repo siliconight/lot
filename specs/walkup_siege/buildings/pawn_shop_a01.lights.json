@@ -2,7 +2,7 @@
   "light_manifest_version": "1.1.0",
   "building_id": "pawn_shop_a01",
   "theme": "greybox",
-  "space": "Blender Z-up, meters; rot_y = degrees about up; pos is the fixture location",
+  "space": "Blender Z-up, meters; rot_y = degrees about up; pos is the fixture location -- for a ceiling row, hung below the slab's underside, not below the floor above",
   "rig_library": "lux",
   "anchors": [
     {
@@ -12,31 +12,33 @@
       "pos": [
         0.0,
         -2.5,
-        3.3
+        3.05
       ],
       "rot_y": 0.0,
       "room": "shop_floor",
       "row": {
-        "count": 5,
-        "spacing": 3.2
+        "count": 4,
+        "spacing": 4.0
       },
+      "drop": 3.05,
       "reacts_to_alarm": true
     },
     {
-      "id": "safe_room_ceiling",
-      "type": "fluorescent",
+      "id": "safe_room_bulbs",
+      "type": "pendant",
       "source": "derived",
       "pos": [
         0.0,
         4.5,
-        3.3
+        2.45
       ],
       "rot_y": 0.0,
       "room": "safe_room",
       "row": {
-        "count": 5,
-        "spacing": 3.2
+        "count": 3,
+        "spacing": 5.333
       },
+      "drop": 2.45,
       "reacts_to_alarm": true
     },
     {
@@ -46,14 +48,15 @@
       "pos": [
         0.0,
         -3.5,
-        6.7
+        6.45
       ],
       "rot_y": 0.0,
       "room": "apartment",
       "row": {
-        "count": 5,
-        "spacing": 3.2
+        "count": 4,
+        "spacing": 4.0
       },
+      "drop": 3.05,
       "reacts_to_alarm": true
     },
     {
@@ -61,16 +64,17 @@
       "type": "fluorescent",
       "source": "derived",
       "pos": [
-        0.0,
+        2.0,
         3.5,
-        6.7
+        6.45
       ],
       "rot_y": 0.0,
       "room": "upper_storage",
       "row": {
-        "count": 5,
-        "spacing": 3.2
+        "count": 3,
+        "spacing": 4.0
       },
+      "drop": 3.05,
       "reacts_to_alarm": true
     },
     {

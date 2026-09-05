@@ -2,7 +2,7 @@
   "light_manifest_version": "1.1.0",
   "building_id": "apartment_walkup_a01",
   "theme": "greybox",
-  "space": "Blender Z-up, meters; rot_y = degrees about up; pos is the fixture location",
+  "space": "Blender Z-up, meters; rot_y = degrees about up; pos is the fixture location -- for a ceiling row, hung below the slab's underside, not below the floor above",
   "rig_library": "lux",
   "anchors": [
     {
@@ -12,31 +12,51 @@
       "pos": [
         -5.5,
         -4.5,
-        3.1
+        2.8
       ],
       "rot_y": 0.0,
       "room": "front_hall",
       "row": {
-        "count": 4,
-        "spacing": 2.75
+        "count": 3,
+        "spacing": 3.667
       },
+      "drop": 2.8,
       "reacts_to_alarm": true
     },
     {
-      "id": "kitchen_ceiling",
+      "id": "kitchen_ceiling_0",
       "type": "fluorescent",
       "source": "derived",
       "pos": [
-        5.5,
+        1.833,
         -4.5,
-        3.1
+        2.8
       ],
       "rot_y": 0.0,
       "room": "kitchen",
       "row": {
-        "count": 4,
-        "spacing": 2.75
+        "count": 1,
+        "spacing": 0.0
       },
+      "drop": 2.8,
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "kitchen_ceiling_1",
+      "type": "fluorescent",
+      "source": "derived",
+      "pos": [
+        9.167,
+        -4.5,
+        2.8
+      ],
+      "rot_y": 0.0,
+      "room": "kitchen",
+      "row": {
+        "count": 1,
+        "spacing": 0.0
+      },
+      "drop": 2.8,
       "reacts_to_alarm": true
     },
     {
@@ -46,7 +66,7 @@
       "pos": [
         0.0,
         4.5,
-        3.1
+        2.8
       ],
       "rot_y": 0.0,
       "room": "garage_bay",
@@ -54,6 +74,7 @@
         "count": 5,
         "spacing": 4.4
       },
+      "drop": 2.8,
       "reacts_to_alarm": true
     },
     {
@@ -63,14 +84,15 @@
       "pos": [
         -4.25,
         0.0,
-        6.3
+        6.0
       ],
       "rot_y": 90.0,
       "room": "office",
       "row": {
-        "count": 5,
-        "spacing": 3.6
+        "count": 4,
+        "spacing": 4.5
       },
+      "drop": 2.8,
       "reacts_to_alarm": true
     },
     {
@@ -80,48 +102,51 @@
       "pos": [
         6.75,
         0.0,
-        6.3
+        6.0
       ],
       "rot_y": 90.0,
       "room": "bedroom",
       "row": {
-        "count": 5,
-        "spacing": 3.6
+        "count": 4,
+        "spacing": 4.5
       },
+      "drop": 2.8,
       "reacts_to_alarm": true
     },
     {
-      "id": "basement_vault_ceiling",
-      "type": "fluorescent",
+      "id": "basement_vault_bulbs",
+      "type": "pendant",
       "source": "derived",
       "pos": [
         6.5,
         1.0,
-        -0.1
+        -1.0
       ],
       "rot_y": 90.0,
       "room": "basement_vault",
       "row": {
-        "count": 5,
-        "spacing": 3.2
+        "count": 4,
+        "spacing": 4.0
       },
+      "drop": 2.2,
       "reacts_to_alarm": true
     },
     {
-      "id": "basement_approach_ceiling",
-      "type": "fluorescent",
+      "id": "basement_approach_bulbs",
+      "type": "pendant",
       "source": "derived",
       "pos": [
         -4.5,
-        1.0,
-        -0.1
+        3.0,
+        -1.0
       ],
       "rot_y": 90.0,
       "room": "basement_approach",
       "row": {
-        "count": 5,
-        "spacing": 3.2
+        "count": 3,
+        "spacing": 4.0
       },
+      "drop": 2.2,
       "reacts_to_alarm": true
     },
     {

@@ -1,11 +1,11 @@
 {
   "glb": "marina_a03.glb",
-  "glb_sha256": "0d4bcf8d20ef3c61ed6033ec98839678a581f2d04c6fba47419737882e6891ed",
-  "glb_bytes": 118548,
+  "glb_sha256": "d2f198fd4687e59e61ce9faf580676cb8f7eef06b535cac6ca8acb87e2f661b6",
+  "glb_bytes": 239164,
   "spec": "marina_a03.json",
-  "spec_sha256": "7a91fa21c1736a9f4a6b332c2bd96459ee81b5b9acbd3fb7fae2818e8dc594ab",
-  "builder_sha256": "753ed496b12e2db450c12b9fd52a4c05379b62cf2df0266c0ff54aeba41ab15e",
-  "builder_files": 69,
-  "deli_counter_version": "Deli Counter 0.88.0",
-  "stamped_utc": "2026-08-01T19:14:38Z"
+  "spec_sha256": "663e9f98e185a910f2335eabc2748387d3c50b6a8f6caac7ff277742a3999802",
+  "builder_sha256": "37c63a83535fc5b25b9da6891232639bab31eec98427fb1963b34507bd9d18ab",
+  "builder_files": 78,
+  "deli_counter_version": "Deli Counter 0.102.1",
+  "stamped_utc": "2026-08-26T00:37:06Z"
 }

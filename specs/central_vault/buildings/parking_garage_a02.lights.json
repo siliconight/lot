@@ -2,7 +2,7 @@
   "light_manifest_version": "1.1.0",
   "building_id": "parking_garage_a02",
   "theme": "greybox",
-  "space": "Blender Z-up, meters; rot_y = degrees about up; pos is the fixture location",
+  "space": "Blender Z-up, meters; rot_y = degrees about up; pos is the fixture location -- for a ceiling row, hung below the slab's underside, not below the floor above",
   "rig_library": "lux",
   "anchors": [
     {
@@ -12,14 +12,15 @@
       "pos": [
         -16.0,
         -12.0,
-        2.9
+        2.6
       ],
       "rot_y": 0.0,
       "room": "attendant_booth",
       "row": {
-        "count": 3,
-        "spacing": 2.667
+        "count": 2,
+        "spacing": 4.0
       },
+      "drop": 2.6,
       "reacts_to_alarm": true
     },
     {
@@ -29,7 +30,7 @@
       "pos": [
         4.0,
         -12.0,
-        2.9
+        2.6
       ],
       "rot_y": 0.0,
       "room": "deck_0_south",
@@ -37,6 +38,7 @@
         "count": 5,
         "spacing": 6.4
       },
+      "drop": 2.6,
       "reacts_to_alarm": true
     },
     {
@@ -46,14 +48,15 @@
       "pos": [
         0.0,
         3.0,
-        2.9
+        2.6
       ],
       "rot_y": 0.0,
       "room": "deck_0_main",
       "row": {
-        "count": 5,
+        "count": 3,
         "spacing": 8.0
       },
+      "drop": 2.6,
       "reacts_to_alarm": true
     },
     {
@@ -63,7 +66,7 @@
       "pos": [
         0.0,
         -4.5,
-        5.9
+        5.6
       ],
       "rot_y": 0.0,
       "room": "deck_1",
@@ -71,6 +74,7 @@
         "count": 5,
         "spacing": 8.0
       },
+      "drop": 2.6,
       "reacts_to_alarm": true
     },
     {
@@ -80,7 +84,7 @@
       "pos": [
         -8.0,
         10.5,
-        5.9
+        5.6
       ],
       "rot_y": 0.0,
       "room": "deck_1_west",
@@ -88,23 +92,25 @@
         "count": 5,
         "spacing": 4.8
       },
+      "drop": 2.6,
       "reacts_to_alarm": true
     },
     {
-      "id": "armored_pen_ceiling",
-      "type": "fluorescent",
+      "id": "armored_pen_bulbs",
+      "type": "pendant",
       "source": "derived",
       "pos": [
         12.0,
         10.5,
-        5.9
+        5.0
       ],
       "rot_y": 0.0,
       "room": "armored_pen",
       "row": {
-        "count": 5,
-        "spacing": 3.2
+        "count": 4,
+        "spacing": 4.0
       },
+      "drop": 2.0,
       "reacts_to_alarm": true
     },
     {
@@ -240,7 +246,7 @@
       "type": "wall_pack",
       "source": "derived",
       "pos": [
-        -10.0,
+        -9.15,
         -15.15,
         2.65
       ],

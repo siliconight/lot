@@ -43,7 +43,7 @@
       "name": "OBJECTIVE_A",
       "type": "objective",
       "id": "A",
-      "x": -11.0,
+      "x": 9.0,
       "y": 7.0,
       "z": 0.0,
       "rot_z": 0.0,
@@ -216,7 +216,7 @@
       "wall": "ext_0_S",
       "kind": "door",
       "story": 0,
-      "x": 5.12,
+      "x": 4.75,
       "y": -11.0,
       "z": 1.1,
       "width": 1.8,
@@ -309,7 +309,7 @@
       "sill": 1.2,
       "tag": null,
       "breach_class": null,
-      "material": null,
+      "material": "glass",
       "vaultable": true,
       "reinforceable": false,
       "building": "gas_station_a01"
@@ -574,6 +574,24 @@
       }
     },
     {
+      "node": "ext_col_0_N_seg15",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "ext_col_0_N_seg16",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
       "node": "ext_col_0_S_seg0",
       "material": {
         "id": "glass",
@@ -755,6 +773,24 @@
     },
     {
       "node": "ext_col_0_S_seg12",
+      "material": {
+        "id": "glass",
+        "acoustic": "Glass",
+        "absorption": 0.1,
+        "damping": 0.05
+      }
+    },
+    {
+      "node": "ext_col_0_S_seg13",
+      "material": {
+        "id": "glass",
+        "acoustic": "Glass",
+        "absorption": 0.1,
+        "damping": 0.05
+      }
+    },
+    {
+      "node": "ext_col_0_S_seg14",
       "material": {
         "id": "glass",
         "acoustic": "Glass",
@@ -1513,6 +1549,8 @@
       ],
       "source": "inferred",
       "reversible": false,
+      "material": "drywall",
+      "breach_class": "soft_wall",
       "building": "gas_station_a01"
     },
     {
@@ -1549,12 +1587,12 @@
       "building": "gas_station_a01"
     },
     {
-      "id": "gas_station_a01:if:c4fe0716",
+      "id": "gas_station_a01:if:d0991565",
       "kind": "door",
       "slot_ref": "ext_0_S_open2",
       "transform": {
         "translation": [
-          5.12,
+          4.75,
           -11.0,
           1.1
         ],
@@ -1765,8 +1803,76 @@
   "platforms": [],
   "fire_escapes": [],
   "surface_roles": {
-    "slab_0": "floor",
-    "slab_1": "ceiling",
+    "slab_0_t0_0": "floor",
+    "slab_0_t0_1": "floor",
+    "slab_0_t0_2": "floor",
+    "slab_0_t0_3": "floor",
+    "slab_0_t0_4": "floor",
+    "slab_0_t0_5": "floor",
+    "slab_0_t0_6": "floor",
+    "slab_0_t1_0": "floor",
+    "slab_0_t1_1": "floor",
+    "slab_0_t1_2": "floor",
+    "slab_0_t1_3": "floor",
+    "slab_0_t1_4": "floor",
+    "slab_0_t1_5": "floor",
+    "slab_0_t1_6": "floor",
+    "slab_0_t2_0": "floor",
+    "slab_0_t2_1": "floor",
+    "slab_0_t2_2": "floor",
+    "slab_0_t2_3": "floor",
+    "slab_0_t2_4": "floor",
+    "slab_0_t2_5": "floor",
+    "slab_0_t2_6": "floor",
+    "slab_0_t3_0": "floor",
+    "slab_0_t3_1": "floor",
+    "slab_0_t3_2": "floor",
+    "slab_0_t3_3": "floor",
+    "slab_0_t3_4": "floor",
+    "slab_0_t3_5": "floor",
+    "slab_0_t3_6": "floor",
+    "slab_0_t4_0": "floor",
+    "slab_0_t4_1": "floor",
+    "slab_0_t4_2": "floor",
+    "slab_0_t4_3": "floor",
+    "slab_0_t4_4": "floor",
+    "slab_0_t4_5": "floor",
+    "slab_0_t4_6": "floor",
+    "slab_1_t0_0": "ceiling",
+    "slab_1_t0_1": "ceiling",
+    "slab_1_t0_2": "ceiling",
+    "slab_1_t0_3": "ceiling",
+    "slab_1_t0_4": "ceiling",
+    "slab_1_t0_5": "ceiling",
+    "slab_1_t0_6": "ceiling",
+    "slab_1_t1_0": "ceiling",
+    "slab_1_t1_1": "ceiling",
+    "slab_1_t1_2": "ceiling",
+    "slab_1_t1_3": "ceiling",
+    "slab_1_t1_4": "ceiling",
+    "slab_1_t1_5": "ceiling",
+    "slab_1_t1_6": "ceiling",
+    "slab_1_t2_0": "ceiling",
+    "slab_1_t2_1": "ceiling",
+    "slab_1_t2_2": "ceiling",
+    "slab_1_t2_3": "ceiling",
+    "slab_1_t2_4": "ceiling",
+    "slab_1_t2_5": "ceiling",
+    "slab_1_t2_6": "ceiling",
+    "slab_1_t3_0": "ceiling",
+    "slab_1_t3_1": "ceiling",
+    "slab_1_t3_2": "ceiling",
+    "slab_1_t3_3": "ceiling",
+    "slab_1_t3_4": "ceiling",
+    "slab_1_t3_5": "ceiling",
+    "slab_1_t3_6": "ceiling",
+    "slab_1_t4_0": "ceiling",
+    "slab_1_t4_1": "ceiling",
+    "slab_1_t4_2": "ceiling",
+    "slab_1_t4_3": "ceiling",
+    "slab_1_t4_4": "ceiling",
+    "slab_1_t4_5": "ceiling",
+    "slab_1_t4_6": "ceiling",
     "ext_0_N_seg0": "wall",
     "ext_0_N_seg1": "wall",
     "ext_0_N_seg2": "wall",
@@ -1786,6 +1892,8 @@
     "ext_0_N_seg13": "wall",
     "ext_0_N_open2_lintel": "doorway",
     "ext_0_N_seg14": "wall",
+    "ext_0_N_seg15": "wall",
+    "ext_0_N_seg16": "wall",
     "ext_0_S_seg0": "wall",
     "ext_0_S_open0_lintel": "window",
     "ext_0_S_open0_sill": "window",
@@ -1807,6 +1915,8 @@
     "ext_0_S_open3_sill": "window",
     "ext_0_S_open3_pane": "window",
     "ext_0_S_seg12": "wall",
+    "ext_0_S_seg13": "wall",
+    "ext_0_S_seg14": "wall",
     "ext_0_E_seg0": "wall",
     "ext_0_E_seg1": "wall",
     "ext_0_E_seg2": "wall",

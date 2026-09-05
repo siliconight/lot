@@ -1,11 +1,11 @@
 {
   "glb": "pvp_station_ref.glb",
-  "glb_sha256": "51e46933cee132ac7775223f248e7d4142c75af5b51fe04395956e58224addbb",
-  "glb_bytes": 203596,
+  "glb_sha256": "9f17ddc19af8cf0f5c823e51a2c3ca45d968ab17b1318aa16604750a033e0522",
+  "glb_bytes": 440088,
   "spec": "pvp_station_ref.json",
-  "spec_sha256": "1a36c024af1acdc5f0462cf27046da08f1d0d2652730d0ce75b65b7df249ce88",
-  "builder_sha256": "753ed496b12e2db450c12b9fd52a4c05379b62cf2df0266c0ff54aeba41ab15e",
-  "builder_files": 69,
-  "deli_counter_version": "Deli Counter 0.88.0",
-  "stamped_utc": "2026-08-01T19:14:55Z"
+  "spec_sha256": "c7d862aa0869762981673fc3765c24f052f33bfce3032b18eef5f6eb70a481bb",
+  "builder_sha256": "37c63a83535fc5b25b9da6891232639bab31eec98427fb1963b34507bd9d18ab",
+  "builder_files": 78,
+  "deli_counter_version": "Deli Counter 0.102.1",
+  "stamped_utc": "2026-08-26T00:37:32Z"
 }

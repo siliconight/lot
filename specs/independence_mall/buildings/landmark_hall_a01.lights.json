@@ -2,7 +2,7 @@
   "light_manifest_version": "1.1.0",
   "building_id": "landmark_hall_a01",
   "theme": "greybox",
-  "space": "Blender Z-up, meters; rot_y = degrees about up; pos is the fixture location",
+  "space": "Blender Z-up, meters; rot_y = degrees about up; pos is the fixture location -- for a ceiling row, hung below the slab's underside, not below the floor above",
   "rig_library": "lux",
   "anchors": [
     {
@@ -10,9 +10,9 @@
       "type": "fluorescent",
       "source": "derived",
       "pos": [
-        0.0,
+        -0.0,
         -3.9,
-        4.9
+        4.6
       ],
       "rot_y": 0.0,
       "room": "assembly_hall",
@@ -20,23 +20,25 @@
         "count": 5,
         "spacing": 6.8
       },
+      "drop": 4.6,
       "reacts_to_alarm": true
     },
     {
-      "id": "artifact_room_ceiling",
-      "type": "fluorescent",
+      "id": "artifact_room_bulbs",
+      "type": "pendant",
       "source": "derived",
       "pos": [
         -13.26,
         8.1,
-        4.9
+        4.0
       ],
       "rot_y": 90.0,
       "room": "artifact_room",
       "row": {
-        "count": 3,
-        "spacing": 2.6
+        "count": 2,
+        "spacing": 3.9
       },
+      "drop": 4.0,
       "reacts_to_alarm": true
     },
     {
@@ -46,7 +48,7 @@
       "pos": [
         3.74,
         8.1,
-        4.9
+        4.6
       ],
       "rot_y": 0.0,
       "room": "curator_band",
@@ -54,6 +56,7 @@
         "count": 5,
         "spacing": 5.304
       },
+      "drop": 4.6,
       "reacts_to_alarm": true
     },
     {

@@ -1,11 +1,11 @@
 {
   "glb": "rail_station_a02.glb",
-  "glb_sha256": "f3e4f1d3a3d13d07c9e453291d0f11043bc19765efee8d366f554368b79d87af",
-  "glb_bytes": 158004,
+  "glb_sha256": "e26e9756b81bdaefce62943aa08763a90eef70815da67d4b746f5c238ef560b7",
+  "glb_bytes": 338748,
   "spec": "rail_station_a02.json",
   "spec_sha256": "b459156e6161eafd6db0f7f3b1ac7cff427d950e5cec05048060b87c160d1ab3",
-  "builder_sha256": "753ed496b12e2db450c12b9fd52a4c05379b62cf2df0266c0ff54aeba41ab15e",
-  "builder_files": 69,
-  "deli_counter_version": "Deli Counter 0.88.0",
-  "stamped_utc": "2026-08-01T19:14:57Z"
+  "builder_sha256": "37c63a83535fc5b25b9da6891232639bab31eec98427fb1963b34507bd9d18ab",
+  "builder_files": 78,
+  "deli_counter_version": "Deli Counter 0.102.1",
+  "stamped_utc": "2026-08-26T00:37:35Z"
 }

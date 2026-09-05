@@ -2,7 +2,7 @@
   "light_manifest_version": "1.1.0",
   "building_id": "warehouse_a01",
   "theme": "greybox",
-  "space": "Blender Z-up, meters; rot_y = degrees about up; pos is the fixture location",
+  "space": "Blender Z-up, meters; rot_y = degrees about up; pos is the fixture location -- for a ceiling row, hung below the slab's underside, not below the floor above",
   "rig_library": "lux",
   "anchors": [
     {
@@ -12,7 +12,7 @@
       "pos": [
         0.0,
         -4.0,
-        4.9
+        4.6
       ],
       "rot_y": 0.0,
       "room": "dock_floor",
@@ -20,6 +20,7 @@
         "count": 5,
         "spacing": 7.2
       },
+      "drop": 4.6,
       "reacts_to_alarm": true
     },
     {
@@ -29,14 +30,15 @@
       "pos": [
         -13.0,
         8.0,
-        4.9
+        4.6
       ],
       "rot_y": 0.0,
       "room": "office",
       "row": {
-        "count": 3,
-        "spacing": 3.333
+        "count": 2,
+        "spacing": 5.0
       },
+      "drop": 4.6,
       "reacts_to_alarm": true
     },
     {
@@ -46,31 +48,33 @@
       "pos": [
         -1.0,
         8.0,
-        4.9
+        4.6
       ],
       "rot_y": 0.0,
       "room": "back_corridor",
       "row": {
-        "count": 5,
-        "spacing": 2.8
+        "count": 4,
+        "spacing": 3.5
       },
+      "drop": 4.6,
       "reacts_to_alarm": true
     },
     {
-      "id": "cage_ceiling",
-      "type": "fluorescent",
+      "id": "cage_bulbs",
+      "type": "pendant",
       "source": "derived",
       "pos": [
         12.0,
         8.0,
-        4.9
+        4.0
       ],
       "rot_y": 0.0,
       "room": "cage",
       "row": {
-        "count": 4,
-        "spacing": 3.0
+        "count": 3,
+        "spacing": 4.0
       },
+      "drop": 4.0,
       "reacts_to_alarm": true
     },
     {

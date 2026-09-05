@@ -1,11 +1,11 @@
 {
   "glb": "pharmacy_a01.glb",
-  "glb_sha256": "4c7dacee13e1b9392d1c24d5051bbbb7573bd4f2e8343e21ca955ad766497223",
-  "glb_bytes": 76564,
+  "glb_sha256": "8044d350bafd30809e386b9009b2b336f4f8b8d3c4ccf4e14b60b32bc69b8e59",
+  "glb_bytes": 129492,
   "spec": "pharmacy_a01.json",
   "spec_sha256": "aac8f373e149b8f574d9370144eff575b840f4a7be18adbcc684bf768154402b",
-  "builder_sha256": "753ed496b12e2db450c12b9fd52a4c05379b62cf2df0266c0ff54aeba41ab15e",
-  "builder_files": 69,
-  "deli_counter_version": "Deli Counter 0.88.0",
-  "stamped_utc": "2026-08-01T19:14:52Z"
+  "builder_sha256": "37c63a83535fc5b25b9da6891232639bab31eec98427fb1963b34507bd9d18ab",
+  "builder_files": 78,
+  "deli_counter_version": "Deli Counter 0.102.1",
+  "stamped_utc": "2026-08-26T00:37:29Z"
 }

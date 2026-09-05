@@ -238,7 +238,7 @@
       "sill": 1.2,
       "tag": null,
       "breach_class": null,
-      "material": null,
+      "material": "glass",
       "vaultable": false,
       "reinforceable": false,
       "building": "marina_a03"
@@ -255,7 +255,7 @@
       "sill": 1.5,
       "tag": null,
       "breach_class": null,
-      "material": null,
+      "material": "glass",
       "vaultable": false,
       "reinforceable": false,
       "building": "marina_a03"
@@ -265,7 +265,7 @@
       "kind": "garage",
       "story": 0,
       "x": -18.0,
-      "y": 0.0,
+      "y": -0.15,
       "z": 1.5,
       "width": 3.6,
       "height": 3.0,
@@ -581,6 +581,24 @@
       }
     },
     {
+      "node": "ext_col_0_N_seg19",
+      "material": {
+        "id": "metal",
+        "acoustic": "Metal",
+        "absorption": 0.5,
+        "damping": 0.3
+      }
+    },
+    {
+      "node": "ext_col_0_N_seg20",
+      "material": {
+        "id": "metal",
+        "acoustic": "Metal",
+        "absorption": 0.5,
+        "damping": 0.3
+      }
+    },
+    {
       "node": "ext_col_0_S_seg0",
       "material": {
         "id": "metal",
@@ -779,6 +797,24 @@
       }
     },
     {
+      "node": "ext_col_0_S_seg18",
+      "material": {
+        "id": "metal",
+        "acoustic": "Metal",
+        "absorption": 0.5,
+        "damping": 0.3
+      }
+    },
+    {
+      "node": "ext_col_0_S_seg19",
+      "material": {
+        "id": "metal",
+        "acoustic": "Metal",
+        "absorption": 0.5,
+        "damping": 0.3
+      }
+    },
+    {
       "node": "ext_col_0_E_seg0",
       "material": {
         "id": "metal",
@@ -959,7 +995,7 @@
       }
     },
     {
-      "node": "ext_col_0_W_seg5",
+      "node": "ext_col_0_W_open0_lintel",
       "material": {
         "id": "metal",
         "acoustic": "Metal",
@@ -968,7 +1004,7 @@
       }
     },
     {
-      "node": "ext_col_0_W_open0_lintel",
+      "node": "ext_col_0_W_seg5",
       "material": {
         "id": "metal",
         "acoustic": "Metal",
@@ -1005,24 +1041,6 @@
     },
     {
       "node": "ext_col_0_W_seg9",
-      "material": {
-        "id": "metal",
-        "acoustic": "Metal",
-        "absorption": 0.5,
-        "damping": 0.3
-      }
-    },
-    {
-      "node": "ext_col_0_W_seg10",
-      "material": {
-        "id": "metal",
-        "acoustic": "Metal",
-        "absorption": 0.5,
-        "damping": 0.3
-      }
-    },
-    {
-      "node": "ext_col_0_W_seg11",
       "material": {
         "id": "metal",
         "acoustic": "Metal",
@@ -1388,6 +1406,8 @@
       ],
       "source": "inferred",
       "reversible": false,
+      "material": "drywall",
+      "breach_class": "soft_wall",
       "building": "marina_a03"
     },
     {
@@ -1424,13 +1444,13 @@
       "building": "marina_a03"
     },
     {
-      "id": "marina_a03:if:3df65997",
+      "id": "marina_a03:if:6ee5d38a",
       "kind": "door",
       "slot_ref": "ext_0_W_open0",
       "transform": {
         "translation": [
           -18.0,
-          0.0,
+          -0.15,
           1.5
         ],
         "rot_y": 270
@@ -1581,6 +1601,8 @@
       ],
       "source": "inferred",
       "reversible": false,
+      "material": "drywall",
+      "breach_class": "soft_wall",
       "building": "marina_a03"
     }
   ],
@@ -1781,8 +1803,86 @@
   "platforms": [],
   "fire_escapes": [],
   "surface_roles": {
-    "slab_0": "floor",
-    "slab_1": "ceiling",
+    "slab_0_t0_0": "floor",
+    "slab_0_t0_1": "floor",
+    "slab_0_t0_2": "floor",
+    "slab_0_t0_3": "floor",
+    "slab_0_t0_4": "floor",
+    "slab_0_t0_5": "floor",
+    "slab_0_t0_6": "floor",
+    "slab_0_t0_7": "floor",
+    "slab_0_t1_0": "floor",
+    "slab_0_t1_1": "floor",
+    "slab_0_t1_2": "floor",
+    "slab_0_t1_3": "floor",
+    "slab_0_t1_4": "floor",
+    "slab_0_t1_5": "floor",
+    "slab_0_t1_6": "floor",
+    "slab_0_t1_7": "floor",
+    "slab_0_t2_0": "floor",
+    "slab_0_t2_1": "floor",
+    "slab_0_t2_2": "floor",
+    "slab_0_t2_3": "floor",
+    "slab_0_t2_4": "floor",
+    "slab_0_t2_5": "floor",
+    "slab_0_t2_6": "floor",
+    "slab_0_t2_7": "floor",
+    "slab_0_t3_0": "floor",
+    "slab_0_t3_1": "floor",
+    "slab_0_t3_2": "floor",
+    "slab_0_t3_3": "floor",
+    "slab_0_t3_4": "floor",
+    "slab_0_t3_5": "floor",
+    "slab_0_t3_6": "floor",
+    "slab_0_t3_7": "floor",
+    "slab_0_t4_0": "floor",
+    "slab_0_t4_1": "floor",
+    "slab_0_t4_2": "floor",
+    "slab_0_t4_3": "floor",
+    "slab_0_t4_4": "floor",
+    "slab_0_t4_5": "floor",
+    "slab_0_t4_6": "floor",
+    "slab_0_t4_7": "floor",
+    "slab_1_t0_0": "ceiling",
+    "slab_1_t0_1": "ceiling",
+    "slab_1_t0_2": "ceiling",
+    "slab_1_t0_3": "ceiling",
+    "slab_1_t0_4": "ceiling",
+    "slab_1_t0_5": "ceiling",
+    "slab_1_t0_6": "ceiling",
+    "slab_1_t0_7": "ceiling",
+    "slab_1_t1_0": "ceiling",
+    "slab_1_t1_1": "ceiling",
+    "slab_1_t1_2": "ceiling",
+    "slab_1_t1_3": "ceiling",
+    "slab_1_t1_4": "ceiling",
+    "slab_1_t1_5": "ceiling",
+    "slab_1_t1_6": "ceiling",
+    "slab_1_t1_7": "ceiling",
+    "slab_1_t2_0": "ceiling",
+    "slab_1_t2_1": "ceiling",
+    "slab_1_t2_2": "ceiling",
+    "slab_1_t2_3": "ceiling",
+    "slab_1_t2_4": "ceiling",
+    "slab_1_t2_5": "ceiling",
+    "slab_1_t2_6": "ceiling",
+    "slab_1_t2_7": "ceiling",
+    "slab_1_t3_0": "ceiling",
+    "slab_1_t3_1": "ceiling",
+    "slab_1_t3_2": "ceiling",
+    "slab_1_t3_3": "ceiling",
+    "slab_1_t3_4": "ceiling",
+    "slab_1_t3_5": "ceiling",
+    "slab_1_t3_6": "ceiling",
+    "slab_1_t3_7": "ceiling",
+    "slab_1_t4_0": "ceiling",
+    "slab_1_t4_1": "ceiling",
+    "slab_1_t4_2": "ceiling",
+    "slab_1_t4_3": "ceiling",
+    "slab_1_t4_4": "ceiling",
+    "slab_1_t4_5": "ceiling",
+    "slab_1_t4_6": "ceiling",
+    "slab_1_t4_7": "ceiling",
     "ext_0_N_seg0": "wall",
     "ext_0_N_seg1": "wall",
     "ext_0_N_seg2": "wall",
@@ -1805,6 +1905,8 @@
     "ext_0_N_seg16": "wall",
     "ext_0_N_seg17": "wall",
     "ext_0_N_seg18": "wall",
+    "ext_0_N_seg19": "wall",
+    "ext_0_N_seg20": "wall",
     "ext_0_S_seg0": "wall",
     "ext_0_S_seg1": "wall",
     "ext_0_S_seg2": "wall",
@@ -1827,6 +1929,8 @@
     "ext_0_S_seg15": "wall",
     "ext_0_S_seg16": "wall",
     "ext_0_S_seg17": "wall",
+    "ext_0_S_seg18": "wall",
+    "ext_0_S_seg19": "wall",
     "ext_0_E_seg0": "wall",
     "ext_0_E_seg1": "wall",
     "ext_0_E_seg2": "wall",
@@ -1847,14 +1951,12 @@
     "ext_0_W_seg2": "wall",
     "ext_0_W_seg3": "wall",
     "ext_0_W_seg4": "wall",
-    "ext_0_W_seg5": "wall",
     "ext_0_W_open0_lintel": "doorway",
+    "ext_0_W_seg5": "wall",
     "ext_0_W_seg6": "wall",
     "ext_0_W_seg7": "wall",
     "ext_0_W_seg8": "wall",
     "ext_0_W_seg9": "wall",
-    "ext_0_W_seg10": "wall",
-    "ext_0_W_seg11": "wall",
     "int_0_0_seg0": "wall",
     "int_0_0_seg1": "wall",
     "int_0_0_seg2": "wall",
@@ -1903,9 +2005,31 @@
     "rack_a": "prop",
     "rack_b": "prop",
     "hull_stand": "prop",
-    "parapet_N": "wall",
-    "parapet_S": "wall",
-    "parapet_E": "wall",
-    "parapet_W": "wall"
+    "parapet_N_t0_0": "wall",
+    "parapet_N_t0_1": "wall",
+    "parapet_N_t0_2": "wall",
+    "parapet_N_t0_3": "wall",
+    "parapet_N_t0_4": "wall",
+    "parapet_N_t0_5": "wall",
+    "parapet_N_t0_6": "wall",
+    "parapet_N_t0_7": "wall",
+    "parapet_S_t0_0": "wall",
+    "parapet_S_t0_1": "wall",
+    "parapet_S_t0_2": "wall",
+    "parapet_S_t0_3": "wall",
+    "parapet_S_t0_4": "wall",
+    "parapet_S_t0_5": "wall",
+    "parapet_S_t0_6": "wall",
+    "parapet_S_t0_7": "wall",
+    "parapet_E_t0_0": "wall",
+    "parapet_E_t1_0": "wall",
+    "parapet_E_t2_0": "wall",
+    "parapet_E_t3_0": "wall",
+    "parapet_E_t4_0": "wall",
+    "parapet_W_t0_0": "wall",
+    "parapet_W_t1_0": "wall",
+    "parapet_W_t2_0": "wall",
+    "parapet_W_t3_0": "wall",
+    "parapet_W_t4_0": "wall"
   }
 }

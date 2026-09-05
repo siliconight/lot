@@ -2,7 +2,7 @@
   "light_manifest_version": "1.1.0",
   "building_id": "strip_retail_a02",
   "theme": "greybox",
-  "space": "Blender Z-up, meters; rot_y = degrees about up; pos is the fixture location",
+  "space": "Blender Z-up, meters; rot_y = degrees about up; pos is the fixture location -- for a ceiling row, hung below the slab's underside, not below the floor above",
   "rig_library": "lux",
   "anchors": [
     {
@@ -12,14 +12,15 @@
       "pos": [
         0.0,
         -3.0,
-        3.3
+        3.0
       ],
       "rot_y": 0.0,
       "room": "showroom",
       "row": {
-        "count": 5,
-        "spacing": 3.6
+        "count": 4,
+        "spacing": 4.5
       },
+      "drop": 3.0,
       "reacts_to_alarm": true
     },
     {
@@ -29,31 +30,33 @@
       "pos": [
         -3.0,
         4.0,
-        3.3
+        3.0
       ],
       "rot_y": 0.0,
       "room": "workshop",
       "row": {
-        "count": 4,
-        "spacing": 3.0
+        "count": 3,
+        "spacing": 4.0
       },
+      "drop": 3.0,
       "reacts_to_alarm": true
     },
     {
-      "id": "stone_vault_ceiling",
-      "type": "fluorescent",
+      "id": "stone_vault_bulbs",
+      "type": "pendant",
       "source": "derived",
       "pos": [
         6.0,
         4.0,
-        3.3
+        2.4
       ],
       "rot_y": 0.0,
       "room": "stone_vault",
       "row": {
-        "count": 2,
-        "spacing": 3.0
+        "count": 1,
+        "spacing": 0.0
       },
+      "drop": 2.4,
       "reacts_to_alarm": true
     },
     {

@@ -1,11 +1,11 @@
 {
   "glb": "arena_a03.glb",
-  "glb_sha256": "90f74dd1f06025a5424730b2a1043bf6aadb4c652b6b37e72c981fa27ef3ce8e",
-  "glb_bytes": 208720,
+  "glb_sha256": "7dc50138bce5f588b53bdf7e884cd69fd04125e7138adcb50cb1bafbd2feedeb",
+  "glb_bytes": 535812,
   "spec": "arena_a03.json",
   "spec_sha256": "5ae2f10ebb4769766c0ec8ae515f19ef1637acea8c44fdd9c9a4c7596c78bf92",
-  "builder_sha256": "753ed496b12e2db450c12b9fd52a4c05379b62cf2df0266c0ff54aeba41ab15e",
-  "builder_files": 69,
-  "deli_counter_version": "Deli Counter 0.88.0",
-  "stamped_utc": "2026-08-01T19:13:41Z"
+  "builder_sha256": "37c63a83535fc5b25b9da6891232639bab31eec98427fb1963b34507bd9d18ab",
+  "builder_files": 78,
+  "deli_counter_version": "Deli Counter 0.102.1",
+  "stamped_utc": "2026-08-26T00:35:31Z"
 }

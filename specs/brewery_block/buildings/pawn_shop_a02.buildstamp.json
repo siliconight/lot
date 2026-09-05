@@ -1,11 +1,11 @@
 {
   "glb": "pawn_shop_a02.glb",
-  "glb_sha256": "076e82e238d4def1e65b0587cc80bb014454ac826f2121e78dc0eccda16ba5b6",
-  "glb_bytes": 107424,
+  "glb_sha256": "345b7e21f0e1cbf19b4eff58ee63734009f6b5f0747ace2b6762a71baf16a54d",
+  "glb_bytes": 160064,
   "spec": "pawn_shop_a02.json",
-  "spec_sha256": "9bb6de50ce4970c4a7cd5d4ba355028ed606872000a8885b8d4d792f8c8ea133",
-  "builder_sha256": "753ed496b12e2db450c12b9fd52a4c05379b62cf2df0266c0ff54aeba41ab15e",
-  "builder_files": 69,
-  "deli_counter_version": "Deli Counter 0.88.0",
-  "stamped_utc": "2026-08-01T19:14:51Z"
+  "spec_sha256": "693ab4b123eae98babf2e411e7b28810de5f4ac13b3261b9d1287a96765e5250",
+  "builder_sha256": "37c63a83535fc5b25b9da6891232639bab31eec98427fb1963b34507bd9d18ab",
+  "builder_files": 78,
+  "deli_counter_version": "Deli Counter 0.102.1",
+  "stamped_utc": "2026-08-26T00:37:26Z"
 }

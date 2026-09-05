@@ -1,11 +1,11 @@
 {
   "glb": "airport_terminal_a02.glb",
-  "glb_sha256": "37cd96bbb6bc25c44c76f7f4fb758634f861f83bab2e160fac65bc7ac9924fd1",
-  "glb_bytes": 191596,
+  "glb_sha256": "7e220d5babc024cbfb37a6ebb3bce4221cc8dbd5401a79cd4af9729b1ecd7efd",
+  "glb_bytes": 486568,
   "spec": "airport_terminal_a02.json",
   "spec_sha256": "20f554f93fc4a02d902e9fc9c432b3fb963c7d463f840a07e3b8de276667f312",
-  "builder_sha256": "753ed496b12e2db450c12b9fd52a4c05379b62cf2df0266c0ff54aeba41ab15e",
-  "builder_files": 69,
-  "deli_counter_version": "Deli Counter 0.88.0",
-  "stamped_utc": "2026-08-01T19:13:31Z"
+  "builder_sha256": "37c63a83535fc5b25b9da6891232639bab31eec98427fb1963b34507bd9d18ab",
+  "builder_files": 78,
+  "deli_counter_version": "Deli Counter 0.102.1",
+  "stamped_utc": "2026-08-26T00:35:15Z"
 }

@@ -2,7 +2,7 @@
   "light_manifest_version": "1.1.0",
   "building_id": "supermarket_a03",
   "theme": "greybox",
-  "space": "Blender Z-up, meters; rot_y = degrees about up; pos is the fixture location",
+  "space": "Blender Z-up, meters; rot_y = degrees about up; pos is the fixture location -- for a ceiling row, hung below the slab's underside, not below the floor above",
   "rig_library": "lux",
   "anchors": [
     {
@@ -12,7 +12,7 @@
       "pos": [
         0.0,
         -4.0,
-        4.1
+        3.8
       ],
       "rot_y": 0.0,
       "room": "sales_floor",
@@ -20,6 +20,7 @@
         "count": 5,
         "spacing": 8.0
       },
+      "drop": 3.8,
       "reacts_to_alarm": true
     },
     {
@@ -29,7 +30,7 @@
       "pos": [
         0.0,
         11.0,
-        4.1
+        3.8
       ],
       "rot_y": 0.0,
       "room": "receiving",
@@ -37,16 +38,17 @@
         "count": 5,
         "spacing": 8.0
       },
+      "drop": 3.8,
       "reacts_to_alarm": true
     },
     {
-      "id": "cellar_west_ceiling",
-      "type": "fluorescent",
+      "id": "cellar_west_bulbs",
+      "type": "pendant",
       "source": "derived",
       "pos": [
         -9.0,
         0.0,
-        -0.1
+        -1.0
       ],
       "rot_y": 90.0,
       "room": "cellar_west",
@@ -54,16 +56,17 @@
         "count": 5,
         "spacing": 6.0
       },
+      "drop": 3.2,
       "reacts_to_alarm": true
     },
     {
-      "id": "count_cage_ceiling",
-      "type": "fluorescent",
+      "id": "count_cage_bulbs",
+      "type": "pendant",
       "source": "derived",
       "pos": [
         11.0,
         0.0,
-        -0.1
+        -1.0
       ],
       "rot_y": 90.0,
       "room": "count_cage",
@@ -71,6 +74,7 @@
         "count": 5,
         "spacing": 6.0
       },
+      "drop": 3.2,
       "reacts_to_alarm": true
     },
     {

@@ -1,11 +1,11 @@
 {
   "glb": "casino_a01.glb",
-  "glb_sha256": "2829735a96cd3d24839bbef494a9e86715206d45f6b3465680d4a6ec83c4df55",
-  "glb_bytes": 134740,
+  "glb_sha256": "c151647e0cbca5dbe23811c94c78a4fd5d56f2ce517a4c4421db98f4245af69d",
+  "glb_bytes": 293016,
   "spec": "casino_a01.json",
   "spec_sha256": "679fa7287e277f0c649da008401cff35a80abf727c36430ab6629ae5734bd98a",
-  "builder_sha256": "753ed496b12e2db450c12b9fd52a4c05379b62cf2df0266c0ff54aeba41ab15e",
-  "builder_files": 69,
-  "deli_counter_version": "Deli Counter 0.88.0",
-  "stamped_utc": "2026-08-01T19:13:56Z"
+  "builder_sha256": "37c63a83535fc5b25b9da6891232639bab31eec98427fb1963b34507bd9d18ab",
+  "builder_files": 78,
+  "deli_counter_version": "Deli Counter 0.102.1",
+  "stamped_utc": "2026-08-26T00:35:57Z"
 }

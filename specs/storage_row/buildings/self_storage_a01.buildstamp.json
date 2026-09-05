@@ -1,11 +1,11 @@
 {
   "glb": "self_storage_a01.glb",
-  "glb_sha256": "2a11ec38400585613249b3534431549c960c16944d75f2865cf9c7849182bf2e",
-  "glb_bytes": 106784,
+  "glb_sha256": "5f7cd741095caefcf96619a11a04ba4e6cdb956a7688063560f89ec48f788329",
+  "glb_bytes": 252676,
   "spec": "self_storage_a01.json",
-  "spec_sha256": "203af101ed4d7f886d45df9cfecffd9127bf858bc66368e1df282d4f64def338",
-  "builder_sha256": "753ed496b12e2db450c12b9fd52a4c05379b62cf2df0266c0ff54aeba41ab15e",
-  "builder_files": 69,
-  "deli_counter_version": "Deli Counter 0.88.0",
-  "stamped_utc": "2026-08-01T19:14:58Z"
+  "spec_sha256": "e0f54b290794ab0761ef0552b570f597d6ea13d3b9fd455660be83b1b6564259",
+  "builder_sha256": "37c63a83535fc5b25b9da6891232639bab31eec98427fb1963b34507bd9d18ab",
+  "builder_files": 78,
+  "deli_counter_version": "Deli Counter 0.102.1",
+  "stamped_utc": "2026-08-26T00:37:38Z"
 }

@@ -2,7 +2,7 @@
   "light_manifest_version": "1.1.0",
   "building_id": "train_yard_a01",
   "theme": "greybox",
-  "space": "Blender Z-up, meters; rot_y = degrees about up; pos is the fixture location",
+  "space": "Blender Z-up, meters; rot_y = degrees about up; pos is the fixture location -- for a ceiling row, hung below the slab's underside, not below the floor above",
   "rig_library": "lux",
   "anchors": [
     {
@@ -12,7 +12,7 @@
       "pos": [
         0.0,
         -4.25,
-        4.9
+        4.6
       ],
       "rot_y": 0.0,
       "room": "shed_floor",
@@ -20,23 +20,25 @@
         "count": 5,
         "spacing": 10.4
       },
+      "drop": 4.6,
       "reacts_to_alarm": true
     },
     {
-      "id": "dispatch_office_ceiling",
-      "type": "fluorescent",
+      "id": "dispatch_office_bulbs",
+      "type": "pendant",
       "source": "derived",
       "pos": [
         -20.28,
         8.75,
-        4.9
+        4.0
       ],
       "rot_y": 0.0,
       "room": "dispatch_office",
       "row": {
-        "count": 4,
-        "spacing": 2.86
+        "count": 3,
+        "spacing": 3.813
       },
+      "drop": 4.0,
       "reacts_to_alarm": true
     },
     {
@@ -46,7 +48,7 @@
       "pos": [
         5.72,
         8.75,
-        4.9
+        4.6
       ],
       "rot_y": 0.0,
       "room": "works_band",
@@ -54,6 +56,7 @@
         "count": 5,
         "spacing": 8.112
       },
+      "drop": 4.6,
       "reacts_to_alarm": true
     },
     {

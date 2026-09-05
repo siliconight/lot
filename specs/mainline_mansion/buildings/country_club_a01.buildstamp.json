@@ -1,11 +1,11 @@
 {
   "glb": "country_club_a01.glb",
-  "glb_sha256": "2d5bf08313dfe2938ded53b727a1acc88ca20503779e0a545382f84b486e2b03",
-  "glb_bytes": 142480,
+  "glb_sha256": "92bc5a4e4324633718fcd82a2972ec41d28942ba7e18896fb112c5300dcd090f",
+  "glb_bytes": 321496,
   "spec": "country_club_a01.json",
   "spec_sha256": "649510c5813e50e9cbeff2633368022555ab10f770241465453f5f2cca5f4ec9",
-  "builder_sha256": "753ed496b12e2db450c12b9fd52a4c05379b62cf2df0266c0ff54aeba41ab15e",
-  "builder_files": 69,
-  "deli_counter_version": "Deli Counter 0.88.0",
-  "stamped_utc": "2026-08-01T19:14:03Z"
+  "builder_sha256": "37c63a83535fc5b25b9da6891232639bab31eec98427fb1963b34507bd9d18ab",
+  "builder_files": 78,
+  "deli_counter_version": "Deli Counter 0.102.1",
+  "stamped_utc": "2026-08-26T00:36:09Z"
 }
