@@ -22,7 +22,29 @@ func _ready() -> void:
 	_waypoint("EXTRACTION", extraction_pos, Color(0.2, 1.0, 0.5))
 	var p := get_node_or_null("Player")
 	if p:
-		p.global_position = spawn_pos
+		if DisplayServer.get_name() == "headless":
+			# WHEN THERE IS NO WALKER, THE RIGHT NUMBER OF PLAYERS IS NONE --
+			# the same reasoning `_bake_nav` already applies to baking.
+			#
+			# This node is a CharacterBody3D on collision layer 1 (the World
+			# layer) with a 1.8 m capsule, and the line below parked it ON the
+			# crew spawn -- which is the point of the preview and fatal to an
+			# evaluation. Laser Tag spawns its own pill at that coordinate, so
+			# the pill materialised INSIDE this capsule, was depenetrated onto
+			# top of it, and came to rest 1.547 m above the navmesh with
+			# is_on_floor() true. From there `get_next_path_position()` returns
+			# the bot's own XZ, `_advance_route` flattens that to a zero vector,
+			# and the body never takes a step.
+			#
+			# Measured on market_row_001 seed 7503, one run, same seed either
+			# side: body_y 1.797 -> 0.001, gap to the navmesh +1.547 -> -0.499,
+			# route index 0/3 -> 2/3, and a bot that had not moved in 10.7 s
+			# walked ~20 m. Laser Tag's own demo greybox carries no such node,
+			# which is why its bot always walked and this never showed up in
+			# Laser Tag's CI.
+			p.queue_free()
+		else:
+			p.global_position = spawn_pos
 	_hud()
 
 

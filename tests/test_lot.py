@@ -885,6 +885,43 @@ def test_walk_scene_does_not_race_an_external_navmesh_bake():
     print("  walk scene leaves the headless navmesh bake to the runner: OK")
 
 
+def test_walk_scene_removes_its_preview_player_when_headless():
+    """The walk scene ships a `Player` -- a CharacterBody3D on collision layer 1
+    with a 1.8 m capsule -- and `_ready` parks it ON the crew spawn, which is
+    the whole point of a walkthrough and fatal to an evaluation.
+
+    Laser Tag spawns its own pill at that same coordinate. The pill therefore
+    materialised INSIDE this capsule, was depenetrated onto the top of it, and
+    came to rest with `is_on_floor()` true 1.547 m above the navmesh. From
+    there `get_next_path_position()` returns the bot's own XZ, `_advance_route`
+    flattens that to a zero vector, and the body never takes a step -- which is
+    what `route_completion_rate` has been reporting as 0.0 (roadmap 122).
+
+    Measured on market_row_001 seed 7503, one run, identical seed either side:
+
+        body_y            1.797  ->  0.001
+        gap to navmesh   +1.547  -> -0.499
+        route index         0/3  ->    2/3
+        distance moved     0.0 m ->  ~20 m in 14.9 s
+
+    Laser Tag's own demo greybox has no such node, so its bot always walked and
+    its CI never saw this. Same rule as the bake above: headless means nobody is
+    walking, and when there is no walker the right number of players is none."""
+    import os
+    gd = open(os.path.join(os.path.dirname(__file__), "..", "godot",
+                           "addons", "lot", "lot_site_walk.gd")).read()
+    body = gd[gd.index("func _ready"):]
+    body = body[:body.index(chr(10) + "func ", 1)]
+    assert 'get_node_or_null("Player")' in body
+    guard = body.index('DisplayServer.get_name() == "headless"')
+    free = body.index("queue_free()")
+    park = body.index("p.global_position = spawn_pos")
+    assert guard < free < park, (
+        "headless must free the preview player BEFORE the branch that parks it "
+        "on the crew spawn")
+    print("  walk scene drops its preview player when headless: OK")
+
+
 def test_route_samples_are_interior_and_evenly_spaced():
     """Endpoints are already markers and the marker pass has asked about them.
     What sampling adds is the ground BETWEEN them, which nothing asked about."""

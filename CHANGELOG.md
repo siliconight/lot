@@ -1,3 +1,51 @@
+## [0.52.0] - the crew spawned inside the walkthrough's player
+
+Roadmap 122. `route_completion_rate` has been 0.0 in 31 of the 33 Laser Tag
+reports on disk -- every workspace, every cold run, highest ever 0.16 -- and
+the cause was in this repo.
+
+### Fixed
+- `lot_site_walk.gd` frees its preview `Player` when the scene is loaded
+  headless, instead of parking it on the crew spawn.
+
+  WHAT WAS HAPPENING. The walk scene ships a `Player` -- a CharacterBody3D on
+  collision layer 1, the World layer, with a 1.8 m capsule -- and `_ready`
+  moved it to `spawn_pos`. That is the entire point of a walkthrough and fatal
+  to an evaluation: Level Factory stages this same scene as Laser Tag's map,
+  and Laser Tag spawns its own pill at that identical coordinate. The pill
+  materialised INSIDE this capsule, was depenetrated onto the top of it, and
+  came to rest 1.547 m above the navmesh with `is_on_floor()` true. From there
+  `get_next_path_position()` returns the bot's own XZ, `_advance_route`
+  flattens it to a zero vector, and the body never takes a step. The bot was
+  not failing to navigate; it was standing on the walkthrough's player.
+
+  MEASURED on market_row_001 seed 7503, one run, identical seed either side of
+  the change, with a probe reading `map_get_closest_point` at each trace mark:
+
+        body_y            1.797  ->  0.001
+        gap to navmesh   +1.547  -> -0.499
+        route index         0/3  ->    2/3
+        movement           none  ->  ~20 m over 14.9 s
+
+  The before column is constant for the whole 10.7 s run -- same position,
+  zero velocity, `on_floor` true -- which is what a body resting on an
+  obstacle looks like rather than one that cannot path.
+
+  WHY NOTHING CAUGHT IT. Laser Tag's own demo greybox carries no such node, so
+  its CI bot always walked. The harness does check the spawn for obstruction,
+  but with a single point at `spawn + UP * 0.9`, which clears an obstacle
+  topping out at 1.797. And `ground_contact` tolerates up to `MAX_DROP = 4.0`
+  because it was built to catch spawns over a HOLE, not spawns in the air.
+
+  This is the same rule `_bake_nav` already applied one function below, and
+  the comment there states it: headless means nobody is walking. When there is
+  no walker, the right number of preview players is none.
+
+### Added
+- `test_walk_scene_removes_its_preview_player_when_headless`, a sibling of the
+  existing headless-bake guard, asserting the free happens before the branch
+  that parks the player on the spawn. Verified to fail on the pre-fix script.
+
 ## [0.51.0] - two implementations of one overlay, and the export layer wins
 
 0.50.0 gave the walk harness its own position readout, not knowing Level
