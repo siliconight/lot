@@ -304,6 +304,15 @@ CHEST_HEIGHT = 1.0
 #: merits: occluding against measured colliders instead of declared footprints.
 ENEMY_SIGHT_RANGE = 35.0
 
+#: What an enemy walks at: ``LT_EnemyMovement.move_speed = 4.0``. Carried for
+#: the reason `ENEMY_SIGHT_RANGE` is, and used for one thing -- the ground an
+#: enemy can cover during `REACTION_SECONDS`, which is what
+#: `opening_engagement_is_fair` has to judge cover against. It is within 12% of
+#: `CREW_SPEED`, which is the whole problem: the corner that hides an enemy
+#: from the crew's first second is a corner the enemy walks out of in that same
+#: second.
+ENEMY_SPEED = 4.0
+
 
 def solid_occluders(reading) -> list:
     """2D rects from MEASURED colliders -- only what can block an eyeline.
@@ -469,8 +478,74 @@ def opening_engagement_is_fair(candidate, crew_path, occluders,
     reach = opening_range + clearance
     if all(math.dist(candidate, p) >= reach for p in crew_path):
         return True
-    return not any(has_line_of_sight(candidate, p, occluders)
-                   for p in crew_path)
+    # THE DISC APPLIES TO OCCLUSION, NOT TO DISTANCE, and that is a deliberate
+    # limit rather than an oversight. What roadmap 127 measured is cover being
+    # credited against an enemy that walks out of it; the distance branch has a
+    # separate and smaller understatement -- `clearance` is the ground the CREW
+    # covers, so a closing speed of `CREW_SPEED` alone, when both sides close at
+    # about 4 m/s and the real gap shrinks by nearer 8.5 m in the second. Widening
+    # it too would push every marginal enemy 4 m further out in the same change
+    # that refuses more occlusion, and `ENEMY_SIGHT_RANGE` records what happened
+    # last time placement got stricter on two axes at once: enemies stranded on
+    # ground they could not path off, `enemy_stuck_events` 34 -> 75, score
+    # unchanged. One axis, measured, then the other.
+    for enemy_at in enemy_opening_positions(candidate, occluders):
+        if any(has_line_of_sight(enemy_at, p, occluders) for p in crew_path):
+            return False
+    return True
+
+
+#: Directions sampled around a candidate. Eight is the cheap version on
+#: purpose: the disc is an approximation of navmesh reachability either way,
+#: and the question it answers -- does this cover survive a second -- does not
+#: get a different answer from sixteen.
+_OPENING_DIRECTIONS = 8
+
+
+def enemy_opening_positions(candidate, occluders) -> list:
+    """Where the enemy might be by the time the crew's first second is up.
+
+    The candidate itself, plus a ring at `ENEMY_SPEED` * `REACTION_SECONDS`,
+    minus the samples standing inside a building.
+
+    WHY A DISC AND NOT A POINT. `opening_engagement_is_fair` judged cover
+    against the tile the enemy STARTS on, and the enemy does not stay there:
+    `LT_EnemyMovement` seeks from frame one at 4.0 m/s, within 12% of the
+    crew's own speed. Measured on `restaurant_row_001` seed 9003 (roadmap
+    127): standing on the spawn, every enemy inside the 35 m it can see is
+    blocked by real collision and the only clear line is 59.1 m away -- the
+    occlusion credit was honest. Step the crew alone and the first in-range
+    clear line is 2.75 s out; step BOTH at 4.0 m/s and it is 1.5 s. Laser Tag
+    measured 0.73 s on the same map, identical in all 25 runs. Straight lines
+    are not navmesh paths, so the times are an order of magnitude rather than a
+    stopwatch, and the sign is the point: the cover does not last the second it
+    was credited for.
+
+    THIS IS THE SAME CORRECTION THE CREW SIDE ALREADY HAD. The docstring above
+    records making `crew_path` a stretch of route instead of a spawn tile, for
+    exactly this reason. The enemy stayed a point until now.
+
+    A RING, NOT A REACHABILITY BAKE. Lot has no navmesh here, so this cannot
+    know whether an enemy can actually walk 4 m north; it drops the samples
+    that would stand inside a building and accepts the rest. That makes the
+    test conservative -- it may credit an enemy with ground it cannot reach,
+    and so refuse a placement that would have been fair. Refusing too much is
+    the safer direction for THIS test and the dangerous one for the map: see
+    `ENEMY_SIGHT_RANGE`, where refusing occlusion inside 35 m stranded enemies
+    on unpathable ground and took `enemy_stuck_events` from 34 to 75 while the
+    score did not move. Whatever this changes has to be measured the same way.
+    """
+    out = [tuple(candidate[:2])]
+    travel = ENEMY_SPEED * REACTION_SECONDS
+    rects = list(occluders or ())
+    for i in range(_OPENING_DIRECTIONS):
+        angle = 2.0 * math.pi * float(i) / float(_OPENING_DIRECTIONS)
+        point = (candidate[0] + math.cos(angle) * travel,
+                 candidate[1] + math.sin(angle) * travel)
+        if any(_inside(point, r) for r in rects):
+            continue
+        out.append(point)
+    return out
 
 
 def _fractions(index: int, count: int, step: float = SLIDE_STEP):

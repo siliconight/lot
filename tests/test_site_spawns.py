@@ -573,3 +573,58 @@ def test_the_route_point_that_is_the_objective_is_seated_too():
     block = text[text.index('name="LT_PlayerRoutePoints"'):]
     lines = [l for l in block.splitlines() if l.startswith("transform")]
     assert lines[1].endswith("35, 0, 17)"), lines[1]
+
+
+# ---- the opening is judged against an enemy that moves (roadmap 127) --------
+
+def test_cover_that_the_enemy_walks_out_of_is_not_cover():
+    """A wall between the crew and an enemy 20 m away, and a gap beside it.
+
+    The enemy starts behind the wall, so the old point test called this fair.
+    It walks at `ENEMY_SPEED` from frame one, the same speed as the crew, and
+    `REACTION_SECONDS` of that is 4 m -- enough to clear a wall it is standing
+    at the edge of. Measured on restaurant_row_001 seed 9003, the real version
+    of this shortened the opening from 0.73 s to 1.53 s.
+    """
+    crew = [(0.0, 0.0)]
+    enemy = (20.0, 0.0)
+    # A wall on the eyeline, narrow enough that 4 m of travel gets around it.
+    wall = [(9.0, -1.5, 11.0, 1.5)]
+    assert not site_spawns.has_line_of_sight(enemy, crew[0], wall), (
+        "the wall must block the direct line, or this tests nothing")
+    assert not site_spawns.opening_engagement_is_fair(enemy, crew, wall)
+
+
+def test_a_wall_the_enemy_cannot_get_round_in_a_second_is_still_cover():
+    """The disc must not refuse everything -- a long wall stays cover, or the
+    test has no way to say yes and placement has nowhere to put anybody."""
+    crew = [(0.0, 0.0)]
+    enemy = (20.0, 0.0)
+    wall = [(9.0, -40.0, 11.0, 40.0)]
+    assert site_spawns.opening_engagement_is_fair(enemy, crew, wall)
+
+
+def test_the_disc_drops_samples_standing_inside_a_building():
+    """An enemy cannot walk into a wall, so a sample there is not a position
+    it could occupy and must not be used to refuse the placement."""
+    inside_everything = [(-100.0, -100.0, 100.0, 100.0)]
+    got = site_spawns.enemy_opening_positions((0.0, 0.0), inside_everything)
+    assert got == [(0.0, 0.0)], got
+
+
+def test_the_disc_is_the_candidate_plus_a_ring():
+    got = site_spawns.enemy_opening_positions((0.0, 0.0), [])
+    assert len(got) == site_spawns._OPENING_DIRECTIONS + 1
+    assert got[0] == (0.0, 0.0)
+    travel = site_spawns.ENEMY_SPEED * site_spawns.REACTION_SECONDS
+    for point in got[1:]:
+        assert abs(math.dist(point, (0.0, 0.0)) - travel) < 1e-9
+
+
+def test_distance_alone_still_decides_a_far_enemy():
+    """The disc applies to occlusion only. Widening the distance branch too
+    would push every marginal enemy 4 m further in the same change, and
+    `ENEMY_SIGHT_RANGE` records what that cost last time."""
+    far = site_spawns.OPENING_RANGE + site_spawns.OPENING_CLEARANCE
+    assert site_spawns.opening_engagement_is_fair((far, 0.0), [(0.0, 0.0)], [])
+

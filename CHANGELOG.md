@@ -1,3 +1,60 @@
+## [0.53.0] - the opening is judged against an enemy that moves
+
+Roadmap 127, the cheap half.
+
+### Fixed
+- `opening_engagement_is_fair` judges occlusion against the ground an enemy can
+  reach in `REACTION_SECONDS`, not against the tile it starts on.
+  `enemy_opening_positions` returns the candidate plus an eight-point ring at
+  `ENEMY_SPEED * REACTION_SECONDS`, dropping samples that stand inside a
+  building.
+
+  THIS IS THE CORRECTION THE CREW SIDE ALREADY HAD. The docstring records
+  making `crew_path` a stretch of route instead of a spawn tile, because "the
+  crew does not spend that second standing on the spawn". The enemy stayed a
+  point, and `LT_EnemyMovement.move_speed` is 4.0 m/s -- within 12% of
+  `CREW_SPEED`. The corner that hides an enemy from the crew's first second is
+  a corner the enemy walks out of in that same second.
+
+  HOW IT WAS ESTABLISHED, because Lot was not wrong about what it measured.
+  Raycasting a staged copy of restaurant_row_001 seed 9003 at the 1.6 m eye:
+  standing on the spawn, every enemy inside the 35 m it can see is blocked by
+  real collision and the only clear line is 59.1 m away. The occlusion credit
+  was honest. Stepping the crew alone, the first in-range clear line is 2.75 s
+  out; stepping both at 4.0 m/s it is 1.5 s. Laser Tag measured 0.73 s,
+  identical in all 25 runs of that candidate.
+
+### Measured, on cold run 9003's three candidates, same seeds either side
+
+        seed        contact        survival     enemy_stuck   score
+        9003    0.73 -> 1.53    3.81 -> 5.58        0 -> 0    50 -> 50
+        9104    0.27 -> 1.40    3.71 -> 5.38        0 -> 0    50 -> 50
+        9205    0.27 -> 1.47    2.40 -> 3.71        0 -> 0    50 -> 50
+
+  `enemy_stuck_events` STAYING AT ZERO IS THE RESULT THAT MATTERS, and it is
+  the one the previous attempt at a stricter placement failed. `ENEMY_SIGHT_RANGE`
+  records that run: refusing occlusion inside 35 m took `enemy_stuck_events`
+  from 34 to 75 because enemies were pushed onto ground they could not path
+  off, and the score did not move. Here nothing was dropped
+  (no `LOT_ENEMY_SPAWN_UNPLACEABLE`) and `ENEMY_PATHING` reports PASS.
+  `LOT_ENEMY_SPAWN_STANDOFF` no longer fires at all -- the search now finds
+  fair ground first time rather than sliding onto it.
+
+### What it did NOT do, stated rather than left to be noticed
+- THE SCORE DID NOT MOVE: 50 on all three, before and after.
+  `first_contact_min_seconds` is 3.0 and `min_reasonable_survival_seconds` is
+  10.0, so 1.5 s and 5.6 s are better numbers on the same side of both
+  thresholds. INSTANT_CONTACT and NO_REACTION_TIME still fire.
+- A NEW WARNING APPEARED. `BLIND_MAP` at 52% -- more than half of walkable
+  positions can now be seen from no enemy spawn at all, where before the run
+  did not raise it. Overexposure fell the other way, 28% to 19%. Enemies that
+  keep their cover through the opening are enemies further out of the crew's
+  path, and that is a trade this change makes without deciding it is right.
+- The DISTANCE branch is untouched and still understates. `clearance` is the
+  ground the CREW covers, so it models a closing speed of `CREW_SPEED` alone
+  when both sides close at about 4 m/s. Widening it in the same change would
+  have moved two axes at once, which is what went wrong last time.
+
 ## [0.52.0] - the crew spawned inside the walkthrough's player
 
 Roadmap 122. `route_completion_rate` has been 0.0 in 31 of the 33 Laser Tag
