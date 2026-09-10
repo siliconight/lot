@@ -263,16 +263,24 @@ def _segment_crosses(a, b, rect) -> bool:
     return t_enter <= t_exit
 
 
-#: Where the two sightlines run. `LT_BotPlayerController` sights from
-#: ``body.global_position + UP * 1.4`` and ``LT_LineOfSightTester.CHEST_OFFSET``
-#: is ``UP * 1.0``; `site_cover` carries the same pair and derives
-#: `MIN_COVER_HEIGHT` from where they cross.
+#: Where the two sightlines run. Laser Tag 0.20.0 gives every body ONE eye,
+#: placed by `LT_MapEvalHarness` from `LT_TestScenario.player_eye_height_m` /
+#: `enemy_eye_height_m`, and both sides aim at `aim_height_m`; `site_cover`
+#: carries the same pair and derives `MIN_COVER_HEIGHT` from where they cross.
+#:
+#: WAS 1.4, AND THAT WAS THE EVALUATOR'S OWN INCOHERENCE RATHER THAN A STALE
+#: COPY. Seven heights described one firefight there and no two agreed -- the
+#: crew saw from a hardcoded 1.4 and fired from 1.55, the enemy saw from 1.5
+#: and fired from 1.3 -- so a producer carrying "the" eye height was carrying
+#: one of seven. Roadmap 131.
 #:
 #: Carried rather than imported, the same stated assumption `OPENING_RANGE`
 #: makes: Lot cannot read the Laser Tag checkout, so it holds the numbers and
 #: names where they came from, and `packages.validation.lasertag_contract`
-#: reports drift against what is written here.
-EYE_HEIGHT = 1.4
+#: reports drift against what is written here -- which for THESE two it did
+#: not do until 131 added `check_sight_drift`, so the promise in this comment
+#: was true of the range and false of the pair it is attached to.
+EYE_HEIGHT = 1.6
 CHEST_HEIGHT = 1.0
 
 #: ``enemy_sight_range = 35.0`` in ``default_laser_tag_scenario.tres``, and

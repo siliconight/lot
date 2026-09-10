@@ -1,3 +1,37 @@
+## [0.54.0] - the carried sight heights are the evaluator's, and now they are checked
+
+Roadmap 131. `site_cover` derives `MIN_COVER_HEIGHT` -- how tall a solid must
+be to break a MUTUAL sightline -- from `EYE_HEIGHT` and `CHEST_HEIGHT`, which
+it carries as a stated assumption because Lot cannot read the Laser Tag
+checkout. Its own comment has said since it was written that Level Factory's
+`lasertag_contract` reports drift on them. `Engagement` carried only the
+engagement RANGES, so the two constants that comment is attached to were the
+two nobody checked.
+
+### Changed
+- `EYE_HEIGHT` 1.4 -> 1.6 in both `site_cover` and `site_spawns`, so
+  `MIN_COVER_HEIGHT` moves 1.2 -> 1.3.
+
+  THE 1.4 WAS NOT STALE, IT WAS ONE OF SEVEN. Laser Tag used seven different
+  heights to describe one firefight and no two agreed: the crew saw from a
+  hardcoded 1.4 and fired from 1.55, the enemy saw from 1.5 and fired from
+  1.3, its target selection sighted from 1.4 again, and the map sampler
+  measured cover from a 1.5 of its own. A producer carrying "the" eye height
+  was carrying one of seven, correctly sourced and still wrong. Laser Tag
+  0.20.0 gives each body one eye; both are 1.6 and the crossing is 1.3.
+- `test_the_minimum_cover_height_is_where_the_two_sightlines_cross` asserted a
+  bare `== 1.2`, which is the defect its own docstring complains about: when
+  the evaluator moved, the constant correctly followed and the test failed for
+  being right. It now asserts the DERIVATION, and pins the value separately
+  with the version that produced it.
+
+### Consequence
+Cover built to the old number is 10 cm short and leaves one side a free shot
+over it -- and `time_to_first_contact` is stamped on the first shot by EITHER
+side, so half a broken sightline starts the clock exactly where none would.
+`COVER_HEIGHT` stays 2.0 and is unaffected; what moves is the floor below
+which `break_interval` returns `None`.
+
 ## [0.53.0] - the opening is judged against an enemy that moves
 
 Roadmap 127, the cheap half.

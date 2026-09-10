@@ -56,7 +56,16 @@ def test_the_minimum_cover_height_is_where_the_two_sightlines_cross():
     both at that one position; anything shorter leaves one side a free shot,
     and a free shot starts the evaluator's clock just the same.
     """
-    assert site_cover.MIN_COVER_HEIGHT == 1.2
+    # DERIVED, so the assertion is the derivation and not the answer. This
+    # pinned a bare 1.2 until roadmap 131, which is the shape of defect the
+    # docstring above is complaining about: when Laser Tag gave every body one
+    # eye and the crew's rose from 1.4 to 1.6, the constant correctly moved to
+    # 1.3 and the test failed for being right.
+    assert site_cover.MIN_COVER_HEIGHT == (
+        site_cover.EYE_HEIGHT + site_cover.CHEST_HEIGHT) / 2.0
+    # The value today, named so a reader knows which evaluator produced it.
+    # Laser Tag 0.20.0 sights both sides from 1.6 at a 1.0 chest.
+    assert site_cover.MIN_COVER_HEIGHT == 1.3
     assert site_cover.required_height(0.5) == site_cover.MIN_COVER_HEIGHT
     assert site_cover.required_height(0.0) == site_cover.EYE_HEIGHT
     assert site_cover.required_height(1.0) == site_cover.EYE_HEIGHT

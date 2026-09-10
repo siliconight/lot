@@ -42,14 +42,24 @@ import math
 from dataclasses import dataclass, field
 
 #: Where each side's eye and its target sit, from the Laser Tag scripts.
-#: ``LT_BotPlayerController`` sights from ``body.global_position + UP * 1.4``
-#: and ``LT_LineOfSightTester.CHEST_OFFSET`` is ``UP * 1.0``.
+#: Since 0.20.0 a body's eye is a node the harness places from
+#: `LT_TestScenario.player_eye_height_m` / `enemy_eye_height_m`, and both
+#: sides aim at `aim_height_m`.
+#:
+#: WAS 1.4 / 1.0, CROSSING AT 1.2. The 1.4 was one of SEVEN heights Laser Tag
+#: used to describe one firefight, none of which agreed: the crew sighted from
+#: 1.4 and fired from 1.55, the enemy sighted from 1.5 and fired from 1.3, and
+#: the map sampler measured cover from a 1.5 of its own. Roadmap 131 gave each
+#: body one eye; both are 1.6 now and the crossing is 1.3, so cover built to
+#: the old number is 10 cm short and leaves one side a free shot over it.
 #:
 #: A stated assumption in the sense `site_spawns.OPENING_RANGE` is: Lot cannot
 #: read the Laser Tag checkout, so it carries the numbers and names where they
 #: came from. Level Factory's `packages.validation.lasertag_contract` reads the
-#: real files and reports drift against what is written here.
-EYE_HEIGHT = 1.4
+#: real files and reports drift against what is written here -- `check_drift`
+#: for the range, and `check_sight_drift` for THIS pair, which went unchecked
+#: from the day this comment first claimed otherwise until roadmap 131.
+EYE_HEIGHT = 1.6
 CHEST_HEIGHT = 1.0
 
 #: The shortest solid that breaks a *mutual* sightline on level ground, and not
