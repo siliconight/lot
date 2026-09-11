@@ -1,3 +1,13 @@
+## [0.55.2] - site_surfaces --strict fails on what went wrong, not on what went right
+
+`site_surfaces.py --strict` exited non-zero on ANY finding, and the tool
+reports its own success as one: `LOT_SURFACE_FOOTPRINTS_MERGED`, severity
+info, "read footprints for 1 of 1 buildings". The first pipeline run of the
+stage (Level Factory 0.68.0's `lot_site_surfaces`, roadmap 110) therefore
+failed a clean result -- 6 zones, 3 exclusions, every footprint read. Strict
+now ignores `info`; the unreadable-footprint warn it was written for still
+fails, and its test still holds.
+
 ## [0.55.1] - the served line says a fresh project needs an import pass
 
 Roadmap 25. `cater` closed with "SERVED -> open <site>_walk.tscn in Godot,

@@ -338,6 +338,33 @@ def test_cli_strict_fails_on_unreadable_footprints(tmp_path):
     assert SS.main([str(spec_path), "--out", str(out), "--strict"]) == 1
 
 
+def test_cli_strict_passes_a_clean_result_that_reports_its_own_success(tmp_path):
+    """The info line saying the footprints WERE merged is not a failure.
+
+    The first pipeline run of this tool exited 1 on exactly that line (Level
+    Factory 0.68.0, cold-9005-ws: 6 zones, 3 exclusions, 1 of 1 footprints
+    read), because --strict counted every finding. Strict is for what went
+    wrong."""
+    import json
+    spec_path = tmp_path / "site.json"
+    spec_path.write_text(json.dumps(spec()), encoding="utf-8")
+    out = tmp_path / "s.json"
+    real = SS.surfaces
+
+    def only_info(*a, **kw):
+        res = dict(real(*a, **kw))
+        res["findings"] = [{"severity": "info",
+                            "code": "LOT_SURFACE_FOOTPRINTS_MERGED",
+                            "message": "read footprints for 1 of 1 buildings"}]
+        return res
+
+    SS.surfaces = only_info
+    try:
+        assert SS.main([str(spec_path), "--out", str(out), "--strict"]) == 0
+    finally:
+        SS.surfaces = real
+
+
 def test_cli_capsule_is_overridable(tmp_path):
     import json
     spec_path = tmp_path / "site.json"

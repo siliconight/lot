@@ -593,7 +593,12 @@ def main(argv=None):
 
     for f in out["findings"]:
         sys.stderr.write(f"[{f['severity']}] {f['code']}: {f['message']}\n")
-    if a.strict and out["findings"]:
+    # `--strict` is for what went WRONG. `LOT_SURFACE_FOOTPRINTS_MERGED` is
+    # an info line saying the merge happened -- the opposite of the undressed
+    # seams the flag exists to catch -- and counting it made the first
+    # pipeline run of this tool (Level Factory 0.68.0, cold-9005-ws) exit 1
+    # on a clean result: 6 zones, 3 exclusions, 1 of 1 footprints read.
+    if a.strict and any(f.get("severity") != "info" for f in out["findings"]):
         return 1
     return 0
 
