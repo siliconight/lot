@@ -1,3 +1,26 @@
+## [0.55.0] - the site light envelope is stamped from the files it merges
+
+Roadmap 95. `merge_lights` wrote `"light_manifest_version": "1.0.0"` as a
+literal while Deli Counter's `lights.py` stamped 1.1.0 on every building
+manifest it merged, and the anchors were copied wholesale -- so the site file
+declared one contract and satisfied a later one. Reproduced on cold run 9005's
+build of 2026-09-10: building envelope 1.1.0, site envelope 1.0.0, `drop` (a
+1.1.0 field) on the ceiling anchors. Nothing read the field, which is why it
+survived; the `--art --unlit` handoff is documented as "a contract another
+lighting system can read", and the version is the field that makes that safe.
+
+### Fixed
+- The envelope is the HIGHEST version among the merged building manifests,
+  because that is the contract the anchors actually need a reader to
+  understand. The full set is recorded as `light_manifest_versions_merged`, so
+  a mix is visible rather than averaged away. A file with no version predates
+  the field and is 1.0.0 by definition; a site with no building manifests is
+  Lot's streetlights alone and stays 1.0.0. `_version_key` compares as
+  integers, so 1.10.0 sorts above 1.9.0.
+- `test_lights_manifest_shape` asserted `== "1.0.0"` -- the same bare literal
+  as the defect, one file over. It now asserts against the merged set, and a
+  new test merges a 1.0.0 and a 1.1.0 building and checks both fields.
+
 ## [0.54.0] - the carried sight heights are the evaluator's, and now they are checked
 
 Roadmap 131. `site_cover` derives `MIN_COVER_HEIGHT` -- how tall a solid must

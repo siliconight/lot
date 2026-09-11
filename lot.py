@@ -373,6 +373,15 @@ def merge_lights(site_spec, base_dir):
     (mirrors merge_gameplay), plus the exterior streetlights Lot derives.
     Deterministic. Consumed by Lux's light-anchor loader."""
     site = {
+        # STAMPED FROM THE FILES BEING MERGED, not a literal (roadmap 95).
+        # This was "1.0.0" written by hand while Deli Counter's lights.py
+        # stamped 1.1.0 on every building manifest, and the anchors were
+        # copied wholesale -- so the site file declared one contract and
+        # satisfied a later one (`drop` on 28 of 28 ceiling anchors, a 1.1.0
+        # field). Nothing read the envelope, which is why it drifted; the
+        # `--art --unlit` handoff is documented as "a contract another
+        # lighting system can read", and the version is the field that makes
+        # that safe. Set below once the merged versions are known.
         "light_manifest_version": "1.0.0",
         "site": site_spec["name"],
         "space": ("Blender Z-up, meters; rot_y = degrees about up; "
@@ -380,6 +389,7 @@ def merge_lights(site_spec, base_dir):
         "rig_library": "lux",
         "anchors": [],
     }
+    merged_versions = []
     for b in site_spec["buildings"]:
         bid = b["id"]
         placement = {"at": b["at"], "rot": b.get("rot", 0)}
@@ -391,6 +401,9 @@ def merge_lights(site_spec, base_dir):
             continue
         with open(lp, encoding="utf-8") as f:
             lm = json.load(f)
+        # A file with no version predates the field and is 1.0.0 by
+        # definition -- that was the only contract when the field was absent.
+        merged_versions.append(str(lm.get("light_manifest_version") or "1.0.0"))
         for a in lm.get("anchors", []):
             wa = dict(a)
             wa["id"] = f"{bid}/{a.get('id', 'light')}"
@@ -405,7 +418,26 @@ def merge_lights(site_spec, base_dir):
             site["anchors"].append(wa)
 
     site["anchors"].extend(_streetlight_anchors(site_spec))
+    # THE HIGHEST VERSION MERGED, because that is the contract the anchors
+    # actually need: a 1.1.0 anchor carries fields a 1.0.0 reader does not
+    # know, and an envelope claiming 1.0.0 over it promises a consumer more
+    # than the file keeps. A site with no building manifests at all is Lot's
+    # streetlights alone, which carry nothing past 1.0.0. The full set is
+    # recorded beside it so a MIX is visible rather than averaged away.
+    if merged_versions:
+        site["light_manifest_version"] = max(merged_versions, key=_version_key)
+    site["light_manifest_versions_merged"] = sorted(set(merged_versions))
     return site
+
+
+def _version_key(v):
+    """'1.1.0' -> (1, 1, 0), so 1.10.0 sorts above 1.9.0 and a stray suffix
+    does not raise."""
+    out = []
+    for part in str(v).split("."):
+        digits = "".join(ch for ch in part if ch.isdigit())
+        out.append(int(digits) if digits else 0)
+    return tuple(out)
 
 
 # ---------------------------------------------------------------------------

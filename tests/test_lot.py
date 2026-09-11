@@ -772,8 +772,56 @@ def test_lights_streetlights_paths_and_perimeter():
 def test_lights_manifest_shape():
     spec = json.load(open(os.path.join(SPECS, "example_compound.json")))
     m = lot.merge_lights(spec, SPECS)
-    assert m["light_manifest_version"] == "1.0.0"
+    # The envelope is whatever the merged files carry, not a literal. This
+    # asserted `== "1.0.0"` -- the same bare constant it was guarding against
+    # in the code under test -- and would have failed the moment the fixture
+    # files gained a version, for being right (roadmap 95).
+    assert m["light_manifest_version"] == max(
+        m["light_manifest_versions_merged"] or ["1.0.0"], key=lot._version_key)
     assert m["rig_library"] == "lux" and m["site"] == "example_compound"
+
+
+def test_lights_envelope_is_the_version_the_anchors_need():
+    """`merge_lights` wrote "light_manifest_version": "1.0.0" as a literal while
+    Deli Counter stamped 1.1.0 on every building file it merged, and the
+    anchors were copied wholesale -- so the site file declared one contract
+    and satisfied a later one. Measured on `county_hospital_001` seed 9005,
+    built 2026-09-10: building envelope 1.1.0, site envelope 1.0.0, `drop`
+    (a 1.1.0 field) on the ceiling anchors. Nothing read the field, which is
+    why it survived, and the `--art --unlit` handoff is documented as a
+    contract another lighting system can read."""
+    import tempfile
+    with tempfile.TemporaryDirectory() as td:
+        for bid, ver in (("old", "1.0.0"), ("new", "1.1.0")):
+            json.dump({"light_manifest_version": ver, "anchors": [
+                {"id": "c", "type": "ceiling_row", "pos": [1.0, 1.0, 3.0],
+                 "rot_y": 0.0, "room": "r"}]},
+                open(os.path.join(td, bid + ".lights.json"), "w"))
+        spec = {"name": "mix", "ground": {"w": 40, "d": 40}, "buildings": [
+            {"id": "old", "at": [0, 0], "rot": 0, "lights": "old.lights.json"},
+            {"id": "new", "at": [20, 0], "rot": 0, "lights": "new.lights.json"},
+        ]}
+        m = lot.merge_lights(spec, td)
+        # the envelope is the HIGHEST merged, because that is what the anchors
+        # actually need a reader to understand
+        assert m["light_manifest_version"] == "1.1.0"
+        # and the mix is recorded rather than averaged away
+        assert m["light_manifest_versions_merged"] == ["1.0.0", "1.1.0"]
+
+        # a file with no version predates the field and is 1.0.0 by definition
+        json.dump({"anchors": []},
+                  open(os.path.join(td, "old.lights.json"), "w"))
+        m = lot.merge_lights(spec, td)
+        assert m["light_manifest_versions_merged"] == ["1.0.0", "1.1.0"]
+
+        # a site with no building manifests at all is Lot's streetlights alone
+        m = lot.merge_lights({"name": "bare", "ground": {"w": 40, "d": 40},
+                              "buildings": []}, td)
+        assert m["light_manifest_version"] == "1.0.0"
+        assert m["light_manifest_versions_merged"] == []
+
+    # ten sorts above nine: a string compare would get this wrong
+    assert lot._version_key("1.10.0") > lot._version_key("1.9.0")
 
 
 def test_lights_deterministic():
