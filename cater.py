@@ -362,7 +362,18 @@ def cater(site_spec_path, project_dir, dc=None, blender=None, preview=False,
           f"{len(jobs)} copied into place")
 
     run_lot(site_spec_path, project_dir, walkable, navqa, preview=False)
+    # A project Godot has never opened parses with errors until the editor
+    # has imported it: `lux_root.gd` and `lux_preset.gd` fail to load because
+    # `class_name` resolution needs the editor's scan, and every building
+    # reports its `.glb` as vanished (roadmap 25: 59 errors, byte-identical
+    # on a second run, 0 after one `--import`). Opening the project in the
+    # editor does that import; anything automated must run it itself, and
+    # every pipeline stage that launches a served project does. Said here so
+    # the served line does not read as "ready to run headless".
     print(f"[cater] SERVED -> open {site_name}_walk.tscn in Godot, F6")
+    print(f"[cater]        (headless or scripted? run `godot --headless "
+          f"--path {project_dir} --import` first: an unopened project has "
+          f"no import artifacts and every building reads as vanished)")
     if pack:
         import package
         package.build_pack(site_spec_path, dc=dc_dir, note=pack_note)

@@ -1,3 +1,16 @@
+## [0.55.1] - the served line says a fresh project needs an import pass
+
+Roadmap 25. `cater` closed with "SERVED -> open <site>_walk.tscn in Godot,
+F6" and nothing else, and a project Godot has never opened parses with 59
+errors until the editor has imported it -- `lux_root.gd` and `lux_preset.gd`
+fail to load because `class_name` resolution needs the editor's scan, and
+every building reports its `.glb` as vanished. Harmless for a person, who
+opens the project first; a silent trap for anything scripted. Every pipeline
+stage that launches a served project runs `--import` itself now (Level
+Factory's staging, export and portability check, the Lux adapter, Lot's
+`package.py` and `walktest.py`, the factory's walk tools); the one thing left
+was the line a person reads. It says so, with the command.
+
 ## [0.55.0] - the site light envelope is stamped from the files it merges
 
 Roadmap 95. `merge_lights` wrote `"light_manifest_version": "1.0.0"` as a
