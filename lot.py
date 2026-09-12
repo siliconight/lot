@@ -928,13 +928,14 @@ def write_site_slots(site_spec, out_path):
         if not sp or not dims or len(dims) < 3:
             continue
         cx, cy = cv["at"]
+        base = SIDEWALK_H if cv.get("base") == "sidewalk" else 0.0
         slots.append({
             "slot_id": f"cover_{i}", "role": "prop", "size_mod": "full",
             "style": 1, "material": COVER_MATERIALS.get(sp, "metal_painted"),
             "current_ref": "prop_greybox_01", "kit_axis": "theme",
             "species": sp,
             "transform": {"translation": [round(cx, 4), round(cy, 4),
-                                          round(float(dims[2]) / 2.0, 4)],
+                                          round(base + float(dims[2]) / 2.0, 4)],
                           "rot_y": float(cv.get("yaw") or 0.0),
                           "scale": [1.0, 1.0, 1.0]},
             "fit": {"dims": [float(dims[0]), float(dims[1]), float(dims[2])],
@@ -960,7 +961,10 @@ def write_site_slots(site_spec, out_path):
 #: prop slot (the Zoo genome's default). Named here so the slot Lot writes
 #: says what Zoo will read, rather than leaving the field empty.
 COVER_MATERIALS = {"box_truck": "metal_painted", "cargo_container": "metal_painted",
-                   "simple_car": "metal_painted"}
+                   "simple_car": "metal_painted",
+                   # the kerb line (site_furniture)
+                   "streetlight": "metal", "fire_hydrant": "metal_painted",
+                   "litter_bin": "metal_painted", "sign_post": "metal_bare"}
 
 
 COVER_DIR = "cover"
@@ -1217,18 +1221,21 @@ def _outdoor_nodes(site_spec, preview=False, self_flooring=None, skins=None,
     for i, cv in enumerate(site_spec.get("cover", [])):
         cx, cy = cv["at"]
         sx, sy, sz = cv.get("size", COVER)
+        # Where the piece's underside sits: the plate, or the top of a
+        # sidewalk band for kerb-line furniture (roadmap 153).
+        base = SIDEWALK_H if cv.get("base") == "sidewalk" else 0.0
         if i in cover_refs:
             # The module Zoo built for this slot, standing where the box
             # stood: same centre, same yaw, its own collision (roadmap 22).
             # The module is centre-pivot at the slot's dims, so its origin
             # is the box's centre.
             xform = _godot_transform((cx, cy), float(cv.get("yaw") or 0.0),
-                                     z=sy / 2)
+                                     z=base + sy / 2)
             body += [f'[node name="cover_{i}" parent="." '
                      f'instance=ExtResource("{cover_refs[i]}")]',
                      f'transform = Transform3D({xform})', '']
             continue
-        bl, sr = _box_node(f"cover_{i}", (sx, sy, sz), (cx, sy / 2, -cy),
+        bl, sr = _box_node(f"cover_{i}", (sx, sy, sz), (cx, base + sy / 2, -cy),
                            COVER_COLOR)
         body += bl
         sub += sr
@@ -2314,6 +2321,22 @@ def assemble(site_spec_path, out_dir=None, walkable=False, navqa=False,
         species=site_cover.COVER_SPECIES)
     site_spec.setdefault("cover", []).extend(
         c.as_site_cover() for c in cover_plan.cover)
+    # THE KERB LINE (roadmap 153): lamps at a spacing and a hydrant, a bin
+    # and a sign at every crossing, on the sidewalk bands, as the same
+    # prop-slot records cover pieces are -- so the site kit builds them and
+    # the themed site stands them. Every piece stands taller than the step
+    # limit and carries collision, so the honesty rule holds by species.
+    import site_furniture
+    import site_streets
+    furniture = site_furniture.plan_furniture(site_streets.roads(site_spec),
+                                              SIDEWALK_H)
+    site_spec["cover"].extend(furniture)
+    merged["furniture_plan"] = {"placed": furniture}
+    if furniture:
+        from collections import Counter as _Counter
+        _by = _Counter(f["species"] for f in furniture)
+        print("[lot] LOT_FURNITURE_PLACED: " + ", ".join(
+            f"{n} {s}" for s, n in sorted(_by.items())) + " along the kerb line")
     merged["cover_plan"] = {
         "placed": [c.as_dict() for c in cover_plan.cover],
         "still_open": [f"{a} -> {b} ({d:.1f} m)"

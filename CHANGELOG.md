@@ -1,3 +1,20 @@
+## [0.62.0] - the kerb line
+
+Roadmap 153, the second layer. `site_furniture` places, along every
+sidewalk band of every road in `site_streets`, a streetlight every 25 m
+(IES RP-8's residential spacing at the low end, for a 6 m lamp) and at
+every crossing a fire hydrant 2.5 m past the dropped kerb, a litter bin
+1.5 m before it and a stop-sign post at its edge facing the road -- each
+on the band's outer half so the kerb edge stays clear for a body stepping
+off at a cut, none inside a cut's span plus a clearance. They are the
+same prop-slot records the cover planner writes, with a `base` of
+`sidewalk`: the manifest's translation and the scene's instance both
+stand the module on the band's top (`SIDEWALK_H`) rather than the plate,
+box and module alike. Every species is taller than the step limit and
+carries collision, so the honesty rule holds by species. The plan is
+written to the gameplay file as `furniture_plan` and said as
+`LOT_FURNITURE_PLACED`.
+
 ## [0.61.0] - the street is a model, and it carries its paint
 
 Roadmap 153, the walker's "does Lot need to evolve now": yes, in this way.
