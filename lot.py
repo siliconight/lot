@@ -715,24 +715,26 @@ def _yaw_box_node(name, size, center_godot, yaw_deg, color=None, skin=None):
 MARKING_Y = ROAD_THICK + SURFACE_TIER / 2.0 + 0.001
 
 
-def _yaw_quad_node(name, size, center_godot, yaw_deg, color):
+def _yaw_quad_node(name, size, center_godot, yaw_deg, color, skin=None):
     """(body_lines, subres_lines) for a flat painted rectangle: a Node3D
     carrying the tiled meshes `_mesh_child_lines` makes, one shared
     material, and NO body -- markings have no collision. ``size`` is
-    (along, across) in the plan; the quad is `SURFACE_TIER` thick."""
+    (along, across) in the plan; the quad is `SURFACE_TIER` thick. With a
+    `paint` skin the quad wears the pack, tinted by the marking's own
+    colour, and the pack's cutout is where the paint has worn through."""
     along, across = size
     x, yh, z = center_godot
     r = math.radians(yaw_deg)
     c, s = math.cos(r), math.sin(r)
     xform = (f"{c:g}, 0, {s:g}, 0, 1, 0, {-s:g}, 0, {c:g}, {x:g}, {yh:g}, {z:g}")
-    mesh_body, mesh_sub = _mesh_child_lines(name, (along, SURFACE_TIER, across), color)
+    mesh_body, mesh_sub = _mesh_child_lines(name, (along, SURFACE_TIER, across), color, skin)
     body = [f'[node name="{name}" type="Node3D" parent="."]',
             f'transform = Transform3D({xform})', '']
     body += mesh_body
-    return body, list(mesh_sub) + _mat_sub(name, color)
+    return body, list(mesh_sub) + _mat_sub(name, color, skin, tint=color if skin else None)
 
 
-def _mat_sub(name, color, skin=None):
+def _mat_sub(name, color, skin=None, tint=None):
     """The one StandardMaterial3D a body's tiles share. `color` alone is the
     flat greybox read; with a `skin` (see `ground_skins`) the material carries
     the Pixelcoat maps, projected in WORLD space so a plate tiled into 8 m
@@ -756,6 +758,14 @@ def _mat_sub(name, color, skin=None):
         lines.append('uv1_triplanar = true')
         lines.append('uv1_world_triplanar = true')
         lines.append(f'uv1_scale = Vector3({s:g}, {s:g}, {s:g})')
+        if skin.get("alpha_mode") == "scissor":
+            # the pack's alpha is a cutout: tested, never blended, so the
+            # quad stays in the opaque pass and needs no sorting
+            lines.append('transparency = 2')
+            lines.append('alpha_scissor_threshold = 0.5')
+        if tint:
+            r, g, b = tint[:3]
+            lines.append(f'albedo_color = Color({r:g}, {g:g}, {b:g}, 1)')
         lines.append('')
         return lines
     if len(color) == 3:
@@ -776,7 +786,7 @@ CODE_GROUND_SKIN_MISSING = "LOT_GROUND_SKIN_MISSING"
 #: which material kind a family wears is the caller's decision (Level Factory
 #: maps ground -> asphalt, path -> sidewalk), because Lot does not know the
 #: theme and does not read Pixelcoat's profiles -- only the pack it was handed.
-SKIN_FAMILIES = ("ground", "path", "courtyard", "road", "sidewalk")
+SKIN_FAMILIES = ("ground", "path", "courtyard", "road", "sidewalk", "paint")
 
 
 def ground_skins(site_spec):
@@ -837,6 +847,9 @@ def ground_skins(site_spec):
             "normal": _abs(maps["normal"]) if maps.get("normal") else None,
             "meters_per_tile": mpt,
             "nearest": hints.get("interpolation") == "nearest",
+            # a cutout pack (road paint worn through to the road) asks for
+            # alpha scissor; anything else is opaque
+            "alpha_mode": (hints.get("transparency") or {}).get("alpha_mode"),
         }
     return skins, findings
 
@@ -1296,8 +1309,15 @@ def _outdoor_nodes(site_spec, preview=False, self_flooring=None, skins=None,
     for f_ in street_findings:
         print(f"[lot] {f_}")
     for road in street_roads:
-        i, w, length, ang = road.index, road.width, road.length, road.angle_deg
-        cx, cy = road.centre
+        i, w, ang = road.index, road.width, road.angle_deg
+        # the slab: the whole road, or from the far edge of the band of a
+        # road it ends on (`site_streets._slab`) -- two slabs lying
+        # coplanar over a junction's mouth would z-fight, and the other
+        # road's dropped kerb is that mouth's surface
+        length = road.slab_length
+        if length <= 0.05:
+            continue
+        cx, cy = road.slab_centre
         bl, sr = _yaw_box_node(f"road_{i}",
                                (length, ROAD_THICK + GROUND_SINK, w),
                                (cx, (ROAD_THICK - GROUND_SINK) / 2, -cy),
@@ -1306,6 +1326,7 @@ def _outdoor_nodes(site_spec, preview=False, self_flooring=None, skins=None,
         sub += sr
         for kerb in road.kerbs:
             for j, (t0, t1, is_cut) in enumerate(kerb.spans):
+                t0, t1 = max(t0, road.slab[0]), min(t1, road.slab[1])
                 seg = t1 - t0
                 if seg <= 0.05:
                     continue
@@ -1321,14 +1342,15 @@ def _outdoor_nodes(site_spec, preview=False, self_flooring=None, skins=None,
                 sub += sr
     # THE PAINT. Flat quads a hair above the road, tiled like every other
     # surface and with NO collision -- a marking is not a thing a body meets.
-    # Geometry standing in for the decal layer (item 152) the same way a
-    # box stands in for a prop: the shape and the place are right, the
-    # material is the greybox's flat read.
+    # The quad is the decal's shape and place; with a `paint` skin (a
+    # Pixelcoat road-paint pack, cutout where the paint has worn through)
+    # it is the decal layer of item 152, and without one it is the
+    # greybox's flat read.
     for n, m in enumerate(site_streets.markings(street_roads)):
         along, across = m["size"]
         bl, sr = _yaw_quad_node(f"mark_{n}_{m['kind']}", (along, across),
                                 (m["at"][0], MARKING_Y, -m["at"][1]),
-                                -m["yaw"], tuple(m["color"]))
+                                -m["yaw"], tuple(m["color"]), skin=skins.get("paint"))
         body += bl
         sub += sr
 

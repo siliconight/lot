@@ -28,7 +28,8 @@ CUT_MARGIN = 0.6
 #: What the paint looks like. Widths from the MUTCD's normal line (4 in ~ 0.1
 #: m, rounded up so a 512 px tile reads it) and its continental crosswalk
 #: (bars 0.3-0.6 m wide, spaced their own width). Colours are the greybox's
-#: flat reads until the decal layer carries a Pixelcoat marking texture.
+#: flat reads, and the tint of the road-paint pack when the site carries
+#: one (`lot.SKIN_FAMILIES`, family `paint`).
 LINE_WIDTH = 0.12
 EDGE_INSET = 0.30          # edge line, in from the kerb face
 DASH_ON = 3.0
@@ -63,8 +64,8 @@ def bays(road) -> list:
     if not has_parking(road):
         return []
     out = []
-    keep_out = [(c.t - c.width / 2.0 - CROSSING_SETBACK,
-                 c.t + c.width / 2.0 + CROSSING_SETBACK) for c in road.crossings]
+    keep_out = [(crossing_box(c)[0] - CROSSING_SETBACK,
+                 crossing_box(c)[1] + CROSSING_SETBACK) for c in road.crossings]
     for kerb in road.kerbs:
         cuts = [(t0, t1) for t0, t1, is_cut in kerb.spans if is_cut]
         offset = kerb.sign * (road.width / 2.0 - LANE_DEPTH / 2.0)
@@ -79,11 +80,18 @@ def bays(road) -> list:
 
 @dataclass
 class Cut:
-    """A crossing dropped into a kerb: where along the kerb, how wide."""
+    """A crossing dropped into a kerb: where along the kerb, how wide.
+
+    A ROAD crossing carries the crosser's sidewalk too, because the box a
+    junction takes is the crosser's width plus both its bands; and whether
+    the crosser ENDS here (a T: its endpoint lies on this road's line),
+    because the leg that ends is the one that stops."""
     t: float
     span: float
     width: float        # the crossing's own width (the path's)
     kind: str           # "path" or "road"
+    sidewalk: float = 0.0
+    terminal: bool = False
 
 
 @dataclass
@@ -108,10 +116,22 @@ class Road:
     perp: tuple
     kerbs: list = field(default_factory=list)
     crossings: list = field(default_factory=list)   # Cuts against the CENTRE line
+    #: The slab's extent along ``t``: the whole road, unless an end lies on
+    #: another road, where the slab begins at the far edge of that road's
+    #: band and the other road's dropped kerb carries the mouth (a T).
+    slab: tuple = (0.0, 0.0)
 
     @property
     def centre(self):
         return ((self.a[0] + self.b[0]) / 2.0, (self.a[1] + self.b[1]) / 2.0)
+
+    @property
+    def slab_centre(self):
+        return self.point((self.slab[0] + self.slab[1]) / 2.0)
+
+    @property
+    def slab_length(self):
+        return self.slab[1] - self.slab[0]
 
     def point(self, t: float, offset: float = 0.0):
         """Plan point ``t`` metres along, ``offset`` metres across (left +)."""
@@ -141,11 +161,11 @@ def kerb_crossings(site_spec, bld, origin, along, perp, offset, length, width,
     px, py = perp
     kx, ky = ox + px * offset, oy + py * offset
     out = []
-    crossers = [(p, float(p.get("width", 6.0)), "path")
+    crossers = [(p, float(p.get("width", 6.0)), "path", 0.0)
                 for p in site_spec.get("paths", []) or []]
-    crossers += [(r, float(r.get("width", 9.0)), "road")
+    crossers += [(r, float(r.get("width", 9.0)), "road", float(r.get("sidewalk") or 0.0))
                  for r in site_spec.get("roads", []) or []]
-    for p, pw, kind in crossers:
+    for p, pw, kind, psw in crossers:
         try:
             (pax, pay), (pbx, pby) = _endpoints(p, bld)
         except (KeyError, TypeError):
@@ -159,6 +179,11 @@ def kerb_crossings(site_spec, bld, origin, along, perp, offset, length, width,
         s = (ux * ry - uy * rx) / den
         if not (-0.05 <= s <= 1.05):
             continue                      # crosses the LINE, not the path
+        # where the crosser meets the road's CENTRE line, not this kerb's:
+        # a road that ends on the centre line (a T) is terminal whichever
+        # kerb is being asked, and its parameter at the kerb is not 0
+        rx0, ry0 = pax - ox, pay - oy
+        s_c = (ux * ry0 - uy * rx0) / den
         if t < 0.0 or t > length:
             continue                      # past the end of this kerb
         vl = math.hypot(vx, vy) or 1e-9
@@ -172,8 +197,39 @@ def kerb_crossings(site_spec, bld, origin, along, perp, offset, length, width,
                 f"along it, so {span:.1f} m of kerb is dropped to keep the "
                 f"crossing walkable. Re-route it closer to square, or run it "
                 f"along the sidewalk rather than across it.")
-        out.append(Cut(t=t, span=span, width=pw, kind=kind))
+        out.append(Cut(t=t, span=span, width=pw, kind=kind, sidewalk=psw,
+                       terminal=(s_c < 0.05 or s_c > 0.95)))
     return out
+
+
+def crossing_box(cut) -> tuple:
+    """(lo, hi) along the road that a crossing takes: a path's own width; a
+    road's width plus its sidewalk band each side -- the junction box."""
+    half = cut.width / 2.0 + (cut.sidewalk if cut.kind == "road" else 0.0)
+    return (cut.t - half, cut.t + half)
+
+
+def _slab(road, others) -> tuple:
+    """Where the slab runs: trimmed at an end that lies on another road's
+    centre line (within a metre, within that road's extent) by the far edge
+    of that road's band, so the two slabs never lie coplanar over the mouth
+    and the other road's dropped kerb is the mouth's surface."""
+    t0, t1 = 0.0, road.length
+    for other in others:
+        if other is road:
+            continue
+        for end, which in ((road.a, 0), (road.b, 1)):
+            dx, dy = end[0] - other.a[0], end[1] - other.a[1]
+            along = dx * other.along[0] + dy * other.along[1]
+            across = dx * other.perp[0] + dy * other.perp[1]
+            if abs(across) > 1.0 or along < -1.0 or along > other.length + 1.0:
+                continue
+            trim = other.width / 2.0 + other.sidewalk
+            if which == 0:
+                t0 = max(t0, trim)
+            else:
+                t1 = min(t1, road.length - trim)
+    return (t0, max(t0, t1))
 
 
 def split_span(length, cuts, margin: float = CUT_MARGIN):
@@ -229,6 +285,8 @@ def roads(site_spec, findings=None) -> list:
                 road.kerbs.append(Kerb(side=side, sign=sgn, offset=off * sgn,
                                        cuts=cuts, spans=split_span(length, cuts)))
         out.append(road)
+    for road in out:
+        road.slab = _slab(road, out)
     return out
 
 
@@ -256,9 +314,18 @@ def markings(roads_list) -> list:
         # kerb face
         edge = (half - LANE_DEPTH) if has_parking(road) else (half - EDGE_INSET)
         for sgn in (1, -1):
-            out.append(_marking("edge_line", road, road.length / 2.0,
-                                sgn * edge, road.length,
-                                LINE_WIDTH, WHITE, side="L" if sgn > 0 else "R"))
+            side = "L" if sgn > 0 else "R"
+            # broken over a road's mouth on that kerb -- the edge line
+            # stops where the other road begins -- and whole over a path's
+            # dropped kerb, which keeps the lane's edge
+            mouths = [(c.t - c.span / 2.0, c.t + c.span / 2.0)
+                      for k in road.kerbs if k.side == side
+                      for c in k.cuts if c.kind == "road"]
+            for e0, e1 in _outside(road.slab[0], road.slab[1], mouths):
+                if e1 - e0 > 0.5:
+                    out.append(_marking("edge_line", road, (e0 + e1) / 2.0,
+                                        sgn * edge, e1 - e0, LINE_WIDTH, WHITE,
+                                        side=side))
         # bay ticks: a short line across the parking lane at every bay edge
         seen = set()
         for bay in bays(road):
@@ -269,46 +336,88 @@ def markings(roads_list) -> list:
                 seen.add(key)
                 out.append(_marking("bay_tick", road, t, bay["offset"],
                                     LINE_WIDTH, LANE_DEPTH, WHITE, side=bay["side"]))
-        # crosswalk stations: one per crossing of the centre line
-        stations = sorted((c.t, c.width) for c in road.crossings)
-        # the crosswalk plus the stop bars either side of it: no dash runs
+        # THE CROSSINGS, each as a box along the road with crosswalks at
+        # its ends. A path's box is its own width and its crosswalk is
+        # the box. A road's box is its width plus its sidewalk bands, and
+        # a crosswalk lies at EACH end in line with the crosser's
+        # sidewalk (that is where people crossing the junction walk); an
+        # end past this road's own extent is dropped, so a T leg gets the
+        # one crosswalk across its mouth and the through road gets one
+        # each side of the mouth.
+        boxes = []                    # (lo, hi, walks[(centre, width)], stops)
+        for c in sorted(road.crossings, key=lambda c: c.t):
+            lo, hi = crossing_box(c)
+            if c.kind == "road" and c.sidewalk > 0.0:
+                walks = [(lo + c.sidewalk / 2.0, c.sidewalk),
+                         (hi - c.sidewalk / 2.0, c.sidewalk)]
+            else:
+                walks = [(c.t, c.width)]
+            # kept within the ROAD's extent, not its slab: a T leg's mouth
+            # crosswalk lies on the through road's dropped kerb, between
+            # the slab and the centre line, and that is where it belongs
+            walks = [(tc, wc) for tc, wc in walks
+                     if tc - wc / 2.0 >= -1e-6 and tc + wc / 2.0 <= road.length + 1e-6]
+            # the leg that ENDS at a junction is the one that stops: a
+            # road crosser whose end lies on this road makes this the
+            # through road, which keeps its right of way. A path crossing
+            # keeps its stop bars (a marked crosswalk).
+            stops = not (c.kind == "road" and c.terminal)
+            boxes.append((lo, hi, walks, stops, round(c.t, 3)))
+        # the crosswalks plus the stop bars either side: no dash runs
         # into a stop bar
         clear = STOP_BAR_SETBACK + STOP_BAR_DEPTH
-        bands = [(t - w / 2.0 - clear, t + w / 2.0 + clear) for t, w in stations]
+        bands = [(lo - clear, hi + clear) for lo, hi, _w, _s, _t in boxes]
 
         def _in_band(t0, t1):
             return any(not (t1 <= b0 or t0 >= b1) for b0, b1 in bands)
 
-        # centre line, dashed, skipping the crosswalks
-        t = 0.0
-        while t < road.length:
-            t1 = min(t + DASH_ON, road.length)
+        # centre line, dashed, within the slab, skipping the boxes
+        t = road.slab[0]
+        while t < road.slab[1]:
+            t1 = min(t + DASH_ON, road.slab[1])
             if t1 - t > 0.5 and not _in_band(t, t1):
                 out.append(_marking("centre_line", road, (t + t1) / 2.0, 0.0,
                                     t1 - t, LINE_WIDTH, YELLOW))
             t += DASH_ON + DASH_OFF
         # crosswalk bars and stop bars
-        for t_c, w_c in stations:
-            n = max(1, int(w_c // (BAR_WIDTH + BAR_GAP)))
-            start = t_c - (n * (BAR_WIDTH + BAR_GAP) - BAR_GAP) / 2.0
-            for j in range(n):
-                tb = start + j * (BAR_WIDTH + BAR_GAP) + BAR_WIDTH / 2.0
-                out.append(_marking("crosswalk_bar", road, tb, 0.0, BAR_WIDTH,
-                                    road.width - 2.0 * EDGE_INSET, WHITE,
-                                    station=round(t_c, 3)))
+        lane = half - EDGE_INSET
+        for lo, hi, walks, stops, station in boxes:
+            for t_c, w_c in walks:
+                n = max(1, int(w_c // (BAR_WIDTH + BAR_GAP)))
+                start = t_c - (n * (BAR_WIDTH + BAR_GAP) - BAR_GAP) / 2.0
+                for j in range(n):
+                    tb = start + j * (BAR_WIDTH + BAR_GAP) + BAR_WIDTH / 2.0
+                    out.append(_marking("crosswalk_bar", road, tb, 0.0, BAR_WIDTH,
+                                        road.width - 2.0 * EDGE_INSET, WHITE,
+                                        station=station))
+            if not stops:
+                continue
             # a stop bar on the approach lane each way: traffic on the L
-            # lane travels +t and stops before the crosswalk; on the R lane
-            # it travels -t and stops after it
-            lane = half - EDGE_INSET
-            t_lo = t_c - w_c / 2.0 - STOP_BAR_SETBACK - STOP_BAR_DEPTH / 2.0
-            t_hi = t_c + w_c / 2.0 + STOP_BAR_SETBACK + STOP_BAR_DEPTH / 2.0
-            if t_lo - STOP_BAR_DEPTH / 2.0 > 0.0:
+            # lane travels +t and stops before the box; on the R lane it
+            # travels -t and stops after it
+            t_lo = lo - STOP_BAR_SETBACK - STOP_BAR_DEPTH / 2.0
+            t_hi = hi + STOP_BAR_SETBACK + STOP_BAR_DEPTH / 2.0
+            if t_lo - STOP_BAR_DEPTH / 2.0 > road.slab[0]:
                 out.append(_marking("stop_bar", road, t_lo, lane / 2.0,
-                                    STOP_BAR_DEPTH, lane, WHITE, station=round(t_c, 3)))
-            if t_hi + STOP_BAR_DEPTH / 2.0 < road.length:
+                                    STOP_BAR_DEPTH, lane, WHITE, station=station))
+            if t_hi + STOP_BAR_DEPTH / 2.0 < road.slab[1]:
                 out.append(_marking("stop_bar", road, t_hi, -lane / 2.0,
-                                    STOP_BAR_DEPTH, lane, WHITE, station=round(t_c, 3)))
+                                    STOP_BAR_DEPTH, lane, WHITE, station=station))
     return out
+
+
+def _outside(t0, t1, holes):
+    """[(a, b)] -- the parts of t0..t1 outside every hole."""
+    spans, cursor = [], t0
+    for h0, h1 in sorted(holes):
+        if h1 <= cursor or h0 >= t1:
+            continue
+        if h0 > cursor:
+            spans.append((cursor, h0))
+        cursor = max(cursor, h1)
+    if cursor < t1:
+        spans.append((cursor, t1))
+    return spans
 
 
 def manifest(site_spec, roads_list=None, findings=None) -> dict:
@@ -320,9 +429,11 @@ def manifest(site_spec, roads_list=None, findings=None) -> dict:
         "roads": [{"index": r.index, "a": list(r.a), "b": list(r.b),
                    "width": r.width, "sidewalk": r.sidewalk,
                    "length": round(r.length, 4),
+                   "slab": [round(r.slab[0], 4), round(r.slab[1], 4)],
                    "kerbs": [{"side": k.side, "offset": round(k.offset, 4),
                               "cuts": [{"t": round(c.t, 4), "span": round(c.span, 4),
-                                        "width": c.width, "kind": c.kind}
+                                        "width": c.width, "kind": c.kind,
+                                        "sidewalk": c.sidewalk, "terminal": c.terminal}
                                        for c in k.cuts]} for k in r.kerbs]}
                   for r in rl],
         "markings": markings(rl),

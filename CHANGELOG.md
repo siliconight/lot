@@ -1,3 +1,28 @@
+## [0.65.0] - intersections, and the paint as a decal
+
+Roadmap 153. INTERSECTIONS: a road crossing is a BOX -- the crosser's
+width plus its sidewalk band each side (`Cut.sidewalk`, `crossing_box`) --
+and the paint answers it: a crosswalk at each end of the box in line with
+the crosser's sidewalks (a path's crosswalk is still the path), the stop
+bar only on the leg that ENDS at the junction (`Cut.terminal`, judged
+where the crosser meets the road's centre line: a T leg stops, the through
+road keeps its right of way; a path crossing keeps both bars), the centre
+line and the edge lines broken over the box -- the edge line over a road's
+mouth only, whole over a dropped kerb -- and parking clear of the box. A
+road that ends on another begins its slab at that road's band edge
+(`Road.slab`, `_slab`), so two slabs never lie coplanar over the mouth and
+the through road's dropped kerb is the mouth's surface; the writer draws
+the slab and clips the band pieces to it. The manifest carries `slab` per
+road and `sidewalk`/`terminal` per cut. Residue: two roads CROSSING (an X,
+neither ending) still overlap their slabs; the generated spec makes a T.
+
+THE PAINT AS A DECAL (152 step 2): a `paint` skin family. A Pixelcoat
+`road_paint` pack (0.31.0) whose import hints ask for alpha scissor gets
+`transparency = 2` on the marking quads' material, and the quad is tinted
+by the marking's own colour -- so the white lines are worn through to the
+road in patches and the centre line is the same paint in yellow. Without
+the pack the quads are the greybox's flat read, as before.
+
 ## [0.64.0] - the waiting places: a tree between the lamps, a bus stop per road
 
 Roadmap 153, the third layer. `site_furniture` now plants a `street_tree`
