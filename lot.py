@@ -39,6 +39,7 @@ A site spec (JSON):
 import json
 import math
 import os
+import shutil
 
 
 #: What a MISSING contract file falls back to. These must track the ratified
@@ -818,21 +819,51 @@ def ground_skins(site_spec):
     return skins, findings
 
 
-def _skin_ext_lines(skins):
-    """One Texture2D ext_resource per map, ABSOLUTE on disk. Lot does not
-    own the textures and does not copy them; a consumer that ships the
-    scene bundles what it references (Level Factory's export rewrites every
-    absolute ref into its package)."""
+SKINS_DIR = "skins"
+
+
+def _skin_ext_lines(skins, out_dir, prefix):
+    """One Texture2D ext_resource per map, the map COPIED to `<out_dir>/skins/`
+    and referenced beside the scene the way a staged building is
+    (`skins/<file>` in portable mode, `res://skins/<file>` otherwise).
+
+    0.57.0 wrote the pack's absolute path and copied nothing, on the theory
+    that a consumer bundles what a scene references. Level Factory's export
+    does; Godot does not: a `.png` outside the project has no importer, so
+    the scene's first loader -- the Lux stage, which stages the scene into a
+    throwaway project -- failed to parse it ("No loader found for resource
+    ... expected type: Texture2D"), the stage exited 2, and cold run 9015
+    shipped a package with no lighting at all. Everything that loads a Lot
+    scene copies the scene's siblings (Lux's staging does, the export does
+    for `lot/`), so the maps live as siblings.
+    """
     lines = []
+    dest = os.path.join(out_dir, SKINS_DIR)
     for fam in SKIN_FAMILIES:
         sk = skins.get(fam)
         if not sk:
             continue
         for m in ("albedo", "roughness", "normal"):
-            if sk.get(m):
-                lines.append(f'[ext_resource type="Texture2D" path="{sk[m]}" '
-                             f'id="{sk["id"]}_{m}"]')
+            src = sk.get(m)
+            if not src:
+                continue
+            os.makedirs(dest, exist_ok=True)
+            name = os.path.basename(src)
+            target = os.path.join(dest, name)
+            if not (os.path.exists(target) and _same_bytes(src, target)):
+                shutil.copyfile(src, target)
+            lines.append(f'[ext_resource type="Texture2D" '
+                         f'path="{prefix}{SKINS_DIR}/{name}" '
+                         f'id="{sk["id"]}_{m}"]')
     return lines
+
+
+def _same_bytes(a, b):
+    try:
+        with open(a, "rb") as fa, open(b, "rb") as fb:
+            return fa.read() == fb.read()
+    except OSError:
+        return False
 
 
 def _blocker_source(bk):
@@ -1298,7 +1329,8 @@ def write_godot_scene(site_spec, merged, out_path, glb_dir=".", preview=False,
                "path": bool(site_spec.get("paths")),
                "courtyard": bool(site_spec.get("courtyards"))}
     skins = {fam: sk for fam, sk in skins.items() if present.get(fam)}
-    res_lines += _skin_ext_lines(skins)
+    res_lines += _skin_ext_lines(skins, os.path.dirname(os.path.abspath(out_path)),
+                                 prefix)
 
     outdoor_body, outdoor_sub = _outdoor_nodes(
         site_spec, preview=preview, self_flooring=self_flooring, skins=skins)

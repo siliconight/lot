@@ -94,7 +94,14 @@ def test_the_scene_declares_each_map_once_and_counts_it_in_load_steps(tmp_path):
     assert len(tex) == 2                 # albedo + roughness; no courtyard, no courtyard maps
     assert any('id="skin_ground_albedo"' in ln for ln in tex)
     assert not any("courtyard" in ln for ln in tex)
-    assert all('path="' in ln and ":/" in ln for ln in tex)   # absolute, forward slashes
+    # the maps are COPIED beside the scene and referenced as siblings, the
+    # way a staged building is -- Godot has no importer for a png outside
+    # the project, and the Lux stage loads this scene in one
+    assert all('path="res://skins/' in ln for ln in tex)
+    out_dir = os.path.dirname(r["scene"])
+    assert os.path.isfile(os.path.join(out_dir, "skins", "asphalt_street_albedo.png"))
+    assert os.path.isfile(os.path.join(out_dir, "skins", "asphalt_street_roughness.png"))
+    assert not os.path.exists(os.path.join(out_dir, "skins", "concrete_delco_albedo.png"))
     import re
     n = int(re.search(r"load_steps=(\d+)", txt).group(1))
     assert n == len(ext) + txt.count("[sub_resource") + 1
@@ -112,6 +119,20 @@ def test_an_unreadable_pack_is_reported_and_the_plate_stays_flat(tmp_path):
     assert "not an outdoor family" in findings[1][1]
     body, sub = lot._outdoor_nodes(spec, skins=skins)
     assert "albedo_color = Color(0.3, 0.32, 0.34, 1)" in "\n".join(sub)
+
+
+def test_portable_mode_references_the_copied_maps_relative_to_the_scene(tmp_path):
+    spec = _spec()
+    spec["ground_skins"] = {"ground": _pack(tmp_path, "asphalt_street", "asphalt")}
+    path = os.path.join(SPECS, "_skin_probe2.json")
+    json.dump(spec, open(path, "w", encoding="utf-8"))
+    try:
+        r = lot.assemble(path, str(tmp_path / "out"), portable=True)
+    finally:
+        os.remove(path)
+    txt = open(r["scene"], encoding="utf-8").read()
+    tex = [ln for ln in txt.splitlines() if 'type="Texture2D"' in ln]
+    assert tex and all('path="skins/' in ln for ln in tex)
 
 
 def test_a_pack_without_a_period_is_refused_not_guessed(tmp_path):

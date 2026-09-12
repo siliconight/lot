@@ -1,3 +1,17 @@
+## [0.58.0] - the skins live beside the scene
+
+0.57.0 wrote each map's absolute path and copied nothing, on the theory
+that a consumer bundles what a scene references. Level Factory's export
+does; Godot does not: a `.png` outside a project has no importer, so the
+first thing to load the scene -- the Lux stage, which stages it into a
+throwaway project -- failed to parse it ("No loader found for resource
+... expected type: Texture2D"), exited 2, and cold run 9015 shipped a
+package with no lighting at all. Everything that loads a Lot scene copies
+the scene's siblings, so the maps are now copied to `skins/` beside the
+scene and referenced as siblings, the way a staged building is:
+`skins/<map>` in portable mode, `res://skins/<map>` otherwise. Byte-equal
+copies are not rewritten. Tests cover both modes.
+
 ## [0.57.1] - a skin is declared only where a body will wear it
 
 Measured on cold run 9014's themed spec with all three families named: the
