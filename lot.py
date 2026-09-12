@@ -2379,7 +2379,8 @@ def assemble(site_spec_path, out_dir=None, walkable=False, navqa=False,
     import site_parking
     import site_streets
     furniture = site_furniture.plan_furniture(site_streets.roads(site_spec),
-                                              site_spec.get("buildings") or [])
+                                              site_spec.get("buildings") or [],
+                                              list(cover_points.values()))
     site_spec.setdefault("cover", []).extend(furniture)
     merged["furniture_plan"] = {"placed": furniture}
     standing = []

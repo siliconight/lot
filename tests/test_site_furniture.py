@@ -124,3 +124,20 @@ def test_the_facing_kerb_is_read_from_the_buildings_side():
     assert site_furniture._facing_kerb(road, [{"at": [0, 30]}]).side == "L"
     assert site_furniture._facing_kerb(road, [{"at": [0, -30]}]).side == "R"
     assert site_furniture._facing_kerb(road, []) is None
+
+
+def test_a_piece_keeps_clear_of_the_mission_markers():
+    """Cold run 9030, third seed: a lamp stood on Enemy_4 and the preflight
+    refused the candidate. A lamp or a tree steps along its band; a corner
+    piece or a bus stop is skipped."""
+    roads = site_streets.roads(_probe())
+    bare = site_furniture.plan_furniture(roads)
+    lamp = next(p for p in bare if p["species"] == "streetlight")
+    marker = tuple(lamp["at"])
+    pieces = site_furniture.plan_furniture(roads, markers=[marker])
+    for p in pieces:
+        assert site_furniture._clear_of_markers(p, [marker]), p
+    # the lamp stepped along its band rather than vanishing
+    moved = [p for p in pieces if p["species"] == "streetlight" and p["kerb"] == lamp["kerb"]
+             and abs(p["t"] - lamp["t"]) <= 4.0 + 1e-6]
+    assert moved and moved[0]["t"] != lamp["t"]

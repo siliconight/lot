@@ -24,6 +24,8 @@ Frame: spec/Blender Z-up plan coordinates, like `site_streets`. Pure.
 """
 from __future__ import annotations
 
+import site_cover
+
 #: (species, width, depth, height) in the species' own frame, and the rule
 #: that places it. Dims are the Zoo genomes' defaults.
 #:   streetlight: one every 25 m (IES RP-8 residential spacing is 25-30 m
@@ -66,6 +68,7 @@ SHELTER_INSET = 0.85      # the shelter's half depth plus a hand
 BENCH_TOWARD_BACK = 0.35  # the bench's centre, from the shelter's, toward its back
 SIGN_BEFORE_SHELTER = 1.0
 PIECE_GAP = 0.3           # daylight between two pieces along the band
+NUDGES = (0.0, 2.0, -2.0, 4.0, -4.0)   # a lamp or a tree steps along its band
 
 
 def _clear_of_cuts(t, half_along, kerb, clearance=CUT_CLEARANCE):
@@ -82,6 +85,36 @@ def _free(t, half_along, placed, gap=PIECE_GAP):
         if abs(p["t"] - t) < half_along + p["along"] / 2.0 + gap:
             return False
     return True
+
+
+def _nudged(make, t, half_along, kerb, placed, markers):
+    """The piece ``make(t)`` at its station, or stepped along the band by
+    `NUDGES` when a MARKER is in the way. A station over a dropped kerb is
+    skipped, not nudged -- the spacing rule stays the spacing rule, and a
+    marker is the one thing worth a step."""
+    if not _clear_of_cuts(t, half_along, kerb):
+        return None
+    for dt in NUDGES:
+        s = t + dt
+        if not (_clear_of_cuts(s, half_along, kerb) and _free(s, half_along, placed)):
+            continue
+        piece = make(s)
+        if _clear_of_markers(piece, markers):
+            return piece
+    return None
+
+
+def _clear_of_markers(piece, markers) -> bool:
+    """No mission marker within `site_cover.MARKER_CLEARANCE` of the piece's
+    footprint edge -- the rule cover and the cars keep. Cold run 9030's
+    third seed stood a lamp ON Enemy_4, and the preflight refused the
+    candidate for an enemy inside solid geometry: the kerb line had never
+    looked at the markers."""
+    x, y = piece["at"]
+    sx, _h, sy = piece["size"]
+    rect = site_cover._grow((x - sx / 2.0, y - sy / 2.0, x + sx / 2.0, y + sy / 2.0),
+                            site_cover.MARKER_CLEARANCE)
+    return not any(site_cover._inside(tuple(m), rect) for m in markers)
 
 
 def _piece(name, species, road, kerb, t, offset, yaw_extra=0.0, breaks=""):
@@ -115,7 +148,7 @@ def _facing_kerb(road, buildings):
     return next((k for k in road.kerbs if k.sign == sign), None)
 
 
-def _bus_stop(road, kerb, placed, n):
+def _bus_stop(road, kerb, placed, n, markers=()):
     """The stop as a set -- shelter, bench inside it, sign before it -- at
     the midpoint of the longest free stretch of ``kerb`` that holds it clear
     of the cuts and of what already stands; nudged along in 3 m steps when
@@ -145,23 +178,28 @@ def _bus_stop(road, kerb, placed, n):
             if not (_free(t, sw / 2.0, placed) and _free(sign_t, sign_d / 2.0, placed)):
                 continue
             tag = f"stop@{t:.1f}"
-            return [_piece(f"BusShelter_{n}", "bus_shelter", road, kerb, t, shelter_off,
-                           back, breaks=tag),
-                    _piece(f"Bench_{n + 1}", "bench", road, kerb, t, bench_off, back,
-                           breaks=tag),
-                    _piece(f"StopSign_{n + 2}", "sign_post", road, kerb, sign_t, outer,
-                           90.0, breaks=tag)]
+            pieces = [_piece(f"BusShelter_{n}", "bus_shelter", road, kerb, t, shelter_off,
+                             back, breaks=tag),
+                      _piece(f"Bench_{n + 1}", "bench", road, kerb, t, bench_off, back,
+                             breaks=tag),
+                      _piece(f"StopSign_{n + 2}", "sign_post", road, kerb, sign_t, outer,
+                             90.0, breaks=tag)]
+            if all(_clear_of_markers(p, markers) for p in pieces):
+                return pieces
     return []
 
 
-def plan_furniture(roads_list, buildings=()) -> list:
+def plan_furniture(roads_list, buildings=(), markers=()) -> list:
     """Pieces along every sidewalk band, as site-cover-shaped records with a
     ``base`` of ``sidewalk`` (the module stands on the band's top, not the
     plate; the caller resolves the height). ``buildings`` are the spec's,
-    read only for which kerb they face. Returns the list; the caller
+    read only for which kerb they face; ``markers`` the mission points
+    every piece keeps clear of (a lamp or a tree steps along its band, a
+    corner piece or a bus stop is skipped). Returns the list; the caller
     extends the spec and the slots."""
     out = []
     n = 0
+    markers = [tuple(m) for m in markers]
     for road in roads_list:
         if not road.sidewalk:
             continue
@@ -173,15 +211,19 @@ def plan_furniture(roads_list, buildings=()) -> list:
             t = LAMP_START
             while t < road.length - LAMP_START:
                 w, d, h = SPECIES["streetlight"]
-                if _clear_of_cuts(t, d / 2.0, kerb):
-                    placed.append(_piece(f"Lamp_{n}", "streetlight", road, kerb, t, outer))
+                lamp = _nudged(lambda s: _piece(f"Lamp_{n}", "streetlight", road, kerb, s, outer),
+                               t, d / 2.0, kerb, placed, markers)
+                if lamp:
+                    placed.append(lamp)
                     n += 1
                 tt = t + TREE_OFFSET
                 gw, gd = FOOTPRINT["street_tree"]
-                if tt < road.length - LAMP_START and _clear_of_cuts(tt, gd / 2.0, kerb) \
-                        and _free(tt, gw / 2.0, placed):
-                    placed.append(_piece(f"Tree_{n}", "street_tree", road, kerb, tt, tree_off))
-                    n += 1
+                if tt < road.length - LAMP_START:
+                    tree = _nudged(lambda s: _piece(f"Tree_{n}", "street_tree", road, kerb, s, tree_off),
+                                   tt, gw / 2.0, kerb, placed, markers)
+                    if tree:
+                        placed.append(tree)
+                        n += 1
                 t += LAMP_SPACING
             # per cut: a hydrant past it, a bin before it, a sign at its edge
             for c in sorted(kerb.cuts, key=lambda c: c.t):
@@ -196,13 +238,15 @@ def plan_furniture(roads_list, buildings=()) -> list:
                     tt = c.t + dt
                     if 0.5 < tt < road.length - 0.5 and _clear_of_cuts(tt, d / 2.0, kerb) \
                             and _free(tt, max(w, d) / 2.0, placed):
-                        placed.append(_piece(f"{species}_{n}", species, road, kerb, tt,
-                                             outer, yaw_extra, breaks=f"crossing@{c.t:.1f}"))
-                        n += 1
+                        piece = _piece(f"{species}_{n}", species, road, kerb, tt,
+                                       outer, yaw_extra, breaks=f"crossing@{c.t:.1f}")
+                        if _clear_of_markers(piece, markers):
+                            placed.append(piece)
+                            n += 1
             out.extend(placed)
             # the bus stop, on the kerb the buildings face
             if kerb is _facing_kerb(road, buildings):
-                stop = _bus_stop(road, kerb, placed, n)
+                stop = _bus_stop(road, kerb, placed, n, markers)
                 n += len(stop)
                 out.extend(stop)
     return out

@@ -1,3 +1,14 @@
+## [0.66.1] - the kerb line keeps clear of the mission markers
+
+Cold run 9030's third seed stood a lamp on Enemy_4, and the Laser Tag
+preflight refused that candidate for an enemy inside solid geometry: the
+kerb line had never looked at the markers (the cover planner and the cars
+always had). `site_furniture` now keeps every piece
+`site_cover.MARKER_CLEARANCE` from every marker's edge -- a lamp or a tree
+steps along its band by up to 4 m to do it, a corner piece or a bus stop
+is skipped -- and a station over a dropped kerb is still skipped, not
+nudged, so the spacing rule stays the spacing rule.
+
 ## [0.66.0] - the street is planned before the cover, and an X has one surface
 
 Roadmap 153 residue. THE CARS FIRST: `assemble` plans the kerb line and
