@@ -164,3 +164,20 @@ def test_assemble_writes_the_manifest_beside_the_scene(tmp_path):
     for s in doc["slots"]:
         assert s["species"] in {n for n, *_ in site_cover.COVER_SPECIES}
         assert s["fit"]["dims"][2] > site_cover.MIN_COVER_HEIGHT
+
+
+def test_marker_clearance_is_measured_from_the_pieces_edge():
+    """Cold run 9018: a 6 m truck's END lay on an enemy spawn under the
+    centre rule, Laser Tag's preflight refused the candidate ("Enemy_2 is
+    sealed off from the crew spawn"), and the export gate held. A marker must
+    be MARKER_CLEARANCE clear of the piece's edge, whatever its length."""
+    # a marker 2.5 m past where a truck's end would land, on the line
+    plan = site_cover.plan_cover(
+        {"LT_PlayerSpawn": CREW, "Enemy_0": ENEMY, "Enemy_1": (0.0, 5.5)},
+        [], GROUND, opening_range=45.0, species=site_cover.COVER_SPECIES)
+    for p in plan.cover:
+        for m in (CREW, ENEMY, (0.0, 5.5)):
+            r = p.rect
+            dx = max(r[0] - m[0], 0.0, m[0] - r[2])
+            dy = max(r[1] - m[1], 0.0, m[1] - r[3])
+            assert max(dx, dy) >= site_cover.MARKER_CLEARANCE - 1e-9, (p.name, p.species, m, r)

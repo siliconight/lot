@@ -543,7 +543,14 @@ def _usable(candidate, *, ground, rects, markers, placed, size) -> bool:
         return False
     if any(_overlaps(piece, rect) for rect in rects):
         return False
-    if any(math.dist(candidate, m) < MARKER_CLEARANCE for m in markers):
+    # Marker clearance is measured from the piece's EDGE, not its centre. The
+    # centre rule left a 3 m cube 1.5 m clear of a marker; a 6 m truck under
+    # the same rule can lay its end on the marker. Cold run 9018, the first
+    # with species pieces: a piece stood with its end at an enemy spawn
+    # against a wall, Laser Tag's preflight refused the candidate ("Enemy_2
+    # is sealed off from the crew spawn"), and the export gate held.
+    clear = _grow(piece, MARKER_CLEARANCE)
+    if any(_inside(m, clear) for m in markers):
         return False
     # Two rules between pieces, both required. The centre rule is the one
     # every square piece was placed by. The EDGE rule is what it meant: two

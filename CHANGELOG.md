@@ -1,3 +1,16 @@
+## [0.59.1] - marker clearance is measured from the piece's edge
+
+Cold run 9018, the first with species pieces: the chain worked -- Zoo built
+the truck and the container from the site's manifest, Lot stood both where
+their boxes were -- and Laser Tag's preflight refused the candidate:
+"Enemy_2 is sealed off from the crew spawn". Measured: the container's end
+stood 0.25 m from Enemy_2, beside a building. `_usable` kept a marker
+`MARKER_CLEARANCE` from the piece's CENTRE, which left a 3 m cube 1.5 m
+clear and a 6 m container nothing at all. The clearance is now the piece's
+rect grown by the same 3 m; a marker inside it refuses the spot. The export
+gate (Level Factory 0.76.0) held on the blocker, which is the first time a
+cover defect was stopped before it shipped.
+
 ## [0.59.0] - cover is a species-shaped slot, not a cube
 
 Roadmap 22, open since August: the cover this module places to break
