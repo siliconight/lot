@@ -142,6 +142,10 @@ MARKER_CLEARANCE = 3.0
 #: across a street is a route that no longer exists.
 COVER_SEPARATION = 6.0
 
+#: Edge to edge, what `COVER_SEPARATION` meant for two `COVER_SIZE` squares:
+#: the lane a body walks between two pieces of street furniture.
+COVER_EDGE_GAP = COVER_SEPARATION - COVER_SIZE
+
 #: Where in the usable interval to sit, 0 being the crew's end. A third of the
 #: way from the crew is deliberate: it gives the crew something to move between
 #: on its approach rather than handing the far end a wall to hold. Same
@@ -152,9 +156,56 @@ APPROACH_BIAS = 0.35
 SEARCH_STEP = 0.02
 
 
+#: What stands in the street as cover, largest first, as (species, width,
+#: depth, height) in the SPECIES' own frame: width across, depth along its
+#: length. The planner turns each piece so its length lies ACROSS the
+#: sightline it breaks, and takes the first species that fits the lane.
+#:
+#: Why these and not a 3 m cube (roadmap 22, the walker 2026-09-12: "the green
+#: boxes should be larger props with collision to offer cover between
+#: buildings to force creative traversal"). A parked box truck or a container
+#: is six metres of solid across a lane -- a crew walks around it, not past
+#: it -- and every one of these is a thing that stands in a Delco lot. Every
+#: height clears `MIN_COVER_HEIGHT` (1.3): the car by 15 cm, which is why it
+#: is last. The dims are the Zoo genomes' defaults (`simple_car`,
+#: `box_truck`, `cargo_container`), so the module Zoo builds for the slot is
+#: exact-fit by construction.
+COVER_SPECIES = (
+    ("box_truck", 2.4, 6.0, 2.8),
+    ("cargo_container", 2.44, 6.06, 2.59),
+    ("simple_car", 1.75, 4.3, 1.45),
+)
+
+
+def footprint(width: float, depth: float, yaw: float):
+    """Plan-view (size_x, size_y) of a species turned by ``yaw`` degrees
+    about up. Quantised to 0 / 90 on purpose: the sightline and pinch
+    arithmetic is axis-aligned, and a piece at 37 degrees would be measured
+    by its bounding box -- a break it does not make. Cars in a Delco lot
+    park square to the plate anyway."""
+    return (depth, width) if int(round(yaw)) % 180 == 90 else (width, depth)
+
+
+def across_yaw(a, b) -> float:
+    """The yaw that lays a piece's LENGTH across the line a-b.
+
+    At yaw 0 a species stands as Zoo builds it, depth (its length) along Y
+    -- Zoo's `forward: +Y`, the frame a prop slot's dims are given in. A
+    line running mostly along X is broken by a length along Y, so yaw 0; a
+    line along Y wants the length along X, so 90."""
+    dx, dy = abs(b[0] - a[0]), abs(b[1] - a[1])
+    return 0.0 if dx >= dy else 90.0
+
+
 @dataclass
 class Cover:
-    """One piece of cover: a solid on the ground, and the line it was for."""
+    """One piece of cover: a solid on the ground, and the line it was for.
+
+    ``size`` is the plan-view side of a SQUARE piece, the form every caller
+    before 0.59.0 used; ``size_x`` / ``size_y`` are the plan-view footprint
+    of a species piece after its yaw, and default to ``size`` so a square
+    piece and a species piece are one class with one ``rect``.
+    """
 
     name: str
     x: float
@@ -163,16 +214,32 @@ class Cover:
     height: float = COVER_HEIGHT
     breaks: str = ""
     span: float = 0.0
+    species: str = ""
+    yaw: float = 0.0
+    size_x: float = 0.0
+    size_y: float = 0.0
+    width: float = 0.0
+    depth: float = 0.0
+
+    def __post_init__(self):
+        if not self.size_x:
+            self.size_x = self.size
+        if not self.size_y:
+            self.size_y = self.size
 
     @property
     def rect(self):
-        half = self.size / 2.0
-        return (self.x - half, self.y - half, self.x + half, self.y + half)
+        hx, hy = self.size_x / 2.0, self.size_y / 2.0
+        return (self.x - hx, self.y - hy, self.x + hx, self.y + hy)
 
     def as_dict(self) -> dict:
-        return {"name": self.name, "x": round(self.x, 3), "y": round(self.y, 3),
-                "size": self.size, "height": self.height,
-                "breaks": self.breaks, "span": round(self.span, 1)}
+        out = {"name": self.name, "x": round(self.x, 3), "y": round(self.y, 3),
+               "size": self.size, "height": self.height,
+               "breaks": self.breaks, "span": round(self.span, 1)}
+        if self.species:
+            out.update({"species": self.species, "yaw": self.yaw,
+                        "width": self.width, "depth": self.depth})
+        return out
 
     def as_site_cover(self) -> dict:
         """The same piece as a site spec ``cover`` record.
@@ -189,10 +256,18 @@ class Cover:
         reads them; a person looking at why a crate is standing in the street
         does.
         """
-        return {"at": [round(self.x, 3), round(self.y, 3)],
-                "size": [self.size, self.height, self.size],
-                "source": "site_cover",
-                "breaks": self.breaks, "span": round(self.span, 1)}
+        out = {"at": [round(self.x, 3), round(self.y, 3)],
+               "size": [self.size_x, self.height, self.size_y],
+               "source": "site_cover",
+               "breaks": self.breaks, "span": round(self.span, 1)}
+        if self.species:
+            # The species and ITS OWN dims (width across, depth along), plus
+            # the yaw that lays them in the plan: what the site's slot
+            # manifest carries so Zoo builds the piece exact-fit and the
+            # themed site can stand the module where the box stood.
+            out.update({"species": self.species, "yaw": self.yaw,
+                        "dims": [self.width, self.depth, self.height]})
+        return out
 
 
 @dataclass
@@ -343,10 +418,11 @@ def _point_at(a, b, t):
     return (a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t)
 
 
-def _piece_rect(candidate, size: float):
-    half = size / 2.0
-    return (candidate[0] - half, candidate[1] - half,
-            candidate[0] + half, candidate[1] + half)
+def _piece_rect(candidate, size):
+    """``size`` is a side (square piece) or a (size_x, size_y) footprint."""
+    sx, sy = (size, size) if isinstance(size, (int, float)) else size
+    return (candidate[0] - sx / 2.0, candidate[1] - sy / 2.0,
+            candidate[0] + sx / 2.0, candidate[1] + sy / 2.0)
 
 
 def _overlaps(one, other) -> bool:
@@ -443,7 +519,7 @@ def _grow(rect, margin: float):
     return (x0 - margin, y0 - margin, x1 + margin, y1 + margin)
 
 
-def _usable(candidate, *, ground, rects, markers, placed, size: float) -> bool:
+def _usable(candidate, *, ground, rects, markers, placed, size) -> bool:
     """Every reason a geometrically-correct position is still the wrong one.
 
     Tested as a footprint rather than as a point, which is not a refinement: a
@@ -469,7 +545,17 @@ def _usable(candidate, *, ground, rects, markers, placed, size: float) -> bool:
         return False
     if any(math.dist(candidate, m) < MARKER_CLEARANCE for m in markers):
         return False
+    # Two rules between pieces, both required. The centre rule is the one
+    # every square piece was placed by. The EDGE rule is what it meant: two
+    # 3 m cubes six metres apart centre to centre stand three metres apart
+    # edge to edge, and a body walks between them. Measured the day species
+    # pieces arrived: two 6 m trucks six metres apart centre to centre stood
+    # 0.78 m apart edge to edge, and `pinches` reported the lane the
+    # planner had just sealed. The gap is the separation the squares
+    # implied, kept as a derived number rather than a new one.
+    grown = _grow(piece, COVER_EDGE_GAP)
     return all(math.dist(candidate, (c.x, c.y)) >= COVER_SEPARATION
+               and not _overlaps(grown, c.rect)
                for c in placed)
 
 
@@ -511,6 +597,40 @@ def _place_on(line, *, ground, rects, markers, placed, height, bias, size,
             if step == 0:
                 break
     return None
+
+
+def _place_species(line, *, species, ground, rects, markers, placed, bias,
+                   crew=None, start: int = 0):
+    """A species that fits on ``line``, turned across it, or None.
+
+    Tries `species` from index ``start`` round the table -- the piece's own
+    index, so a street gets a truck, a container, a car, a truck, rather
+    than the same truck five times -- and returns
+    ``(spot, (name, width, depth, height), yaw)`` for the first that both
+    breaks the line (its own height decides the interval) and stands clear
+    of everything (its own turned footprint decides the room). A lane too
+    tight for a truck gets a car; a lane too tight for a car gets nothing,
+    and `plan_cover` says so the way it always has.
+    """
+    yaw = across_yaw(line[2], line[3])
+    n = len(species)
+    order = [species[(start + k) % n] for k in range(n)] if n else []
+    for name, w, d, h in order:
+        spot = _place_on(line, ground=ground, rects=rects, markers=markers,
+                         placed=placed, height=h, bias=bias,
+                         size=footprint(w, d, yaw), crew=crew)
+        if spot is not None:
+            return spot, (name, w, d, h), yaw
+    return None
+
+
+def _species_piece(name, spot, sp, yaw, line):
+    sname, w, d, h = sp
+    sx, sy = footprint(w, d, yaw)
+    return Cover(name=name, x=spot[0], y=spot[1], size=max(sx, sy), height=h,
+                 breaks=f"{line[0]} -> {line[1]}", span=line[4],
+                 species=sname, yaw=yaw, size_x=sx, size_y=sy,
+                 width=w, depth=d)
 
 
 #: The marker `site_spawns` writes the crew's spawn as, and the end cover is
@@ -597,7 +717,8 @@ def plan_cover(points: dict, rects, ground, *, opening_range: float,
                crew: str = CREW_MARKER,
                route=None,
                route_spacing: float = ROUTE_SAMPLE_SPACING,
-               route_metres_per_piece: float = ROUTE_METRES_PER_PIECE) -> CoverPlan:
+               route_metres_per_piece: float = ROUTE_METRES_PER_PIECE,
+               species=None) -> CoverPlan:
     """Cover for every open sightline this site opens fire along.
 
     ``points`` is the mission markers by name -- crew spawn, enemies,
@@ -686,21 +807,36 @@ def plan_cover(points: dict, rects, ground, *, opening_range: float,
         # same budget, three pieces now close all seven of its lines.
         return sorted(lines, key=lambda line: crew not in (line[0], line[1]))
 
+    def _piece_for(line, crew_end):
+        """A square piece (the 0.58 form) or the largest species that fits."""
+        if species:
+            hit = _place_species(line, species=species, ground=ground,
+                                 rects=placeable, markers=markers,
+                                 placed=plan.cover, bias=bias, crew=crew_end,
+                                 start=len(plan.cover))
+            if hit is None:
+                return None
+            spot, sp, yaw = hit
+            return _species_piece(f"Cover_{len(plan.cover)}", spot, sp, yaw, line)
+        spot = _place_on(line, ground=ground, rects=placeable, markers=markers,
+                         placed=plan.cover, height=height, bias=bias,
+                         size=size, crew=crew_end)
+        if spot is None:
+            return None
+        return Cover(name=f"Cover_{len(plan.cover)}", x=spot[0], y=spot[1],
+                     size=size, height=height,
+                     breaks=f"{line[0]} -> {line[1]}", span=line[4])
+
     remaining = outstanding()
     while remaining and len(plan.cover) < limit:
         line = remaining[0]
-        spot = _place_on(line, ground=ground, rects=placeable, markers=markers,
-                         placed=plan.cover, height=height, bias=bias,
-                         size=size, crew=crew)
-        if spot is None:
+        piece = _piece_for(line, crew)
+        if piece is None:
             plan.unbreakable.append(line)
             refused.add((line[0], line[1]))
             remaining = [other for other in remaining
                          if (other[0], other[1]) not in refused]
             continue
-        piece = Cover(name=f"Cover_{len(plan.cover)}", x=spot[0], y=spot[1],
-                      size=size, height=height,
-                      breaks=f"{line[0]} -> {line[1]}", span=line[4])
         plan.cover.append(piece)
         # A placed piece is a wall for the next measurement and an obstacle for
         # the next placement, and it needs its own separation rather than the
@@ -737,18 +873,13 @@ def plan_cover(points: dict, rects, ground, *, opening_range: float,
         placed_here = 0
         while pending and placed_here < budget:
             line = pending[0]
-            spot = _place_on(line, ground=ground, rects=placeable,
-                             markers=markers, placed=plan.cover, height=height,
-                             bias=bias, size=size, crew=line[0])
-            if spot is None:
+            piece = _piece_for(line, line[0])
+            if piece is None:
                 refused_route.add((line[0], line[1]))
                 pending = [other for other in pending
                            if (other[0], other[1]) not in refused_route]
                 continue
-            plan.cover.append(Cover(
-                name=f"Cover_{len(plan.cover)}", x=spot[0], y=spot[1],
-                size=size, height=height,
-                breaks=f"{line[0]} -> {line[1]}", span=line[4]))
+            plan.cover.append(piece)
             measured = measured + [plan.cover[-1].rect]
             placeable = placeable + [plan.cover[-1].rect]
             placed_here += 1

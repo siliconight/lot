@@ -1,3 +1,35 @@
+## [0.59.0] - cover is a species-shaped slot, not a cube
+
+Roadmap 22, open since August: the cover this module places to break
+sightlines was a 3 m green cube in every package, and the site had no slot
+manifest for anything to replace it through. The walker, 2026-09-12: "the
+green boxes should be larger props with collision to offer cover between
+buildings to force creative traversal."
+
+`site_cover` now places SPECIES pieces -- `COVER_SPECIES`: a box truck
+(2.4 x 6.0 x 2.8), a cargo container (2.44 x 6.06 x 2.59), a car (1.75 x
+4.3 x 1.45), the Zoo genomes' own defaults -- turned so the length lies
+ACROSS the sightline (yaw 0 keeps Zoo's frame, length along Y; 90 turns
+it), quantised to 0/90 so the axis-aligned break and pinch arithmetic
+measure the piece and not its bounding box. The table is walked from the
+piece's own index, so a street gets a truck, a container, a car, not one
+truck five times, and each piece takes the largest that fits its lane. The
+centre-to-centre separation the squares were placed by is joined by the
+edge-to-edge gap it implied (`COVER_EDGE_GAP`, 3 m): measured the day the
+trucks arrived, two of them six metres apart centre to centre stood 0.78 m
+apart and `pinches` reported the lane the planner had just sealed. The
+square form is untouched for any caller that passes no species.
+
+`assemble` writes `<site>.slots.json` beside the scene: one prop slot per
+species piece in Deli Counter's slot-manifest shape (species, exact dims,
+transform with the yaw, convex collision), so the same Zoo kit build that
+dresses a building builds the street's cover. A themed spec that names
+`cover_modules` (the build directory, theme, style) gets each module
+instanced where its box stood -- centre for centre, the module's own
+collision, by the stem `cover_module_stem` mirrors from Deli Counter and
+Zoo and pins by literal -- and every piece whose module is not there keeps
+its box under `LOT_COVER_MODULE_MISSING`, with the stem it looked for.
+
 ## [0.58.0] - the skins live beside the scene
 
 0.57.0 wrote each map's absolute path and copied nothing, on the theory

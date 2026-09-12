@@ -866,6 +866,123 @@ def _same_bytes(a, b):
         return False
 
 
+# ---------------------------------------------------------------------------
+# the site's slot manifest: its cover pieces as prop slots Zoo can build to
+# (roadmap 22 -- outdoor props had no swap contract, so cover stayed boxes)
+# ---------------------------------------------------------------------------
+
+CODE_COVER_MODULE_MISSING = "LOT_COVER_MODULE_MISSING"
+
+
+def cover_module_stem(species: str, theme: str, style: int,
+                      dims) -> str:
+    """The file Zoo builds for a prop slot with a species hint, by NAME.
+
+    THE THIRD COPY OF ONE RULE. `deli_counter/themed_tscn.module_stem` and
+    `zoo_keeper/core/kit.module_stem` construct this same name from the same
+    slot, and neither parses; they agree by being kept identical and each
+    pins the other with literals (`test_themed_stem`, Zoo's
+    `test_openings`). This mirror is pinned the same way in
+    `tests/test_site_cover_slots.py`, and it exists because Lot resolves the
+    site's cover the way Deli Counter resolves a building's props: a prop
+    slot with dims (w, d, h) in centimetres and a species becomes
+    `prop_<species>_<theme>_<style:02d>_w<w>_d<d>_h<h>`.
+    """
+    w, d, h = (int(round(float(v) * 100)) for v in dims)
+    return f"prop_{species}_{theme}_{int(style):02d}_w{w}_d{d}_h{h}"
+
+
+def write_site_slots(site_spec, out_path):
+    """The site's `<name>.slots.json`: one prop slot per species cover piece,
+    in Deli Counter's slot-manifest shape (`slot_manifest_version` 1.2.0),
+    so the SAME Zoo kit build that dresses a building dresses the street.
+
+    Only species pieces are slots; a square 0.58-form piece has no species
+    and stays the box it was. Returns the number of slots written."""
+    slots = []
+    for i, cv in enumerate(site_spec.get("cover", []) or []):
+        sp = cv.get("species")
+        dims = cv.get("dims")
+        if not sp or not dims or len(dims) < 3:
+            continue
+        cx, cy = cv["at"]
+        slots.append({
+            "slot_id": f"cover_{i}", "role": "prop", "size_mod": "full",
+            "style": 1, "material": COVER_MATERIALS.get(sp, "metal_painted"),
+            "current_ref": "prop_greybox_01", "kit_axis": "theme",
+            "species": sp,
+            "transform": {"translation": [round(cx, 4), round(cy, 4),
+                                          round(float(dims[2]) / 2.0, 4)],
+                          "rot_y": float(cv.get("yaw") or 0.0),
+                          "scale": [1.0, 1.0, 1.0]},
+            "fit": {"dims": [float(dims[0]), float(dims[1]), float(dims[2])],
+                    "pivot": "center", "openings": [], "collision": "convex"},
+            "breaks": cv.get("breaks", ""),
+        })
+    doc = {
+        "slot_manifest_version": "1.2.0",
+        "building_id": "site",
+        "theme": "greybox",
+        "module_library": "art/zoo",
+        "module_size": 2.0,
+        "space": "spec/Blender Z-up raw coords; rot_y = degrees about up",
+        "coverage": {"prop/site_cover": len(slots)},
+        "slots": slots,
+    }
+    with open(out_path, "w", encoding="utf-8") as fh:
+        json.dump(doc, fh, indent=2)
+    return len(slots)
+
+
+#: The material a cover species is built in, as Deli Counter names one on a
+#: prop slot (the Zoo genome's default). Named here so the slot Lot writes
+#: says what Zoo will read, rather than leaving the field empty.
+COVER_MATERIALS = {"box_truck": "metal_painted", "cargo_container": "metal_painted",
+                   "simple_car": "metal_painted"}
+
+
+def cover_module_refs(site_spec, prefix):
+    """Which cover pieces have a built module to stand in for the box.
+
+    The spec's ``cover_modules`` names the Zoo kit build's directory, theme
+    and style; each species piece resolves to `<dir>/<stem>.glb` by
+    `cover_module_stem`. Returns (refs, ext_lines, findings): ``refs`` maps a
+    cover INDEX to its ext_resource id, ``ext_lines`` declare the GLBs by
+    ABSOLUTE path (the shape Lot has always used for a building's glb, which
+    every consumer that stages this scene rewrites and bundles), and each
+    piece whose module is not there is a `LOT_COVER_MODULE_MISSING` finding
+    with the stem it looked for -- the box stays, the art pass is
+    progressive, and nothing is quiet about it.
+    """
+    cm = site_spec.get("cover_modules") or {}
+    refs, ext, findings = {}, [], []
+    if not cm.get("dir"):
+        return refs, ext, findings
+    theme, style = str(cm.get("theme", "")), int(cm.get("style", 1))
+    if not theme:
+        findings.append((CODE_COVER_MODULE_MISSING,
+                         "cover_modules names no theme; every piece stays a box"))
+        return refs, ext, findings
+    seen = {}
+    for i, cv in enumerate(site_spec.get("cover", []) or []):
+        sp, dims = cv.get("species"), cv.get("dims")
+        if not sp or not dims:
+            continue
+        stem = cover_module_stem(sp, theme, style, dims)
+        glb = os.path.abspath(os.path.join(str(cm["dir"]), stem + ".glb")).replace("\\", "/")
+        if not os.path.isfile(glb):
+            findings.append((CODE_COVER_MODULE_MISSING,
+                             f"cover_{i} ({sp}): no {stem}.glb in {cm['dir']}; "
+                             f"the box stays"))
+            continue
+        if stem not in seen:
+            seen[stem] = f"cover_{stem}"
+            ext.append(f'[ext_resource type="PackedScene" path="{glb}" '
+                       f'id="{seen[stem]}"]')
+        refs[i] = seen[stem]
+    return refs, ext, findings
+
+
 def _blocker_source(bk):
     """Optional facade-shell geometry for a blocker (.tscn wins over .glb), or
     None to fall back to a plain box."""
@@ -1048,7 +1165,8 @@ def _split_span(length, cuts, margin=0.6):
     return spans
 
 
-def _outdoor_nodes(site_spec, preview=False, self_flooring=None, skins=None):
+def _outdoor_nodes(site_spec, preview=False, self_flooring=None, skins=None,
+                   cover_refs=None):
     """(body_lines, subres_lines) for all Phase-2 outdoor geometry.
 
     `self_flooring` is the set of building ids whose geometry demonstrably
@@ -1158,9 +1276,21 @@ def _outdoor_nodes(site_spec, preview=False, self_flooring=None, skins=None):
             body += bl
             sub += sr
 
+    cover_refs = cover_refs or {}
     for i, cv in enumerate(site_spec.get("cover", [])):
         cx, cy = cv["at"]
         sx, sy, sz = cv.get("size", COVER)
+        if i in cover_refs:
+            # The module Zoo built for this slot, standing where the box
+            # stood: same centre, same yaw, its own collision (roadmap 22).
+            # The module is centre-pivot at the slot's dims, so its origin
+            # is the box's centre.
+            xform = _godot_transform((cx, cy), float(cv.get("yaw") or 0.0),
+                                     z=sy / 2)
+            body += [f'[node name="cover_{i}" parent="." '
+                     f'instance=ExtResource("{cover_refs[i]}")]',
+                     f'transform = Transform3D({xform})', '']
+            continue
         bl, sr = _box_node(f"cover_{i}", (sx, sy, sz), (cx, sy / 2, -cy),
                            COVER_COLOR)
         body += bl
@@ -1331,9 +1461,16 @@ def write_godot_scene(site_spec, merged, out_path, glb_dir=".", preview=False,
     skins = {fam: sk for fam, sk in skins.items() if present.get(fam)}
     res_lines += _skin_ext_lines(skins, os.path.dirname(os.path.abspath(out_path)),
                                  prefix)
+    # Cover modules (roadmap 22): the pieces Zoo built stand in for their
+    # boxes; a piece with no module keeps its box and says so.
+    cover_refs, cover_ext, cover_findings = cover_module_refs(site_spec, prefix)
+    for code, msg in cover_findings:
+        print(f"[lot] {code}: {msg}")
+    res_lines += cover_ext
 
     outdoor_body, outdoor_sub = _outdoor_nodes(
-        site_spec, preview=preview, self_flooring=self_flooring, skins=skins)
+        site_spec, preview=preview, self_flooring=self_flooring, skins=skins,
+        cover_refs=cover_refs)
 
     building_body, building_sub = [], []
     if preview:
@@ -2228,7 +2365,11 @@ def assemble(site_spec_path, out_dir=None, walkable=False, navqa=False,
         # crosses and not only between the markers at either end of it.
         route=[cover_points["LT_PlayerSpawn"],
                cover_points["LT_ObjectivePoint"],
-               cover_points["LT_ExtractionPoint"]])
+               cover_points["LT_ExtractionPoint"]],
+        # Species-shaped pieces, largest first (roadmap 22): a box truck, a
+        # container, a car -- turned across the line they break -- instead
+        # of a 3 m cube. Each is a slot the site's manifest carries.
+        species=site_cover.COVER_SPECIES)
     site_spec.setdefault("cover", []).extend(
         c.as_site_cover() for c in cover_plan.cover)
     merged["cover_plan"] = {
@@ -2291,6 +2432,12 @@ def assemble(site_spec_path, out_dir=None, walkable=False, navqa=False,
     tscn_out = os.path.join(out_dir, f"{site_spec['name']}.tscn")
     write_godot_scene(site_spec, merged, tscn_out, preview=preview,
                       portable=portable, self_flooring=self_flooring)
+    # The site's own slot manifest: its cover, as prop slots Zoo builds to
+    # (roadmap 22). Written beside the scene the way Deli Counter writes a
+    # building's, so the same kit build serves both.
+    slots_out = os.path.join(out_dir, f"{site_spec['name']}.slots.json")
+    n_slots = write_site_slots(site_spec, slots_out)
+    print(f"[lot] site slots -> {slots_out} ({n_slots} cover slot(s))")
 
     # Site-level step gate, read back off the scene just WRITTEN rather than
     # re-derived from the constants that produced it. A capsule walks up a step
