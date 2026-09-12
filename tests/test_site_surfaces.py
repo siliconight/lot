@@ -18,6 +18,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import site_cover                # noqa: E402
+import site_extent               # noqa: E402
 import site_steps                # noqa: E402
 import site_surfaces as SS       # noqa: E402
 
@@ -201,8 +202,30 @@ def test_unreadable_footprints_are_reported_not_skipped():
 def test_annotated_footprints_produce_wall_bases_and_no_finding():
     zones, findings = SS.zones(footprinted())
     walls = [z for z in zones if SS._family_of(z) == "wall_base"]
-    assert len(walls) == 4
+    assert len(walls) == 16          # four strips around each of four plans
     assert SS.CODE_FOOTPRINT_UNKNOWN not in [f["code"] for f in findings]
+
+
+def test_a_wall_base_is_a_band_outside_the_plan_not_the_plan():
+    """Cold run 9012's bank: 159 pebbles, scraps and weed tufts on the lobby
+    carpet came from `wall_base_b0`, which was the whole floor plan grown by
+    the band. A seam is where ground meets a wall; the floor is not ground."""
+    s = footprinted()
+    zones, _ = SS.zones(s)
+    walls = [z for z in zones if SS._family_of(z) == "wall_base"]
+    band = SS.wall_base_band_m()
+    for b in s["buildings"]:
+        fp = site_extent.rotated_footprint(b)
+        mine = [z for z in walls if f"building:{b['id']}" in z["tags"]]
+        assert len(mine) == 4
+        for z in mine:
+            a = z["aabb"]
+            # no square metre of the plan is in the strip
+            ox = min(a[3], fp[2]) - max(a[0], fp[0])
+            oy = min(a[4], fp[3]) - max(a[1], fp[1])
+            assert ox <= 1e-9 or oy <= 1e-9, (z["surface_zone_id"], a, fp)
+            # and the strip is one band wide
+            assert min(a[3] - a[0], a[4] - a[1]) - band < 1e-9
 
 
 def test_wall_base_band_comes_from_the_nav_bake():
@@ -233,7 +256,7 @@ def test_every_exclusion_names_what_declared_it():
     for e in xs:
         assert e["declared_by"] == "lot"
         assert e["tag"] in {"path", "spawn", "objective", "interactable",
-                            "door", "cover_edge", "readability"}
+                            "door", "cover_edge", "readability", "building"}
 
 
 def test_spawn_objective_and_extraction_all_become_exclusions():
@@ -262,6 +285,25 @@ def test_a_placements_own_radius_widens_the_exclusion():
     just_outside = (-48.0 + site_cover.MARKER_CLEARANCE + 0.5, -28.0)
     assert SS.excluded(just_outside, xs) == []
     assert SS.excluded(just_outside, xs, radius_m=1.0) == ["spawn"]
+
+
+def test_a_buildings_floor_plan_is_excluded_and_its_seam_is_not():
+    """Cold run 9012's bank: 26 of the 185 pieces of clutter on the lobby
+    carpet came from the path corridor (which starts at the objective,
+    inside) and the open-ground remainder (which is the whole plate).
+    Nothing had said a floor plan is not ground. A raw spec carries no
+    footprint, so it emits no box -- and zones() already reports that."""
+    xs, _ = SS.exclusions(footprinted())
+    boxes = [e for e in xs if e["tag"] == "building"]
+    assert len(boxes) == 4
+    for e in boxes:
+        assert e["declared_by"] == "lot" and len(e["aabb"]) == 6
+    # the garage is at (-48, -28), 20 x 14, unrotated
+    assert "building" in SS.excluded((-48.0, -28.0), xs)
+    assert "building" in SS.excluded((-38.5, -21.5), xs)         # a corner
+    assert "building" not in SS.excluded((-38.0 + 0.3, -28.0), xs)  # the seam
+    assert "building" not in SS.excluded((0.0, 50.0), xs)
+    assert [e for e in SS.exclusions(spec())[0] if e["tag"] == "building"] == []
 
 
 # --- the shape the planner receives ----------------------------------------
@@ -408,7 +450,7 @@ def test_merging_is_what_makes_wall_bases_appear(tmp_path):
     assert not [z for z in bare if z["kind"] == "wall_base"]
     out = SS.surfaces(_gameplay_dir(tmp_path), base_dir=str(tmp_path))
     walls = [z for z in out["zones"] if z["kind"] == "wall_base"]
-    assert len(walls) == 4
+    assert len(walls) == 16          # four strips around each of four plans
     assert all(z["density"] == "high" for z in walls)
     assert SS.CODE_FOOTPRINT_UNKNOWN not in [f["code"] for f in out["findings"]]
 
@@ -418,17 +460,20 @@ def test_a_rotated_building_gets_a_rotated_wall_base(tmp_path):
     ground. If this ever comes back square-on, `rotated_footprint` stopped
     being consulted and every rotated building is dressed to the wrong box."""
     out = SS.surfaces(_gameplay_dir(tmp_path), base_dir=str(tmp_path))
-    deli = next(z for z in out["zones"]
-                if z["surface_zone_id"] == "wall_base_deli")
-    a = deli["aabb"]
-    assert (a[4] - a[1]) > (a[3] - a[0])
+    strips = [z["aabb"] for z in out["zones"]
+              if z["surface_zone_id"].startswith("wall_base_deli_")]
+    assert len(strips) == 4
+    # the union of the four strips is the plan grown by the band
+    a = [min(s[0] for s in strips), min(s[1] for s in strips),
+         max(s[3] for s in strips), max(s[4] for s in strips)]
+    assert (a[3] - a[1]) > (a[2] - a[0])
 
 
 def test_a_building_with_no_gameplay_file_is_still_reported(tmp_path):
     """Partial data must not read as complete data."""
     s = _gameplay_dir(tmp_path, {"garage": [36.0, 28.0], "pawn": [16.0, 14.0]})
     out = SS.surfaces(s, base_dir=str(tmp_path))
-    assert len([z for z in out["zones"] if z["kind"] == "wall_base"]) == 2
+    assert len([z for z in out["zones"] if z["kind"] == "wall_base"]) == 8
     codes = [f["code"] for f in out["findings"]]
     assert SS.CODE_FOOTPRINT_UNKNOWN in codes
     msg = [f["message"] for f in out["findings"]
@@ -472,7 +517,7 @@ def test_cli_defaults_base_dir_to_the_specs_own_directory(tmp_path):
     out = tmp_path / "surfaces.json"
     assert SS.main([str(tmp_path / "site.json"), "--out", str(out)]) == 0
     data = json.loads(out.read_text(encoding="utf-8"))
-    assert len([z for z in data["zones"] if z["kind"] == "wall_base"]) == 4
+    assert len([z for z in data["zones"] if z["kind"] == "wall_base"]) == 16
 
 
 def test_cli_empty_base_dir_skips_the_merge(tmp_path):

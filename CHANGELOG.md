@@ -1,3 +1,29 @@
+## [0.56.0] - a building's floor plan is not ground
+
+The walker, on cold run 9012's bank lobby: "are these grey blobs the
+surface dressing?" They were. Patina's `surface_dressing` placed 185 of its
+3,643 pieces -- pebbles, litter scraps, rubble, weed tufts -- inside the
+bank's footprint, on the carpet, and every one of them was allowed by the
+zones this module declared: 159 from `wall_base_b0`, 17 from `open_ground`,
+9 from the `path_b0_b1` corridor. Three causes, one module.
+
+The wall base was `grow(footprint, band)` -- the whole floor plan plus one
+agent radius -- called a seam. It is now the four strips of that box MINUS
+the plan, `_annulus_strips`, the same shape the perimeter already used; a
+building with a readable footprint declares `wall_base_<id>_0..3`, and no
+square metre of the plan is in any of them (test).
+
+The open-ground remainder is the whole plate, and a path corridor from a
+building starts at the building's centre, so both also cover interiors --
+and nothing had said an interior is not ground. `exclusions()` now emits one
+`building` box per footprinted building (schema tag added in
+`level_factory/schemas/surface_dressing.v1.json`); Patina's `excluded()`
+already honours `aabb` exclusions, so nothing downstream changes. Interiors
+are Deli Counter's layer, dressed at the shell's request.
+
+A raw spec carries no footprints, emits no boxes and no bands, and
+`LOT_SURFACE_FOOTPRINT_UNKNOWN` says so, as before.
+
 ## [0.55.2] - site_surfaces --strict fails on what went wrong, not on what went right
 
 `site_surfaces.py --strict` exited non-zero on ANY finding, and the tool

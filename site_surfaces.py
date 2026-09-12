@@ -363,6 +363,14 @@ def zones(site_spec, *, ground=None, nav_bake=None, capsule=None):
                              ["route", f"path:{label}"]))
 
     # --- wall bases: the seam where ground meets a building -----------------
+    # The band is the footprint GROWN by one agent radius MINUS the footprint:
+    # four strips hugging the outside of the walls. The first version shipped
+    # `grow(fp, band)` whole -- the building's entire floor plan plus the
+    # band -- and called it a seam. Measured on cold run 9012's bank
+    # (2026-09-12): 159 of the 185 pebbles, scraps and weed tufts standing on
+    # the lobby carpet came from `wall_base_b0`, a 30.8 x 22.8 m box over a
+    # 30 x 22 m building. The walker asked whether the grey blobs were the
+    # surface dressing. They were.
     band = wall_base_band_m(nav_bake)
     unknown = []
     for b in site_spec.get("buildings", []) or []:
@@ -370,9 +378,12 @@ def zones(site_spec, *, ground=None, nav_bake=None, capsule=None):
         if fp is None:
             unknown.append(str(b.get("id", "?")))
             continue
-        out.append(_zone(f"wall_base_{b['id']}", "wall_base", "wall_base",
-                         site_extent.grow(fp, band), z_lo, z_hi,
-                         "environmental_edge", ["seam", f"building:{b['id']}"]))
+        for k, strip in enumerate(_annulus_strips(site_extent.grow(fp, band),
+                                                  fp)):
+            out.append(_zone(f"wall_base_{b['id']}_{k}", "wall_base",
+                             "wall_base", strip, z_lo, z_hi,
+                             "environmental_edge",
+                             ["seam", f"building:{b['id']}"]))
     if unknown:
         findings.append(_finding(
             CODE_FOOTPRINT_UNKNOWN, "warn",
@@ -427,10 +438,27 @@ def _family_of(zone) -> str:
     return "open"
 
 
-def exclusions(site_spec):
+def exclusions(site_spec, *, capsule=None):
     """Regions dressing must keep out of. Returns (exclusions, findings)."""
     out, findings = [], []
     bld = {b["id"]: b for b in site_spec.get("buildings", []) or []}
+    cap = capsule or capsule_block()
+
+    # A building's floor plan is not ground. Every ground zone is a box, the
+    # open-ground remainder is the whole plate, and a path corridor stepping
+    # out of a building's door starts INSIDE it -- so without this, outdoor
+    # clutter lands on interior floors (26 of the bank's 185 came from the
+    # path and the remainder). Interiors are dressed by Deli Counter's own
+    # layer, at the shell's request, never by the site's ground scatter.
+    for b in site_spec.get("buildings", []) or []:
+        fp = site_extent.rotated_footprint(b)
+        if fp is None:
+            continue           # already reported by zones() as unknown
+        out.append({
+            "tag": "building",
+            "declared_by": "lot",
+            "aabb": _aabb(fp, 0.0, cap["unassisted_step_max_m"]),
+        })
 
     for i, c in enumerate(site_spec.get("cover", []) or []):
         at = c.get("at")
