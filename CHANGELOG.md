@@ -1,3 +1,10 @@
+## [0.57.1] - a skin is declared only where a body will wear it
+
+Measured on cold run 9014's themed spec with all three families named: the
+spec has no courtyard, and the header declared the courtyard's two maps
+anyway -- resources nothing referenced. Families without a body in the spec
+now get no ext_resource lines.
+
 ## [0.57.0] - the ground plate wears the theme's skin
 
 Roadmap 152. Measured on cold run 9014: the exterior plate shipped as one

@@ -1292,6 +1292,12 @@ def write_godot_scene(site_spec, merged, out_path, glb_dir=".", preview=False,
     skins, skin_findings = ground_skins(site_spec)
     for code, msg in skin_findings:
         print(f"[lot] {code}: {msg}")
+    # Declare only the maps a body will reference: a spec with no courtyard
+    # gets no courtyard textures in its header.
+    present = {"ground": bool(site_spec.get("ground")),
+               "path": bool(site_spec.get("paths")),
+               "courtyard": bool(site_spec.get("courtyards"))}
+    skins = {fam: sk for fam, sk in skins.items() if present.get(fam)}
     res_lines += _skin_ext_lines(skins)
 
     outdoor_body, outdoor_sub = _outdoor_nodes(

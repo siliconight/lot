@@ -79,7 +79,9 @@ def test_a_named_pack_becomes_a_world_projected_material(tmp_path):
 
 def test_the_scene_declares_each_map_once_and_counts_it_in_load_steps(tmp_path):
     spec = _spec()
-    spec["ground_skins"] = {"ground": _pack(tmp_path, "asphalt_street", "asphalt")}
+    spec.pop("courtyards", None)
+    spec["ground_skins"] = {"ground": _pack(tmp_path, "asphalt_street", "asphalt"),
+                            "courtyard": _pack(tmp_path, "concrete_delco", "concrete")}
     path = os.path.join(SPECS, "_skin_probe.json")
     json.dump(spec, open(path, "w", encoding="utf-8"))
     try:
@@ -89,8 +91,9 @@ def test_the_scene_declares_each_map_once_and_counts_it_in_load_steps(tmp_path):
     txt = open(r["scene"], encoding="utf-8").read()
     ext = [ln for ln in txt.splitlines() if ln.startswith("[ext_resource")]
     tex = [ln for ln in ext if 'type="Texture2D"' in ln]
-    assert len(tex) == 2                                   # albedo + roughness
+    assert len(tex) == 2                 # albedo + roughness; no courtyard, no courtyard maps
     assert any('id="skin_ground_albedo"' in ln for ln in tex)
+    assert not any("courtyard" in ln for ln in tex)
     assert all('path="' in ln and ":/" in ln for ln in tex)   # absolute, forward slashes
     import re
     n = int(re.search(r"load_steps=(\d+)", txt).group(1))
