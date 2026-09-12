@@ -40,6 +40,42 @@ STOP_BAR_SETBACK = 1.0     # from the crosswalk's edge
 WHITE = (0.90, 0.90, 0.88)
 YELLOW = (0.90, 0.75, 0.20)
 
+#: Parking along the kerb (roadmap 153): bay length and lane depth at the
+#: low end of parallel-parking practice (20-22 ft bays, 7-8 ft lanes), so a
+#: 10 m road keeps two 2.8 m driving lanes; no bay within the setback of a
+#: crossing (the 20 ft no-parking rule at a crosswalk). A road with
+#: sidewalks has parking lanes; its edge lines mark the driving lanes' edge,
+#: inside the parking lane.
+BAY_LENGTH = 6.0
+LANE_DEPTH = 2.2
+CROSSING_SETBACK = 6.0
+
+
+def has_parking(road) -> bool:
+    return bool(road.sidewalk) and road.width >= 2.0 * LANE_DEPTH + 5.0
+
+
+def bays(road) -> list:
+    """Every parking bay on ``road``: dicts of side, index, t0, t1 (along)
+    and offset (across, to the lane's centre). Bays step from the road's
+    start; a stretch within `CROSSING_SETBACK` of a centre-line crossing, or
+    over a kerb cut, holds none."""
+    if not has_parking(road):
+        return []
+    out = []
+    keep_out = [(c.t - c.width / 2.0 - CROSSING_SETBACK,
+                 c.t + c.width / 2.0 + CROSSING_SETBACK) for c in road.crossings]
+    for kerb in road.kerbs:
+        cuts = [(t0, t1) for t0, t1, is_cut in kerb.spans if is_cut]
+        offset = kerb.sign * (road.width / 2.0 - LANE_DEPTH / 2.0)
+        for i in range(int(road.length // BAY_LENGTH)):
+            t0, t1 = i * BAY_LENGTH, (i + 1) * BAY_LENGTH
+            if any(not (t1 <= a or t0 >= b) for a, b in keep_out + cuts):
+                continue
+            out.append({"side": kerb.side, "index": i, "t0": t0, "t1": t1,
+                        "offset": offset})
+    return out
+
 
 @dataclass
 class Cut:
@@ -215,11 +251,24 @@ def markings(roads_list) -> list:
     out = []
     for road in roads_list:
         half = road.width / 2.0
-        # edge lines, full length, in from each kerb face
+        # edge lines, full length: at the driving lane's edge, which is
+        # inside the parking lane on a road that has one, else in from the
+        # kerb face
+        edge = (half - LANE_DEPTH) if has_parking(road) else (half - EDGE_INSET)
         for sgn in (1, -1):
             out.append(_marking("edge_line", road, road.length / 2.0,
-                                sgn * (half - EDGE_INSET), road.length,
+                                sgn * edge, road.length,
                                 LINE_WIDTH, WHITE, side="L" if sgn > 0 else "R"))
+        # bay ticks: a short line across the parking lane at every bay edge
+        seen = set()
+        for bay in bays(road):
+            for t in (bay["t0"], bay["t1"]):
+                key = (bay["side"], round(t, 3))
+                if key in seen or t <= 0.0 or t >= road.length:
+                    continue
+                seen.add(key)
+                out.append(_marking("bay_tick", road, t, bay["offset"],
+                                    LINE_WIDTH, LANE_DEPTH, WHITE, side=bay["side"]))
         # crosswalk stations: one per crossing of the centre line
         stations = sorted((c.t, c.width) for c in road.crossings)
         # the crosswalk plus the stop bars either side of it: no dash runs

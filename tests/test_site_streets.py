@@ -67,7 +67,8 @@ def test_the_paint_is_where_the_model_puts_it():
     assert {m["side"] for m in kinds["edge_line"]} == {"L", "R"}
     for m in kinds["edge_line"]:
         assert m["size"] == [220.0, site_streets.LINE_WIDTH]
-        assert abs(abs(m["at"][1]) - (5.0 - site_streets.EDGE_INSET)) < 1e-6
+        # a road with parking lanes marks the DRIVING lanes' edge (0.63.0)
+        assert abs(abs(m["at"][1]) - (5.0 - site_streets.LANE_DEPTH)) < 1e-6
     stations = sorted({m["station"] for m in kinds["crosswalk_bar"]})
     # eight crossings, one station each, at the CENTRE line -- not two per
     # diagonal path (one per kerb), which is what stationing at the kerb gave
@@ -113,7 +114,8 @@ def test_assemble_writes_the_markings_manifest(tmp_path):
     doc = json.loads((tmp_path / "coldrun_kerb_probe.markings.json").read_text(encoding="utf-8"))
     assert doc["schema"] == "site-markings/1"
     assert len(doc["roads"]) == 1 and doc["roads"][0]["kerbs"][0]["cuts"]
-    assert {m["kind"] for m in doc["markings"]} == {"edge_line", "centre_line", "crosswalk_bar", "stop_bar"}
+    assert {m["kind"] for m in doc["markings"]} == {"edge_line", "centre_line", "crosswalk_bar",
+                                                    "stop_bar", "bay_tick"}
 
 
 def test_a_spec_without_roads_paints_nothing():

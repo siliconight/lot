@@ -894,6 +894,28 @@ def _same_bytes(a, b):
 # ---------------------------------------------------------------------------
 
 CODE_COVER_MODULE_MISSING = "LOT_COVER_MODULE_MISSING"
+CODE_COVER_MODULE_FAILED = "LOT_COVER_MODULE_FAILED"
+
+
+def _kit_index(module_dir: str) -> dict:
+    """stem -> row of the Zoo kit index in ``module_dir`` (`*_kit.built.json`),
+    or {} when there is none -- then every module that exists is stood, as
+    before the index was read."""
+    out = {}
+    try:
+        names = [n for n in os.listdir(module_dir) if n.endswith("_kit.built.json")]
+    except OSError:
+        return out
+    for n in sorted(names):
+        try:
+            with open(os.path.join(module_dir, n), encoding="utf-8") as fh:
+                doc = json.load(fh)
+        except (OSError, ValueError):
+            continue
+        for row in doc.get("modules", []) or []:
+            if row.get("stem"):
+                out[row["stem"]] = row
+    return out
 
 
 def cover_module_stem(species: str, theme: str, style: int,
@@ -1000,6 +1022,7 @@ def cover_module_refs(site_spec, prefix, out_dir=None):
         findings.append((CODE_COVER_MODULE_MISSING,
                          "cover_modules names no theme; every piece stays a box"))
         return refs, ext, findings
+    index = _kit_index(str(cm["dir"]))
     seen = {}
     for i, cv in enumerate(site_spec.get("cover", []) or []):
         sp, dims = cv.get("species"), cv.get("dims")
@@ -1011,6 +1034,17 @@ def cover_module_refs(site_spec, prefix, out_dir=None):
             findings.append((CODE_COVER_MODULE_MISSING,
                              f"cover_{i} ({sp}): no {stem}.glb in {cm['dir']}; "
                              f"the box stays"))
+            continue
+        # THE INDEX'S VERDICT, READ. Zoo writes `site_kit.built.json` beside
+        # the modules with a `status` per row; a module that failed exact
+        # fit (cold run 9024: the lamp 6.18 m against 6.00, the car 4.36
+        # against 4.30) was stood anyway because this resolved by file. A
+        # failed module keeps its box, and says which check it failed.
+        verdict = index.get(stem)
+        if verdict is not None and verdict.get("status") != "pass":
+            findings.append((CODE_COVER_MODULE_FAILED,
+                             f"cover_{i} ({sp}): {stem} built with status "
+                             f"{verdict.get('status')!r}; the box stays"))
             continue
         if stem not in seen:
             seen[stem] = f"cover_{stem}"
@@ -2332,6 +2366,23 @@ def assemble(site_spec_path, out_dir=None, walkable=False, navqa=False,
                                               SIDEWALK_H)
     site_spec["cover"].extend(furniture)
     merged["furniture_plan"] = {"placed": furniture}
+    # THE CARS, IN ORDER (roadmap 153): a seeded share of the parking bays
+    # holds a car, parked along the road, clear of every marker and every
+    # piece already standing. A parked car is cover; it is the same
+    # prop-slot record, and it stands from the plate like the trucks.
+    import site_parking
+    standing = []
+    for cv in site_spec["cover"]:
+        sx, _sy, sz = cv.get("size", COVER)
+        standing.append((cv["at"][0] - sx / 2.0, cv["at"][1] - sz / 2.0,
+                         cv["at"][0] + sx / 2.0, cv["at"][1] + sz / 2.0))
+    parked = site_parking.plan_parking(site_streets.roads(site_spec), standing,
+                                       list(cover_points.values()))
+    site_spec["cover"].extend(parked)
+    merged["parking_plan"] = {"placed": parked}
+    if parked:
+        print(f"[lot] LOT_PARKING_PLACED: {len(parked)} car(s) parked in the "
+              f"kerb lanes' bays")
     if furniture:
         from collections import Counter as _Counter
         _by = _Counter(f["species"] for f in furniture)

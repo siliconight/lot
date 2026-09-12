@@ -1,3 +1,25 @@
+## [0.63.0] - cars parked in the kerb lanes, and the index's verdict read
+
+Roadmap 153, the cars in order. `site_streets` gains parking lanes: 6.0 m
+bays in a 2.2 m lane along each kerb of a road with sidewalks (the low end
+of parallel-parking practice, so a 10 m road keeps two 2.8 m driving
+lanes), none within 6 m of a crossing (the 20 ft no-parking rule) or over
+a kerb cut; the edge lines move to the driving lanes' edge and every bay
+edge gets a tick. `site_parking` parks a `simple_car` in 60 percent of the
+bays by a stable hash of (road, side, bay) -- the same spec parks the
+same cars every run -- along the road, clear of every mission marker and
+of every piece already standing by the cover planner's own two rules. A
+parked car is cover, and it is the same prop-slot record: the site kit
+builds it, the themed site stands it. `parking_plan` in the gameplay
+file, `LOT_PARKING_PLACED` on stdout.
+
+THE INDEX, READ. Zoo writes `site_kit.built.json` beside the modules with
+a `status` per row, and Lot stood a module by file: cold run 9024 shipped
+the lamp at 6.18 m against a 6.00 m slot and the car at 4.36 against 4.30
+with both rows `fail`. A module whose row is not `pass` keeps its box
+under `LOT_COVER_MODULE_FAILED`, naming the status; no index stands
+everything that exists, as before.
+
 ## [0.62.0] - the kerb line
 
 Roadmap 153, the second layer. `site_furniture` places, along every
