@@ -1,3 +1,12 @@
+## [0.60.0] - a road and its sidewalks wear their own skins
+
+Roadmap 153. `ground_skins` gains two families: `road` for the strip and
+the kerb cuts (road at road height), `sidewalk` for the raised kerb bands.
+Declared only when the spec names a road, like every other family. The
+road, sidewalk, kerb and crossing geometry itself is unchanged and has
+existed for hand-authored specs since the kerb work; Level Factory 0.78.0
+is what puts a road in a generated spec for the first time.
+
 ## [0.59.2] - the cover modules live beside the scene
 
 Cold run 9019: three modules built, three boxes replaced in Lot's scene,

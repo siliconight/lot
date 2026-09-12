@@ -754,7 +754,7 @@ CODE_GROUND_SKIN_MISSING = "LOT_GROUND_SKIN_MISSING"
 #: which material kind a family wears is the caller's decision (Level Factory
 #: maps ground -> asphalt, path -> sidewalk), because Lot does not know the
 #: theme and does not read Pixelcoat's profiles -- only the pack it was handed.
-SKIN_FAMILIES = ("ground", "path", "courtyard")
+SKIN_FAMILIES = ("ground", "path", "courtyard", "road", "sidewalk")
 
 
 def ground_skins(site_spec):
@@ -1329,7 +1329,7 @@ def _outdoor_nodes(site_spec, preview=False, self_flooring=None, skins=None,
         bl, sr = _yaw_box_node(f"road_{i}",
                                (length, ROAD_THICK + GROUND_SINK, w),
                                (cx, (ROAD_THICK - GROUND_SINK) / 2, -cy),
-                               -ang, ROAD_COLOR)
+                               -ang, ROAD_COLOR, skin=skins.get("road"))
         body += bl
         sub += sr
         sw = rd.get("sidewalk")
@@ -1361,7 +1361,8 @@ def _outdoor_nodes(site_spec, preview=False, self_flooring=None, skins=None,
                           else f"sidewalk_{i}{side}_{j}")
                     bl, sr = _yaw_box_node(
                         nm, (seg, h, sw), (scx, h / 2, -scy), -ang,
-                        SIDEWALK_COLOR)
+                        SIDEWALK_COLOR,
+                        skin=skins.get("road" if is_cut else "sidewalk"))
                     body += bl
                     sub += sr
 
@@ -1476,7 +1477,9 @@ def write_godot_scene(site_spec, merged, out_path, glb_dir=".", preview=False,
     # gets no courtyard textures in its header.
     present = {"ground": bool(site_spec.get("ground")),
                "path": bool(site_spec.get("paths")),
-               "courtyard": bool(site_spec.get("courtyards"))}
+               "courtyard": bool(site_spec.get("courtyards")),
+               "road": bool(site_spec.get("roads")),
+               "sidewalk": any(r.get("sidewalk") for r in site_spec.get("roads") or [])}
     skins = {fam: sk for fam, sk in skins.items() if present.get(fam)}
     res_lines += _skin_ext_lines(skins, os.path.dirname(os.path.abspath(out_path)),
                                  prefix)

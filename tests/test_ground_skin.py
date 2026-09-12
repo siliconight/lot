@@ -150,3 +150,29 @@ def test_no_key_means_the_scene_it_always_was():
     before = lot._outdoor_nodes(spec)
     assert lot.ground_skins(spec) == ({}, [])
     assert lot._outdoor_nodes(spec, skins={}) == before
+
+
+def test_a_road_and_its_sidewalks_wear_their_own_skins(tmp_path):
+    """Roadmap 153: the generated spec names a road now, and a road is not
+    the plate -- the strip wears the `road` pack, the sidewalks the
+    `sidewalk` pack, and a kerb cut, which is road at road height, the road's."""
+    spec = _spec()
+    spec["roads"] = [{"a": [-60.0, -20.0], "b": [60.0, -20.0], "width": 10.0, "sidewalk": 3.0}]
+    spec["paths"].append({"a": [0.0, -5.0], "b": [0.0, -20.0], "width": 4.0})
+    spec["ground_skins"] = {"road": _pack(tmp_path, "asphalt_delco", "asphalt"),
+                            "sidewalk": _pack(tmp_path, "sidewalk_delco", "sidewalk")}
+    skins, findings = lot.ground_skins(spec)
+    assert findings == [] and set(skins) == {"road", "sidewalk"}
+    body, sub = lot._outdoor_nodes(spec, skins=skins)
+    txt = "\n".join(sub)
+    r = txt[txt.index('id="Mat_road_0"'):]; r = r[:r.index("\n\n")]
+    assert 'albedo_texture = ExtResource("skin_road_albedo")' in r
+    s = txt[txt.index('id="Mat_sidewalk_0L_0"'):]; s = s[:s.index("\n\n")]
+    assert 'albedo_texture = ExtResource("skin_sidewalk_albedo")' in s
+    cut = [ln for ln in sub if 'id="Mat_kerbcut_' in ln]
+    assert cut, "the spur must cut the kerb"
+    k = txt[txt.index(cut[0]):]; k = k[:k.index("\n\n")]
+    assert 'albedo_texture = ExtResource("skin_road_albedo")' in k
+    # the plate was not named, so it stays flat
+    g = txt[txt.index('id="Mat_Ground"'):]; g = g[:g.index("\n\n")]
+    assert "albedo_texture" not in g
