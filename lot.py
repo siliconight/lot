@@ -941,18 +941,29 @@ COVER_MATERIALS = {"box_truck": "metal_painted", "cargo_container": "metal_paint
                    "simple_car": "metal_painted"}
 
 
-def cover_module_refs(site_spec, prefix):
+COVER_DIR = "cover"
+
+
+def cover_module_refs(site_spec, prefix, out_dir=None):
     """Which cover pieces have a built module to stand in for the box.
 
     The spec's ``cover_modules`` names the Zoo kit build's directory, theme
     and style; each species piece resolves to `<dir>/<stem>.glb` by
     `cover_module_stem`. Returns (refs, ext_lines, findings): ``refs`` maps a
-    cover INDEX to its ext_resource id, ``ext_lines`` declare the GLBs by
-    ABSOLUTE path (the shape Lot has always used for a building's glb, which
-    every consumer that stages this scene rewrites and bundles), and each
-    piece whose module is not there is a `LOT_COVER_MODULE_MISSING` finding
-    with the stem it looked for -- the box stays, the art pass is
+    cover INDEX to its ext_resource id, ``ext_lines`` declare the GLBs, and
+    each piece whose module is not there is a `LOT_COVER_MODULE_MISSING`
+    finding with the stem it looked for -- the box stays, the art pass is
     progressive, and nothing is quiet about it.
+
+    The modules are COPIED to `<out_dir>/cover/` and referenced as siblings
+    of the scene (`cover/<stem>.glb`, or `res://cover/...` off portable
+    mode), exactly as the ground's skins are. 0.59.0 referenced them by
+    absolute path; cold run 9019 showed what that costs one stage on: the
+    Lux stage stages the scene into a throwaway project, Godot has no
+    loader for a glb outside it ("No loader found for resource"), and the
+    applied scene the package ships came back with every cover node gone
+    -- three modules built, three boxes replaced, nothing in the level.
+    Every stage that loads a Lot scene copies its siblings.
     """
     cm = site_spec.get("cover_modules") or {}
     refs, ext, findings = {}, [], []
@@ -977,7 +988,15 @@ def cover_module_refs(site_spec, prefix):
             continue
         if stem not in seen:
             seen[stem] = f"cover_{stem}"
-            ext.append(f'[ext_resource type="PackedScene" path="{glb}" '
+            ref_path = glb
+            if out_dir:
+                dest = os.path.join(out_dir, COVER_DIR)
+                os.makedirs(dest, exist_ok=True)
+                target = os.path.join(dest, stem + ".glb")
+                if not (os.path.exists(target) and _same_bytes(glb, target)):
+                    shutil.copyfile(glb, target)
+                ref_path = f"{prefix}{COVER_DIR}/{stem}.glb"
+            ext.append(f'[ext_resource type="PackedScene" path="{ref_path}" '
                        f'id="{seen[stem]}"]')
         refs[i] = seen[stem]
     return refs, ext, findings
@@ -1463,7 +1482,8 @@ def write_godot_scene(site_spec, merged, out_path, glb_dir=".", preview=False,
                                  prefix)
     # Cover modules (roadmap 22): the pieces Zoo built stand in for their
     # boxes; a piece with no module keeps its box and says so.
-    cover_refs, cover_ext, cover_findings = cover_module_refs(site_spec, prefix)
+    cover_refs, cover_ext, cover_findings = cover_module_refs(
+        site_spec, prefix, os.path.dirname(os.path.abspath(out_path)))
     for code, msg in cover_findings:
         print(f"[lot] {code}: {msg}")
     res_lines += cover_ext

@@ -1,3 +1,14 @@
+## [0.59.2] - the cover modules live beside the scene
+
+Cold run 9019: three modules built, three boxes replaced in Lot's scene,
+none in the level. 0.59.0 referenced each module by absolute path, the Lux
+stage stages the scene into a throwaway project, Godot has no loader for a
+glb outside it ("No loader found for resource"), and the applied scene the
+package ships came back without the cover nodes. The skins had taught this
+one stage earlier (0.58.0). The modules are now copied to `cover/` beside
+the scene and referenced as siblings -- `cover/<stem>.glb`, `res://cover/`
+off portable mode -- which every stage that loads a Lot scene carries.
+
 ## [0.59.1] - marker clearance is measured from the piece's edge
 
 Cold run 9018, the first with species pieces: the chain worked -- Zoo built

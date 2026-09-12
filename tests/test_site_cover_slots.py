@@ -139,10 +139,18 @@ def test_a_built_module_stands_where_the_box_stood(tmp_path):
                        "species": "box_truck", "yaw": 90.0, "dims": [2.4, 6.0, 2.8]}],
             "cover_modules": {"dir": str(tmp_path), "theme": "delco_1997", "style": 1},
             "buildings": []}
-    refs, ext, findings = lot.cover_module_refs(spec, "res://")
+    out = tmp_path / "out"
+    out.mkdir()
+    refs, ext, findings = lot.cover_module_refs(spec, "", str(out))
     assert findings == [] and refs == {0: "cover_prop_box_truck_delco_1997_01_w240_d600_h280",
                                        1: "cover_prop_box_truck_delco_1997_01_w240_d600_h280"}
-    assert len(ext) == 1 and 'type="PackedScene"' in ext[0] and "\\" not in ext[0]
+    # copied beside the scene and referenced as a sibling -- Godot has no
+    # loader for a glb outside the project, and the Lux stage loads this
+    # scene in one (cold run 9019: three modules built, none in the level)
+    assert len(ext) == 1 and 'type="PackedScene"' in ext[0]
+    assert 'path="cover/prop_box_truck_delco_1997_01_w240_d600_h280.glb"' in ext[0]
+    assert (out / "cover" / "prop_box_truck_delco_1997_01_w240_d600_h280.glb").read_bytes() == b"glTF"
+    assert lot.cover_module_refs(spec, "res://", str(out))[1][0].count('path="res://cover/') == 1
     body, sub = lot._outdoor_nodes(spec, cover_refs=refs)
     txt = "\n".join(body)
     assert txt.count('instance=ExtResource("cover_prop_box_truck_delco_1997_01_w240_d600_h280")') == 2
