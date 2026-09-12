@@ -1,3 +1,31 @@
+## [0.57.0] - the ground plate wears the theme's skin
+
+Roadmap 152. Measured on cold run 9014: the exterior plate shipped as one
+untextured 0.52 grey, so the only detail outdoors was Layer 3's clutter on
+it, and 2,708 pieces of clutter read as defects in a texture that was not
+there. The walker: "it looks like unintentional defects on the texture."
+
+A site spec may now name `ground_skins`: a Pixelcoat pack DIRECTORY per
+outdoor family (`ground`, `path`, `courtyard`). `ground_skins()` reads the
+pack manifest (stdlib json, nothing from Pixelcoat imported) and the
+material every tile of that body shares carries the albedo, roughness and
+normal maps as `Texture2D` ext_resources, projected in WORLD space
+(`uv1_world_triplanar`) at the pack's own `meters_per_tile` -- the same
+projection `zoo_worldskin.gd` gives the kit at import, so an 8 m mesh tile
+and a yawed path read as one continuous surface; nearest filtering when the
+pack's import hints ask for it. Texture paths are written absolute; Lot
+does not copy what it does not own, and a consumer that ships the scene
+bundles what it references (Level Factory's export already rewrites every
+absolute ref into its package).
+
+A pack that cannot be read -- no directory, no manifest, no albedo, no tile
+period -- is `LOT_GROUND_SKIN_MISSING` on stdout and the family stays its
+flat greybox colour: a plate nobody asked to skin and a plate whose skin
+went missing look identical from the walker's side, and the difference is
+the whole answer to "why is the ground grey". A spec without the key writes
+the scene it always wrote, byte for byte (test). Perimeter walls stay flat
+and bright on purpose: they are the edge of the world.
+
 ## [0.56.0] - a building's floor plan is not ground
 
 The walker, on cold run 9012's bank lobby: "are these grey blobs the

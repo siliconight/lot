@@ -625,7 +625,7 @@ def _mesh_tiles(sx, sz, tile=MESH_TILE):
     return out
 
 
-def _mesh_child_lines(name, size, color):
+def _mesh_child_lines(name, size, color, skin=None):
     """The MeshInstance3D children and their BoxMesh sub_resources for one
     StaticBody3D, tiled to MESH_TILE. Shared by `_box_node` and
     `_yaw_box_node` so the law cannot drift between them. Children sit in the
@@ -640,7 +640,7 @@ def _mesh_child_lines(name, size, color):
             body.append('transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, '
                         f'{dx:g}, 0, {dz:g})')
         body.append(f'mesh = SubResource("BoxMesh_{name}{suffix}")')
-        if color:
+        if color or skin:
             body.append(f'material_override = SubResource("Mat_{name}")')
         body.append('')
         sub += [
@@ -650,14 +650,15 @@ def _mesh_child_lines(name, size, color):
     return body, sub
 
 
-def _box_node(name, size, at_xyz, color=None):
+def _box_node(name, size, at_xyz, color=None, skin=None):
     """(body_lines, subres_lines) for an axis-aligned StaticBody3D box with a
     BoxMesh + BoxShape3D, at Godot-frame (x, y_height, z). color: optional
-    (r,g,b[,a]) -> a StandardMaterial3D override. The VISUAL is tiled to
+    (r,g,b[,a]) -> a StandardMaterial3D override; skin: a `ground_skins`
+    record, which wins over the colour. The VISUAL is tiled to
     MESH_TILE (see `_mesh_tiles`); the shape is one box, as it always was."""
     sx, sy, sz = size
     x, yh, z = at_xyz
-    mesh_body, mesh_sub = _mesh_child_lines(name, size, color)
+    mesh_body, mesh_sub = _mesh_child_lines(name, size, color, skin)
     body = [
         f'[node name="{name}" type="StaticBody3D" parent="."]',
         f'transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, {x:g}, {yh:g}, {z:g})',
@@ -673,11 +674,11 @@ def _box_node(name, size, at_xyz, color=None):
         f'[sub_resource type="BoxShape3D" id="BoxShape_{name}"]',
         f'size = Vector3({sx:g}, {sy:g}, {sz:g})', '',
     ]
-    sub += _mat_sub(name, color)
+    sub += _mat_sub(name, color, skin)
     return body, sub
 
 
-def _yaw_box_node(name, size, center_godot, yaw_deg, color=None):
+def _yaw_box_node(name, size, center_godot, yaw_deg, color=None, skin=None):
     """Like _box_node but yaw'd about Godot-Y (for paths/roads between buildings).
     color: optional (r,g,b[,a]) -> a StandardMaterial3D override. The VISUAL
     is tiled to MESH_TILE in the body's LOCAL frame -- the parent transform
@@ -688,7 +689,7 @@ def _yaw_box_node(name, size, center_godot, yaw_deg, color=None):
     r = math.radians(yaw_deg)
     c, s = math.cos(r), math.sin(r)
     xform = (f"{c:g}, 0, {s:g}, 0, 1, 0, {-s:g}, 0, {c:g}, {x:g}, {yh:g}, {z:g}")
-    mesh_body, mesh_sub = _mesh_child_lines(name, size, color)
+    mesh_body, mesh_sub = _mesh_child_lines(name, size, color, skin)
     body = [
         f'[node name="{name}" type="StaticBody3D" parent="."]',
         f'transform = Transform3D({xform})',
@@ -704,21 +705,133 @@ def _yaw_box_node(name, size, center_godot, yaw_deg, color=None):
         f'[sub_resource type="BoxShape3D" id="BoxShape_{name}"]',
         f'size = Vector3({sx:g}, {sy:g}, {sz:g})', '',
     ]
-    sub += _mat_sub(name, color)
+    sub += _mat_sub(name, color, skin)
     return body, sub
 
 
-def _mat_sub(name, color):
-    if not color:
+def _mat_sub(name, color, skin=None):
+    """The one StandardMaterial3D a body's tiles share. `color` alone is the
+    flat greybox read; with a `skin` (see `ground_skins`) the material carries
+    the Pixelcoat maps, projected in WORLD space so a plate tiled into 8 m
+    meshes and a path yawed to its buildings read as one continuous surface
+    -- the same projection `zoo_worldskin.gd` gives the kit at import. The
+    tile period is the pack's `meters_per_tile`, not a number chosen here."""
+    if not color and not skin:
         return []
+    lines = [f'[sub_resource type="StandardMaterial3D" id="Mat_{name}"]']
+    if skin:
+        rid = skin["id"]
+        lines.append(f'albedo_texture = ExtResource("{rid}_albedo")')
+        if skin.get("roughness"):
+            lines.append(f'roughness_texture = ExtResource("{rid}_roughness")')
+        if skin.get("normal"):
+            lines.append('normal_enabled = true')
+            lines.append(f'normal_texture = ExtResource("{rid}_normal")')
+        if skin.get("nearest"):
+            lines.append('texture_filter = 2')      # nearest, with mipmaps
+        s = 1.0 / float(skin["meters_per_tile"])
+        lines.append('uv1_triplanar = true')
+        lines.append('uv1_world_triplanar = true')
+        lines.append(f'uv1_scale = Vector3({s:g}, {s:g}, {s:g})')
+        lines.append('')
+        return lines
     if len(color) == 3:
         color = color + (1.0,)
     r, g, b, a = color
-    lines = [f'[sub_resource type="StandardMaterial3D" id="Mat_{name}"]']
     if a < 1.0:
         lines.append('transparency = 1')
     lines.append(f'albedo_color = Color({r:g}, {g:g}, {b:g}, {a:g})')
     lines.append('')
+    return lines
+
+
+CODE_GROUND_SKIN_MISSING = "LOT_GROUND_SKIN_MISSING"
+
+#: Outdoor families a site spec may skin, and the ext_resource id stem each
+#: gets. The spec names a Pixelcoat PACK DIRECTORY per family
+#: (`"ground_skins": {"ground": "<dir>", "path": "<dir>", "courtyard": "<dir>"}`);
+#: which material kind a family wears is the caller's decision (Level Factory
+#: maps ground -> asphalt, path -> sidewalk), because Lot does not know the
+#: theme and does not read Pixelcoat's profiles -- only the pack it was handed.
+SKIN_FAMILIES = ("ground", "path", "courtyard")
+
+
+def ground_skins(site_spec):
+    """Resolve the spec's `ground_skins` pack directories into skin records.
+
+    Returns (skins, findings). A family whose pack cannot be read is REPORTED
+    and left flat -- the plate ships in its greybox colour and the finding
+    says why -- never silently skipped: an unskinned plate and a plate nobody
+    asked to skin look identical from the walker's side, and the difference
+    is the whole answer to "why is the ground grey".
+
+    Measured need (roadmap 152, cold run 9014): the exterior ground was one
+    untextured 0.52 grey, so the only detail outdoors was the clutter on it,
+    and 2,708 pieces of clutter read as defects in a texture that was not
+    there.
+    """
+    raw = site_spec.get("ground_skins") or {}
+    skins, findings = {}, []
+    for fam, pack_dir in raw.items():
+        if fam not in SKIN_FAMILIES:
+            findings.append((CODE_GROUND_SKIN_MISSING,
+                             f"{fam!r} is not an outdoor family "
+                             f"({', '.join(SKIN_FAMILIES)}); ignored"))
+            continue
+        pack_dir = str(pack_dir)
+        packs = sorted(f for f in (os.listdir(pack_dir) if os.path.isdir(pack_dir) else [])
+                       if f.endswith(".pack.json"))
+        if not packs:
+            findings.append((CODE_GROUND_SKIN_MISSING,
+                             f"{fam}: no *.pack.json in {pack_dir}; the "
+                             f"{fam} stays flat"))
+            continue
+        with open(os.path.join(pack_dir, packs[0]), encoding="utf-8") as fh:
+            pk = json.load(fh)
+        maps = pk.get("maps") or {}
+        if not maps.get("albedo"):
+            findings.append((CODE_GROUND_SKIN_MISSING,
+                             f"{fam}: {packs[0]} names no albedo map; the "
+                             f"{fam} stays flat"))
+            continue
+        mpt = float(pk.get("meters_per_tile") or 0.0)
+        if mpt <= 0.0:
+            findings.append((CODE_GROUND_SKIN_MISSING,
+                             f"{fam}: {packs[0]} has no meters_per_tile; a "
+                             f"period nobody chose would be invented, so the "
+                             f"{fam} stays flat"))
+            continue
+
+        def _abs(fname):
+            return os.path.abspath(os.path.join(pack_dir, fname)).replace("\\", "/")
+
+        hints = pk.get("import_hints") or {}
+        skins[fam] = {
+            "id": f"skin_{fam}",
+            "profile": pk.get("material_profile") or packs[0][:-len(".pack.json")],
+            "albedo": _abs(maps["albedo"]),
+            "roughness": _abs(maps["roughness"]) if maps.get("roughness") else None,
+            "normal": _abs(maps["normal"]) if maps.get("normal") else None,
+            "meters_per_tile": mpt,
+            "nearest": hints.get("interpolation") == "nearest",
+        }
+    return skins, findings
+
+
+def _skin_ext_lines(skins):
+    """One Texture2D ext_resource per map, ABSOLUTE on disk. Lot does not
+    own the textures and does not copy them; a consumer that ships the
+    scene bundles what it references (Level Factory's export rewrites every
+    absolute ref into its package)."""
+    lines = []
+    for fam in SKIN_FAMILIES:
+        sk = skins.get(fam)
+        if not sk:
+            continue
+        for m in ("albedo", "roughness", "normal"):
+            if sk.get(m):
+                lines.append(f'[ext_resource type="Texture2D" path="{sk[m]}" '
+                             f'id="{sk["id"]}_{m}"]')
     return lines
 
 
@@ -904,15 +1017,20 @@ def _split_span(length, cuts, margin=0.6):
     return spans
 
 
-def _outdoor_nodes(site_spec, preview=False, self_flooring=None):
+def _outdoor_nodes(site_spec, preview=False, self_flooring=None, skins=None):
     """(body_lines, subres_lines) for all Phase-2 outdoor geometry.
 
     `self_flooring` is the set of building ids whose geometry demonstrably
     brings collision (see site_ground.audit). Only those get a hole cut in the
     ground beneath them. Passing None means nothing has been checked, so no
     holes are cut -- an unchecked assumption must not be able to open a void.
+
+    `skins` is `ground_skins(site_spec)[0]`: per outdoor family, the
+    Pixelcoat maps its material wears. Absent, every family keeps its flat
+    greybox colour, byte for byte.
     """
     body, sub = [], []
+    skins = skins or {}
     bld = {b["id"]: b for b in site_spec["buildings"]}
     if SIDEWALK_H > STEP_MAX:
         # RE-AIMED, not deleted. The old test asked whether the half-step band
@@ -956,7 +1074,7 @@ def _outdoor_nodes(site_spec, preview=False, self_flooring=None):
                                ((x0 + x1) / 2,
                                 -(GROUND_THICK + GROUND_SINK) / 2,
                                 -(y0 + y1) / 2),
-                               GROUND_COLOR)
+                               GROUND_COLOR, skin=skins.get("ground"))
             body += bl
             sub += sr
 
@@ -976,7 +1094,7 @@ def _outdoor_nodes(site_spec, preview=False, self_flooring=None):
         bl, sr = _yaw_box_node(f"path_{i}",
                                (length, PATH_THICK + GROUND_SINK, w),
                                (cx, (PATH_THICK - GROUND_SINK) / 2, -cy), -ang,
-                               PATH_COLOR)
+                               PATH_COLOR, skin=skins.get("path"))
         body += bl
         sub += sr
 
@@ -986,7 +1104,7 @@ def _outdoor_nodes(site_spec, preview=False, self_flooring=None):
         bl, sr = _box_node(f"courtyard_{i}",
                            (sx, COURT_THICK + GROUND_SINK, sy),
                            (cx, (COURT_THICK - GROUND_SINK) / 2, -cy),
-                           COURT_COLOR)
+                           COURT_COLOR, skin=skins.get("courtyard"))
         body += bl
         sub += sr
 
@@ -1169,8 +1287,15 @@ def write_godot_scene(site_spec, merged, out_path, glb_dir=".", preview=False,
                 res_lines.append(
                     f'[ext_resource type="PackedScene" path="{prefix}{rel}" id="{rid}"]')
 
+    # Outdoor skins: the spec names a Pixelcoat pack per family, and a pack
+    # that cannot be read is said out loud and left flat (roadmap 152).
+    skins, skin_findings = ground_skins(site_spec)
+    for code, msg in skin_findings:
+        print(f"[lot] {code}: {msg}")
+    res_lines += _skin_ext_lines(skins)
+
     outdoor_body, outdoor_sub = _outdoor_nodes(
-        site_spec, preview=preview, self_flooring=self_flooring)
+        site_spec, preview=preview, self_flooring=self_flooring, skins=skins)
 
     building_body, building_sub = [], []
     if preview:
