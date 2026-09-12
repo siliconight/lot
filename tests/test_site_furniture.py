@@ -71,9 +71,11 @@ def test_assemble_writes_the_furniture_as_slots_standing_on_the_kerb(tmp_path):
         assert s["fit"]["collision"] == "convex"
     g = json.loads((tmp_path / "coldrun_kerb_probe.site.gameplay.json").read_text(encoding="utf-8"))
     assert g["furniture_plan"]["placed"]
-    # and the box the scene draws for a lamp stands on the band's top
+    # and the box the scene draws for a lamp stands on the band's top (the
+    # kerb line is planned first, so the first lamp is the first slot)
     txt = (tmp_path / "coldrun_kerb_probe.tscn").read_text(encoding="utf-8")
-    i = txt.index('name="cover_%d"' % (len(g["cover_plan"]["placed"])))
+    first_lamp = next(i for i, s in enumerate(doc["slots"]) if s["species"] == "streetlight")
+    i = txt.index('name="cover_%d"' % first_lamp)
     assert f", {lot.SIDEWALK_H + 3.0:g}, " in txt[i:].split("\n")[1]
 
 

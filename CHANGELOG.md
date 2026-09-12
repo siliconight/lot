@@ -1,3 +1,19 @@
+## [0.66.0] - the street is planned before the cover, and an X has one surface
+
+Roadmap 153 residue. THE CARS FIRST: `assemble` plans the kerb line and
+parks the cars before the cover planner runs, and hands both to
+`plan_cover(standing=...)`, where they occlude a sightline the way a placed
+piece does and a piece keeps its own daylight from them -- so a truck or a
+container is stood in the road only for a line the street's own furniture
+left open. Measured before: cold run 9028 stood a container at the
+junction with 28 cars parked, because the cars were planned after. AN X
+CROSSING: where a lower-index road crosses THROUGH another, that road owns
+the junction's surface; the higher road carries `gaps` (the lower's box)
+and `drawn_spans` is its slab less those, so its slab and band pieces stop
+at the box's edges and resume past them -- no two slabs or dropped kerbs
+lie coplanar. `Cut.crosser` names the crossing road; the manifest carries
+`gaps`. Tested on a two-road X and on the kerb probe.
+
 ## [0.65.1] - the paint pack reaches the scene
 
 Cold run 9028 named the road-paint pack in the themed spec, `ground_skins`

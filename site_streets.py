@@ -92,6 +92,7 @@ class Cut:
     kind: str           # "path" or "road"
     sidewalk: float = 0.0
     terminal: bool = False
+    crosser: int = -1   # the crossing road's index in the spec (-1: a path)
 
 
 @dataclass
@@ -120,6 +121,12 @@ class Road:
     #: another road, where the slab begins at the far edge of that road's
     #: band and the other road's dropped kerb carries the mouth (a T).
     slab: tuple = (0.0, 0.0)
+    #: Boxes along ``t`` this road does NOT draw: where a lower-index road
+    #: crosses THROUGH it (an X), that road's carriageway and bands own the
+    #: junction's surface, and this road's slab and band pieces stop at the
+    #: box's edges and resume past them. Without this two slabs and two
+    #: dropped kerbs lay coplanar over every X.
+    gaps: list = field(default_factory=list)
 
     @property
     def centre(self):
@@ -161,11 +168,11 @@ def kerb_crossings(site_spec, bld, origin, along, perp, offset, length, width,
     px, py = perp
     kx, ky = ox + px * offset, oy + py * offset
     out = []
-    crossers = [(p, float(p.get("width", 6.0)), "path", 0.0)
+    crossers = [(p, float(p.get("width", 6.0)), "path", 0.0, -1)
                 for p in site_spec.get("paths", []) or []]
-    crossers += [(r, float(r.get("width", 9.0)), "road", float(r.get("sidewalk") or 0.0))
-                 for r in site_spec.get("roads", []) or []]
-    for p, pw, kind, psw in crossers:
+    crossers += [(r, float(r.get("width", 9.0)), "road", float(r.get("sidewalk") or 0.0), ri)
+                 for ri, r in enumerate(site_spec.get("roads", []) or [])]
+    for p, pw, kind, psw, crosser in crossers:
         try:
             (pax, pay), (pbx, pby) = _endpoints(p, bld)
         except (KeyError, TypeError):
@@ -198,8 +205,14 @@ def kerb_crossings(site_spec, bld, origin, along, perp, offset, length, width,
                 f"crossing walkable. Re-route it closer to square, or run it "
                 f"along the sidewalk rather than across it.")
         out.append(Cut(t=t, span=span, width=pw, kind=kind, sidewalk=psw,
-                       terminal=(s_c < 0.05 or s_c > 0.95)))
+                       terminal=(s_c < 0.05 or s_c > 0.95), crosser=crosser))
     return out
+
+
+def drawn_spans(road) -> list:
+    """[(t0, t1)] of the slab this road draws: its slab less its gaps."""
+    return [(a, b) for a, b in _outside(road.slab[0], road.slab[1], road.gaps)
+            if b - a > 0.05]
 
 
 def crossing_box(cut) -> tuple:
@@ -287,6 +300,10 @@ def roads(site_spec, findings=None) -> list:
         out.append(road)
     for road in out:
         road.slab = _slab(road, out)
+        # an X: a lower-index road crossing through owns the junction box
+        road.gaps = [crossing_box(c) for c in road.crossings
+                     if c.kind == "road" and not c.terminal
+                     and 0 <= c.crosser < road.index]
     return out
 
 
@@ -430,6 +447,7 @@ def manifest(site_spec, roads_list=None, findings=None) -> dict:
                    "width": r.width, "sidewalk": r.sidewalk,
                    "length": round(r.length, 4),
                    "slab": [round(r.slab[0], 4), round(r.slab[1], 4)],
+                   "gaps": [[round(a, 4), round(b, 4)] for a, b in r.gaps],
                    "kerbs": [{"side": k.side, "offset": round(k.offset, 4),
                               "cuts": [{"t": round(c.t, 4), "span": round(c.span, 4),
                                         "width": c.width, "kind": c.kind,

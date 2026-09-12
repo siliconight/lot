@@ -154,3 +154,40 @@ def test_the_written_scene_wears_the_paint_pack_as_a_scissor_decal(tmp_path):
     assert txt.count("transparency = 2") >= 1
     assert "albedo_color = Color(0.9, 0.9, 0.88, 1)" in txt        # the white tint
     assert (tmp_path / "skins" / "road_paint_delco_albedo.png").exists()
+
+
+def _cross():
+    """Two 10 m roads with 3 m bands crossing at the origin: an X."""
+    return {"name": "cross", "ground": {"size_x": 140, "size_y": 140},
+            "buildings": [],
+            "roads": [{"a": [-60, 0], "b": [60, 0], "width": 10, "sidewalk": 3},
+                      {"a": [0, -60], "b": [0, 60], "width": 10, "sidewalk": 3}]}
+
+
+def test_an_x_crossing_gaps_the_higher_road_over_the_lowers_box():
+    ew, ns = site_streets.roads(_cross())
+    assert ew.gaps == [] and ew.slab == (0.0, 120.0)
+    assert ns.slab == (0.0, 120.0) and ns.gaps == [(52.0, 68.0)]     # 60 +- (5 + 3)
+    assert site_streets.drawn_spans(ns) == [(0.0, 52.0), (68.0, 120.0)]
+    assert site_streets.drawn_spans(ew) == [(0.0, 120.0)]
+    for c in ns.crossings + ew.crossings:
+        assert c.kind == "road" and not c.terminal
+    assert ns.crossings[0].crosser == 0 and ew.crossings[0].crosser == 1
+
+
+def test_the_scene_draws_the_x_without_a_coplanar_slab():
+    import re
+    body, sub = lot._outdoor_nodes(_cross())
+    txt = "\n".join(body)
+    assert 'name="road_0"' in txt and 'name="road_1_0"' in txt and 'name="road_1_1"' in txt
+    assert 'name="road_1"' not in txt
+    # no piece of road 1 -- slab, sidewalk or dropped kerb -- has its centre
+    # inside the box the through road owns (plan |y| < 8)
+    for m in re.finditer(r'name="(road_1_\d|sidewalk_1[LR]_[\d_]+|kerbcut_1[LR]_[\d_]+)" type="StaticBody3D" parent="\."\]\ntransform = Transform3D\(([^)]*)\)', txt):
+        vals = [float(v) for v in m.group(2).split(",")]
+        assert abs(vals[11]) >= 8.0 - 1e-6, (m.group(1), vals[11])
+    # the through road's own dropped kerbs carry the crossing
+    assert 'name="kerbcut_0L_' in txt and 'name="kerbcut_0R_' in txt
+    # and the manifest says so
+    doc = site_streets.manifest(_cross())
+    assert doc["roads"][1]["gaps"] == [[52.0, 68.0]] and doc["roads"][0]["gaps"] == []

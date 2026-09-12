@@ -1314,32 +1314,38 @@ def _outdoor_nodes(site_spec, preview=False, self_flooring=None, skins=None,
         # road it ends on (`site_streets._slab`) -- two slabs lying
         # coplanar over a junction's mouth would z-fight, and the other
         # road's dropped kerb is that mouth's surface
-        length = road.slab_length
-        if length <= 0.05:
-            continue
-        cx, cy = road.slab_centre
-        bl, sr = _yaw_box_node(f"road_{i}",
-                               (length, ROAD_THICK + GROUND_SINK, w),
-                               (cx, (ROAD_THICK - GROUND_SINK) / 2, -cy),
-                               -ang, ROAD_COLOR, skin=skins.get("road"))
-        body += bl
-        sub += sr
+        # ... and less the boxes a lower-index road owns where it crosses
+        # through (an X): the slab and the band pieces stop at the box's
+        # edges and resume past them (`site_streets.drawn_spans`).
+        spans = site_streets.drawn_spans(road)
+        for k, (s0, s1) in enumerate(spans):
+            cx, cy = road.point((s0 + s1) / 2.0)
+            nm = f"road_{i}" if len(spans) == 1 else f"road_{i}_{k}"
+            bl, sr = _yaw_box_node(nm, (s1 - s0, ROAD_THICK + GROUND_SINK, w),
+                                   (cx, (ROAD_THICK - GROUND_SINK) / 2, -cy),
+                                   -ang, ROAD_COLOR, skin=skins.get("road"))
+            body += bl
+            sub += sr
         for kerb in road.kerbs:
-            for j, (t0, t1, is_cut) in enumerate(kerb.spans):
+            pieces = [(t0, t1, is_cut, j) for j, (t0, t1, is_cut) in enumerate(kerb.spans)]
+            for t0, t1, is_cut, j in pieces:
                 t0, t1 = max(t0, road.slab[0]), min(t1, road.slab[1])
-                seg = t1 - t0
-                if seg <= 0.05:
-                    continue
-                scx, scy = road.point((t0 + t1) / 2.0, kerb.offset)
-                h = ROAD_THICK if is_cut else SIDEWALK_H
-                nm = (f"kerbcut_{i}{kerb.side}_{j}" if is_cut
-                      else f"sidewalk_{i}{kerb.side}_{j}")
-                bl, sr = _yaw_box_node(
-                    nm, (seg, h, road.sidewalk), (scx, h / 2, -scy), -ang,
-                    SIDEWALK_COLOR,
-                    skin=skins.get("road" if is_cut else "sidewalk"))
-                body += bl
-                sub += sr
+                parts = site_streets._outside(t0, t1, road.gaps) if t1 > t0 else []
+                for kk, (p0, p1) in enumerate(parts):
+                    seg = p1 - p0
+                    if seg <= 0.05:
+                        continue
+                    scx, scy = road.point((p0 + p1) / 2.0, kerb.offset)
+                    h = ROAD_THICK if is_cut else SIDEWALK_H
+                    tag = f"{j}" if len(parts) == 1 else f"{j}_{kk}"
+                    nm = (f"kerbcut_{i}{kerb.side}_{tag}" if is_cut
+                          else f"sidewalk_{i}{kerb.side}_{tag}")
+                    bl, sr = _yaw_box_node(
+                        nm, (seg, h, road.sidewalk), (scx, h / 2, -scy), -ang,
+                        SIDEWALK_COLOR,
+                        skin=skins.get("road" if is_cut else "sidewalk"))
+                    body += bl
+                    sub += sr
     # THE PAINT. Flat quads a hair above the road, tiled like every other
     # surface and with NO collision -- a marking is not a thing a body meets.
     # The quad is the decal's shape and place; with a `paint` skin (a
@@ -2365,6 +2371,38 @@ def assemble(site_spec_path, out_dir=None, walkable=False, navqa=False,
                     "LT_ExtractionPoint": tuple(walk_pos["extraction"][:2])}
     for i, (ex, ey, _ez) in enumerate(spawn_plan.positions):
         cover_points[f"Enemy_{i}"] = (ex, ey)
+    # THE STREET FIRST (roadmap 153): the kerb line and the parked cars are
+    # planned before the cover planner runs, and stand in its measurement,
+    # so a truck in the road is the exception -- a line nothing on the
+    # street could break -- rather than the rule.
+    import site_furniture
+    import site_parking
+    import site_streets
+    furniture = site_furniture.plan_furniture(site_streets.roads(site_spec),
+                                              site_spec.get("buildings") or [])
+    site_spec.setdefault("cover", []).extend(furniture)
+    merged["furniture_plan"] = {"placed": furniture}
+    standing = []
+    for cv in site_spec["cover"]:
+        sx, _sy, sz = cv.get("size", COVER)
+        standing.append((cv["at"][0] - sx / 2.0, cv["at"][1] - sz / 2.0,
+                         cv["at"][0] + sx / 2.0, cv["at"][1] + sz / 2.0))
+    parked = site_parking.plan_parking(site_streets.roads(site_spec), standing,
+                                       list(cover_points.values()))
+    site_spec["cover"].extend(parked)
+    merged["parking_plan"] = {"placed": parked}
+    for cv in parked:
+        sx, _sy, sz = cv["size"]
+        standing.append((cv["at"][0] - sx / 2.0, cv["at"][1] - sz / 2.0,
+                         cv["at"][0] + sx / 2.0, cv["at"][1] + sz / 2.0))
+    if parked:
+        print(f"[lot] LOT_PARKING_PLACED: {len(parked)} car(s) parked in the "
+              f"kerb lanes' bays")
+    if furniture:
+        from collections import Counter as _Counter
+        _by = _Counter(f["species"] for f in furniture)
+        print("[lot] LOT_FURNITURE_PLACED: " + ", ".join(
+            f"{n} {s}" for s, n in sorted(_by.items())) + " along the kerb line")
     cover_plan = site_cover.plan_cover(
         cover_points,
         # The footprints as built. `plan_cover` measures sightlines against
@@ -2385,45 +2423,10 @@ def assemble(site_spec_path, out_dir=None, walkable=False, navqa=False,
         # Species-shaped pieces, largest first (roadmap 22): a box truck, a
         # container, a car -- turned across the line they break -- instead
         # of a 3 m cube. Each is a slot the site's manifest carries.
-        species=site_cover.COVER_SPECIES)
-    site_spec.setdefault("cover", []).extend(
-        c.as_site_cover() for c in cover_plan.cover)
-    # THE KERB LINE (roadmap 153): lamps at a spacing and a hydrant, a bin
-    # and a sign at every crossing, on the sidewalk bands, as the same
-    # prop-slot records cover pieces are -- so the site kit builds them and
-    # the themed site stands them. Every piece stands taller than the step
-    # limit and carries collision, so the honesty rule holds by species.
-    # THE WAITING PLACES: a tree in a grate between every two lamps, and a
-    # bus stop -- shelter, bench, sign -- per road on the kerb the
-    # buildings face.
-    import site_furniture
-    import site_streets
-    furniture = site_furniture.plan_furniture(site_streets.roads(site_spec),
-                                              site_spec.get("buildings") or [])
-    site_spec["cover"].extend(furniture)
-    merged["furniture_plan"] = {"placed": furniture}
-    # THE CARS, IN ORDER (roadmap 153): a seeded share of the parking bays
-    # holds a car, parked along the road, clear of every marker and every
-    # piece already standing. A parked car is cover; it is the same
-    # prop-slot record, and it stands from the plate like the trucks.
-    import site_parking
-    standing = []
-    for cv in site_spec["cover"]:
-        sx, _sy, sz = cv.get("size", COVER)
-        standing.append((cv["at"][0] - sx / 2.0, cv["at"][1] - sz / 2.0,
-                         cv["at"][0] + sx / 2.0, cv["at"][1] + sz / 2.0))
-    parked = site_parking.plan_parking(site_streets.roads(site_spec), standing,
-                                       list(cover_points.values()))
-    site_spec["cover"].extend(parked)
-    merged["parking_plan"] = {"placed": parked}
-    if parked:
-        print(f"[lot] LOT_PARKING_PLACED: {len(parked)} car(s) parked in the "
-              f"kerb lanes' bays")
-    if furniture:
-        from collections import Counter as _Counter
-        _by = _Counter(f["species"] for f in furniture)
-        print("[lot] LOT_FURNITURE_PLACED: " + ", ".join(
-            f"{n} {s}" for s, n in sorted(_by.items())) + " along the kerb line")
+        species=site_cover.COVER_SPECIES,
+        # the kerb line and the parked cars, already standing
+        standing=standing)
+    site_spec["cover"].extend(c.as_site_cover() for c in cover_plan.cover)
     merged["cover_plan"] = {
         "placed": [c.as_dict() for c in cover_plan.cover],
         "still_open": [f"{a} -> {b} ({d:.1f} m)"

@@ -109,3 +109,32 @@ def test_a_module_the_index_failed_keeps_its_box(tmp_path):
         assert lot.cover_module_refs(spec, "", str(tmp_path / "out"))[0] == {0: f"cover_{stem}"}
     (tmp_path / "site_kit.built.json").unlink()
     assert lot.cover_module_refs(spec, "", str(tmp_path / "out"))[0] == {0: f"cover_{stem}"}
+
+
+def test_what_already_stands_occludes_and_keeps_its_daylight():
+    """Cold run 9028: a container at the junction with 28 cars parked,
+    because the cars were planned after the cover. What stands before the
+    planner runs breaks sightlines like a placed piece and a piece keeps
+    clear of it."""
+    ground = (-60.0, -30.0, 60.0, 30.0)
+    points = {"LT_PlayerSpawn": (-50.0, 0.0), "LT_ObjectivePoint": (50.0, 0.0),
+              "Enemy_0": (40.0, 0.0)}
+    bare = site_cover.plan_cover(points, [], ground, opening_range=45.0,
+                                 species=site_cover.COVER_SPECIES)
+    assert bare.cover, "the bare line needs a piece"
+    # a car parked across the line is already the cover
+    car = (-3.0, -1.0, 3.0, 1.0)
+    with_car = site_cover.plan_cover(points, [], ground, opening_range=45.0,
+                                     species=site_cover.COVER_SPECIES, standing=[car])
+    assert len(with_car.cover) < len(bare.cover) or not with_car.cover
+    for c in with_car.cover:
+        assert not site_cover._overlaps(c.rect, site_cover._grow(car, site_cover.COVER_EDGE_GAP)), c.rect
+
+
+def test_assemble_parks_the_cars_before_it_places_cover(tmp_path):
+    lot.assemble(os.path.join(SPECS, "coldrun_kerb_probe.json"), str(tmp_path))
+    doc = json.loads((tmp_path / "coldrun_kerb_probe.slots.json").read_text(encoding="utf-8"))
+    order = [s["species"] for s in doc["slots"]]
+    first_car = order.index("simple_car")
+    first_truck = next((i for i, s in enumerate(order) if s in ("box_truck", "cargo_container")), None)
+    assert first_truck is None or first_car < first_truck

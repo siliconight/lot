@@ -725,7 +725,7 @@ def plan_cover(points: dict, rects, ground, *, opening_range: float,
                route=None,
                route_spacing: float = ROUTE_SAMPLE_SPACING,
                route_metres_per_piece: float = ROUTE_METRES_PER_PIECE,
-               species=None) -> CoverPlan:
+               species=None, standing=None) -> CoverPlan:
     """Cover for every open sightline this site opens fire along.
 
     ``points`` is the mission markers by name -- crew spawn, enemies,
@@ -773,6 +773,15 @@ def plan_cover(points: dict, rects, ground, *, opening_range: float,
     # footprints it has and cannot get this wrong on Lot's behalf.
     measured = list(rects)
     placeable = [_grow(rect, clearance) for rect in rects]
+    # WHAT ALREADY STANDS (roadmap 153): the parked cars and the kerb line,
+    # planned before this runs. They occlude a sightline the way a placed
+    # piece does and a piece keeps its own daylight from them -- so a truck
+    # is stood in the road only for a line the street's own furniture left
+    # open. Measured before this: cold run 9028 put a container at the
+    # junction with 28 cars parked, because the cars were planned after.
+    for rect in standing or ():
+        measured.append(tuple(rect))
+        placeable.append(_grow(tuple(rect), COVER_EDGE_GAP))
     # A line nothing could stand on stays refused. Re-measuring after each
     # placement would otherwise hand it straight back, and the loop would spend
     # its whole budget failing to break the same lane.
