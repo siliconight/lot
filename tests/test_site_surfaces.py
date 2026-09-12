@@ -528,3 +528,29 @@ def test_cli_empty_base_dir_skips_the_merge(tmp_path):
     SS.main([str(tmp_path / "site.json"), "--base-dir", "", "--out", str(out)])
     data = json.loads(out.read_text(encoding="utf-8"))
     assert not [z for z in data["zones"] if z["kind"] == "wall_base"]
+
+
+def test_a_road_declares_road_and_sidewalk_zones(tmp_path):
+    """Roadmap 153: a road was open ground to this module; now the strip is a
+    `road` (low) and each kerb band a `sidewalk` (high, a seam), from the
+    same model the scene draws. A spec without roads declares neither."""
+    import json
+    spec_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                             "specs", "coldrun_kerb_probe.json")
+    s = json.load(open(spec_path))
+    zones, _ = SS.zones(s)
+    fam = _families(zones)
+    roads = [z for z in zones if fam[z["surface_zone_id"]] == "road"]
+    walks = [z for z in zones if fam[z["surface_zone_id"]] == "sidewalk"]
+    assert roads and walks
+    assert all(z["density"] == "low" for z in roads)
+    assert all(z["density"] == "high" and z["kind"] == "sidewalk" for z in walks)
+    assert {t for z in walks for t in z["tags"] if t.startswith("kerb:")} == {"kerb:L", "kerb:R"}
+    # the sidewalk bands lie beside the strip, not on it: 3 m wide at +-6.5
+    for z in walks:
+        a = z["aabb"]
+        assert abs(a[4] - a[1] - 3.0) < 1e-6
+        assert min(abs(a[1]), abs(a[4])) >= 5.0 - 1e-6
+    ranks = [SS.PRECEDENCE.index(SS._family_of(z)) for z in zones]
+    assert ranks == sorted(ranks)
+    assert "road" not in set(_families(SS.zones(footprinted())[0]).values())

@@ -1,3 +1,36 @@
+## [0.61.0] - the street is a model, and it carries its paint
+
+Roadmap 153, the walker's "does Lot need to evolve now": yes, in this way.
+A road lived inline in `_outdoor_nodes` -- one yawed box, two sidewalk
+bands split at the crossings, the crossing arithmetic beside them -- and
+every next step of the street asked the same questions of the same
+geometry. `site_streets` answers them once: a `Road` with its kerbs, each
+kerb's cuts and spans, the crossings of the centre line, and `point(t,
+offset)` for anything that needs a place on it. The writer draws what the
+model says, byte for byte what it drew before (measured on the kerb-probe
+spec: 792 road-family node lines and 184 sub-resource lines identical
+before and after), and the shallow-crossing warning is a finding the
+model returns rather than a print inside the writer.
+
+THE PAINT. `site_streets.markings` puts a rectangle where each mark goes:
+an edge line each side (0.12 m, 0.3 m in from the kerb face), a dashed
+centre line (3 m on, 9 m off, yellow) that stays clear of the crossings
+and their stop bars, a continental crosswalk at every crossing of the
+centre line (0.5 m bars, 0.5 m apart, one station per crossing --
+stationing at the kerbs gave 14 crosswalks for 8 crossings on a road the
+paths meet at an angle), and a stop bar per lane before each crosswalk.
+The scene draws them as flat quads one surface tier above the road, tiled
+like every surface and with NO collision (a marking is not a thing a body
+meets); `assemble` writes the same rectangles to `<site>.markings.json`
+(`site-markings/1`) for the decal layer to carry as decals when it can.
+Widths from the MUTCD's normal line and continental crosswalk; colours
+the greybox's flat reads until Pixelcoat has a marking texture.
+
+THE ZONES. `site_surfaces` declares a `road` family (density low) for the
+strip and a `sidewalk` family (high, a seam, kind `sidewalk`) for each
+kerb band, from the same model, ahead of wall bases and behind paths in
+precedence. A road was open ground to the dressing planner before.
+
 ## [0.60.0] - a road and its sidewalks wear their own skins
 
 Roadmap 153. `ground_skins` gains two families: `road` for the strip and

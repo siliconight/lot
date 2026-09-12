@@ -710,6 +710,28 @@ def _yaw_box_node(name, size, center_godot, yaw_deg, color=None, skin=None):
     return body, sub
 
 
+#: Where paint sits: on the road's top face, one surface tier up, so it
+#: draws over the asphalt without a collider and without a z-fight.
+MARKING_Y = ROAD_THICK + SURFACE_TIER / 2.0 + 0.001
+
+
+def _yaw_quad_node(name, size, center_godot, yaw_deg, color):
+    """(body_lines, subres_lines) for a flat painted rectangle: a Node3D
+    carrying the tiled meshes `_mesh_child_lines` makes, one shared
+    material, and NO body -- markings have no collision. ``size`` is
+    (along, across) in the plan; the quad is `SURFACE_TIER` thick."""
+    along, across = size
+    x, yh, z = center_godot
+    r = math.radians(yaw_deg)
+    c, s = math.cos(r), math.sin(r)
+    xform = (f"{c:g}, 0, {s:g}, 0, 1, 0, {-s:g}, 0, {c:g}, {x:g}, {yh:g}, {z:g}")
+    mesh_body, mesh_sub = _mesh_child_lines(name, (along, SURFACE_TIER, across), color)
+    body = [f'[node name="{name}" type="Node3D" parent="."]',
+            f'transform = Transform3D({xform})', '']
+    body += mesh_body
+    return body, list(mesh_sub) + _mat_sub(name, color)
+
+
 def _mat_sub(name, color, skin=None):
     """The one StandardMaterial3D a body's tiles share. `color` alone is the
     flat greybox read; with a `skin` (see `ground_skins`) the material carries
@@ -1080,110 +1102,6 @@ def ground_holes(site_spec, self_flooring=None):
     return holes
 
 
-def _kerb_crossings(site_spec, bld, origin, along, perp, offset, length, width):
-    """(centre, span) per crossing: where a path OR another road crosses this
-    kerb, and how much kerb that crossing consumes measured along it.
-
-    Distances are from the road's start point. Anything that runs parallel, or
-    crosses beyond either end, contributes nothing -- there is no crossing to
-    drop. `width` is the kerb band's depth."""
-    ox, oy = origin
-    ux, uy = along
-    px, py = perp
-    # A point on this kerb is origin + u*t + p*offset.
-    kx, ky = ox + px * offset, oy + py * offset
-    out = []
-    # Everything that crosses this kerb and therefore needs it dropped. `paths`
-    # are the site's designed circulation; ROADS were missing entirely, and at a
-    # junction that means one road's kerb runs uncut across the other's
-    # carriageway -- four raised strips through the crossroads on
-    # warehouse_district, a 0.16 m wall across a road. No gate catches it either:
-    # site_steps reports a rise only where a designed PATH crosses it.
-    #
-    # The angle-aware span below is already correct for a road; a road simply
-    # brings its carriageway width where a path brings its own. And a road does
-    # not cut its own kerb without a special case, because a road is parallel to
-    # its own sidewalk and the parallel test drops it.
-    crossers = [(p, float(p.get("width", 6.0)), "path")
-                for p in site_spec.get("paths", []) or []]
-    crossers += [(r, float(r.get("width", 9.0)), "road")
-                 for r in site_spec.get("roads", []) or []]
-    for p, pw, kind in crossers:
-        try:
-            pax, pay = bld[p["from"]]["at"] if "from" in p else p["a"]
-            pbx, pby = bld[p["to"]]["at"] if "to" in p else p["b"]
-        except (KeyError, TypeError):
-            continue
-        vx, vy = pbx - pax, pby - pay
-        # solve  k + u*t = pa + v*s   for t
-        den = ux * (-vy) - uy * (-vx)
-        if abs(den) < 1e-9:
-            continue                      # parallel: never crosses
-        rx, ry = pax - kx, pay - ky
-        t = (rx * (-vy) - ry * (-vx)) / den
-        s = (ux * ry - uy * rx) / den
-        if not (-0.05 <= s <= 1.05):
-            continue                      # crosses the LINE, not the path
-        if t < 0.0 or t > length:
-            continue                      # past the end of this kerb
-        # How much kerb this crossing consumes ALONG the kerb. A strip of width
-        # pw meeting a LINE at angle t leaves pw/sin(t) on that line, not pw --
-        # and a kerb is not a line, it is a band `width` deep, so the strip also
-        # shears along it by width*cos(t)/sin(t). Dropping only pw assumed every
-        # crossing was head-on: on ballpark_block a 6 m path meets the kerb at
-        # 35 deg and needs 12.0 m, so a 7.2 m cut left the route spilling onto
-        # the sidewalk sections either side and hitting a 0.16 m wall on both.
-        vl = math.hypot(vx, vy) or 1e-9
-        cos_t = abs(vx * ux + vy * uy) / vl
-        sin_t = abs(vx * px + vy * py) / vl
-        span = (pw + float(width) * cos_t) / max(sin_t, 1e-6)
-        if span > 3.0 * pw:
-            # Shallow enough that the path is running ALONG the kerb rather than
-            # across it. The span is still emitted, because a body has to get
-            # over the rise somewhere -- but a designer should see it, since the
-            # honest fix is usually to re-route or to run the path on the
-            # sidewalk instead of through it.
-            print(f"[lot] LOT_KERB_CROSSED_SHALLOW: a {pw} m {kind} meets "
-                  f"this kerb at "
-                  f"{math.degrees(math.asin(min(1.0, sin_t))):.0f} deg "
-                  f"{t:.1f} m along it, so {span:.1f} m of kerb is dropped to "
-                  f"keep the crossing walkable. Re-route it closer to square, "
-                  f"or run it along the sidewalk rather than across it.")
-        out.append((t, span))
-    return out
-
-
-def _split_span(length, cuts, margin=0.6):
-    """[(t0, t1, is_cut)] along a kerb: crossings, and the kerb between them.
-
-    Each entry in `cuts` is (centre, span) from _kerb_crossings: where a route
-    crosses, and the along-kerb length it actually covers -- which is wider than
-    the path wherever the path meets the kerb at an angle. `margin` widens it
-    further so a body approaching off-centre still meets the dropped section
-    rather than clipping its corner, the same reason a real dropped kerb is
-    wider than the crossing painted on it."""
-    spans = []
-    bands = []
-    for t, span in sorted(cuts):
-        half = span / 2.0 + margin
-        bands.append((max(0.0, t - half), min(length, t + half)))
-    merged = []
-    for b in bands:
-        if merged and b[0] <= merged[-1][1]:
-            merged[-1] = (merged[-1][0], max(merged[-1][1], b[1]))
-        else:
-            merged.append(b)
-    cursor = 0.0
-    for b0, b1 in merged:
-        if b0 > cursor:
-            spans.append((cursor, b0, False))
-        spans.append((b0, b1, True))
-        cursor = b1
-    if cursor < length:
-        spans.append((cursor, length, False))
-    return spans
-
-
 def _outdoor_nodes(site_spec, preview=False, self_flooring=None, skins=None,
                    cover_refs=None):
     """(body_lines, subres_lines) for all Phase-2 outdoor geometry.
@@ -1318,53 +1236,54 @@ def _outdoor_nodes(site_spec, preview=False, self_flooring=None, skins=None,
     # roads: the street grid the block is built on (DELCO/Philly grain). A road
     # is a flat asphalt strip between two points, optionally with raised concrete
     # sidewalks running alongside. Buildings + blockers front onto it.
-    for i, rd in enumerate(site_spec.get("roads", [])):
-        ax, ay = bld[rd["from"]]["at"] if "from" in rd else rd["a"]
-        bx_, by_ = bld[rd["to"]]["at"] if "to" in rd else rd["b"]
-        w = rd.get("width", 9.0)
-        cx, cy = (ax + bx_) / 2, (ay + by_) / 2
-        dx, dy = bx_ - ax, by_ - ay
-        length = math.hypot(dx, dy) or 0.001
-        ang = math.degrees(math.atan2(dy, dx))
+    # THE STREET, from its model (site_streets, roadmap 153): the strip, a
+    # sidewalk band each side split at the crossings, and the paint. A kerb
+    # is SUPPOSED to be a wall -- 0.16 m against an unassisted step limit of
+    # 0.117 -- and the answer is not to flatten it but to drop it where
+    # people are meant to cross, exactly as a real street does. Anything the
+    # model does not cut is still a wall, and site_steps.py says so rather
+    # than leaving it to be discovered in play.
+    import site_streets
+    street_findings = []
+    street_roads = site_streets.roads(site_spec, street_findings)
+    for f_ in street_findings:
+        print(f"[lot] {f_}")
+    for road in street_roads:
+        i, w, length, ang = road.index, road.width, road.length, road.angle_deg
+        cx, cy = road.centre
         bl, sr = _yaw_box_node(f"road_{i}",
                                (length, ROAD_THICK + GROUND_SINK, w),
                                (cx, (ROAD_THICK - GROUND_SINK) / 2, -cy),
                                -ang, ROAD_COLOR, skin=skins.get("road"))
         body += bl
         sub += sr
-        sw = rd.get("sidewalk")
-        if sw:
-            ux, uy = dx / length, dy / length        # along
-            px, py = -uy, ux                          # perpendicular (left)
-            off = w / 2 + sw / 2
-            # Where the site's own circulation crosses this kerb. A kerb is
-            # SUPPOSED to be a wall -- 0.16 m against an unassisted step limit
-            # of 0.117 -- and the answer is not to flatten it but to drop it
-            # where people are meant to cross, exactly as a real street does.
-            # Anything this does not reach is still a wall, and site_steps.py
-            # says so rather than leaving it to be discovered in play.
-            for side, sgn in (("L", 1), ("R", -1)):
-                lcx, lcy = cx + px * off * sgn, cy + py * off * sgn
-                cuts = _kerb_crossings(site_spec, bld,
-                                       (ax, ay), (ux, uy), (px, py),
-                                       off * sgn, length, sw)
-                spans = _split_span(length, cuts)
-                for j, (t0, t1, is_cut) in enumerate(spans):
-                    seg = t1 - t0
-                    if seg <= 0.05:
-                        continue
-                    mid = (t0 + t1) / 2.0 - length / 2.0
-                    scx = lcx + ux * mid
-                    scy = lcy + uy * mid
-                    h = ROAD_THICK if is_cut else SIDEWALK_H
-                    nm = (f"kerbcut_{i}{side}_{j}" if is_cut
-                          else f"sidewalk_{i}{side}_{j}")
-                    bl, sr = _yaw_box_node(
-                        nm, (seg, h, sw), (scx, h / 2, -scy), -ang,
-                        SIDEWALK_COLOR,
-                        skin=skins.get("road" if is_cut else "sidewalk"))
-                    body += bl
-                    sub += sr
+        for kerb in road.kerbs:
+            for j, (t0, t1, is_cut) in enumerate(kerb.spans):
+                seg = t1 - t0
+                if seg <= 0.05:
+                    continue
+                scx, scy = road.point((t0 + t1) / 2.0, kerb.offset)
+                h = ROAD_THICK if is_cut else SIDEWALK_H
+                nm = (f"kerbcut_{i}{kerb.side}_{j}" if is_cut
+                      else f"sidewalk_{i}{kerb.side}_{j}")
+                bl, sr = _yaw_box_node(
+                    nm, (seg, h, road.sidewalk), (scx, h / 2, -scy), -ang,
+                    SIDEWALK_COLOR,
+                    skin=skins.get("road" if is_cut else "sidewalk"))
+                body += bl
+                sub += sr
+    # THE PAINT. Flat quads a hair above the road, tiled like every other
+    # surface and with NO collision -- a marking is not a thing a body meets.
+    # Geometry standing in for the decal layer (item 152) the same way a
+    # box stands in for a prop: the shape and the place are right, the
+    # material is the greybox's flat read.
+    for n, m in enumerate(site_streets.markings(street_roads)):
+        along, across = m["size"]
+        bl, sr = _yaw_quad_node(f"mark_{n}_{m['kind']}", (along, across),
+                                (m["at"][0], MARKING_Y, -m["at"][1]),
+                                -m["yaw"], tuple(m["color"]))
+        body += bl
+        sub += sr
 
     # blockers: non-interactable filler buildings -- SOLID collision massing you
     # cannot enter. They wall the street and channel the player toward the real
@@ -2461,6 +2380,16 @@ def assemble(site_spec_path, out_dir=None, walkable=False, navqa=False,
     slots_out = os.path.join(out_dir, f"{site_spec['name']}.slots.json")
     n_slots = write_site_slots(site_spec, slots_out)
     print(f"[lot] site slots -> {slots_out} ({n_slots} cover slot(s))")
+    # The street's paint, as data (roadmap 153): the same rectangles the
+    # scene draws as quads, for the decal layer to carry as decals when it
+    # can, and for anything that wants to know where a crosswalk is.
+    import site_streets
+    marks = site_streets.manifest(site_spec)
+    marks_out = os.path.join(out_dir, f"{site_spec['name']}.markings.json")
+    with open(marks_out, "w", encoding="utf-8") as fh:
+        json.dump(marks, fh, indent=2)
+    print(f"[lot] site markings -> {marks_out} ({len(marks['roads'])} road(s), "
+          f"{len(marks['markings'])} marking(s))")
 
     # Site-level step gate, read back off the scene just WRITTEN rather than
     # re-derived from the constants that produced it. A capsule walks up a step

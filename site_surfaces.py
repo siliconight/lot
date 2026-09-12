@@ -88,6 +88,12 @@ VISIBILITY = {
 # wall seam high, abandoned corner very_high.
 DENSITY_BY_ZONE = {
     "path": "low",
+    # The street (roadmap 153, 0.61.0). A sidewalk's edge is where litter
+    # collects and a road's centre is where it does not: the two readings
+    # the guide gives a kerb, and the two the plate could not make while a
+    # road was open ground to this module.
+    "sidewalk": "high",
+    "road": "low",
     "wall_base": "high",
     "courtyard": "medium",
     "perimeter": "very_high",
@@ -98,7 +104,8 @@ DENSITY_BY_ZONE = {
 # so a point can be inside several; `zone_for` resolves by this order and the
 # emitted list is in it. A path crossing a wall base is still a path -- the
 # thing that matters there is that the route stays legible.
-PRECEDENCE = ("path", "wall_base", "courtyard", "perimeter", "open")
+PRECEDENCE = ("path", "sidewalk", "wall_base", "road", "courtyard", "perimeter",
+              "open")
 
 
 def annotate_footprints(site_spec, base_dir):
@@ -361,6 +368,27 @@ def zones(site_spec, *, ground=None, nav_bake=None, capsule=None):
             out.append(_zone(f"path_{label}_s{j:02d}", "ground", "path", rect,
                              z_lo, z_hi, "gameplay_path",
                              ["route", f"path:{label}"]))
+
+    # --- the street: a road is not open ground, and a sidewalk is a seam ----
+    # From the same model the scene is drawn from (site_streets): the strip
+    # as a corridor of boxes like a path, each sidewalk band as a corridor
+    # along its kerb's centre line. A road with no sidewalk declares no
+    # sidewalk zone.
+    import site_streets
+    for road in site_streets.roads(site_spec):
+        for j, rect in enumerate(corridor_boxes(road.a, road.b, road.width)):
+            out.append(_zone(f"road_{road.index}_s{j:02d}", "ground", "road", rect,
+                             z_lo, z_hi, "play_space",
+                             ["street", f"road:{road.index}"]))
+        for kerb in road.kerbs:
+            ka = road.point(0.0, kerb.offset)
+            kb = road.point(road.length, kerb.offset)
+            for j, rect in enumerate(corridor_boxes(ka, kb, road.sidewalk)):
+                out.append(_zone(f"sidewalk_{road.index}{kerb.side}_s{j:02d}",
+                                 "sidewalk", "sidewalk", rect, z_lo, z_hi,
+                                 "environmental_edge",
+                                 ["street", "seam", f"road:{road.index}",
+                                  f"kerb:{kerb.side}"]))
 
     # --- wall bases: the seam where ground meets a building -----------------
     # The band is the footprint GROWN by one agent radius MINUS the footprint:
