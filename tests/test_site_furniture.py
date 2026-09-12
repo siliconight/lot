@@ -23,7 +23,7 @@ def _probe():
 
 def test_every_piece_stands_on_a_band_clear_of_the_cuts():
     roads = site_streets.roads(_probe())
-    pieces = site_furniture.plan_furniture(roads, lot.SIDEWALK_H)
+    pieces = site_furniture.plan_furniture(roads)
     assert pieces
     (road,) = roads
     for p in pieces:
@@ -36,14 +36,17 @@ def test_every_piece_stands_on_a_band_clear_of_the_cuts():
         kerb = road.kerb(p["kerb"])
         w, d, h = p["dims"]
         assert h > lot.STEP_MAX          # never a thing a body walks through
+        # what must clear a dropped kerb is the piece's FOOTPRINT along the
+        # road (a tree's grate), not its slot (the crown, 2.4 m up)
+        half = p["along"] / 2
         for t0, t1, is_cut in kerb.spans:
             if is_cut:
-                assert t + d / 2 <= t0 + 1e-6 or t - d / 2 >= t1 - 1e-6, (p, (t0, t1))
+                assert t + half <= t0 + 1e-6 or t - half >= t1 - 1e-6, (p, (t0, t1))
 
 
 def test_lamps_at_the_spacing_and_the_corner_set_at_every_cut():
     roads = site_streets.roads(_probe())
-    pieces = site_furniture.plan_furniture(roads, lot.SIDEWALK_H)
+    pieces = site_furniture.plan_furniture(roads)
     by = {}
     for p in pieces:
         by.setdefault(p["species"], []).append(p)
@@ -72,3 +75,50 @@ def test_assemble_writes_the_furniture_as_slots_standing_on_the_kerb(tmp_path):
     txt = (tmp_path / "coldrun_kerb_probe.tscn").read_text(encoding="utf-8")
     i = txt.index('name="cover_%d"' % (len(g["cover_plan"]["placed"])))
     assert f", {lot.SIDEWALK_H + 3.0:g}, " in txt[i:].split("\n")[1]
+
+
+def test_a_tree_stands_between_every_two_lamps_on_the_grates_footprint():
+    roads = site_streets.roads(_probe())
+    pieces = site_furniture.plan_furniture(roads)
+    trees = [p for p in pieces if p["species"] == "street_tree"]
+    lamps = [p for p in pieces if p["species"] == "streetlight"]
+    assert trees and len(trees) <= len(lamps)
+    for p in trees:
+        assert p["dims"] == [4.0, 4.0, 6.0]            # the slot is the crown
+        assert p["size"] == [1.2, 6.0, 1.2]            # the box is the grate
+        assert p["base"] == "sidewalk"
+        # halfway between two lamp STATIONS (a lamp skipped for a cut still
+        # leaves its station), on the outer half of the band
+        phase = (p["t"] - site_furniture.LAMP_START - site_furniture.TREE_OFFSET)
+        assert abs(phase % site_furniture.LAMP_SPACING) < 1e-6, p
+        assert abs(abs(p["at"][1]) - (8.0 - site_furniture.TREE_INSET)) < 1e-6
+
+
+def test_one_bus_stop_per_road_on_the_kerb_the_buildings_face():
+    spec = _probe()
+    roads = site_streets.roads(spec)
+    pieces = site_furniture.plan_furniture(roads, spec["buildings"])
+    shelters = [p for p in pieces if p["species"] == "bus_shelter"]
+    benches = [p for p in pieces if p["species"] == "bench"]
+    signs = [p for p in pieces if p["breaks"].startswith("stop@")]
+    assert len(shelters) == 1 and len(benches) == 1 and len(signs) == 3
+    (sh,), (bn,) = shelters, benches
+    # the probe's buildings stand north of the road: the L kerb, back to +y
+    assert sh["kerb"] == "L" and sh["yaw"] == 0.0 and bn["yaw"] == 0.0
+    assert bn["t"] == sh["t"] and bn["at"][1] > sh["at"][1]      # inside, toward the back
+    assert abs(sh["at"][1] - (8.0 - site_furniture.SHELTER_INSET)) < 1e-6
+    # clear of every cut and of every other piece on that band
+    kerb = roads[0].kerb("L")
+    assert site_furniture._clear_of_cuts(sh["t"], 1.5, kerb)
+    for p in pieces:
+        if p["kerb"] == "L" and p["name"] not in (sh["name"], bn["name"]):
+            assert abs(p["t"] - sh["t"]) >= 1.5 + p["along"] / 2, p
+    # without buildings there is no facing kerb and no stop
+    assert not [p for p in site_furniture.plan_furniture(roads) if p["species"] == "bus_shelter"]
+
+
+def test_the_facing_kerb_is_read_from_the_buildings_side():
+    (road,) = site_streets.roads(_probe())
+    assert site_furniture._facing_kerb(road, [{"at": [0, 30]}]).side == "L"
+    assert site_furniture._facing_kerb(road, [{"at": [0, -30]}]).side == "R"
+    assert site_furniture._facing_kerb(road, []) is None

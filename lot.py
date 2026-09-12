@@ -986,7 +986,10 @@ COVER_MATERIALS = {"box_truck": "metal_painted", "cargo_container": "metal_paint
                    "simple_car": "metal_painted",
                    # the kerb line (site_furniture)
                    "streetlight": "metal", "fire_hydrant": "metal_painted",
-                   "litter_bin": "metal_painted", "sign_post": "metal_bare"}
+                   "litter_bin": "metal_painted", "sign_post": "metal_bare",
+                   # the waiting places (site_furniture)
+                   "bus_shelter": "metal_painted", "bench": "wood",
+                   "street_tree": "wood"}
 
 
 COVER_DIR = "cover"
@@ -1039,9 +1042,12 @@ def cover_module_refs(site_spec, prefix, out_dir=None):
         # the modules with a `status` per row; a module that failed exact
         # fit (cold run 9024: the lamp 6.18 m against 6.00, the car 4.36
         # against 4.30) was stood anyway because this resolved by file. A
-        # failed module keeps its box, and says which check it failed.
+        # failed module keeps its box, and says which check it failed. A
+        # `warn` row is a built module with an advisory against it (a tri
+        # budget, a dim range Zoo marks advisory under exact fit) and
+        # stands; only `fail` -- or a status nobody named -- keeps the box.
         verdict = index.get(stem)
-        if verdict is not None and verdict.get("status") != "pass":
+        if verdict is not None and verdict.get("status") not in ("pass", "warn"):
             findings.append((CODE_COVER_MODULE_FAILED,
                              f"cover_{i} ({sp}): {stem} built with status "
                              f"{verdict.get('status')!r}; the box stays"))
@@ -2360,10 +2366,13 @@ def assemble(site_spec_path, out_dir=None, walkable=False, navqa=False,
     # prop-slot records cover pieces are -- so the site kit builds them and
     # the themed site stands them. Every piece stands taller than the step
     # limit and carries collision, so the honesty rule holds by species.
+    # THE WAITING PLACES: a tree in a grate between every two lamps, and a
+    # bus stop -- shelter, bench, sign -- per road on the kerb the
+    # buildings face.
     import site_furniture
     import site_streets
     furniture = site_furniture.plan_furniture(site_streets.roads(site_spec),
-                                              SIDEWALK_H)
+                                              site_spec.get("buildings") or [])
     site_spec["cover"].extend(furniture)
     merged["furniture_plan"] = {"placed": furniture}
     # THE CARS, IN ORDER (roadmap 153): a seeded share of the parking bays

@@ -1,3 +1,25 @@
+## [0.64.0] - the waiting places: a tree between the lamps, a bus stop per road
+
+Roadmap 153, the third layer. `site_furniture` now plants a `street_tree`
+halfway between every two lamp stations on the outer half of each band,
+and stands one bus stop per road -- a `bus_shelter` open to the kerb with
+a `bench` inside it against its back and a `sign_post` a metre before it
+-- on the kerb the buildings face (`_facing_kerb`, the sign of the mean
+building offset in the road's frame), at the midpoint of the longest
+stretch between two crossings, nudged in 3 m steps clear of whatever
+already stands there (`_free`). Every piece is the same prop-slot record
+as the kerb line, so the site kit builds it and the themed site stands it.
+
+A tree's SLOT is its crown (4 x 4 x 6, what Zoo builds to) and its
+FOOTPRINT is its grate (1.2 x 1.2, what the greybox draws and the navmesh
+carves): `FOOTPRINT` separates the two, `size` is the footprint, `dims`
+the slot, and the record carries `t` and `along` so a planner can ask what
+already stands on a band. The kit index's `warn` rows now stand (a built
+module with an advisory against it); only `fail` keeps the box. The greybox over-blocks the trunk by the grate's
+margin and never under-blocks it. `plan_furniture` lost the `sidewalk_h`
+it never read and gained the spec's buildings; `COVER_MATERIALS` names
+the three species' kinds.
+
 ## [0.63.0] - cars parked in the kerb lanes, and the index's verdict read
 
 Roadmap 153, the cars in order. `site_streets` gains parking lanes: 6.0 m

@@ -101,9 +101,11 @@ def test_a_module_the_index_failed_keeps_its_box(tmp_path):
     refs, ext, findings = lot.cover_module_refs(spec, "", str(tmp_path / "out"))
     assert refs == {} and ext == []
     assert findings[0][0] == lot.CODE_COVER_MODULE_FAILED and "'fail'" in findings[0][1]
-    # a passing row, or no index at all, stands the module as before
-    (tmp_path / "site_kit.built.json").write_text(json.dumps({
-        "modules": [{"stem": stem, "status": "pass"}]}), encoding="utf-8")
-    assert lot.cover_module_refs(spec, "", str(tmp_path / "out"))[0] == {0: f"cover_{stem}"}
+    # a passing row, a row built with an advisory, or no index at all,
+    # stands the module as before
+    for status in ("pass", "warn"):
+        (tmp_path / "site_kit.built.json").write_text(json.dumps({
+            "modules": [{"stem": stem, "status": status}]}), encoding="utf-8")
+        assert lot.cover_module_refs(spec, "", str(tmp_path / "out"))[0] == {0: f"cover_{stem}"}
     (tmp_path / "site_kit.built.json").unlink()
     assert lot.cover_module_refs(spec, "", str(tmp_path / "out"))[0] == {0: f"cover_{stem}"}
