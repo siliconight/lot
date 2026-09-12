@@ -1467,7 +1467,12 @@ def write_godot_scene(site_spec, merged, out_path, glb_dir=".", preview=False,
                "path": bool(site_spec.get("paths")),
                "courtyard": bool(site_spec.get("courtyards")),
                "road": bool(site_spec.get("roads")),
-               "sidewalk": any(r.get("sidewalk") for r in site_spec.get("roads") or [])}
+               "sidewalk": any(r.get("sidewalk") for r in site_spec.get("roads") or []),
+               # the markings' paint: wherever there is a road to paint.
+               # Cold run 9028 named the pack and shipped flat markings,
+               # because this table did not know the family and the
+               # filter below dropped it in silence.
+               "paint": bool(site_spec.get("roads"))}
     skins = {fam: sk for fam, sk in skins.items() if present.get(fam)}
     res_lines += _skin_ext_lines(skins, os.path.dirname(os.path.abspath(out_path)),
                                  prefix)

@@ -129,3 +129,28 @@ def test_the_manifest_carries_the_slab_and_the_cuts_terminal_flag(tmp_path):
     assert doc["roads"][1]["slab"] == [8.0, 50.0]
     (cut,) = doc["roads"][0]["kerbs"][0]["cuts"]
     assert cut["terminal"] is True and cut["sidewalk"] == 3
+
+
+def test_the_written_scene_wears_the_paint_pack_as_a_scissor_decal(tmp_path):
+    """Cold run 9028: the spec named the road-paint pack, `ground_skins`
+    resolved it, and the scene shipped flat markings -- the writer's
+    'present' table did not know the family."""
+    pack = tmp_path / "road_paint_delco_1997"
+    pack.mkdir()
+    (pack / "road_paint_delco_albedo.png").write_bytes(b"PNG")
+    (pack / "road_paint_delco.pack.json").write_text(json.dumps({
+        "maps": {"albedo": "road_paint_delco_albedo.png"}, "meters_per_tile": 0.5,
+        "material_profile": "road_paint_delco",
+        "import_hints": {"interpolation": "nearest",
+                         "transparency": {"opacity": 1.0, "alpha_mode": "scissor"}}}),
+        encoding="utf-8")
+    spec = _tee()
+    spec["ground_skins"] = {"paint": str(pack)}
+    p = tmp_path / "tee.json"
+    p.write_text(json.dumps(spec), encoding="utf-8")
+    lot.assemble(str(p), str(tmp_path))
+    txt = (tmp_path / "tee.tscn").read_text(encoding="utf-8")
+    assert 'id="skin_paint_albedo"' in txt
+    assert txt.count("transparency = 2") >= 1
+    assert "albedo_color = Color(0.9, 0.9, 0.88, 1)" in txt        # the white tint
+    assert (tmp_path / "skins" / "road_paint_delco_albedo.png").exists()

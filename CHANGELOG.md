@@ -1,3 +1,11 @@
+## [0.65.1] - the paint pack reaches the scene
+
+Cold run 9028 named the road-paint pack in the themed spec, `ground_skins`
+resolved it, and the scene shipped flat markings: `write_godot_scene`
+declares only the skin families a body will reference, from a table of
+families it knows, and `paint` was not in the table. It is now, wherever
+there is a road; tested end to end on a tee spec with a stub pack.
+
 ## [0.65.0] - intersections, and the paint as a decal
 
 Roadmap 153. INTERSECTIONS: a road crossing is a BOX -- the crosser's
