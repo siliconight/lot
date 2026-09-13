@@ -1,3 +1,10 @@
+## [0.69.1] - the sign is legible
+
+Cold run 9040's frames: the band over the door was blown to white and the
+shop's name could not be read. Its emission multiplier was 1.6 on top of
+the Lux spot that already lights a facade sign; a lit cabinet is brighter
+than its wall and no brighter. 0.65.
+
 ## [0.69.0] - a lit sign over every shop's door
 
 Roadmap 153. The spec names a Pixelcoat sign pack per building

@@ -1011,7 +1011,10 @@ def _sign_node(name, center_godot, yaw_deg, sign, size):
     if sign.get("emissive"):
         sub += ['emission_enabled = true',
                 f'emission_texture = ExtResource("{sign["id"]}_emissive")',
-                'emission_energy_multiplier = 1.6']
+                # 1.6 blew the face to white on cold run 9040's frames -- a
+                # band that cannot be read is a band nobody put a name on.
+                # A lit cabinet is brighter than its wall and no brighter.
+                'emission_energy_multiplier = 0.65']
     if sign.get("nearest"):
         sub.append('texture_filter = 2')
     sub += ['cull_mode = 2', '']          # a cabinet reads from both sides
