@@ -779,6 +779,28 @@ def _mat_sub(name, color, skin=None, tint=None):
 
 
 CODE_GROUND_SKIN_MISSING = "LOT_GROUND_SKIN_MISSING"
+CODE_SIGN_PACK_MISSING = "LOT_SIGN_PACK_MISSING"
+
+#: A SHOP SIGN IS A BAND ACROSS ITS FRONTAGE, not a plaque on a wall. The
+#: walker's reference frames (docs/SET_DRESSING_REFERENCES.md, the Call of
+#: Duty forecourt): the store's name runs the full width of the storefront
+#: above the glazing. So the band is sized from the facade it hangs on --
+#: `SIGN_SPAN` of it, within these bounds -- and its face is six times as
+#: wide as it is tall, which is the shape Pixelcoat renders a sign pack at.
+SIGN_SPAN = 0.72          # of the facade's width
+SIGN_MIN_W = 2.4
+SIGN_MAX_W = 9.0
+SIGN_ASPECT = 6.0         # width : height, matching the pack
+SIGN_D = 0.22
+SIGN_Z = 3.6              # the band's centre, above grade
+SIGN_PROUD = 0.06         # how far its back sits off the facade
+SIGNS_DIR = "signs"
+
+
+def sign_size(facade_w: float):
+    """(w, h) of the band on a facade ``facade_w`` wide."""
+    w = max(SIGN_MIN_W, min(SIGN_MAX_W, facade_w * SIGN_SPAN))
+    return w, w / SIGN_ASPECT
 
 #: Outdoor families a site spec may skin, and the ext_resource id stem each
 #: gets. The spec names a Pixelcoat PACK DIRECTORY per family
@@ -855,6 +877,145 @@ def ground_skins(site_spec):
 
 
 SKINS_DIR = "skins"
+
+
+def building_signs(site_spec):
+    """(signs, findings): the sign pack each building wears, read the way a
+    ground skin is (`ground_skins`) -- a pack DIRECTORY per building id,
+    named by the spec, resolved here into the maps a material needs.
+
+    The spec says `{"signs": {"b0": "<pack dir>", ...}}`. A building with
+    no entry has no sign, which is the ordinary case for a warehouse or a
+    blocker; a building whose pack cannot be READ is reported and left
+    bare, never silently skipped -- a strip with no signs and a strip
+    whose signs failed to load look identical from the sidewalk.
+    """
+    raw = site_spec.get("signs") or {}
+    known = {b["id"] for b in site_spec.get("buildings", []) or []}
+    signs, findings = {}, []
+    for bid, pack_dir in sorted(raw.items()):
+        if bid not in known:
+            findings.append((CODE_SIGN_PACK_MISSING,
+                             f"{bid!r} names a sign and is not a building on "
+                             f"this site; ignored"))
+            continue
+        pack_dir = str(pack_dir)
+        packs = sorted(f for f in (os.listdir(pack_dir) if os.path.isdir(pack_dir) else [])
+                       if f.endswith(".pack.json"))
+        if not packs:
+            findings.append((CODE_SIGN_PACK_MISSING,
+                             f"{bid}: no *.pack.json in {pack_dir}; the shop "
+                             f"stands with no sign over its door"))
+            continue
+        with open(os.path.join(pack_dir, packs[0]), encoding="utf-8") as fh:
+            pk = json.load(fh)
+        maps = pk.get("maps") or {}
+        if not maps.get("albedo"):
+            findings.append((CODE_SIGN_PACK_MISSING,
+                             f"{bid}: {packs[0]} names no albedo map; no sign"))
+            continue
+
+        def _abs(fname):
+            return os.path.abspath(os.path.join(pack_dir, fname)).replace("\\", "/")
+
+        hints = pk.get("import_hints") or {}
+        signs[bid] = {
+            "id": f"sign_{bid}",
+            "profile": pk.get("material_profile") or packs[0][:-len(".pack.json")],
+            "albedo": _abs(maps["albedo"]),
+            "emissive": _abs(maps["emissive"]) if maps.get("emissive") else None,
+            "nearest": hints.get("interpolation") == "nearest",
+        }
+    return signs, findings
+
+
+def _sign_ext_lines(signs, out_dir, prefix):
+    """One Texture2D ext_resource per sign map, the map COPIED beside the
+    scene like a ground skin's -- Godot has no loader for a png outside the
+    project, and everything that loads a Lot scene copies its siblings."""
+    lines = []
+    dest = os.path.join(out_dir, SIGNS_DIR)
+    for bid in sorted(signs):
+        sk = signs[bid]
+        for m in ("albedo", "emissive"):
+            src = sk.get(m)
+            if not src:
+                continue
+            os.makedirs(dest, exist_ok=True)
+            name = os.path.basename(src)
+            target = os.path.join(dest, name)
+            if not (os.path.exists(target) and _same_bytes(src, target)):
+                shutil.copyfile(src, target)
+            lines.append(f'[ext_resource type="Texture2D" '
+                         f'path="{prefix}{SIGNS_DIR}/{name}" '
+                         f'id="{sk["id"]}_{m}"]')
+    return lines
+
+
+def sign_placement(bdef, roads_list):
+    """(x, y, yaw) for a building's sign: centred on the facade that faces
+    the street, a hand proud of it, looking at the road.
+
+    The facade is chosen by which of the footprint's four sides the nearest
+    road lies off -- the side whose outward normal points most nearly at
+    the road's closest point. A site with no roads hangs the sign on the
+    side facing the plate's centre, which is where a lot's own frontage is.
+    """
+    import site_spawns
+    rect = site_spawns.footprint_rect(bdef, 0.0)
+    if not rect:
+        return None
+    x0, y0, x1, y1 = rect
+    cx, cy = (x0 + x1) / 2.0, (y0 + y1) / 2.0
+    target = None
+    best = None
+    for road in roads_list or []:
+        dx, dy = cx - road.a[0], cy - road.a[1]
+        t = max(0.0, min(road.length, dx * road.along[0] + dy * road.along[1]))
+        p = road.point(t)
+        d = math.hypot(p[0] - cx, p[1] - cy)
+        if best is None or d < best:
+            best, target = d, p
+    if target is None:
+        target = (0.0, 0.0)
+    vx, vy = target[0] - cx, target[1] - cy
+    sides = (("S", 0.0, -1.0, (cx, y0), 270.0),
+             ("N", 0.0, 1.0, (cx, y1), 90.0),
+             ("W", -1.0, 0.0, (x0, cy), 180.0),
+             ("E", 1.0, 0.0, (x1, cy), 0.0))
+    _side, nx, ny, at, yaw = max(sides, key=lambda s: s[1] * vx + s[2] * vy)
+    facade = (y1 - y0) if abs(nx) > abs(ny) else (x1 - x0)
+    return (at[0] + nx * (SIGN_D / 2.0 + SIGN_PROUD),
+            at[1] + ny * (SIGN_D / 2.0 + SIGN_PROUD), yaw, facade)
+
+
+def _sign_node(name, center_godot, yaw_deg, sign, size):
+    """(body, subres) for a lit cabinet: a Node3D with one BoxMesh and an
+    emissive material wearing the pack. No collision -- nothing 3.6 m over
+    a sidewalk needs it -- and no triplanar: a sign's face is its texture
+    once across, not a tiled surface."""
+    x, yh, z = center_godot
+    r = math.radians(yaw_deg)
+    c, s = math.cos(r), math.sin(r)
+    xform = (f"{c:g}, 0, {s:g}, 0, 1, 0, {-s:g}, 0, {c:g}, {x:g}, {yh:g}, {z:g}")
+    body = [f'[node name="{name}" type="Node3D" parent="."]',
+            f'transform = Transform3D({xform})', '',
+            f'[node name="mesh" type="MeshInstance3D" parent="./{name}"]',
+            f'mesh = SubResource("BoxMesh_{name}")',
+            f'material_override = SubResource("Mat_{name}")', '']
+    sw, sh = size
+    sub = [f'[sub_resource type="BoxMesh" id="BoxMesh_{name}"]',
+           f'size = Vector3({sw:g}, {sh:g}, {SIGN_D:g})', '',
+           f'[sub_resource type="StandardMaterial3D" id="Mat_{name}"]',
+           f'albedo_texture = ExtResource("{sign["id"]}_albedo")']
+    if sign.get("emissive"):
+        sub += ['emission_enabled = true',
+                f'emission_texture = ExtResource("{sign["id"]}_emissive")',
+                'emission_energy_multiplier = 1.6']
+    if sign.get("nearest"):
+        sub.append('texture_filter = 2')
+    sub += ['cull_mode = 2', '']          # a cabinet reads from both sides
+    return body, sub
 
 
 def _skin_ext_lines(skins, out_dir, prefix):
@@ -1167,7 +1328,7 @@ def ground_holes(site_spec, self_flooring=None):
 
 
 def _outdoor_nodes(site_spec, preview=False, self_flooring=None, skins=None,
-                   cover_refs=None):
+                   cover_refs=None, signs=None):
     """(body_lines, subres_lines) for all Phase-2 outdoor geometry.
 
     `self_flooring` is the set of building ids whose geometry demonstrably
@@ -1367,6 +1528,27 @@ def _outdoor_nodes(site_spec, preview=False, self_flooring=None, skins=None,
         body += bl
         sub += sr
 
+    # THE SHOP SIGNS. A lit cabinet over each door, on the facade that
+    # faces the street (`sign_placement`), drawn here rather than as a
+    # prop slot because it hangs on a wall: it has no footprint on the
+    # ground, no collision, and nothing for the navmesh to carve.
+    # resolved by the caller when there is one (`write_godot_scene`), and
+    # read here when a probe calls this writer directly
+    if signs is None:
+        signs, _sign_findings = building_signs(site_spec)
+    for b in site_spec.get("buildings", []) or []:
+        sign = signs.get(b["id"])
+        if not sign:
+            continue
+        spot = sign_placement(b, street_roads)
+        if spot is None:
+            continue
+        sx, sy, yaw, facade = spot
+        bl, sr = _sign_node(f"sign_{b['id']}", (sx, SIGN_Z, -sy), -yaw, sign,
+                            sign_size(facade))
+        body += bl
+        sub += sr
+
     # blockers: non-interactable filler buildings -- SOLID collision massing you
     # cannot enter. They wall the street and channel the player toward the real
     # (enterable) heist buildings. The opposite of the see-through preview boxes.
@@ -1489,6 +1671,13 @@ def write_godot_scene(site_spec, merged, out_path, glb_dir=".", preview=False,
     skins = {fam: sk for fam, sk in skins.items() if present.get(fam)}
     res_lines += _skin_ext_lines(skins, os.path.dirname(os.path.abspath(out_path)),
                                  prefix)
+    # THE SHOP SIGNS (roadmap 153): one pack per building, hung on the
+    # facade that faces the street.
+    signs, sign_findings = building_signs(site_spec)
+    for code, msg in sign_findings:
+        print(f"[lot] {code}: {msg}")
+    res_lines += _sign_ext_lines(signs, os.path.dirname(os.path.abspath(out_path)),
+                                 prefix)
     # Cover modules (roadmap 22): the pieces Zoo built stand in for their
     # boxes; a piece with no module keeps its box and says so.
     cover_refs, cover_ext, cover_findings = cover_module_refs(
@@ -1499,7 +1688,7 @@ def write_godot_scene(site_spec, merged, out_path, glb_dir=".", preview=False,
 
     outdoor_body, outdoor_sub = _outdoor_nodes(
         site_spec, preview=preview, self_flooring=self_flooring, skins=skins,
-        cover_refs=cover_refs)
+        cover_refs=cover_refs, signs=signs)
 
     building_body, building_sub = [], []
     if preview:

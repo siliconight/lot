@@ -1,3 +1,23 @@
+## [0.69.0] - a lit sign over every shop's door
+
+Roadmap 153. The spec names a Pixelcoat sign pack per building
+(`{"signs": {"b0": "<pack dir>"}}`, the way it names a ground skin) and
+`building_signs` resolves it into the maps a material needs, reporting
+`LOT_SIGN_PACK_MISSING` for a pack it cannot read rather than leaving a
+blank facade in silence -- a strip with no signs and a strip whose signs
+failed to load look identical from the sidewalk.
+
+A SHOP SIGN IS A BAND ACROSS ITS FRONTAGE, not a plaque on a wall: the
+walker's reference frames show the store's name running the full width of
+the storefront above the glazing. `sign_placement` picks the facade the
+nearest road lies off -- the side whose outward normal points most nearly
+at the road's closest point -- and `sign_size` takes 72 percent of that
+facade's width, between 2.4 m and 9 m, six times as wide as it is tall,
+which is the shape Pixelcoat renders a sign pack at. The band is drawn
+as a lit double-sided quad 3.6 m up with the pack's emissive map, no
+collision and no triplanar: a sign's face is its texture once across, not
+a tiled surface. The maps travel beside the scene like a ground skin's.
+
 ## [0.68.1] - a driveway gets a stop sign
 
 Cold run 9036 shipped no stop sign at all: the generated spec's only
