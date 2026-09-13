@@ -107,6 +107,10 @@ JUNCTION_SETBACK = 2.2    # a stop sign, back up the leg from its mouth
 SIGNAL_SETBACK = 0.4
 METER_INSET = 0.35        # centre of a meter, in from the band's kerb edge
 STOP_PAIR = 1.1           # daylight between two news racks
+#: A cut this wide or wider is a vehicle crossing -- Level Factory's spur
+#: is 4 m and a footpath is narrower -- so the blade at its corner is a
+#: stop sign rather than the generic blank one.
+DRIVEWAY_WIDTH = 3.5
 LAMP_SPACING = 25.0
 LAMP_START = 5.0
 TREE_OFFSET = LAMP_SPACING / 2.0    # a tree halfway between two lamps
@@ -392,9 +396,19 @@ def plan_furniture(roads_list, buildings=(), markers=()) -> list:
                 # offsets are from the dropped kerb's EDGE, which already
                 # carries CUT_CLEARANCE; `_clear_of_cuts` adds it again, so a
                 # piece nearer than that to the edge is refused by design
+                # A DRIVEWAY GETS A STOP SIGN. The cut a spur makes is a
+                # parking-lot exit, and a 1990s American lot exits onto the
+                # street under one -- which is also the only place a stop
+                # sign stands in a generated package, because the spec's
+                # junctions are signalised arterials (cold run 9036 shipped
+                # none). A narrow cut is a footpath and keeps the blank
+                # blade the corner always had. The sign faces the driver
+                # coming OUT of the lot, so it looks across the kerb.
+                corner = ("stop_sign" if c.width >= DRIVEWAY_WIDTH
+                          else "sign_post")
                 for species, dt, yaw_extra in (("fire_hydrant", half + 2.5, 0.0),
                                                ("litter_bin", -(half + 1.5), 0.0),
-                                               ("sign_post", half + 1.0, 90.0)):
+                                               (corner, half + 1.0, 90.0)):
                     w, d, h = SPECIES[species]
                     tt = c.t + dt
                     if 0.5 < tt < road.length - 0.5 and _clear_of_cuts(tt, d / 2.0, kerb) \

@@ -1,3 +1,14 @@
+## [0.68.1] - a driveway gets a stop sign
+
+Cold run 9036 shipped no stop sign at all: the generated spec's only
+junction is a signalised arterial, so `plan_traffic_control` never had one
+to place. A 1990s American parking lot exits onto the street under a stop
+sign, and the cut a SPUR makes in the kerb IS that driveway -- Level
+Factory's spur is 4 m wide and a footpath is narrower, so the blade at a
+corner is a `stop_sign` at a cut of `DRIVEWAY_WIDTH` or more and the blank
+`sign_post` below it. On 9036's own site that is six stop signs, two blank
+blades and the signal.
+
 ## [0.68.0] - the 1990s American street on the kerb line
 
 Roadmap 153. Zoo 0.72.0 mints the kit; `site_furniture` puts each piece

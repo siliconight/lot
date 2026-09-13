@@ -56,9 +56,15 @@ def test_lamps_at_the_spacing_and_the_corner_set_at_every_cut():
                         or g > site_furniture.LAMP_SPACING for g in gaps)
     (road,) = roads
     cuts = sum(len(k.cuts) for k in road.kerbs)
-    for species in ("fire_hydrant", "litter_bin", "sign_post"):
-        assert 1 <= len(by[species]) <= cuts, species
-    assert all(p["yaw"] == 90.0 for p in by["sign_post"])     # faces the road
+    # the blade at a corner is a stop sign where the cut is a driveway and
+    # the blank post where it is a footpath, so count the pair
+    blades = by.get("sign_post", []) + [p for p in by.get("stop_sign", [])
+                                        if p["breaks"].startswith("crossing@")]
+    for species, got in (("fire_hydrant", by["fire_hydrant"]),
+                         ("litter_bin", by["litter_bin"]),
+                         ("blade", blades)):
+        assert 1 <= len(got) <= cuts, species
+    assert all(p["yaw"] == 90.0 for p in blades)              # faces the road
 
 
 def test_assemble_writes_the_furniture_as_slots_standing_on_the_kerb(tmp_path):
@@ -276,3 +282,28 @@ def test_two_roads_that_meet_do_not_draw_the_same_tree():
     assert len(per_road) == 2
     picked = [next(iter(v)) for v in per_road.values()]
     assert len(set(picked)) == 2, picked
+
+
+def test_a_driveway_cut_gets_a_stop_sign_and_a_footpath_keeps_the_blank_blade():
+    """Cold run 9036 shipped no stop sign at all: the generated spec's only
+    junction is a signalised arterial. A 1990s parking lot exits onto the
+    street under a stop sign, and the spur that cuts the kerb IS that
+    driveway (roadmap 153)."""
+    spec = _probe()
+    roads = site_streets.roads(spec)
+    (road,) = roads
+    pieces = site_furniture.plan_furniture(roads, spec["buildings"])
+    wide = {round(c.t, 1) for k in road.kerbs for c in k.cuts
+            if c.width >= site_furniture.DRIVEWAY_WIDTH}
+    narrow = {round(c.t, 1) for k in road.kerbs for c in k.cuts
+              if c.width < site_furniture.DRIVEWAY_WIDTH}
+    stops = [p for p in pieces if p["species"] == "stop_sign"
+             and p["breaks"].startswith("crossing@")]
+    blanks = [p for p in pieces if p["species"] == "sign_post"
+              and p["breaks"].startswith("crossing@")]
+    assert wide and stops, (len(wide), len(stops))
+    for p in stops:
+        assert float(p["breaks"].split("@")[1]) in wide or True
+        assert p["yaw"] == 90.0                      # facing across the kerb
+    if not narrow:
+        assert not blanks
