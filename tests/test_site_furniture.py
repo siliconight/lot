@@ -105,8 +105,12 @@ def test_one_bus_stop_per_road_on_the_kerb_the_buildings_face():
     pieces = site_furniture.plan_furniture(roads, spec["buildings"])
     shelters = [p for p in pieces if p["species"] == "bus_shelter"]
     benches = [p for p in pieces if p["species"] == "bench"]
-    signs = [p for p in pieces if p["breaks"].startswith("stop@")]
-    assert len(shelters) == 1 and len(benches) == 1 and len(signs) == 3
+    # the stop SET: a shelter, a bench inside it and a sign before it. The
+    # mailbox, news racks and payphone carry the same `stop@` tag because
+    # they stand at the same corner, so count the sign itself.
+    signs = [p for p in pieces if p["species"] == "sign_post"
+             and p["breaks"].startswith("stop@")]
+    assert len(shelters) == 1 and len(benches) == 1 and len(signs) == 1
     (sh,), (bn,) = shelters, benches
     # the probe's buildings stand north of the road: the L kerb, back to +y
     assert sh["kerb"] == "L" and sh["yaw"] == 0.0 and bn["yaw"] == 0.0
@@ -195,3 +199,80 @@ def test_every_tree_lots_table_names_is_a_species_zoo_has_at_those_dims():
         dims = tuple(round(g["dimensions"][k]["default"], 3)
                      for k in ("width", "depth", "height"))
         assert dims == site_furniture.SPECIES[sp], (sp, dims, site_furniture.SPECIES[sp])
+
+
+def test_the_junction_carries_a_signal_on_an_arterial_and_a_stop_sign_otherwise():
+    """A Delco side street meeting a commercial strip has a signal; two
+    side streets have a stop sign (roadmap 153, the 1990s street)."""
+    tee = {"name": "tee", "ground": {"size_x": 140, "size_y": 120},
+           "buildings": [],
+           "roads": [{"a": [-60, 0], "b": [60, 0], "width": 10, "sidewalk": 3},
+                     {"a": [0, 0], "b": [0, 50], "width": 10, "sidewalk": 3}]}
+    through, side = site_streets.roads(tee)
+    control = site_furniture.plan_traffic_control(side, [through, side])
+    assert [p["species"] for p in control] == ["traffic_signal"]
+    (sig,) = control
+    # the pole stands back up the leg from its mouth, on the band
+    assert sig["at"][0] != 0.0 or sig["at"][1] > 0
+    assert abs(sig["at"][1] - (site_furniture.JUNCTION_SETBACK + 8.0)) < 3.0
+    assert sig["size"] == [0.7, 6.5, 0.7]          # the box is the pole
+    assert sig["dims"] == [8.0, 0.62, 6.5]         # the slot is the reach
+    # the through road ends on nothing, so it carries no control
+    assert site_furniture.plan_traffic_control(through, [through, side]) == []
+    # a narrow through road with no parking is not an arterial: a stop sign
+    lane = {"name": "lane", "ground": {"size_x": 140, "size_y": 120},
+            "buildings": [],
+            "roads": [{"a": [-60, 0], "b": [60, 0], "width": 6, "sidewalk": 2},
+                      {"a": [0, 0], "b": [0, 50], "width": 6, "sidewalk": 2}]}
+    t2, s2 = site_streets.roads(lane)
+    assert [p["species"] for p in site_furniture.plan_traffic_control(s2, [t2, s2])] \
+        == ["stop_sign"]
+
+
+def test_a_meter_stands_at_every_parking_bay_near_the_kerb():
+    (road,) = site_streets.roads(_probe())
+    meters = site_furniture.plan_meters(road)
+    bays = site_streets.bays(road)
+    assert len(meters) == len(bays)
+    for m in meters:
+        assert m["species"] == "parking_meter" and m["base"] == "sidewalk"
+        # on the band, nearer the road than a lamp is
+        assert 5.0 <= abs(m["at"][1]) <= 6.0, m
+
+
+def test_the_stop_corner_stands_at_the_bus_stop():
+    spec = _probe()
+    roads = site_streets.roads(spec)
+    pieces = site_furniture.plan_furniture(roads, spec["buildings"])
+    by = {}
+    for p in pieces:
+        by.setdefault(p["species"], []).append(p)
+    assert len(by.get("mailbox", [])) == 1
+    assert len(by.get("newspaper_box", [])) == 2
+    assert len(by.get("payphone", [])) == 1
+    shelter = by["bus_shelter"][0]
+    for sp in ("mailbox", "newspaper_box", "payphone"):
+        for p in by[sp]:
+            assert p["kerb"] == shelter["kerb"]
+            assert abs(p["t"] - shelter["t"]) < 12.0, p
+            assert p["breaks"].startswith("stop@")
+
+
+def test_two_roads_that_meet_do_not_draw_the_same_tree():
+    """Cold run 9035 planted red maples on both roads: one hash in five."""
+    spec = {"name": "x", "ground": {"size_x": 200, "size_y": 200},
+            "buildings": [{"id": "b0", "at": [0, 40]}],
+            "roads": [{"a": [-88.5, -35.5], "b": [88.5, -35.5], "width": 10,
+                       "sidewalk": 3},
+                      {"a": [-29.35, -35.5], "b": [-29.35, 43.5], "width": 10,
+                       "sidewalk": 3}]}
+    roads = site_streets.roads(spec)
+    assert site_furniture.tree_for(roads[0]) == site_furniture.tree_for(roads[1])
+    pieces = site_furniture.plan_furniture(roads, spec["buildings"])
+    per_road = {}
+    for p in pieces:
+        if p["species"] in site_furniture.TREES:
+            per_road.setdefault(p["road"], set()).add(p["species"])
+    assert len(per_road) == 2
+    picked = [next(iter(v)) for v in per_road.values()]
+    assert len(set(picked)) == 2, picked

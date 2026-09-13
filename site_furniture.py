@@ -50,6 +50,15 @@ SPECIES = {
     "sign_post": (0.1, 0.1, 2.4),
     "bus_shelter": (3.0, 1.5, 2.5),
     "bench": (1.8, 0.5, 0.45),
+    # THE 1990s AMERICAN STREET (Zoo 0.72.0). Dims are each genome's
+    # defaults; the traffic signal's width is its whole reach, mast arm
+    # tip to luminaire tip, with the pole at the middle of it.
+    "stop_sign": (0.75, 0.08, 2.85),
+    "traffic_signal": (8.0, 0.62, 6.5),
+    "mailbox": (0.6, 0.7, 1.15),
+    "newspaper_box": (0.42, 0.45, 1.15),
+    "parking_meter": (0.22, 0.14, 1.35),
+    "payphone": (0.75, 0.5, 2.3),
     # THE FIVE STREET TREES (Zoo 0.71.0). Dims are each genome's defaults:
     # a young planting as a nursery lists it, so a callery pear is 3 m
     # across and a London plane 5 m. `street_tree` stays the generic one a
@@ -75,6 +84,29 @@ TREES = ("red_maple", "pin_oak", "honey_locust", "london_plane", "callery_pear")
 FOOTPRINT = {t: (1.2, 1.2) for t in
              ("street_tree", "red_maple", "pin_oak", "honey_locust",
               "london_plane", "callery_pear")}
+#: The signal is 8 m of arm about one pole, and its slot's box would lie
+#: across the carriageway. What a body meets is the pole.
+FOOTPRINT["traffic_signal"] = (0.7, 0.7)
+
+#: Where the 1990s kit stands, and why.
+#:   traffic_signal: on the corner of a junction whose through road is an
+#:                   arterial (sidewalks and parking lanes), pole on the
+#:                   ending leg's kerb, mast arm over the through road
+#:   stop_sign:      on the ending leg of every other junction, on the
+#:                   kerb to the right of the approaching driver
+#:   parking_meter:  one per parking bay, near the kerb edge -- a row of
+#:                   single-space meters is half of what dates a street
+#:   mailbox,
+#:   newspaper_box,
+#:   payphone:       at the bus stop, where people already stand
+JUNCTION_SETBACK = 2.2    # a stop sign, back up the leg from its mouth
+#: A mast-arm pole stands ON the corner: measured on cold run 9035's site,
+#: a 2.2 m setback left the arm's tip over the sidewalk instead of over
+#: the near lane, because the arm must cross the setback and the band
+#: before it reaches the carriageway at all.
+SIGNAL_SETBACK = 0.4
+METER_INSET = 0.35        # centre of a meter, in from the band's kerb edge
+STOP_PAIR = 1.1           # daylight between two news racks
 LAMP_SPACING = 25.0
 LAMP_START = 5.0
 TREE_OFFSET = LAMP_SPACING / 2.0    # a tree halfway between two lamps
@@ -218,6 +250,86 @@ def _bus_stop(road, kerb, placed, n, markers=()):
     return []
 
 
+def _junction_mouths(road):
+    """[(t, sign, kerb_side)] where this road ENDS on another: the station
+    of its mouth, which way traffic approaches it (+1 travelling +t, -1
+    travelling -t) and the kerb to the RIGHT of that driver. Lot's `perp`
+    is left of travel a->b, so a driver going +t has the R kerb on the
+    right and a driver going -t has the L kerb."""
+    out = []
+    if road.slab[0] > 0.1:
+        out.append((road.slab[0], -1, "L"))
+    if road.slab[1] < road.length - 0.1:
+        out.append((road.slab[1], 1, "R"))
+    return out
+
+
+def _signalised(road, roads_list) -> bool:
+    """A junction is signalised when the road this leg meets is an arterial
+    -- sidewalks and parking lanes both. A Delco side street meeting a
+    commercial strip has a signal; two side streets have a stop sign."""
+    import site_streets
+    for other in roads_list:
+        if other is road:
+            continue
+        if other.sidewalk and site_streets.has_parking(other):
+            for end in (road.a, road.b):
+                dx, dy = end[0] - other.a[0], end[1] - other.a[1]
+                across = dx * other.perp[0] + dy * other.perp[1]
+                along = dx * other.along[0] + dy * other.along[1]
+                if abs(across) <= 1.0 and -1.0 <= along <= other.length + 1.0:
+                    return True
+    return False
+
+
+def plan_traffic_control(road, roads_list, markers=()) -> list:
+    """The signal or the stop sign at each mouth of ``road``."""
+    out = []
+    if not road.sidewalk:
+        return out
+    signal = _signalised(road, roads_list)
+    for t, approach, side in _junction_mouths(road):
+        kerb = road.kerb(side)
+        if signal:
+            # the pole on the corner, the mast arm reaching over the
+            # through road -- which is the direction of the mouth
+            w, d, h = SPECIES["traffic_signal"]
+            pole_t = t - approach * SIGNAL_SETBACK
+            offset = kerb.offset + kerb.sign * (road.sidewalk / 2.0 - BAND_INSET)
+            yaw_extra = 0.0 if approach > 0 else 180.0
+            piece = _piece(f"Signal_{road.index}{side}", "traffic_signal", road,
+                           kerb, pole_t, offset, yaw_extra,
+                           breaks=f"junction@{t:.1f}")
+        else:
+            # the blade faces the driver coming up the leg, so its face
+            # looks back along the approach
+            pole_t = t - approach * JUNCTION_SETBACK
+            offset = kerb.offset + kerb.sign * (road.sidewalk / 2.0 - BAND_INSET)
+            yaw_extra = 180.0 if approach > 0 else 0.0
+            piece = _piece(f"Stop_{road.index}{side}", "stop_sign", road, kerb,
+                           pole_t, offset, yaw_extra, breaks=f"junction@{t:.1f}")
+        if _clear_of_markers(piece, markers):
+            out.append(piece)
+    return out
+
+
+def plan_meters(road, markers=()) -> list:
+    """A single-space meter at every parking bay, near the kerb edge."""
+    import site_streets
+    out = []
+    for bay in site_streets.bays(road):
+        kerb = road.kerb(bay["side"])
+        w, d, h = SPECIES["parking_meter"]
+        t = (bay["t0"] + bay["t1"]) / 2.0
+        offset = kerb.offset - kerb.sign * (road.sidewalk / 2.0 - METER_INSET)
+        piece = _piece(f"Meter_{road.index}{bay['side']}{bay['index']}",
+                       "parking_meter", road, kerb, t, offset, 90.0,
+                       breaks=f"bay {bay['side']}{bay['index']}")
+        if _clear_of_markers(piece, markers):
+            out.append(piece)
+    return out
+
+
 def plan_furniture(roads_list, buildings=(), markers=()) -> list:
     """Pieces along every sidewalk band, as site-cover-shaped records with a
     ``base`` of ``sidewalk`` (the module stands on the band's top, not the
@@ -229,10 +341,29 @@ def plan_furniture(roads_list, buildings=(), markers=()) -> list:
     out = []
     n = 0
     markers = [tuple(m) for m in markers]
+    # A STREET PLANTS A DIFFERENT TREE ON THE CROSS STREET. `tree_for` is
+    # a hash of one road, so on a two-road site it draws the same species
+    # about one time in five -- cold run 9035 was one of those, and a
+    # junction where the avenue and the side street are the same tree is
+    # the one place the difference would be seen. Each road takes its own
+    # hash unless a road already planted has it, and then the next
+    # unplanted species along.
+    planted, species_for = [], {}
+    for road in roads_list:
+        pick = tree_for(road)
+        if pick in planted and len(planted) < len(TREES):
+            i = TREES.index(pick)
+            for step in range(1, len(TREES)):
+                nxt = TREES[(i + step) % len(TREES)]
+                if nxt not in planted:
+                    pick = nxt
+                    break
+        planted.append(pick)
+        species_for[road.index] = pick
     for road in roads_list:
         if not road.sidewalk:
             continue
-        species_tree = tree_for(road)
+        species_tree = species_for[road.index]
         for kerb in road.kerbs:
             placed = []          # this band's pieces, for `_free`
             outer = kerb.offset + kerb.sign * (road.sidewalk / 2.0 - BAND_INSET)
@@ -279,4 +410,39 @@ def plan_furniture(roads_list, buildings=(), markers=()) -> list:
                 stop = _bus_stop(road, kerb, placed, n, markers)
                 n += len(stop)
                 out.extend(stop)
+                out.extend(_stop_corner(road, kerb, stop, placed, markers))
+        # the junction's control, and a meter at every bay
+        out.extend(plan_traffic_control(road, roads_list, markers))
+        out.extend(plan_meters(road, markers))
+    return out
+
+
+def _stop_corner(road, kerb, stop, placed, markers=()):
+    """The mailbox, the news racks and the payphone, at the bus stop --
+    where a 1990s street put them because it is where people already
+    stand. Nothing is placed when there is no stop."""
+    if not stop:
+        return []
+    shelter = stop[0]
+    outer = kerb.offset + kerb.sign * (road.sidewalk / 2.0 - BAND_INSET)
+    base = shelter["t"] - SPECIES["bus_shelter"][0] / 2.0
+    out = []
+    for species, dt, yaw_extra in (("mailbox", -2.6, 0.0),
+                                   ("newspaper_box", -4.0, 0.0),
+                                   ("newspaper_box", -4.0 - STOP_PAIR, 0.0),
+                                   ("payphone", -6.4, 180.0)):
+        w, d, h = SPECIES[species]
+        t = base + dt
+        if not 0.5 < t < road.length - 0.5:
+            continue
+        # stepped along the band like a lamp: a corner where a lamp or a
+        # tree already stands should move the mailbox, not delete it
+        piece = _nudged(
+            lambda s, species=species, yaw_extra=yaw_extra: _piece(
+                f"{species}_{road.index}{kerb.side}{len(out)}", species, road,
+                kerb, s, outer, yaw_extra, breaks=f"stop@{shelter['t']:.1f}"),
+            t, max(w, d) / 2.0, kerb, placed, markers)
+        if piece is not None:
+            placed.append(piece)
+            out.append(piece)
     return out

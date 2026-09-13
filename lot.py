@@ -1005,7 +1005,11 @@ COVER_MATERIALS = {"box_truck": "metal_painted", "cargo_container": "metal_paint
                    # the five street trees and the generic one
                    "street_tree": "wood", "red_maple": "wood",
                    "pin_oak": "wood", "honey_locust": "wood",
-                   "london_plane": "wood", "callery_pear": "wood"}
+                   "london_plane": "wood", "callery_pear": "wood",
+                   # the 1990s street kit (site_furniture)
+                   "stop_sign": "metal_bare", "traffic_signal": "metal_painted",
+                   "mailbox": "metal_painted", "newspaper_box": "metal_painted",
+                   "parking_meter": "metal_painted", "payphone": "metal_painted"}
 
 
 COVER_DIR = "cover"

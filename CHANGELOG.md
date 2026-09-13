@@ -1,3 +1,33 @@
+## [0.68.0] - the 1990s American street on the kerb line
+
+Roadmap 153. Zoo 0.72.0 mints the kit; `site_furniture` puts each piece
+where that decade's street carried it.
+
+TRAFFIC CONTROL AT THE JUNCTION MOUTHS. A road that ends on another has a
+mouth at one end of its slab, and the driver approaching it has one kerb
+on their right (Lot's `perp` is left of travel, so a driver going +t has
+the R kerb and one going -t has the L). `plan_traffic_control` stands a
+`traffic_signal` there when the road this leg meets is an ARTERIAL --
+sidewalks and parking lanes both, which is a Delco side street meeting a
+commercial strip -- and a `stop_sign` facing the driver otherwise. The
+signal's pole stands ON the corner: measured on cold run 9035's site, a
+2.2 m setback left the arm's tip over the sidewalk, because the arm has to
+cross the setback and the band before it reaches the carriageway at all;
+at 0.4 m the tip lands 1.6 m past the kerb, over the near lane. The
+signal's greybox box is the POLE's footprint, not the slot's 8 m of arm.
+
+A `parking_meter` at every parking bay, near the kerb edge -- a row of
+single-space meters is half of what dates a street -- and the `mailbox`,
+two `newspaper_box`es and a `payphone` at the bus stop, where people
+already stand, each stepped along the band like a lamp when something is
+in the way.
+
+AND TWO ROADS THAT MEET NO LONGER DRAW THE SAME TREE. `tree_for` hashes
+one road, so a two-road site draws one species twice about one time in
+five -- cold run 9035 was one of those, and a junction where the avenue
+and the side street are the same tree is the one place it would be seen.
+A road keeps its own hash unless a road already planted has it.
+
 ## [0.67.0] - a street plants one species per road
 
 Roadmap 153. Zoo 0.71.0 mints five street trees; `site_furniture.tree_for`
