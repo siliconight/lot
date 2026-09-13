@@ -81,13 +81,16 @@ def test_assemble_writes_the_furniture_as_slots_standing_on_the_kerb(tmp_path):
 
 def test_a_tree_stands_between_every_two_lamps_on_the_grates_footprint():
     roads = site_streets.roads(_probe())
+    (road,) = roads
     pieces = site_furniture.plan_furniture(roads)
-    trees = [p for p in pieces if p["species"] == "street_tree"]
+    species = site_furniture.tree_for(road)
+    trees = [p for p in pieces if p["species"] == species]
     lamps = [p for p in pieces if p["species"] == "streetlight"]
     assert trees and len(trees) <= len(lamps)
+    w, _d, h = site_furniture.SPECIES[species]
     for p in trees:
-        assert p["dims"] == [4.0, 4.0, 6.0]            # the slot is the crown
-        assert p["size"] == [1.2, 6.0, 1.2]            # the box is the grate
+        assert p["dims"] == list(site_furniture.SPECIES[species])   # the slot is the crown
+        assert p["size"] == [1.2, h, 1.2]              # the box is the grate
         assert p["base"] == "sidewalk"
         # halfway between two lamp STATIONS (a lamp skipped for a cut still
         # leaves its station), on the outer half of the band
@@ -141,3 +144,54 @@ def test_a_piece_keeps_clear_of_the_mission_markers():
     moved = [p for p in pieces if p["species"] == "streetlight" and p["kerb"] == lamp["kerb"]
              and abs(p["t"] - lamp["t"]) <= 4.0 + 1e-6]
     assert moved and moved[0]["t"] != lamp["t"]
+
+
+def test_a_road_is_planted_with_one_species_and_the_species_is_the_roads():
+    """A street plants one species per road (roadmap 153): five species
+    scattered tree by tree reads as an arboretum."""
+    spec = _probe()
+    roads = site_streets.roads(spec)
+    pieces = site_furniture.plan_furniture(roads, spec["buildings"])
+    trees = [p for p in pieces if p["species"] in site_furniture.TREES]
+    assert trees
+    for road in roads:
+        here = {p["species"] for p in trees if p["road"] == road.index}
+        assert len(here) <= 1, here
+        if here:
+            assert here == {site_furniture.tree_for(road)}
+    # stable: the same spec plants the same street twice
+    again = site_furniture.plan_furniture(site_streets.roads(spec), spec["buildings"])
+    assert [p["species"] for p in again if p["species"] in site_furniture.TREES] == \
+        [p["species"] for p in trees]
+
+
+def test_two_different_roads_can_carry_different_trees():
+    """The hash is on the road's own endpoints, so a plate's avenue and its
+    cross street are not the same tree by construction."""
+    class _R:
+        def __init__(self, a, b):
+            self.a, self.b = a, b
+    seen = {site_furniture.tree_for(_R((x, 0.0), (x + 100.0, 0.0)))
+            for x in range(-40, 40, 3)}
+    assert len(seen) >= 4, seen
+    assert seen <= set(site_furniture.TREES)
+
+
+def test_every_tree_lots_table_names_is_a_species_zoo_has_at_those_dims():
+    """Lot's dims ARE the Zoo genomes' defaults; when the sibling repo is
+    here, say so rather than trusting a comment. Measured 2026-09-13: a
+    callery pear is 3.0 m across at planting and a London plane 5.0 m."""
+    import json
+    zoo = os.path.join(os.path.dirname(os.path.dirname(
+        os.path.dirname(os.path.abspath(__file__)))), "zoo",
+        "zoo_keeper", "genome", "species")
+    if not os.path.isdir(zoo):
+        import pytest
+        pytest.skip("no sibling zoo checkout")
+    for sp in site_furniture.TREES:
+        path = os.path.join(zoo, sp + ".json")
+        assert os.path.isfile(path), sp
+        g = json.load(open(path, encoding="utf-8"))
+        dims = tuple(round(g["dimensions"][k]["default"], 3)
+                     for k in ("width", "depth", "height"))
+        assert dims == site_furniture.SPECIES[sp], (sp, dims, site_furniture.SPECIES[sp])

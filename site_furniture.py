@@ -37,8 +37,9 @@ import site_cover
 #:   sign_post:    one at each crossing, at the cut's near edge, facing the
 #:                 road (a stop sign for the spur); and one before the bus
 #:                 shelter (the stop's flag)
-#:   street_tree:  one halfway between each pair of lamps, in a grate on
-#:                 the outer half of the band; its slot is the crown
+#:   the trees:    one halfway between each pair of lamps, in a grate on
+#:                 the outer half of the band; its slot is the crown, and
+#:                 WHICH tree is a property of the road (`tree_for`)
 #:   bus_shelter:  one per road, on the kerb the buildings face, open side
 #:                 to the road, in the longest stretch between crossings
 #:   bench:        inside the shelter, against its back
@@ -47,17 +48,33 @@ SPECIES = {
     "fire_hydrant": (0.35, 0.35, 0.75),
     "litter_bin": (0.6, 0.6, 1.0),
     "sign_post": (0.1, 0.1, 2.4),
-    "street_tree": (4.0, 4.0, 6.0),
     "bus_shelter": (3.0, 1.5, 2.5),
     "bench": (1.8, 0.5, 0.45),
+    # THE FIVE STREET TREES (Zoo 0.71.0). Dims are each genome's defaults:
+    # a young planting as a nursery lists it, so a callery pear is 3 m
+    # across and a London plane 5 m. `street_tree` stays the generic one a
+    # spec may still name.
+    "street_tree": (4.0, 4.0, 6.0),
+    "red_maple": (4.0, 4.0, 6.0),
+    "pin_oak": (4.0, 4.0, 6.5),
+    "honey_locust": (4.5, 4.5, 6.0),
+    "london_plane": (5.0, 5.0, 6.5),
+    "callery_pear": (3.0, 3.0, 5.5),
 }
+
+#: The trees a road may be planted with, in the order a hash picks from.
+#: A street that plants one species per road reads as a street somebody
+#: planned; five species scattered tree by tree reads as an arboretum.
+TREES = ("red_maple", "pin_oak", "honey_locust", "london_plane", "callery_pear")
 #: The plan footprint the GREYBOX box takes, where it is not the slot's.
 #: A tree's slot is its crown -- the space it takes, and what Zoo builds
 #: to -- but what a body meets is a trunk in a 1.2 m grate, so the box the
 #: greybox draws and the navmesh carves is the grate's column. The greybox
 #: over-blocks the trunk by the grate's margin and never under-blocks it;
 #: the themed module's own collision is the trunk (Zoo `street_tree`).
-FOOTPRINT = {"street_tree": (1.2, 1.2)}
+FOOTPRINT = {t: (1.2, 1.2) for t in
+             ("street_tree", "red_maple", "pin_oak", "honey_locust",
+              "london_plane", "callery_pear")}
 LAMP_SPACING = 25.0
 LAMP_START = 5.0
 TREE_OFFSET = LAMP_SPACING / 2.0    # a tree halfway between two lamps
@@ -69,6 +86,18 @@ BENCH_TOWARD_BACK = 0.35  # the bench's centre, from the shelter's, toward its b
 SIGN_BEFORE_SHELTER = 1.0
 PIECE_GAP = 0.3           # daylight between two pieces along the band
 NUDGES = (0.0, 2.0, -2.0, 4.0, -4.0)   # a lamp or a tree steps along its band
+
+
+def tree_for(road) -> str:
+    """The species this road is planted with: a stable hash of its own
+    endpoints, rounded to the metre. Keyed on the ROAD and not on its index
+    so the avenue of one mission and the avenue of the next are not always
+    the same tree, and keyed on nothing random so a spec plants the same
+    street every run."""
+    h = 2166136261
+    for v in (road.a[0], road.a[1], road.b[0], road.b[1]):
+        h = ((h ^ (int(round(float(v))) & 0xFFFFFFFF)) * 16777619) & 0xFFFFFFFF
+    return TREES[h % len(TREES)]
 
 
 def _clear_of_cuts(t, half_along, kerb, clearance=CUT_CLEARANCE):
@@ -203,6 +232,7 @@ def plan_furniture(roads_list, buildings=(), markers=()) -> list:
     for road in roads_list:
         if not road.sidewalk:
             continue
+        species_tree = tree_for(road)
         for kerb in road.kerbs:
             placed = []          # this band's pieces, for `_free`
             outer = kerb.offset + kerb.sign * (road.sidewalk / 2.0 - BAND_INSET)
@@ -217,9 +247,9 @@ def plan_furniture(roads_list, buildings=(), markers=()) -> list:
                     placed.append(lamp)
                     n += 1
                 tt = t + TREE_OFFSET
-                gw, gd = FOOTPRINT["street_tree"]
+                gw, gd = FOOTPRINT[species_tree]
                 if tt < road.length - LAMP_START:
-                    tree = _nudged(lambda s: _piece(f"Tree_{n}", "street_tree", road, kerb, s, tree_off),
+                    tree = _nudged(lambda s: _piece(f"Tree_{n}", species_tree, road, kerb, s, tree_off),
                                    tt, gw / 2.0, kerb, placed, markers)
                     if tree:
                         placed.append(tree)

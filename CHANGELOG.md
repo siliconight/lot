@@ -1,3 +1,21 @@
+## [0.67.0] - a street plants one species per road
+
+Roadmap 153. Zoo 0.71.0 mints five street trees; `site_furniture.tree_for`
+decides which one a road carries -- a stable hash of the road's own
+endpoints, rounded to the metre, so a mission's avenue is maples and its
+cross street pin oaks, the same spec plants the same street every run, and
+two missions do not always get the same tree. Five species scattered tree
+by tree would read as an arboretum; one per road reads as a street
+somebody planned. Measured over the last three cold runs' specs: five of
+six candidates plant two different species, one plants London planes on
+both roads.
+
+`SPECIES` carries each tree at its own Zoo genome's default dims (a
+callery pear is 3.0 m across at planting, a London plane 5.0 m), and a
+test asserts that against the sibling zoo checkout rather than against
+the comment that says so. Every tree's greybox footprint is still the
+grate's 1.2 m, and `COVER_MATERIALS` names them wood.
+
 ## [0.66.1] - the kerb line keeps clear of the mission markers
 
 Cold run 9030's third seed stood a lamp on Enemy_4, and the Laser Tag

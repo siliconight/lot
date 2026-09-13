@@ -1002,7 +1002,10 @@ COVER_MATERIALS = {"box_truck": "metal_painted", "cargo_container": "metal_paint
                    "litter_bin": "metal_painted", "sign_post": "metal_bare",
                    # the waiting places (site_furniture)
                    "bus_shelter": "metal_painted", "bench": "wood",
-                   "street_tree": "wood"}
+                   # the five street trees and the generic one
+                   "street_tree": "wood", "red_maple": "wood",
+                   "pin_oak": "wood", "honey_locust": "wood",
+                   "london_plane": "wood", "callery_pear": "wood"}
 
 
 COVER_DIR = "cover"
