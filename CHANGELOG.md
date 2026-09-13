@@ -1,3 +1,24 @@
+## [0.69.2] - the sign faces the road
+
+Cold run 9041 scored zero and shipped three signs as blue slivers a few
+pixels wide. `sign_placement` chose the right facade -- that is tested and
+the test was right -- but the yaw it returns is the PLAN-space angle of the
+facade's outward normal, counterclockwise from +x, and the scene writer
+handed it to `_sign_node` as a Godot rotation about Y with only the
+handedness flipped. Every one of the four sides was a quarter turn off, so
+every sign on every street since 0.69.0 stood edge-on to the road it was
+hung for.
+
+`sign_facing` now does the conversion and carries the derivation: the
+cabinet's face is its local +Z, pointing at `(-sin r, 0, cos r)`; plan maps
+to Godot as `(x, -y)`; an outward normal `(cos t, sin t)` therefore needs
+`r = -(t + 90)`, which is the only angle in the circle satisfying both
+components. The new test asserts the emitted basis for all four sides
+rather than the intermediate number, because the intermediate number was
+already correct.
+
+No gate saw this. The walker's frames did.
+
 ## [0.69.1] - the sign is legible
 
 Cold run 9040's frames: the band over the door was blown to white and the

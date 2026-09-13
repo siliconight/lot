@@ -989,6 +989,26 @@ def sign_placement(bdef, roads_list):
             at[1] + ny * (SIGN_D / 2.0 + SIGN_PROUD), yaw, facade)
 
 
+def sign_facing(yaw_plan: float) -> float:
+    """The Godot rotation about Y, in degrees, that turns a sign cabinet's
+    face along a facade whose outward normal lies at `yaw_plan` degrees
+    counterclockwise from plan +x.
+
+    THE DERIVATION, because a bare `- 90` here is how this went wrong once
+    already. `_sign_node` writes the basis `(c,0,s), (0,1,0), (-s,0,c)`;
+    the cabinet is a box `SIGN_W x SIGN_H x SIGN_D` so its face is the
+    local +Z, pointing at world `(-sin r, 0, cos r)`. Plan maps to Godot as
+    `(x, -y)`, so an outward normal `(nx, ny) = (cos t, sin t)` wants
+    `-sin r = cos t` and `cos r = -sin t`, and `r = -(t + 90)` is the only
+    angle satisfying both.
+
+    Cold run 9041 shipped `r = -t`, which is a quarter turn off for every
+    one of the four sides, so all three signs on that street stood edge-on
+    to the road they were hung for. The frames caught it; no gate did.
+    """
+    return -(yaw_plan + 90.0)
+
+
 def _sign_node(name, center_godot, yaw_deg, sign, size):
     """(body, subres) for a lit cabinet: a Node3D with one BoxMesh and an
     emissive material wearing the pack. No collision -- nothing 3.6 m over
@@ -1547,8 +1567,8 @@ def _outdoor_nodes(site_spec, preview=False, self_flooring=None, skins=None,
         if spot is None:
             continue
         sx, sy, yaw, facade = spot
-        bl, sr = _sign_node(f"sign_{b['id']}", (sx, SIGN_Z, -sy), -yaw, sign,
-                            sign_size(facade))
+        bl, sr = _sign_node(f"sign_{b['id']}", (sx, SIGN_Z, -sy),
+                            sign_facing(yaw), sign, sign_size(facade))
         body += bl
         sub += sr
 

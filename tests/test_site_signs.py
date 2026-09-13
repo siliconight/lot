@@ -84,3 +84,36 @@ def test_the_scene_wears_the_sign_and_lights_it(tmp_path):
     assert (tmp_path / "signs" / "sign_goose_mart_albedo.png").exists()
     # b1 named no sign and has none
     assert 'name="sign_b1"' not in txt
+
+
+def _z_axis(line):
+    """The Godot basis' local +Z from a `transform = Transform3D(...)` line --
+    the direction the cabinet's face points, since the box is w x h x SIGN_D."""
+    nums = [float(v) for v in line.split("(", 1)[1].rstrip(")").split(",")]
+    return (round(nums[6], 6), round(nums[7], 6), round(nums[8], 6))
+
+
+def test_the_sign_faces_the_road_it_was_hung_for(tmp_path):
+    """Cold run 9041 was a zero and shipped all three signs edge-on: the
+    plan-space facade angle was handed to the scene writer as a Godot yaw.
+    Assert the emitted basis, not the intermediate number -- the
+    intermediate number was already correct and already tested."""
+    spec = _spec(tmp_path)
+    (b0, _b1) = spec["buildings"]
+    # plan (nx, ny) -> the Godot direction the face must point, z = -y
+    for road, want in (([-55, -20], (0.0, 0.0, 1.0)),     # south  -> +z
+                       ([-55, 40], (0.0, 0.0, -1.0)),     # north  -> -z
+                       ([60, -20], (1.0, 0.0, 0.0)),      # east   -> +x
+                       ([-60, -20], (-1.0, 0.0, 0.0))):   # west   -> -x
+        if road[0] in (60, -60):
+            spec["roads"] = [{"a": [road[0], -40], "b": [road[0], 40],
+                              "width": 10, "sidewalk": 3}]
+        else:
+            spec["roads"] = [{"a": road, "b": [-road[0], road[1]],
+                              "width": 10, "sidewalk": 3}]
+        _x, _y, yaw, _f = lot.sign_placement(b0, site_streets.roads(spec))
+        body, _sub = lot._sign_node("sign_b0", (0.0, lot.SIGN_Z, 0.0),
+                                    lot.sign_facing(yaw), {"id": "s"},
+                                    (6.0, 1.0))
+        line = [l for l in body if l.startswith("transform =")][0]
+        assert _z_axis(line) == want, (road, yaw, line)
