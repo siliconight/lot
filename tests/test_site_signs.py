@@ -117,3 +117,25 @@ def test_the_sign_faces_the_road_it_was_hung_for(tmp_path):
                                     (6.0, 1.0))
         line = [l for l in body if l.startswith("transform =")][0]
         assert _z_axis(line) == want, (road, yaw, line)
+
+
+def test_the_lit_face_is_a_quad_and_the_box_is_only_the_can():
+    """A BoxMesh shows a SUB-RECTANGLE of its texture on any side -- its
+    unwrap's extents are proportional to the box's dimensions -- so cold run
+    9042's 9 x 1.5 x 0.22 cabinet cut "KEYSTONE SAVINGS" off below the letter
+    tops. The face is a QuadMesh, which spans the full 0..1 by construction.
+    """
+    body, sub = lot._sign_node("sign_b0", (0.0, lot.SIGN_Z, 0.0), 0.0,
+                               {"id": "s", "emissive": True, "nearest": True},
+                               (9.0, 1.5))
+    text = "\n".join(sub)
+    assert 'size = Vector2(9, 1.5)' in text          # the face, exactly
+    assert 'size = Vector3(9, 1.5, 0.22)' in text    # the can, with depth
+    # the pack is on the face's material and the box wears a plain colour
+    assert 'albedo_texture = ExtResource("s_albedo")' in text
+    assert 'albedo_color = Color(' in text
+    face = [i for i, l in enumerate(body) if l.startswith('[node name="face"')]
+    assert face, body
+    assert 'material_override = SubResource("Mat_sign_b0")' in body[face[0] + 3]
+    # and it stands proud of the can rather than inside it
+    assert float(body[face[0] + 1].rstrip(")").rsplit(",", 1)[1]) > lot.SIGN_D / 2.0

@@ -1009,23 +1009,53 @@ def sign_facing(yaw_plan: float) -> float:
     return -(yaw_plan + 90.0)
 
 
+#: How far the lit face stands off the cabinet's front. Two millimetres:
+#: enough that no depth test can flip them, small enough that the face and
+#: the body read as one object from the sidewalk.
+SIGN_FACE_PROUD = 0.002
+#: The cabinet body's colour. A sign box is a dark painted can and the
+#: interesting surface is the face; a body wearing the pack was how the
+#: pack came to be shown on six sides at once.
+SIGN_BODY_RGBA = "0.12, 0.12, 0.13, 1"
+
+
 def _sign_node(name, center_godot, yaw_deg, sign, size):
-    """(body, subres) for a lit cabinet: a Node3D with one BoxMesh and an
-    emissive material wearing the pack. No collision -- nothing 3.6 m over
-    a sidewalk needs it -- and no triplanar: a sign's face is its texture
-    once across, not a tiled surface."""
+    """(body, subres) for a lit cabinet: a Node3D holding a BOX (the can) and
+    a QUAD (the lit face) 2 mm proud of it. No collision -- nothing 3.6 m
+    over a sidewalk needs it -- and no triplanar: a sign's face is its
+    texture once across, not a tiled surface.
+
+    WHY TWO MESHES. A BoxMesh does not map a texture 1:1 onto any of its
+    sides: its unwrap's extents are proportional to the box's dimensions, so
+    the face shows a sub-rectangle whose size depends on the other two axes.
+    Measured on cold run 9042's frames -- a 9 x 1.5 x 0.22 cabinet showed
+    about u in [0, 0.90] and v in [0, 0.62] of a centred 512 x 128 pack, and
+    "KEYSTONE SAVINGS" was cut off below the letter tops. A QuadMesh spans
+    the full 0..1 across its one face by construction. No `uv1_scale` could
+    have fixed the box, because the correction would differ per sign size.
+    """
     x, yh, z = center_godot
     r = math.radians(yaw_deg)
     c, s = math.cos(r), math.sin(r)
     xform = (f"{c:g}, 0, {s:g}, 0, 1, 0, {-s:g}, 0, {c:g}, {x:g}, {yh:g}, {z:g}")
+    face_z = SIGN_D / 2.0 + SIGN_FACE_PROUD
     body = [f'[node name="{name}" type="Node3D" parent="."]',
             f'transform = Transform3D({xform})', '',
             f'[node name="mesh" type="MeshInstance3D" parent="./{name}"]',
             f'mesh = SubResource("BoxMesh_{name}")',
+            f'material_override = SubResource("Body_{name}")', '',
+            f'[node name="face" type="MeshInstance3D" parent="./{name}"]',
+            f'transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, '
+            f'{face_z:g})',
+            f'mesh = SubResource("Quad_{name}")',
             f'material_override = SubResource("Mat_{name}")', '']
     sw, sh = size
     sub = [f'[sub_resource type="BoxMesh" id="BoxMesh_{name}"]',
            f'size = Vector3({sw:g}, {sh:g}, {SIGN_D:g})', '',
+           f'[sub_resource type="StandardMaterial3D" id="Body_{name}"]',
+           f'albedo_color = Color({SIGN_BODY_RGBA})', '',
+           f'[sub_resource type="QuadMesh" id="Quad_{name}"]',
+           f'size = Vector2({sw:g}, {sh:g})', '',
            f'[sub_resource type="StandardMaterial3D" id="Mat_{name}"]',
            f'albedo_texture = ExtResource("{sign["id"]}_albedo")']
     if sign.get("emissive"):

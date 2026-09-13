@@ -1,3 +1,29 @@
+## [0.69.3] - the sign's face is a quad, so the whole name is on it
+
+Cold run 9042, with the facing fixed: the bands face the road and the name
+on them is CROPPED. `sign_b1` carries a centred 512 x 128 pack reading
+KEYSTONE SAVINGS; the rendered band showed the top border, a field of green,
+and the tops of the last four letters cut off at the bottom edge.
+
+Measured off the frame rather than recalled from the engine's docs: the
+visible sub-rectangle is about u in [0, 0.90] and v in [0, 0.62]. The box is
+9 x 1.5 x 0.22, and 9 / (9 + 2 * 0.22) = 0.95 with 1.5 / (1.5 + 2 * 0.22) =
+0.77. A BoxMesh's unwrap has extents PROPORTIONAL TO THE BOX, not normalised
+per face, so a face shows part of its texture and how much depends on the
+other two dimensions. No fixed `uv1_scale` corrects that, because the
+correction would differ for every sign size.
+
+So the cabinet is now what a cabinet is. The BoxMesh keeps the silhouette
+and the 22 cm of depth, wearing a plain dark colour; a QuadMesh of exactly
+the band's width and height sits 2 mm proud of its front and carries the
+pack, the emissive and the nearest filter. A QuadMesh spans the full 0..1
+across its one face by construction, which is the property this needed and
+the box never had.
+
+Two frame sets, two defects in the same thirty lines, neither visible to any
+gate: the first pointed the sign at the wrong wall, the second showed two
+thirds of its name.
+
 ## [0.69.2] - the sign faces the road
 
 Cold run 9041 scored zero and shipped three signs as blue slivers a few
