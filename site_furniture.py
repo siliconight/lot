@@ -24,6 +24,8 @@ Frame: spec/Blender Z-up plan coordinates, like `site_streets`. Pure.
 """
 from __future__ import annotations
 
+import math
+
 import site_cover
 
 #: (species, width, depth, height) in the species' own frame, and the rule
@@ -34,9 +36,10 @@ import site_cover
 #:                 (hydrants stand at corners, clear of the crosswalk)
 #:   litter_bin:   one at each crossing, 1.5 m before the cut (where people
 #:                 wait to cross)
-#:   sign_post:    one at each crossing, at the cut's near edge, facing the
-#:                 road (a stop sign for the spur); and one before the bus
-#:                 shelter (the stop's flag)
+#:   sign_post:    one at each crossing, at the cut's near edge -- the blank
+#:                 blade, never a stop sign: a footpath is not an approach
+#:                 (docs/STREET_RULES.md) -- and one before the bus shelter
+#:                 (the stop's flag)
 #:   the trees:    one halfway between each pair of lamps, in a grate on
 #:                 the outer half of the band; its slot is the crown, and
 #:                 WHICH tree is a property of the road (`tree_for`)
@@ -89,17 +92,39 @@ FOOTPRINT = {t: (1.2, 1.2) for t in
 FOOTPRINT["traffic_signal"] = (0.7, 0.7)
 
 #: Where the 1990s kit stands, and why.
-#:   traffic_signal: on the corner of a junction whose through road is an
-#:                   arterial (sidewalks and parking lanes), pole on the
-#:                   ending leg's kerb, mast arm over the through road
-#:   stop_sign:      on the ending leg of every other junction, on the
-#:                   kerb to the right of the approaching driver
+#:   traffic_signal: on the corner of a signalised junction (a yielding
+#:                   road meets an arterial, `site_streets.approaches`),
+#:                   pole on the yielding leg's right-hand kerb, mast arm
+#:                   over the road it meets
+#:   stop_sign:      one per stop-controlled approach, placed by
+#:                   docs/STREET_RULES.md (MUTCD): on the kerb to the
+#:                   approaching driver's RIGHT, the plate's near edge at
+#:                   least `STOP_LATERAL_MIN` from the pavement edge,
+#:                   `STOP_BEFORE_CROSSWALK` before the leg's crosswalk and
+#:                   no more than `STOP_MAX_FROM_JUNCTION` from the crossing
+#:                   road's travelled way, the plate facing the driver; a
+#:                   second on the left only on a multi-lane approach. No
+#:                   stop sign stands at a signalised junction, and none at
+#:                   a footpath crossing.
 #:   parking_meter:  one per parking bay, near the kerb edge -- a row of
 #:                   single-space meters is half of what dates a street
 #:   mailbox,
 #:   newspaper_box,
 #:   payphone:       at the bus stop, where people already stand
-JUNCTION_SETBACK = 2.2    # a stop sign, back up the leg from its mouth
+#: 4 ft before the marked crosswalk's painted near line
+#: (`site_streets.Approach.line`); on a leg the paint does not mark, before
+#: the junction box's edge.
+STOP_BEFORE_CROSSWALK = 1.2
+#: 50 ft: the furthest a stop sign stands from the intersecting travelled
+#: way. A sign that cannot find room inside it is not placed, and said.
+STOP_MAX_FROM_JUNCTION = 15.2
+#: 6 ft, from the pavement edge (the kerb face) to the plate's NEAR edge.
+#: The plate stands across the road to face the driver, so the post is half
+#: a plate further out: a 3 m band holds it on the furniture line; a band
+#: narrower than `STOP_LATERAL_MIN` plus a plate cannot, and the sign
+#: stands as far out as the band holds and the shortfall is reported.
+STOP_LATERAL_MIN = 1.83
+STOP_SEARCH_STEP = 0.5    # a blocked station steps back up the leg by this
 #: A mast-arm pole stands ON the corner: measured on cold run 9035's site,
 #: a 2.2 m setback left the arm's tip over the sidewalk instead of over
 #: the near lane, because the arm must cross the setback and the band
@@ -107,10 +132,6 @@ JUNCTION_SETBACK = 2.2    # a stop sign, back up the leg from its mouth
 SIGNAL_SETBACK = 0.4
 METER_INSET = 0.35        # centre of a meter, in from the band's kerb edge
 STOP_PAIR = 1.1           # daylight between two news racks
-#: A cut this wide or wider is a vehicle crossing -- Level Factory's spur
-#: is 4 m and a footpath is narrower -- so the blade at its corner is a
-#: stop sign rather than the generic blank one.
-DRIVEWAY_WIDTH = 3.5
 LAMP_SPACING = 25.0
 LAMP_START = 5.0
 TREE_OFFSET = LAMP_SPACING / 2.0    # a tree halfway between two lamps
@@ -254,66 +275,142 @@ def _bus_stop(road, kerb, placed, n, markers=()):
     return []
 
 
-def _junction_mouths(road):
-    """[(t, sign, kerb_side)] where this road ENDS on another: the station
-    of its mouth, which way traffic approaches it (+1 travelling +t, -1
-    travelling -t) and the kerb to the RIGHT of that driver. Lot's `perp`
-    is left of travel a->b, so a driver going +t has the R kerb on the
-    right and a driver going -t has the L kerb."""
-    out = []
-    if road.slab[0] > 0.1:
-        out.append((road.slab[0], -1, "L"))
-    if road.slab[1] < road.length - 0.1:
-        out.append((road.slab[1], 1, "R"))
-    return out
+def plate_facing(yaw_deg: float) -> tuple:
+    """The plan direction a Zoo blade's face points when its slot carries
+    ``yaw_deg``.
+
+    MEASURED, not recalled. `lot._godot_transform` writes the text
+    `Transform3D(c, 0, s, 0, 1, 0, -s, 0, c, ...)`, and Godot 4.7 parses those
+    twelve numbers as basis ROWS (`str_to_var` on that text, 2026-09-13: at
+    30 degrees local +X lands on world (0.866, 0, -0.5) and local +Z on
+    (0.5, 0, 0.866)). With plan = Godot (x, -z) that is a counterclockwise
+    plan rotation by the yaw. Zoo's `stop_sign` hangs its face toward
+    Blender -Y, which the Y-up glTF export makes local +Z, so the face
+    points plan `(sin yaw, -cos yaw)`.
+
+    `lot.sign_facing` is a different conversion for a different writer (the
+    shop sign's Godot-authored cabinet) and is not this one."""
+    r = math.radians(yaw_deg)
+    return (math.sin(r), -math.cos(r))
 
 
-def _signalised(road, roads_list) -> bool:
-    """A junction is signalised when the road this leg meets is an arterial
-    -- sidewalks and parking lanes both. A Delco side street meeting a
-    commercial strip has a signal; two side streets have a stop sign."""
+def _facing_driver(travel: int) -> float:
+    """The yaw, relative to the road's own angle, that turns a blade's face
+    back down the road toward a driver travelling ``travel``: the face must
+    point along ``-travel * along``, and `plate_facing(angle - 90)` is
+    ``-along`` while `plate_facing(angle + 90)` is ``+along``."""
+    return -90.0 if travel > 0 else 90.0
+
+
+def _say(findings, text):
+    if findings is not None:
+        findings.append(text)
+
+
+def _stop_sign(name, road, ap, side, markers, placed, findings):
+    """One stop sign for approach ``ap`` on ``side``'s kerb of ``road``, or
+    None (and a finding) when no station within the rules holds it."""
+    kerb = road.kerb(side)
+    w, d, _h = SPECIES["stop_sign"]
+    # LATERAL: the post on the furniture line when that keeps the plate's
+    # near edge STOP_LATERAL_MIN off the pavement; else as far out as the
+    # plate still stands over the band, and the shortfall said
+    need = STOP_LATERAL_MIN + w / 2.0
+    into = road.sidewalk - BAND_INSET
+    if into < need:
+        into = max(into, min(need, road.sidewalk - w / 2.0))
+    offset = kerb.sign * (road.width / 2.0 + into)
+    who = (f"road {road.index}'s {'+t' if ap.travel > 0 else '-t'} approach to "
+           f"road {ap.crosser} ({side} kerb)")
+    if into - w / 2.0 < STOP_LATERAL_MIN - 1e-9:
+        _say(findings,
+             f"LOT_STOP_SIGN_OFFSET_SHORT: the stop sign on {who} stands "
+             f"{into - w / 2.0:.2f} m from the pavement edge to its plate, "
+             f"under the {STOP_LATERAL_MIN} m the rule asks, because the "
+             f"sidewalk band is {road.sidewalk:g} m; a band of "
+             f"{STOP_LATERAL_MIN + w:.2f} m or more holds it.")
+    # ALONG: STOP_BEFORE_CROSSWALK before the leg's crosswalk, stepping back
+    # up the leg past a dropped kerb, a painted crosswalk (a sign beside a
+    # mid-block crosswalk reads as that crosswalk's), a piece or a marker,
+    # never further than STOP_MAX_FROM_JUNCTION from the crossing road's
+    # travelled way. The plate is turned across the road, so its along-road
+    # half is its depth's.
     import site_streets
-    for other in roads_list:
-        if other is road:
+    half = d / 2.0
+    same_band = [p for p in placed if p["road"] == road.index and p["kerb"] == side]
+    walks = site_streets.painted_walks(road)
+    t0 = ap.line - ap.travel * STOP_BEFORE_CROSSWALK
+    step = 0
+    while True:
+        t = t0 - ap.travel * step * STOP_SEARCH_STEP
+        step += 1
+        if ap.travel * (ap.edge - t) > STOP_MAX_FROM_JUNCTION + 1e-9:
+            break
+        if not road.slab[0] + half <= t <= road.slab[1] - half:
+            break
+        if any(g0 - half < t < g1 + half for g0, g1 in road.gaps + walks):
             continue
-        if other.sidewalk and site_streets.has_parking(other):
-            for end in (road.a, road.b):
-                dx, dy = end[0] - other.a[0], end[1] - other.a[1]
-                across = dx * other.perp[0] + dy * other.perp[1]
-                along = dx * other.along[0] + dy * other.along[1]
-                if abs(across) <= 1.0 and -1.0 <= along <= other.length + 1.0:
-                    return True
-    return False
-
-
-def plan_traffic_control(road, roads_list, markers=()) -> list:
-    """The signal or the stop sign at each mouth of ``road``."""
-    out = []
-    if not road.sidewalk:
-        return out
-    signal = _signalised(road, roads_list)
-    for t, approach, side in _junction_mouths(road):
-        kerb = road.kerb(side)
-        if signal:
-            # the pole on the corner, the mast arm reaching over the
-            # through road -- which is the direction of the mouth
-            w, d, h = SPECIES["traffic_signal"]
-            pole_t = t - approach * SIGNAL_SETBACK
-            offset = kerb.offset + kerb.sign * (road.sidewalk / 2.0 - BAND_INSET)
-            yaw_extra = 0.0 if approach > 0 else 180.0
-            piece = _piece(f"Signal_{road.index}{side}", "traffic_signal", road,
-                           kerb, pole_t, offset, yaw_extra,
-                           breaks=f"junction@{t:.1f}")
-        else:
-            # the blade faces the driver coming up the leg, so its face
-            # looks back along the approach
-            pole_t = t - approach * JUNCTION_SETBACK
-            offset = kerb.offset + kerb.sign * (road.sidewalk / 2.0 - BAND_INSET)
-            yaw_extra = 180.0 if approach > 0 else 0.0
-            piece = _piece(f"Stop_{road.index}{side}", "stop_sign", road, kerb,
-                           pole_t, offset, yaw_extra, breaks=f"junction@{t:.1f}")
+        if not (_clear_of_cuts(t, half, kerb) and _free(t, half, same_band)):
+            continue
+        piece = _piece(name, "stop_sign", road, kerb, t, offset,
+                       _facing_driver(ap.travel), breaks=f"junction@{ap.station:.1f}")
         if _clear_of_markers(piece, markers):
-            out.append(piece)
+            return piece
+    _say(findings,
+         f"LOT_STOP_SIGN_NO_ROOM: no station on {who} within "
+         f"{STOP_MAX_FROM_JUNCTION} m of the crossing road holds a stop sign "
+         f"clear of the dropped kerbs, the pieces and the markers; the "
+         f"approach has none.")
+    return None
+
+
+def plan_traffic_control(road, roads_list, markers=(), findings=None,
+                         placed=()) -> list:
+    """The signal or the stop signs on every approach ``road`` makes to a
+    junction (`site_streets.approaches`). ``placed`` are pieces already
+    standing, which a stop sign keeps clear of; ``findings`` (a list of
+    strings) hears about an approach whose control could not be stood by
+    the rules."""
+    import site_streets
+    out = []
+    mine = [ap for ap in site_streets.approaches(roads_list) if ap.road == road.index]
+    for j, ap in enumerate(mine):
+        if ap.control == "through" or (ap.control == "signal" and not ap.minor):
+            # the through road keeps its right of way; at a signal, the
+            # pole on the yielding leg's corner carries the arm over it
+            continue
+        side = site_streets.right_side(ap.travel)
+        tag = "" if len(mine) == 1 else f"_{j}"
+        if not road.sidewalk:
+            _say(findings,
+                 f"LOT_TRAFFIC_CONTROL_NO_BAND: road {road.index}'s "
+                 f"{'+t' if ap.travel > 0 else '-t'} approach to road "
+                 f"{ap.crosser} is under a {ap.control} and has no sidewalk "
+                 f"band to stand it on; nothing is placed.")
+            continue
+        kerb = road.kerb(side)
+        if ap.control == "signal":
+            # the pole on the corner, the mast arm reaching over the road
+            # it meets -- which is the direction of the mouth
+            pole_t = ap.mouth - ap.travel * SIGNAL_SETBACK
+            offset = kerb.offset + kerb.sign * (road.sidewalk / 2.0 - BAND_INSET)
+            yaw_extra = 0.0 if ap.travel > 0 else 180.0
+            piece = _piece(f"Signal_{road.index}{side}{tag}", "traffic_signal", road,
+                           kerb, pole_t, offset, yaw_extra,
+                           breaks=f"junction@{ap.station:.1f}")
+            if _clear_of_markers(piece, markers):
+                out.append(piece)
+            continue
+        # a stop: the right-hand sign, and a left-hand one on a multi-lane
+        # approach, where a driver in the far lane could miss the right
+        sides = [side]
+        if site_streets.approach_lanes(road) >= 2:
+            sides.append("L" if side == "R" else "R")
+        for s in sides:
+            piece = _stop_sign(f"Stop_{road.index}{s}{tag}", road, ap, s, markers,
+                               list(placed) + out, findings)
+            if piece is not None:
+                out.append(piece)
     return out
 
 
@@ -334,14 +431,16 @@ def plan_meters(road, markers=()) -> list:
     return out
 
 
-def plan_furniture(roads_list, buildings=(), markers=()) -> list:
+def plan_furniture(roads_list, buildings=(), markers=(), findings=None) -> list:
     """Pieces along every sidewalk band, as site-cover-shaped records with a
     ``base`` of ``sidewalk`` (the module stands on the band's top, not the
     plate; the caller resolves the height). ``buildings`` are the spec's,
     read only for which kerb they face; ``markers`` the mission points
     every piece keeps clear of (a lamp or a tree steps along its band, a
-    corner piece or a bus stop is skipped). Returns the list; the caller
-    extends the spec and the slots."""
+    corner piece or a bus stop is skipped); ``findings`` (a list of
+    strings) hears about a junction approach whose control could not be
+    stood by the rules. Returns the list; the caller extends the spec and
+    the slots."""
     out = []
     n = 0
     markers = [tuple(m) for m in markers]
@@ -365,11 +464,17 @@ def plan_furniture(roads_list, buildings=(), markers=()) -> list:
         planted.append(pick)
         species_for[road.index] = pick
     for road in roads_list:
+        # THE JUNCTION'S CONTROL FIRST. A stop sign's station is set by the
+        # rules to within a metre or two, and a lamp's is not: the lamp
+        # steps along its band, so it is the lamp that steps. Asked before
+        # the band test so a road with no band says what it could not stand.
+        control = plan_traffic_control(road, roads_list, markers, findings)
         if not road.sidewalk:
             continue
         species_tree = species_for[road.index]
         for kerb in road.kerbs:
-            placed = []          # this band's pieces, for `_free`
+            # this band's pieces, for `_free`, starting with its control
+            placed = [p for p in control if p["kerb"] == kerb.side]
             outer = kerb.offset + kerb.sign * (road.sidewalk / 2.0 - BAND_INSET)
             tree_off = kerb.offset + kerb.sign * (road.sidewalk / 2.0 - TREE_INSET)
             # lamps at a spacing, skipping the cuts, and a tree between each pair
@@ -396,19 +501,19 @@ def plan_furniture(roads_list, buildings=(), markers=()) -> list:
                 # offsets are from the dropped kerb's EDGE, which already
                 # carries CUT_CLEARANCE; `_clear_of_cuts` adds it again, so a
                 # piece nearer than that to the edge is refused by design
-                # A DRIVEWAY GETS A STOP SIGN. The cut a spur makes is a
-                # parking-lot exit, and a 1990s American lot exits onto the
-                # street under one -- which is also the only place a stop
-                # sign stands in a generated package, because the spec's
-                # junctions are signalised arterials (cold run 9036 shipped
-                # none). A narrow cut is a footpath and keeps the blank
-                # blade the corner always had. The sign faces the driver
-                # coming OUT of the lot, so it looks across the kerb.
-                corner = ("stop_sign" if c.width >= DRIVEWAY_WIDTH
-                          else "sign_post")
+                # A CUT IS NEVER AN APPROACH. From 0.68.1 to 0.69.3 a cut
+                # 3.5 m or wider was read as a driveway and given a stop
+                # sign, and Level Factory's door spurs are 4 m: every door
+                # path on cold runs 9046, 9048 and 9049 carried one, a path
+                # crossing both kerbs carried a pair, and the side street's
+                # own kerbs, cut by the road it meets, carried a pair inside
+                # a signalised junction. Measured with
+                # tools/probe_street_control.py. A stop sign belongs to a
+                # junction approach (`plan_traffic_control`); the corner of
+                # a cut keeps the blank blade, whatever its width.
                 for species, dt, yaw_extra in (("fire_hydrant", half + 2.5, 0.0),
                                                ("litter_bin", -(half + 1.5), 0.0),
-                                               (corner, half + 1.0, 90.0)):
+                                               ("sign_post", half + 1.0, 90.0)):
                     w, d, h = SPECIES[species]
                     tt = c.t + dt
                     if 0.5 < tt < road.length - 0.5 and _clear_of_cuts(tt, d / 2.0, kerb) \
@@ -425,8 +530,7 @@ def plan_furniture(roads_list, buildings=(), markers=()) -> list:
                 n += len(stop)
                 out.extend(stop)
                 out.extend(_stop_corner(road, kerb, stop, placed, markers))
-        # the junction's control, and a meter at every bay
-        out.extend(plan_traffic_control(road, roads_list, markers))
+        # a meter at every bay
         out.extend(plan_meters(road, markers))
     return out
 

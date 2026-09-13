@@ -36,6 +36,7 @@ A site spec (JSON):
 }
 """
 
+import hashlib
 import json
 import math
 import os
@@ -715,13 +716,38 @@ def _yaw_box_node(name, size, center_godot, yaw_deg, color=None, skin=None):
 MARKING_Y = ROAD_THICK + SURFACE_TIER / 2.0 + 0.001
 
 
-def _yaw_quad_node(name, size, center_godot, yaw_deg, color, skin=None):
+def paint_offset(key: str) -> tuple:
+    """A fixed (u, v, w) in [0, 1) for one marking's paint, from ``key``.
+
+    WHY. Paint is projected in WORLD space (`_mat_sub`), so two bars a whole
+    number of tiles apart wear the same scuffs whatever the tile size:
+    measured on cold run 9044's `site.markings.json`, 5 of 210 bar pairs
+    still matched after the road-paint pack went to an 8 m tile (Pixelcoat
+    0.39.0), 4 of them exactly, every pair in a different crosswalk. Each
+    marking already has its own material, so a per-marking offset costs
+    nothing.
+
+    WHICH COMPONENTS. Godot 4.7's generated shader (read from the binary's
+    template) is `uv1_triplanar_pos = world * uv1_scale + uv1_offset`, then
+    `*= (1, -1, 1)`, and a face whose normal is up samples `pos.xz`. So a
+    flat marking's two texture axes are shifted by the offset's X and Z --
+    its Y moves only the side faces -- and all three are set.
+
+    DETERMINISTIC: SHA-1 of the key, not Python's `hash()`, which is salted
+    per process and would re-roll the wear on every build."""
+    d = hashlib.sha1(key.encode("utf-8")).digest()
+    return tuple(int.from_bytes(d[i:i + 4], "big") / 4294967296.0 for i in (0, 4, 8))
+
+
+def _yaw_quad_node(name, size, center_godot, yaw_deg, color, skin=None,
+                   uv_offset=None):
     """(body_lines, subres_lines) for a flat painted rectangle: a Node3D
     carrying the tiled meshes `_mesh_child_lines` makes, one shared
     material, and NO body -- markings have no collision. ``size`` is
     (along, across) in the plan; the quad is `SURFACE_TIER` thick. With a
     `paint` skin the quad wears the pack, tinted by the marking's own
-    colour, and the pack's cutout is where the paint has worn through."""
+    colour, and the pack's cutout is where the paint has worn through;
+    ``uv_offset`` (see `paint_offset`) shifts that pack's projection."""
     along, across = size
     x, yh, z = center_godot
     r = math.radians(yaw_deg)
@@ -731,10 +757,11 @@ def _yaw_quad_node(name, size, center_godot, yaw_deg, color, skin=None):
     body = [f'[node name="{name}" type="Node3D" parent="."]',
             f'transform = Transform3D({xform})', '']
     body += mesh_body
-    return body, list(mesh_sub) + _mat_sub(name, color, skin, tint=color if skin else None)
+    return body, list(mesh_sub) + _mat_sub(name, color, skin, tint=color if skin else None,
+                                           uv_offset=uv_offset)
 
 
-def _mat_sub(name, color, skin=None, tint=None):
+def _mat_sub(name, color, skin=None, tint=None, uv_offset=None):
     """The one StandardMaterial3D a body's tiles share. `color` alone is the
     flat greybox read; with a `skin` (see `ground_skins`) the material carries
     the Pixelcoat maps, projected in WORLD space so a plate tiled into 8 m
@@ -758,6 +785,9 @@ def _mat_sub(name, color, skin=None, tint=None):
         lines.append('uv1_triplanar = true')
         lines.append('uv1_world_triplanar = true')
         lines.append(f'uv1_scale = Vector3({s:g}, {s:g}, {s:g})')
+        if uv_offset is not None:
+            u, v, w = uv_offset
+            lines.append(f'uv1_offset = Vector3({u:.6g}, {v:.6g}, {w:.6g})')
         if skin.get("alpha_mode") == "scissor":
             # the pack's alpha is a cutout: tested, never blended, so the
             # quad stays in the opaque pass and needs no sorting
@@ -994,19 +1024,26 @@ def sign_facing(yaw_plan: float) -> float:
     face along a facade whose outward normal lies at `yaw_plan` degrees
     counterclockwise from plan +x.
 
-    THE DERIVATION, because a bare `- 90` here is how this went wrong once
-    already. `_sign_node` writes the basis `(c,0,s), (0,1,0), (-s,0,c)`;
-    the cabinet is a box `SIGN_W x SIGN_H x SIGN_D` so its face is the
-    local +Z, pointing at world `(-sin r, 0, cos r)`. Plan maps to Godot as
-    `(x, -y)`, so an outward normal `(nx, ny) = (cos t, sin t)` wants
-    `-sin r = cos t` and `cos r = -sin t`, and `r = -(t + 90)` is the only
-    angle satisfying both.
+    THE DERIVATION, because a bare `- 90` here is how this went wrong twice
+    already. `_sign_node` writes the text
+    `Transform3D(c, 0, s, 0, 1, 0, -s, 0, c, ...)`, and Godot reads those
+    nine numbers as the basis ROWS -- measured in Godot 4.7 with
+    `str_to_var` on this writer's own text, not recalled. The lit face is a
+    QuadMesh whose own normal is local +Z (also measured), carried to world
+    `(s, 0, c)`: the third COLUMN. Plan maps to Godot as `(x, -y)`, so the
+    face points plan `(sin r, -cos r)`, and an outward normal
+    `(nx, ny) = (cos t, sin t)` wants `sin r = cos t` and `cos r = -sin t`:
+    `r = t + 90` is the only angle satisfying both.
 
-    Cold run 9041 shipped `r = -t`, which is a quarter turn off for every
-    one of the four sides, so all three signs on that street stood edge-on
-    to the road they were hung for. The frames caught it; no gate did.
+    Cold run 9041 shipped `r = -t`, a quarter turn off on every side, so the
+    signs stood edge-on to their road. 0.69.2 then shipped `r = -(t + 90)`,
+    derived by reading the numbers as COLUMNS: that equals `t + 90` modulo
+    360 for a north or south facade and is its half turn for an east or
+    west one, which put the lit face against the wall and the dark can
+    toward the street. Its test read the numbers the same wrong way and
+    passed. Both caught by measuring, neither by a gate.
     """
-    return -(yaw_plan + 90.0)
+    return (yaw_plan + 90.0) % 360.0
 
 
 #: How far the lit face stands off the cabinet's front. Two millimetres:
@@ -1573,11 +1610,19 @@ def _outdoor_nodes(site_spec, preview=False, self_flooring=None, skins=None,
     # Pixelcoat road-paint pack, cutout where the paint has worn through)
     # it is the decal layer of item 152, and without one it is the
     # greybox's flat read.
+    # Each marking's paint is offset by a hash of what the marking IS --
+    # its road, kind and plan position -- rather than its index, so a
+    # marking added elsewhere on the site does not re-roll every other
+    # marking's wear (`paint_offset`).
     for n, m in enumerate(site_streets.markings(street_roads)):
         along, across = m["size"]
+        paint = skins.get("paint")
+        offset = (paint_offset(f"{m['road']}|{m['kind']}|{m['at'][0]:.3f}|{m['at'][1]:.3f}")
+                  if paint else None)
         bl, sr = _yaw_quad_node(f"mark_{n}_{m['kind']}", (along, across),
                                 (m["at"][0], MARKING_Y, -m["at"][1]),
-                                -m["yaw"], tuple(m["color"]), skin=skins.get("paint"))
+                                -m["yaw"], tuple(m["color"]), skin=paint,
+                                uv_offset=offset)
         body += bl
         sub += sr
 
@@ -2627,11 +2672,17 @@ def assemble(site_spec_path, out_dir=None, walkable=False, navqa=False,
     import site_furniture
     import site_parking
     import site_streets
+    furniture_findings = []
     furniture = site_furniture.plan_furniture(site_streets.roads(site_spec),
                                               site_spec.get("buildings") or [],
-                                              list(cover_points.values()))
+                                              list(cover_points.values()),
+                                              furniture_findings)
     site_spec.setdefault("cover", []).extend(furniture)
-    merged["furniture_plan"] = {"placed": furniture}
+    merged["furniture_plan"] = {"placed": furniture, "findings": furniture_findings}
+    # a junction approach whose control could not be stood by the street
+    # rules (docs/STREET_RULES.md) is said, not silently left bare
+    for f_ in furniture_findings:
+        print(f"[lot] {f_}")
     standing = []
     for cv in site_spec["cover"]:
         sx, _sy, sz = cv.get("size", COVER)

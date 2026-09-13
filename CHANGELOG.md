@@ -1,3 +1,78 @@
+## [0.69.4] - stop signs stand at junctions, by the street rules
+
+The walker, cold runs 9046 and 9048: stop signs in pairs at footpath
+crossings. `tools/probe_street_control.py` (new) reports every stop sign and
+every junction leg on a spec. On cold run 9049's generated site 0.69.3 placed
+seven (the assemble's own `furniture_plan`; eight re-planned without its
+markers): one at each 4 m door spur, one or a pair at the 8 m building path
+across the side street, and a pair on the side street's own kerbs INSIDE a
+signalised junction. All three are one rule: any kerb cut 3.5 m or wider was
+read as a driveway and signed, and a road's mouth is a cut too. None of them
+served an approach; every one faced along its road.
+
+Stop signs now follow docs/STREET_RULES.md (MUTCD). `site_streets.approaches`
+models every leg of every road-road junction and which road yields: a T's stem
+yields; at an X or an L corner the lower rank (arterial, then width) yields,
+and equal roads all yield. A yielding road that meets an arterial is under a
+signal and carries no stop sign. `plan_traffic_control` stands one sign per
+stop-controlled approach on the driver's right (traffic keeps right,
+`site_streets.KEEP_RIGHT`), the plate 1.2 m before the leg's painted
+crosswalk, stepping back up the leg past a dropped kerb, a mid-block
+crosswalk, a piece or a marker, never more than 15.2 m from the crossing
+road's travelled way (`LOT_STOP_SIGN_NO_ROOM` when nothing fits). The post
+stands on the furniture line when that keeps the plate's near edge 1.83 m off
+the pavement; a band under 2.58 m cannot, so the sign stands as far out as the
+band holds and `LOT_STOP_SIGN_OFFSET_SHORT` says by how much (central_vault's
+and warehouse_district's 1 m bands both do). A second sign on the left only
+when an approach carries two lanes. A cut, whatever its width, keeps the
+blank blade. The control is planned before the band furniture, so a lamp
+steps aside for a sign rather than the reverse.
+
+THE FACING WAS MEASURED, not recalled. Godot 4.7 parses a `Transform3D(...)`
+text as basis ROWS (`str_to_var` on the text `_godot_transform` writes), so a
+slot yaw is a counterclockwise plan rotation and a Zoo blade, facing Blender
+-Y, faces plan `(sin yaw, -cos yaw)`. 0.69.3's junction signs, at the road's
+angle plus 0 or 180, stood edge-on to the driver they were for.
+
+The stop bars were on the wrong half. `markings` painted the +t driver's bar
+on the L half -- the lane leaving the junction -- while the sign stood on the
+right. They follow `right_side` now. The crosswalks at the signalised
+junctions were already right: the probe finds every leg of cold runs 9046,
+9048 and 9049's junctions marked, and a test holds it.
+
+Paint wear no longer repeats between crosswalks. Paint projects in world
+space, and on cold run 9044's markings 5 of 210 bar pairs still wore
+matching scuffs under Pixelcoat 0.39.0's 8 m tile. Each marking's material
+now carries a `uv1_offset` from a SHA-1 of its road, kind and plan position.
+The knob was confirmed in Godot 4.7's shader template (read from the binary):
+`uv1_triplanar_pos = world * uv1_scale + uv1_offset`, and an upward face
+samples `.xz`, so a flat marking is shifted by the offset's X and Z.
+
+THE SHOP SIGNS ON AN EAST OR WEST FACADE FACED THE WALL. `sign_facing`
+(0.69.2) derived `r = -(t + 90)` by reading the transform text as basis
+columns; Godot reads rows, which makes the answer `r = t + 90`. The two agree
+modulo 360 for a north or south facade and are a half turn apart for east and
+west, so on those facades the lit QuadMesh stood against the wall with the
+dark can toward the street. The 0.69.2 test read the numbers the same wrong
+way (the third row, not the third column) and passed. Measured in Godot 4.7
+by parsing `_sign_node`'s own cabinet and face-child text with `str_to_var`
+and carrying the QuadMesh's normal through it, as plan vectors (outward
+normal; face normal; face offset from the cabinet centre):
+
+    facade  outward   0.69.3 face    offset          0.69.4 face    offset
+    N       (0, 1)    (0, 1)         (0, 0.112)      (0, 1)         (0, 0.112)
+    S       (0, -1)   (0, -1)        (0, -0.112)     (0, -1)        (0, -0.112)
+    E       (1, 0)    (-1, 0) WALL   (-0.112, 0)     (1, 0)         (0.112, 0)
+    W       (-1, 0)   (1, 0) WALL    (0.112, 0)      (-1, 0)        (-0.112, 0)
+
+The test now reads the third column, runs once per facade, and also holds the
+face child forward of the can. Against 0.69.3's `sign_facing` it failed for E
+and W and passed for N and S; it passes on all four now. The shop sign's
+light is not keyed off this yaw: Lux 0.33.0 lights `sign` anchors that come
+from the buildings' own `lights.json` (Deli Counter walls, merged with the
+placement's `rot`), not from `sign_placement` or `sign_facing`, so this
+change does not move any light.
+
 ## [0.69.3] - the sign's face is a quad, so the whole name is on it
 
 Cold run 9042, with the facing fixed: the bands face the road and the name

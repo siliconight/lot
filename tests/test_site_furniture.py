@@ -220,7 +220,7 @@ def test_the_junction_carries_a_signal_on_an_arterial_and_a_stop_sign_otherwise(
     (sig,) = control
     # the pole stands back up the leg from its mouth, on the band
     assert sig["at"][0] != 0.0 or sig["at"][1] > 0
-    assert abs(sig["at"][1] - (site_furniture.JUNCTION_SETBACK + 8.0)) < 3.0
+    assert abs(sig["at"][1] - (site_furniture.SIGNAL_SETBACK + 8.0)) < 1e-6
     assert sig["size"] == [0.7, 6.5, 0.7]          # the box is the pole
     assert sig["dims"] == [8.0, 0.62, 6.5]         # the slot is the reach
     # the through road ends on nothing, so it carries no control
@@ -284,26 +284,17 @@ def test_two_roads_that_meet_do_not_draw_the_same_tree():
     assert len(set(picked)) == 2, picked
 
 
-def test_a_driveway_cut_gets_a_stop_sign_and_a_footpath_keeps_the_blank_blade():
-    """Cold run 9036 shipped no stop sign at all: the generated spec's only
-    junction is a signalised arterial. A 1990s parking lot exits onto the
-    street under a stop sign, and the spur that cuts the kerb IS that
-    driveway (roadmap 153)."""
+def test_a_cut_of_any_width_keeps_the_blank_blade_and_never_a_stop_sign():
+    """From 0.68.1 to 0.69.3 a cut 3.5 m or wider was read as a driveway and
+    signed, so every 4 m door spur carried a stop sign and a path through
+    both kerbs a pair (the walker, cold runs 9046 and 9048). A footpath is
+    not an approach (docs/STREET_RULES.md)."""
     spec = _probe()
     roads = site_streets.roads(spec)
     (road,) = roads
     pieces = site_furniture.plan_furniture(roads, spec["buildings"])
-    wide = {round(c.t, 1) for k in road.kerbs for c in k.cuts
-            if c.width >= site_furniture.DRIVEWAY_WIDTH}
-    narrow = {round(c.t, 1) for k in road.kerbs for c in k.cuts
-              if c.width < site_furniture.DRIVEWAY_WIDTH}
-    stops = [p for p in pieces if p["species"] == "stop_sign"
-             and p["breaks"].startswith("crossing@")]
+    assert {c.width for k in road.kerbs for c in k.cuts} >= {4.0, 5.0}
+    assert not [p for p in pieces if p["species"] == "stop_sign"]
     blanks = [p for p in pieces if p["species"] == "sign_post"
               and p["breaks"].startswith("crossing@")]
-    assert wide and stops, (len(wide), len(stops))
-    for p in stops:
-        assert float(p["breaks"].split("@")[1]) in wide or True
-        assert p["yaw"] == 90.0                      # facing across the kerb
-    if not narrow:
-        assert not blanks
+    assert blanks

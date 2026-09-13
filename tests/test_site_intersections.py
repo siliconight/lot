@@ -62,7 +62,10 @@ def test_a_crossing_is_a_box_with_crosswalks_at_its_ends():
     (stop,) = [m for m in stops if m["yaw"] == 90.0]
     assert abs(stop["at"][1] - (8.0 + site_streets.STOP_BAR_SETBACK
                                 + site_streets.STOP_BAR_DEPTH / 2)) < 1e-9
-    assert stop["at"][0] > 0                                  # the -t lane (R side)
+    # traffic keeps right: the driver coming south toward the T (-t) drives
+    # the west half, which is the L side of a road running north. Until
+    # 0.69.4 the bar lay on the east half, the lane leaving the junction.
+    assert stop["at"][0] < 0
     # the centre lines keep out of the boxes and the side street's stays
     # within its slab
     for m in marks:

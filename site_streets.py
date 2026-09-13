@@ -51,9 +51,35 @@ BAY_LENGTH = 6.0
 LANE_DEPTH = 2.2
 CROSSING_SETBACK = 6.0
 
+#: TRAFFIC KEEPS RIGHT: the level is an American street. A driver travelling
+#: +t (a -> b) drives the R half of the carriageway (negative offset) and has
+#: the R kerb on the right; a driver travelling -t drives the L half with the
+#: L kerb on the right. Every question of "which lane" and "which kerb" in
+#: the street model reads this, so a left-hand site is one table away.
+KEEP_RIGHT = True
+#: The narrowest lane a driving half counts as a second lane at: 10 ft, the
+#: urban minimum in AASHTO and NACTO practice. It decides only whether an
+#: approach is multi-lane (a second stop sign on the left).
+LANE_MIN = 3.0
+
 
 def has_parking(road) -> bool:
     return bool(road.sidewalk) and road.width >= 2.0 * LANE_DEPTH + 5.0
+
+
+def right_side(travel: int) -> str:
+    """The side ("L"/"R") of the road a driver travelling ``travel`` (+1:
+    +t, -1: -t) drives on, which is also the kerb on the right."""
+    plus = "R" if KEEP_RIGHT else "L"
+    minus = "L" if KEEP_RIGHT else "R"
+    return plus if travel > 0 else minus
+
+
+def approach_lanes(road) -> int:
+    """Driving lanes one direction of ``road`` carries: its driving half
+    (the carriageway less any parking lane) in `LANE_MIN` lanes, at least 1."""
+    driving = road.width - (2.0 * LANE_DEPTH if has_parking(road) else 0.0)
+    return max(1, int((driving / 2.0) // LANE_MIN))
 
 
 def bays(road) -> list:
@@ -222,6 +248,140 @@ def crossing_box(cut) -> tuple:
     return (cut.t - half, cut.t + half)
 
 
+def crossing_walks(road, cut) -> list:
+    """[(centre, width)] along ``road`` of the crosswalks a crossing marks.
+    A path's crosswalk is its own width. A road's box carries one at EACH
+    end in line with the crosser's sidewalk (where people crossing the
+    junction walk), so every leg of the junction is marked; an end past
+    this road's own extent is dropped, so a T leg gets the one crosswalk
+    across its mouth and the through road one each side of the mouth."""
+    lo, hi = crossing_box(cut)
+    if cut.kind == "road" and cut.sidewalk > 0.0:
+        walks = [(lo + cut.sidewalk / 2.0, cut.sidewalk),
+                 (hi - cut.sidewalk / 2.0, cut.sidewalk)]
+    else:
+        walks = [(cut.t, cut.width)]
+    # kept within the ROAD's extent, not its slab: a T leg's mouth
+    # crosswalk lies on the through road's dropped kerb, between the slab
+    # and the centre line, and that is where it belongs
+    return [(tc, wc) for tc, wc in walks
+            if tc - wc / 2.0 >= -1e-6 and tc + wc / 2.0 <= road.length + 1e-6]
+
+
+def walk_paint(centre, width) -> tuple:
+    """(t0, t1) of the bars a crosswalk of ``centre`` and ``width`` paints:
+    whole bars and gaps, centred, so the painted near line can stand up to
+    a bar's width inside the walk's nominal edge."""
+    n = max(1, int(width // (BAR_WIDTH + BAR_GAP)))
+    span = n * (BAR_WIDTH + BAR_GAP) - BAR_GAP
+    return (centre - span / 2.0, centre + span / 2.0)
+
+
+def painted_walks(road) -> list:
+    """[(t0, t1)] of every crosswalk ``road`` paints, in bars."""
+    return sorted(walk_paint(tc, wc) for c in road.crossings
+                  for tc, wc in crossing_walks(road, c))
+
+
+def _ends_on(road, other) -> bool:
+    """An end of ``road`` lies on ``other``'s centre line, within a metre
+    across and within its extent: ``road`` is a leg that ENDS at ``other``."""
+    for end in (road.a, road.b):
+        dx, dy = end[0] - other.a[0], end[1] - other.a[1]
+        across = dx * other.perp[0] + dy * other.perp[1]
+        along = dx * other.along[0] + dy * other.along[1]
+        if abs(across) <= 1.0 and -1.0 <= along <= other.length + 1.0:
+            return True
+    return False
+
+
+def is_arterial(road) -> bool:
+    """Sidewalks and parking lanes both: a Delco commercial strip."""
+    return bool(road.sidewalk) and has_parking(road)
+
+
+@dataclass
+class Approach:
+    """One leg of a road-road junction, as the driver arriving on it sees it.
+
+    ``travel`` is the direction of that driver along ``road`` (+1: +t);
+    ``mouth`` the station of the junction box's edge the driver meets first;
+    ``line`` the painted near line of the leg's crosswalk when it is marked,
+    else the mouth;
+    ``edge`` the station of the crosser's travelled-way edge (its kerb face)
+    the driver meets; ``control`` is "signal", "stop" or "through" (the
+    through road of a stop-controlled junction keeps its right of way);
+    ``minor`` whether this road is the one that yields at the junction."""
+    road: int
+    crosser: int
+    travel: int
+    station: float
+    mouth: float
+    line: float
+    edge: float
+    control: str
+    minor: bool
+    marked: bool
+    ped_access: bool
+
+
+def approaches(roads_list) -> list:
+    """Every approach to every road-road junction, and its control.
+
+    WHICH ROAD YIELDS. A road that ends on another (a T's stem) yields to the
+    one it ends on. Where neither or both end (an X, or an L corner) the
+    lower-ranked road yields -- rank is arterial first, then carriageway
+    width -- and two roads of equal rank both yield (an all-way stop).
+
+    SIGNAL OR STOP. A junction is signalised when a yielding road meets an
+    arterial: a Delco side street meeting a commercial strip has a signal;
+    two side streets have stop signs. At a signalised junction every leg is
+    under the signal and none carries a stop sign.
+
+    A leg exists where the road carries pavement upstream of the box -- a
+    T's stem has one, a through road two, an X four."""
+    out = []
+    by_index = {r.index: r for r in roads_list}
+
+    def rank(r):
+        return (1 if is_arterial(r) else 0, r.width)
+
+    for road in roads_list:
+        for c in road.crossings:
+            if c.kind != "road" or c.crosser not in by_index:
+                continue
+            other = by_index[c.crosser]
+            road_ends, other_ends = _ends_on(road, other), _ends_on(other, road)
+            if road_ends != other_ends:
+                minor, other_minor = road_ends, other_ends
+            else:
+                minor = rank(road) <= rank(other)
+                other_minor = rank(other) <= rank(road)
+            signalised = ((minor and is_arterial(other))
+                          or (other_minor and is_arterial(road)))
+            lo, hi = crossing_box(c)
+            walks = crossing_walks(road, c)
+            for travel in (1, -1):
+                mouth = lo if travel > 0 else hi
+                if travel > 0 and mouth <= road.slab[0] + 0.5:
+                    continue
+                if travel < 0 and mouth >= road.slab[1] - 0.5:
+                    continue
+                mine = [walk_paint(tc, wc) for tc, wc in walks
+                        if (tc < c.t) == (travel > 0) and abs(tc - c.t) > 1e-6]
+                marked = bool(mine)
+                line = (mine[0][0] if travel > 0 else mine[0][1]) if mine else mouth
+                control = ("signal" if signalised
+                           else "stop" if minor else "through")
+                out.append(Approach(
+                    road=road.index, crosser=c.crosser, travel=travel,
+                    station=c.t, mouth=mouth, line=line,
+                    edge=c.t - travel * c.width / 2.0,
+                    control=control, minor=minor, marked=marked,
+                    ped_access=bool(c.sidewalk)))
+    return out
+
+
 def _slab(road, others) -> tuple:
     """Where the slab runs: trimmed at an end that lies on another road's
     centre line (within a metre, within that road's extent) by the far edge
@@ -364,16 +524,7 @@ def markings(roads_list) -> list:
         boxes = []                    # (lo, hi, walks[(centre, width)], stops)
         for c in sorted(road.crossings, key=lambda c: c.t):
             lo, hi = crossing_box(c)
-            if c.kind == "road" and c.sidewalk > 0.0:
-                walks = [(lo + c.sidewalk / 2.0, c.sidewalk),
-                         (hi - c.sidewalk / 2.0, c.sidewalk)]
-            else:
-                walks = [(c.t, c.width)]
-            # kept within the ROAD's extent, not its slab: a T leg's mouth
-            # crosswalk lies on the through road's dropped kerb, between
-            # the slab and the centre line, and that is where it belongs
-            walks = [(tc, wc) for tc, wc in walks
-                     if tc - wc / 2.0 >= -1e-6 and tc + wc / 2.0 <= road.length + 1e-6]
+            walks = crossing_walks(road, c)
             # the leg that ENDS at a junction is the one that stops: a
             # road crosser whose end lies on this road makes this the
             # through road, which keeps its right of way. A path crossing
@@ -401,7 +552,7 @@ def markings(roads_list) -> list:
         for lo, hi, walks, stops, station in boxes:
             for t_c, w_c in walks:
                 n = max(1, int(w_c // (BAR_WIDTH + BAR_GAP)))
-                start = t_c - (n * (BAR_WIDTH + BAR_GAP) - BAR_GAP) / 2.0
+                start = walk_paint(t_c, w_c)[0]
                 for j in range(n):
                     tb = start + j * (BAR_WIDTH + BAR_GAP) + BAR_WIDTH / 2.0
                     out.append(_marking("crosswalk_bar", road, tb, 0.0, BAR_WIDTH,
@@ -409,16 +560,21 @@ def markings(roads_list) -> list:
                                         station=station))
             if not stops:
                 continue
-            # a stop bar on the approach lane each way: traffic on the L
-            # lane travels +t and stops before the box; on the R lane it
-            # travels -t and stops after it
+            # a stop bar on the approach lane each way. Traffic keeps right
+            # (`right_side`): a driver travelling +t is on the R half and
+            # stops before the box; one travelling -t is on the L half and
+            # stops after it. Until 0.69.4 the bars were painted on the
+            # opposite halves -- the lanes LEAVING the box -- while the stop
+            # signs stood on the right-hand kerb, so the sign and its line
+            # were on two different lanes.
             t_lo = lo - STOP_BAR_SETBACK - STOP_BAR_DEPTH / 2.0
             t_hi = hi + STOP_BAR_SETBACK + STOP_BAR_DEPTH / 2.0
+            sgn_in = {s: (1.0 if right_side(s) == "L" else -1.0) for s in (1, -1)}
             if t_lo - STOP_BAR_DEPTH / 2.0 > road.slab[0]:
-                out.append(_marking("stop_bar", road, t_lo, lane / 2.0,
+                out.append(_marking("stop_bar", road, t_lo, sgn_in[1] * lane / 2.0,
                                     STOP_BAR_DEPTH, lane, WHITE, station=station))
             if t_hi + STOP_BAR_DEPTH / 2.0 < road.slab[1]:
-                out.append(_marking("stop_bar", road, t_hi, -lane / 2.0,
+                out.append(_marking("stop_bar", road, t_hi, sgn_in[-1] * lane / 2.0,
                                     STOP_BAR_DEPTH, lane, WHITE, station=station))
     return out
 
