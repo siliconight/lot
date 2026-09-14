@@ -1,3 +1,99 @@
+## [0.72.1] - a diagonal path reaches the building it names
+
+Cold run 9052's chain path `path_0`, `b1` at plan (4, -10) to `b2` at
+(45, 10), 8 m wide. The walk copy `_runs/walk_9052_rain` writes it
+`Transform3D(0.898768, 0, -0.438424, 0, 1, 0, 0.438424, 0, 0.898768, 24.5,
+0.005, -0)`. Read back in Godot 4.7, headless, on a scratch copy of that
+package: `str_to_var` on the literal and the instantiated node's
+`global_transform` both give `basis.x = (0.898768, 0, 0.438424)`, and the
+collision box's plan corners are (5.754, 13.595), (2.246, 6.405),
+(46.754, -6.405), (43.246, -13.595). The path ran from (4, 10) to (45, -10):
+the spec's path mirrored across its own centre line, its far end 20 m from
+the building it was drawn to reach. Of that package's 4,909 dressing
+instances, 58 have their origin inside the path the spec asks for; 0.72.0's
+`tops` puts 42 of them on the plate and 16 on the path.
+
+Two defects, one class, and they hid each other.
+
+- **The writers passed the mirror of the angle.** Godot reads the nine
+  basis numbers as ROWS, so `c, 0, s, 0, 1, 0, -s, 0, c` sends local +X to
+  Godot (c, 0, -s), plan (cos r, sin r): the yaw a slab is written with is
+  its counterclockwise plan angle. `path_slabs`, `street_slabs` (road slabs,
+  sidewalk and kerb-cut pieces), `frontage_slabs` and the markings all passed
+  `-angle`. Axis-aligned slabs are symmetric under that, so no street ever
+  showed it; every diagonal path did. `lot.yaw_basis_text` now writes the
+  basis for every yawed node (boxes, paint quads, shop signs -- the signs'
+  text is unchanged) and says what the number means; the four slab
+  functions and the markings pass the plan angle.
+- **`site_steps.surfaces` read the literal as COLUMNS** -- the transpose,
+  which for a yaw is the mirror. So the step gate saw 0.72.0's diagonal slab
+  where the spec meant it and not where it was drawn: the two errors
+  cancelled into a checker that agreed with the spec and not with the scene.
+  It reads rows now. `test_site_steps.test_a_rotated_road_does_not_touch_the_whole_site`
+  had been "corrected" once by the same misreading: its ground tile was moved
+  from Godot (-60, -60), called ON the 45-degree road's centreline, to
+  (-60, 60) -- which is where the engine puts that centreline. The tile is
+  back, and the retraction is kept in the docstring.
+
+Same misreading, different reader: `site_collision._godot_transform`
+documented the literal as "basis columns" and built the transpose, which
+turns every yawed instance in a Deli Counter building scene the other way
+(`tscn_export.godot_basis` writes `basis.rows`). It reads rows now. Measured
+by running `read_source` both ways over 9052's three themed building scenes
+in the walk copy: 38 of 1,435 colliders change, none by more than 0.010 m in
+plan.
+
+`site_surfaces.tops` needed no change: it takes the yaw the slab is drawn
+with, so it moves with the drawing, and `TOPS_RULE` (which Patina matches
+verbatim) is unchanged. Only its docstring, which described the mirror as
+current, is rewritten.
+
+**What moves.** `_outdoor_nodes` on all 28 specs under `specs/` and 9052's
+candidate spec, with 0.72.0 against this, corners read row-major: 1,867
+top-level nodes with a transform, 1,466 with changed transform text, 78 with changed
+geometry -- every one a path. The other 1,388 are axis-aligned slabs whose
+yaw flipped by a half turn and draw the same rectangle; no spec there has a
+diagonal road, band, marking or frontage. A `--walkable --portable` assemble
+of 9052's themed spec writes identical outputs except `site.tscn`, and that
+differs in 106 `transform =` lines. Read back in Godot 4.7 after Lux's own
+`run_lux_apply.gd` on a scratch copy of the staging project, swapped into a
+copy of the walk package, `path_0`'s plan corners are (2.246, -6.405),
+(5.754, -13.595), (43.246, 13.595), (46.754, 6.405): b1 to b2. The 58
+dressing origins on the intended path all read the path's top from the new
+`tops`. `site_steps` on the themed scene reports the same 19 transitions and
+no findings before and after (path_0 meets no raised slab either way).
+Frames from a given plan station over the path, `tools/look_shots.py`, show
+the slab on bare plate north of b1 before and between the two buildings'
+faces after.
+
+NOT REPRODUCED: this Lot's 0.72.0 does not rebuild the cold run's own
+`site.tscn` byte for byte today (4,654 diff lines, the parking bays among
+them), so every before/after above is 0.72.0 against 0.72.1 on today's
+inputs, not the shipped scene against a rebuild.
+
+Nav-QA walktest, 9052's candidate spec `--walkable --navqa --portable`,
+staged into a copy of the run's own walktest staging project, Lot's
+`walktest.py --require`: PASS with 0.72.0 and PASS with this. Every proxy leg
+and every bot walker reports the same; three of the four player walkers
+differ by at most 0.3 m (274.1/275.6/277.1 m against 274.0/275.9/277.2 m).
+Neither rebuild matches the cold run's own walktest: both report proxy_2 and
+proxy_10 off the main network behind 3.6 m and 3.9 m vertical legs, a
+~302 m spine against the run's ~405 m, and players at 273-277 m against
+365-368 m. That difference is between today's inputs and the run's and is
+not measured further here.
+
+Tests (`test_diagonal_slabs.py`, reading the emitted scene row-major with
+its own parser rather than `site_steps`'): a diagonal path's drawn corners are
+its intended corners at 26, 63, 117, 153, 207, 243, 297 and 333 degrees; the
+step gate reads that path where it is drawn; `tops` declares the drawn slab
+and the path's top is under points near both ends of the intended rectangle;
+9052's chain path lands on b1 and b2; a diagonal road's slab is its
+rectangle, every band piece lies in its own kerb's band and every marking
+runs along the road, and the step gate reads all of them as drawn; the
+collision reader turns an instance the way Godot does. 34 cases, plus the
+restored rotated-road step test: all 35 fail on 0.72.0. 528 passed, 1
+skipped.
+
 ## [0.72.0] - dressing is told how high the ground is
 
 Cold run 9052's walk copy (`_runs/walk_9052_rain`): every one of the 4,909

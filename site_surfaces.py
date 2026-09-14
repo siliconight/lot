@@ -387,9 +387,13 @@ def tops(site_spec, *, ground=None):
     with, unchanged: Godot reads `Transform3D(...)` row-major, so a yaw of r
     sends local +X to Godot (cos r, 0, -sin r), which is plan (cos r, sin r)
     (checked with `str_to_var` in Godot 4.7 on cold run 9052's `path_0`). It
-    is deliberately NOT re-derived from a path's endpoints: the drawn
-    diagonal path is mirrored from its endpoints (see the 0.72.0 changelog),
-    and what dressing has to stand on is the slab that was drawn.
+    is deliberately NOT re-derived from a path's endpoints: what dressing has
+    to stand on is the slab that was drawn. In 0.72.0 the two differed -- the
+    drawn diagonal path was mirrored from its endpoints, and this followed
+    the drawing. From 0.72.1 the drawing writes the plan angle as its yaw
+    (`lot.yaw_basis_text`), so for every yaw the slab drawn, the slab
+    declared here and the slab the spec's endpoints describe are one
+    rectangle, and `test_diagonal_slabs` holds all three together.
 
     The plate is one slab over the resolved ground rect at `lot.PLATE_TOP`.
     Its holes are not declared: a hole is cut only inside a building's

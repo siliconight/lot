@@ -181,7 +181,15 @@ def surfaces(tscn_path):
         if not size:
             continue
         n = [float(v) for v in m.group(2).split(",")]
-        bx, by, bz, o = n[0:3], n[3:6], n[6:9], n[9:12]
+        # The nine numbers are the basis ROWS (Godot 4.7, measured: see
+        # `lot.yaw_basis_text`), so the image of local X, Y, Z is read DOWN
+        # them. Until 0.72.1 this took (n0, n1, n2) as local X's image -- the
+        # transpose, which for a yaw is the mirror -- and so checked a
+        # diagonal slab where the spec meant it rather than where Lot drew
+        # it; while the drawing was itself mirrored the two errors cancelled
+        # into a checker that agreed with the spec and not the scene.
+        bx, by, bz = (n[0], n[3], n[6]), (n[1], n[4], n[7]), (n[2], n[5], n[8])
+        o = n[9:12]
         hx, hy, hz = size[0] / 2, size[1] / 2, size[2] / 2
         pts = []
         top = -1e9

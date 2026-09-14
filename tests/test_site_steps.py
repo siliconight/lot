@@ -144,9 +144,15 @@ def test_a_rotated_road_does_not_touch_the_whole_site(tmp_path):
     the map, so adjacency has to be a separating-axis test on the real
     rectangle or every ground tile reads as adjacent to every road.
 
-    The first version of this test put the ground tile at (-60, -60), which is
-    exactly ON the diagonal road's centreline -- the test was wrong and the code
-    was right. The tile sits at (-60, +60) now, 85 m off the line."""
+    RETRACTED, kept above the result that replaced it: "The first version of
+    this test put the ground tile at (-60, -60), which is exactly ON the
+    diagonal road's centreline -- the test was wrong and the code was right.
+    The tile sits at (-60, +60) now, 85 m off the line." That was judged by
+    `surfaces` reading the literal column-major. Godot 4.7 reads it row-major
+    (`lot.yaw_basis_text`): this road's local +X is Godot (0.707, 0, -0.707),
+    its centreline is z = -x, and (-60, +60) lies exactly ON it. The first
+    version was right and the code was wrong (0.72.1). The tile is back at
+    Godot (-60, -60), 85 m off the line as the engine draws it."""
     import math as _m
     c, s = _m.cos(_m.radians(45)), _m.sin(_m.radians(45))
     p = tmp_path / "rot.tscn"
@@ -155,7 +161,7 @@ def test_a_rotated_road_does_not_touch_the_whole_site(tmp_path):
         '[sub_resource type="BoxShape3D" id="S0"]\nsize = Vector3(40, 0.5, 4)\n\n'
         '[sub_resource type="BoxShape3D" id="S1"]\nsize = Vector3(200, 0.16, 3)\n\n'
         '[node name="Ground_0" type="StaticBody3D" parent="."]\n'
-        'transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -60, -0.25, 60)\n\n'
+        'transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -60, -0.25, -60)\n\n'
         '[node name="col" type="CollisionShape3D" parent="./Ground_0"]\n'
         'shape = SubResource("S0")\n\n'
         f'[node name="sidewalk_0L" type="StaticBody3D" parent="."]\n'

@@ -381,13 +381,23 @@ def boxes_in(doc: dict, *, every_mesh: bool = False, prefix: str = "") -> Readin
 # Godot scene text
 # ---------------------------------------------------------------------------
 def _godot_transform(numbers):
-    """Godot's ``Transform3D`` argument order is basis *columns* then origin."""
+    """A ``Transform3D(...)`` literal as a 3x4 matrix (rows, origin last).
+
+    The nine basis numbers are the matrix's ROWS, then the origin: Godot 4.7's
+    `str_to_var` on `Transform3D(0.898768, 0, -0.438424, 0, 1, 0, 0.438424, 0,
+    0.898768, ...)` gives `basis.x = (0.898768, 0, 0.438424)` (see
+    `lot.yaw_basis_text`), and Deli Counter's `tscn_export.godot_basis` writes
+    `basis.rows`. Until 0.72.1 this said "basis columns" and built the
+    transpose, which turns every yawed instance the other way; measured on
+    cold run 9052's three themed buildings (`read_source` both ways on the
+    walk copy's `lot/*/site.tscn`) the reading changes 38 of 1,435 colliders,
+    none by more than 0.010 m in plan."""
     v = [float(n) for n in numbers]
     if len(v) < 12:
         return _IDENTITY
-    return ((v[0], v[3], v[6], v[9]),
-            (v[1], v[4], v[7], v[10]),
-            (v[2], v[5], v[8], v[11]))
+    return ((v[0], v[1], v[2], v[9]),
+            (v[3], v[4], v[5], v[10]),
+            (v[6], v[7], v[8], v[11]))
 
 
 def _tscn_instances(text: str):

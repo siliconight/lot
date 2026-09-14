@@ -26,6 +26,13 @@ literal is ROW-major, local +X is (n0, n3, n6). `site_steps.surfaces` takes
 slabs are symmetric under it, which is why nothing on a street caught it.
 So the reader below is row-major, as the engine is, and the declaration
 follows what the engine draws.
+
+0.72.1: `site_steps.surfaces` reads row-major too, and the drawing writes the
+plan angle as its yaw, so the literal above is now written
+`Transform3D(0.898768, 0, 0.438424, 0, 1, 0, -0.438424, 0, 0.898768, ...)`
+and the path lies where its endpoints say. The reader below stays separate
+from `site_steps` on purpose: a test that reads the scene with the checker's
+own code cannot catch the checker.
 """
 import json
 import os

@@ -451,8 +451,12 @@ def _godot_transform(at, rot, z=0.0):
     site Z height -> Godot Y. Yaw (about site Z) becomes yaw about Godot Y."""
     r = math.radians(rot)
     c, s = math.cos(r), math.sin(r)
-    # Godot Basis rows for a rotation about Y by -rot (handedness flip from the
-    # Z-up->Y-up axis swap). origin: site (x,y) -> Godot (x, z_height, -y)
+    # Godot Basis ROWS (Godot 4.7 reads the nine numbers row-major, see
+    # `yaw_basis_text`) for a rotation about Godot +Y by +rot: local +X lands
+    # on Godot (c, 0, -s), plan (c, s), the counterclockwise turn
+    # `_place_point` gives the markers. origin: site (x,y) -> Godot
+    # (x, z_height, -y). Until 0.72.1 this comment said "by -rot", which is
+    # what the numbers mean read as columns; the numbers were right.
     bx = (c, 0.0, s)
     by = (0.0, 1.0, 0.0)
     bz = (-s, 0.0, c)
@@ -684,17 +688,39 @@ def _box_node(name, size, at_xyz, color=None, skin=None):
     return body, sub
 
 
+def yaw_basis_text(yaw_deg):
+    """The nine basis numbers of a `Transform3D(...)` literal for a turn of
+    `yaw_deg` about Godot +Y, as every yawed node here writes them.
+
+    WHAT THE NUMBERS MEAN, measured rather than recalled: Godot 4.7 reads the
+    nine as basis ROWS. `str_to_var` on cold run 9052's `path_0` literal
+    `Transform3D(0.898768, 0, -0.438424, 0, 1, 0, 0.438424, 0, 0.898768, ...)`
+    gives `basis.x = (0.898768, 0, 0.438424)`, and the same scene instantiated
+    headless gives that `global_transform` (2026-09-13). So local +X lands on
+    Godot `(cos r, 0, -sin r)`, which is plan `(cos r, sin r)`: `yaw_deg` is a
+    COUNTERCLOCKWISE PLAN ANGLE, and a slab whose length runs along plan
+    angle `a` is written with `yaw_deg = a`, not `-a`.
+
+    Read as columns the same numbers turn the other way, and for a yaw off the
+    right angles that is a mirror image. Lot drew every diagonal path, road,
+    sidewalk band and marking that way until 0.72.1 (see `path_slabs`)."""
+    r = math.radians(yaw_deg)
+    c, s = math.cos(r), math.sin(r)
+    return f"{c:g}, 0, {s:g}, 0, 1, 0, {-s:g}, 0, {c:g}"
+
+
 def _yaw_box_node(name, size, center_godot, yaw_deg, color=None, skin=None):
     """Like _box_node but yaw'd about Godot-Y (for paths/roads between buildings).
-    color: optional (r,g,b[,a]) -> a StandardMaterial3D override. The VISUAL
+    `yaw_deg` is the plan angle, counterclockwise from +x, that the box's
+    local x (`size[0]`) runs along (`yaw_basis_text` says why that is the
+    number to pass). color: optional (r,g,b[,a]) -> a StandardMaterial3D
+    override. The VISUAL
     is tiled to MESH_TILE in the body's LOCAL frame -- the parent transform
     carries the yaw, so the tiles need no rotation math and a 65 m path
     becomes nine ~7 m meshes lying exactly where the one mesh lay."""
     sx, sy, sz = size
     x, yh, z = center_godot
-    r = math.radians(yaw_deg)
-    c, s = math.cos(r), math.sin(r)
-    xform = (f"{c:g}, 0, {s:g}, 0, 1, 0, {-s:g}, 0, {c:g}, {x:g}, {yh:g}, {z:g}")
+    xform = f"{yaw_basis_text(yaw_deg)}, {x:g}, {yh:g}, {z:g}"
     mesh_body, mesh_sub = _mesh_child_lines(name, size, color, skin)
     body = [
         f'[node name="{name}" type="StaticBody3D" parent="."]',
@@ -751,12 +777,12 @@ def _yaw_quad_node(name, size, center_godot, yaw_deg, color, skin=None,
     (along, across) in the plan; the quad is `SURFACE_TIER` thick. With a
     `paint` skin the quad wears the pack, tinted by the marking's own
     colour, and the pack's cutout is where the paint has worn through;
-    ``uv_offset`` (see `paint_offset`) shifts that pack's projection."""
+    ``uv_offset`` (see `paint_offset`) shifts that pack's projection.
+    ``yaw_deg`` is the plan angle the quad's `along` runs at, as for
+    `_yaw_box_node`."""
     along, across = size
     x, yh, z = center_godot
-    r = math.radians(yaw_deg)
-    c, s = math.cos(r), math.sin(r)
-    xform = (f"{c:g}, 0, {s:g}, 0, 1, 0, {-s:g}, 0, {c:g}, {x:g}, {yh:g}, {z:g}")
+    xform = f"{yaw_basis_text(yaw_deg)}, {x:g}, {yh:g}, {z:g}"
     mesh_body, mesh_sub = _mesh_child_lines(name, (along, SURFACE_TIER, across), color, skin)
     body = [f'[node name="{name}" type="Node3D" parent="."]',
             f'transform = Transform3D({xform})', '']
@@ -1076,9 +1102,7 @@ def _sign_node(name, center_godot, yaw_deg, sign, size):
     have fixed the box, because the correction would differ per sign size.
     """
     x, yh, z = center_godot
-    r = math.radians(yaw_deg)
-    c, s = math.cos(r), math.sin(r)
-    xform = (f"{c:g}, 0, {s:g}, 0, 1, 0, {-s:g}, 0, {c:g}, {x:g}, {yh:g}, {z:g}")
+    xform = f"{yaw_basis_text(yaw_deg)}, {x:g}, {yh:g}, {z:g}"
     face_z = SIGN_D / 2.0 + SIGN_FACE_PROUD
     body = [f'[node name="{name}" type="Node3D" parent="."]',
             f'transform = Transform3D({xform})', '',
@@ -1471,13 +1495,18 @@ def path_slabs(site_spec):
         dx, dy = bx_ - ax, by_ - ay
         length = math.hypot(dx, dy)
         ang = math.degrees(math.atan2(dy, dx))
-        # path lies along its length (x), width across (z), thin (y)
+        # path lies along its length (x), width across (z), thin (y), and
+        # its x runs at plan angle `ang` -- which is the yaw to write
+        # (`yaw_basis_text`). Until 0.72.1 this passed `-ang`, and every
+        # diagonal path was drawn mirrored across its own centre line:
+        # cold run 9052's b1 -> b2 path ended at plan (45, -10), 20 m from
+        # the building at (45, 10) it was drawn to reach.
         # Extended DOWN by GROUND_SINK so it stays buried in the plate; the
         # top face does not move, so every height check reads the same number.
         out.append(_surface_slab(f"path_{i}", "path",
                                  (length, PATH_THICK + GROUND_SINK, w),
                                  (cx, (PATH_THICK - GROUND_SINK) / 2, -cy),
-                                 -ang, PATH_THICK))
+                                 ang, PATH_THICK))
     return out
 
 
@@ -1516,7 +1545,7 @@ def street_slabs(street_roads):
             out.append(_surface_slab(nm, "road",
                                      (s1 - s0, ROAD_THICK + GROUND_SINK, w),
                                      (cx, (ROAD_THICK - GROUND_SINK) / 2, -cy),
-                                     -ang, ROAD_THICK))
+                                     ang, ROAD_THICK))
         for kerb in road.kerbs:
             pieces = [(t0, t1, is_cut, j) for j, (t0, t1, is_cut) in enumerate(kerb.spans)]
             for t0, t1, is_cut, j in pieces:
@@ -1533,7 +1562,7 @@ def street_slabs(street_roads):
                           else f"sidewalk_{i}{kerb.side}_{tag}")
                     out.append(_surface_slab(
                         nm, "kerbcut" if is_cut else "sidewalk",
-                        (seg, h, road.sidewalk), (scx, h / 2, -scy), -ang, h))
+                        (seg, h, road.sidewalk), (scx, h / 2, -scy), ang, h))
     return out
 
 
@@ -1549,7 +1578,7 @@ def frontage_slabs(site_spec, street_roads, findings=None):
         out.append(_surface_slab(
             f"frontage_{fr.road}{fr.side}_{n}", "frontage",
             (fr.length, FRONTAGE_THICK + GROUND_SINK, fr.depth),
-            (fcx, (FRONTAGE_THICK - GROUND_SINK) / 2, -fcy), -road.angle_deg,
+            (fcx, (FRONTAGE_THICK - GROUND_SINK) / 2, -fcy), road.angle_deg,
             FRONTAGE_THICK))
     return out
 
@@ -1730,7 +1759,7 @@ def _outdoor_nodes(site_spec, preview=False, self_flooring=None, skins=None,
                   if paint else None)
         bl, sr = _yaw_quad_node(f"mark_{n}_{m['kind']}", (along, across),
                                 (m["at"][0], MARKING_Y, -m["at"][1]),
-                                -m["yaw"], tuple(m["color"]), skin=paint,
+                                m["yaw"], tuple(m["color"]), skin=paint,
                                 uv_offset=offset)
         body += bl
         sub += sr
