@@ -74,11 +74,13 @@ def test_a_different_capsule_moves_the_limit():
 
 
 def test_zone_ceiling_is_the_step_limit():
-    """A zone's box may not offer height the honesty rule forbids there."""
+    """A zone's box may not offer height the honesty rule forbids there:
+    one unassisted step above the surface the zone names, and no more."""
     cap = SS.capsule_block()
     zones, _ = SS.zones(spec(), capsule=cap)
     for z in zones:
-        assert z["aabb"][5] == cap["unassisted_step_max_m"]
+        assert abs((z["aabb"][5] - z["aabb"][2])
+                   - cap["unassisted_step_max_m"]) < 1e-5
 
 
 # --- every zone traces to a spec key ---------------------------------------
@@ -312,7 +314,7 @@ def test_surfaces_returns_manifest_blocks_and_declares_its_space():
     out = SS.surfaces(footprinted())
     assert out["space"] == "spec/Blender Z-up raw coords"
     assert set(out) == {"space", "capsule", "bands", "zones", "exclusions",
-                        "findings"}
+                        "tops", "tops_rule", "findings"}
     assert set(out["bands"]) == {"micro", "low", "medium", "tall"}
     assert "orders" not in out          # the planner's job, one stage later
 

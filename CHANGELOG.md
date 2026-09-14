@@ -1,3 +1,82 @@
+## [0.72.0] - dressing is told how high the ground is
+
+Cold run 9052's walk copy (`_runs/walk_9052_rain`): every one of the 4,909
+instances in `bank_block_001_dressing.tscn` has origin y = 0.0. Read against
+the StaticBody3D boxes of the `site.tscn` it was placed on (byte-identical to
+that run's `themed_site_assemble` output), 2,500 stand more than 5 mm below
+the top of the slab under them: 1,648 inside a 0.0974 m sidewalk band, 739 in
+the road (0.010), 64 in a path (0.012), 49 in a kerb cut (0.010). By zone
+kind: `sidewalk` 1,531 of 1,550, `ground` 968 of 3,306, `wall_base` 1 of 53.
+
+Where the height was lost, stage by stage. `site_surfaces.zones` declared
+every zone from `z_lo = 0.0` and nothing anywhere declared how high a surface
+was; Patina's planner wrote `"pos": [x, y, 0.0]`; Level Factory's
+`dressing_scene` carries pos[2] to Godot y faithfully (it reproduces the
+shipped scene byte for byte from the shipped manifest); Zoo's clutter has its
+origin at the contact point (`connectors.anchor` type `surface`, extracted
+mesh bases at -0.006 to 0). So the number belongs to Lot, which draws the
+slabs, and to the planner, which picks the point.
+
+A zone could not carry it. Zones are boxes over surfaces they do not name --
+a sidewalk corridor runs on over its kerb cut and past the road's end, the
+open-ground remainder covers the whole plate -- and on 9052, 627 instances
+stood on a different family's slab from the one their zone names. Placed at
+their own zone's surface, 618 would still have been more than 5 mm off.
+
+**`site_surfaces.tops`**, and `surfaces.json` carries it with `tops_rule`:
+every flat slab Lot draws outdoors, in plan, `{name, family, centre, size,
+yaw_deg, top_m}`, plus the plate at `PLATE_TOP` (-`GROUND_SINK`). The height
+under a point is the largest `top_m` of the slabs holding it. The slabs come
+from the functions the scene is now drawn with -- `path_slabs`,
+`courtyard_slabs`, `street_slabs`, `frontage_slabs` in `lot.py`, which
+`_outdoor_nodes` iterates -- so the declaration and the drawing are one
+computation. `_outdoor_nodes` output is byte-identical to 0.71.0's on all 28
+specs under `specs/` that have buildings and on 9052's candidate and themed
+specs, and a full `--walkable --portable` assemble of 9052's themed spec
+writes identical `site.tscn`, `site_walk.tscn`, gameplay, lights, slots and
+markings.
+
+A zone's aabb z now runs from the top of the surface its family names
+(`sidewalk` SIDEWALK_H, `frontage` FRONTAGE_THICK, `road` ROAD_THICK, `path`
+PATH_THICK, `courtyard` COURT_THICK, the rest the plate) to one unassisted
+step above it. Nothing reads it; it had said 0 for a band 0.0974 m tall.
+
+Measured after, through the pipeline's own stages on scratch copies (this
+Lot's `site_surfaces` on 9052's candidate spec, Patina 0.22.0's planner,
+Level Factory's `dressing_scene` writer, swapped into a copy of 9052's walk
+package rebuilt on Lot 0.71.0 geometry, which this Lot reproduces): 4,690
+instances, 0 more than 5 mm off the slab under them in the Lux-applied scene
+that renders, split `ground` 0 of 3,206, `sidewalk` 0 of 1,432 (frontage 0 of
+52), `wall_base` 0 of 52. The same stages with 0.71.0 and Patina 0.21.1:
+4,948 instances, 2,587 off (`sidewalk` 1,587 of 1,606 including all 56 on
+frontages, `ground` 990 of 3,289, `wall_base` 10 of 53). Frames from given
+low stations along the north band show it bare before and dressed after.
+
+Found on the way and NOT changed here, both about diagonal slabs:
+
+- The drawn diagonal path is mirrored. `_yaw_box_node` is called with
+  `-ang`, and Godot reads the `Transform3D(...)` literal row-major:
+  `str_to_var` on 9052's `path_0` gives `basis.x = (0.898768, 0, 0.438424)`,
+  so its far end is at plan (44.5, -9.75) while `b2` stands at (45, 10). On
+  9052, 42 dressing instances within 4 m of the b1 -> b2 centreline stand on
+  bare plate, and 32 stand on the drawn path away from that centreline. `tops`
+  follows the drawing, as dressing must.
+- `site_steps.surfaces` reads the same literal column-major -- the
+  transpose, which for a yaw is the mirror -- so the step gate sees a
+  diagonal slab where the spec meant it rather than where it is drawn.
+  Axis-aligned slabs are symmetric under it. `test_site_surface_tops` reads
+  the scene row-major for that reason and says why.
+
+Tests (`test_site_surface_tops.py`): every walkable box `_outdoor_nodes`
+draws for 9052's spec, a spec with diagonal paths and a courtyard, and
+`specs/coldrun_kerb_probe.json` is declared with its name, top and plan
+corners, and nothing is declared that is not drawn; the top under points on
+9052's bank front (band, kerb cut, road, cross-street band, frontage, spur
+under the band, spur inside the frontage, plate, off the site); each zone's
+z_lo is its own surface; the CLI writes `tops` and `tops_rule`. All six fail
+on 0.71.0. `test_zone_ceiling_is_the_step_limit` now holds the box to one
+step above its floor rather than above 0.
+
 ## [0.71.0] - a building close to the sidewalk meets it
 
 The walker, cold run 9052 (rain), at the foot of the bank: the edge between

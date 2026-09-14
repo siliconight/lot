@@ -346,11 +346,114 @@ def _annulus_strips(outer, inner):
     return [r for r in out if r[0] < r[2] and r[1] < r[3]]
 
 
+def _slab_top(name, family, centre, size, yaw_deg, top):
+    r = AABB_DIGITS
+    return {"name": name, "family": family,
+            "centre": [round(centre[0], r), round(centre[1], r)],
+            "size": [round(size[0], r), round(size[1], r)],
+            "yaw_deg": round(float(yaw_deg), r),
+            "top_m": round(float(top), r)}
+
+
+#: How a planner reads `tops`. Carried in the artifact so the rule travels
+#: with the data rather than being re-decided by each reader.
+TOPS_RULE = ("surface height at plan point (x, y) = the largest top_m of the "
+             "slabs whose rectangle holds it; with (dx, dy) from the slab's "
+             "centre, u = dx*cos(yaw) + dy*sin(yaw), v = dx*sin(yaw) - "
+             "dy*cos(yaw), held when |u| <= size[0]/2 and |v| <= size[1]/2. "
+             "A point no slab holds has no surface.")
+
+
+def tops(site_spec, *, ground=None):
+    """Every flat surface Lot draws outdoors, as plan slabs with their top.
+
+    WHY THIS EXISTS. A dressing instance has to stand ON something, and until
+    this block existed nothing told the planner how high that something was:
+    every zone said z 0, and on cold run 9052 all 4,909 instances were placed
+    at z 0 -- read back off the shipped scene, 1,648 sat inside a 0.0974 m
+    sidewalk band, 739 in the road, 64 in a path and 49 in a kerb cut. Zones
+    cannot carry the answer: they are boxes laid over surfaces they do not
+    name (a sidewalk corridor runs on over the kerb cut and past the road's
+    end, the open-ground remainder covers the whole plate), and on that run
+    627 instances stood on a different family's slab from the one their zone
+    names; placed at their zone's own surface, 618 would still be more than
+    5 mm off the surface under them.
+
+    FROM THE DRAWING, NOT BESIDE IT. The slabs are `lot.path_slabs`,
+    `courtyard_slabs`, `street_slabs` and `frontage_slabs` -- the functions
+    `lot._outdoor_nodes` draws from -- converted to plan: `centre` (x, y),
+    `size` (local x, local z), `yaw_deg` such that the slab's local x axis is
+    plan (cos yaw, sin yaw). That yaw is the Godot yaw the box node is written
+    with, unchanged: Godot reads `Transform3D(...)` row-major, so a yaw of r
+    sends local +X to Godot (cos r, 0, -sin r), which is plan (cos r, sin r)
+    (checked with `str_to_var` in Godot 4.7 on cold run 9052's `path_0`). It
+    is deliberately NOT re-derived from a path's endpoints: the drawn
+    diagonal path is mirrored from its endpoints (see the 0.72.0 changelog),
+    and what dressing has to stand on is the slab that was drawn.
+
+    The plate is one slab over the resolved ground rect at `lot.PLATE_TOP`.
+    Its holes are not declared: a hole is cut only inside a building's
+    footprint, which `exclusions` already keeps dressing out of.
+    """
+    import lot
+    import site_streets
+    out = []
+    g = ground or site_extent.resolve(site_spec)
+    if site_spec.get("ground") and g.rect is not None:
+        x0, y0, x1, y1 = g.rect
+        out.append(_slab_top("Ground", "ground", ((x0 + x1) / 2, (y0 + y1) / 2),
+                             (x1 - x0, y1 - y0), 0.0, lot.PLATE_TOP))
+    street = site_streets.roads(site_spec)
+    for s in (lot.path_slabs(site_spec) + lot.courtyard_slabs(site_spec)
+              + lot.street_slabs(street)
+              + lot.frontage_slabs(site_spec, street)):
+        sx, _sy, sz = s["size"]
+        cx, _cy, cz = s["centre"]
+        out.append(_slab_top(s["name"], s["family"], (cx, -cz), (sx, sz),
+                             s["yaw_deg"] or 0.0, s["top"]))
+    return out
+
+
+def surface_top(point, slabs):
+    """`TOPS_RULE`, for a reader in this repo (and for the tests that hold
+    `tops` to the scene). Returns None where no slab holds the point."""
+    x, y = float(point[0]), float(point[1])
+    best = None
+    for s in slabs:
+        r = math.radians(s["yaw_deg"])
+        dx, dy = x - s["centre"][0], y - s["centre"][1]
+        u = dx * math.cos(r) + dy * math.sin(r)
+        v = dx * math.sin(r) - dy * math.cos(r)
+        if abs(u) <= s["size"][0] / 2 and abs(v) <= s["size"][1] / 2:
+            if best is None or s["top_m"] > best:
+                best = s["top_m"]
+    return best
+
+
 def zones(site_spec, *, ground=None, nav_bake=None, capsule=None):
-    """Dressable regions, most restrictive first. Returns (zones, findings)."""
+    """Dressable regions, most restrictive first. Returns (zones, findings).
+
+    A zone's aabb z runs from the top of the surface its family NAMES
+    (`family_top` below) to one unassisted step above it. That is a statement about
+    the zone, not about every point in it -- see `tops` for why a zone's box
+    cannot carry the height under a placement.
+    """
+    import lot
     cap = capsule or capsule_block()
-    z_hi = cap["unassisted_step_max_m"]      # the tallest legal thing here
-    z_lo = 0.0
+    step = cap["unassisted_step_max_m"]      # the tallest legal thing here
+    family_top = {
+        "path": lot.PATH_THICK,
+        "sidewalk": lot.SIDEWALK_H,
+        "road": lot.ROAD_THICK,
+        "wall_base": lot.PLATE_TOP,
+        "courtyard": lot.COURT_THICK,
+        "perimeter": lot.PLATE_TOP,
+        "open": lot.PLATE_TOP,
+    }
+
+    def zr(family):
+        return family_top[family], family_top[family] + step
+
     findings = []
     out = []
 
@@ -366,7 +469,7 @@ def zones(site_spec, *, ground=None, nav_bake=None, capsule=None):
     for label, a, b, width in _path_segments(site_spec):
         for j, rect in enumerate(corridor_boxes(a, b, width)):
             out.append(_zone(f"path_{label}_s{j:02d}", "ground", "path", rect,
-                             z_lo, z_hi, "gameplay_path",
+                             *zr("path"), "gameplay_path",
                              ["route", f"path:{label}"]))
 
     # --- the street: a road is not open ground, and a sidewalk is a seam ----
@@ -379,14 +482,14 @@ def zones(site_spec, *, ground=None, nav_bake=None, capsule=None):
     for road in street:
         for j, rect in enumerate(corridor_boxes(road.a, road.b, road.width)):
             out.append(_zone(f"road_{road.index}_s{j:02d}", "ground", "road", rect,
-                             z_lo, z_hi, "play_space",
+                             *zr("road"), "play_space",
                              ["street", f"road:{road.index}"]))
         for kerb in road.kerbs:
             ka = road.point(0.0, kerb.offset)
             kb = road.point(road.length, kerb.offset)
             for j, rect in enumerate(corridor_boxes(ka, kb, road.sidewalk)):
                 out.append(_zone(f"sidewalk_{road.index}{kerb.side}_s{j:02d}",
-                                 "sidewalk", "sidewalk", rect, z_lo, z_hi,
+                                 "sidewalk", "sidewalk", rect, *zr("sidewalk"),
                                  "environmental_edge",
                                  ["street", "seam", f"road:{road.index}",
                                   f"kerb:{kerb.side}"]))
@@ -395,7 +498,8 @@ def zones(site_spec, *, ground=None, nav_bake=None, capsule=None):
     by_index = {r.index: r for r in street}
     for n, fr in enumerate(site_streets.frontages(site_spec, street)):
         out.append(_zone(f"frontage_{fr.road}{fr.side}_{n}", "sidewalk",
-                         "sidewalk", fr.rect(by_index[fr.road]), z_lo, z_hi,
+                         "sidewalk", fr.rect(by_index[fr.road]), lot.FRONTAGE_THICK,
+                         lot.FRONTAGE_THICK + step,
                          "environmental_edge",
                          ["street", "frontage", f"road:{fr.road}",
                           f"kerb:{fr.side}", f"building:{fr.building}"]))
@@ -419,7 +523,7 @@ def zones(site_spec, *, ground=None, nav_bake=None, capsule=None):
         for k, strip in enumerate(_annulus_strips(site_extent.grow(fp, band),
                                                   fp)):
             out.append(_zone(f"wall_base_{b['id']}_{k}", "wall_base",
-                             "wall_base", strip, z_lo, z_hi,
+                             "wall_base", strip, *zr("wall_base"),
                              "environmental_edge",
                              ["seam", f"building:{b['id']}"]))
     if unknown:
@@ -437,7 +541,7 @@ def zones(site_spec, *, ground=None, nav_bake=None, capsule=None):
                                    float(c.get("size_x", 0.0)),
                                    float(c.get("size_y", 0.0)))
         out.append(_zone(f"courtyard_{i}", "ground", "courtyard", rect,
-                         z_lo, z_hi, "play_space", ["courtyard"]))
+                         *zr("courtyard"), "play_space", ["courtyard"]))
 
     # --- perimeter: outside the content, by definition -----------------------
     # `required_rect` is content + CLEARANCE. Anything beyond it is ground no
@@ -454,11 +558,11 @@ def zones(site_spec, *, ground=None, nav_bake=None, capsule=None):
         inner = _intersect(g.rect, required) or g.rect
     for k, strip in enumerate(_annulus_strips(g.rect, inner)):
         out.append(_zone(f"perimeter_edge_{k}", "ground", "perimeter", strip,
-                         z_lo, z_hi, "environmental_edge",
+                         *zr("perimeter"), "environmental_edge",
                          ["outside_required_rect"]))
 
     # --- everything else ----------------------------------------------------
-    out.append(_zone("open_ground", "ground", "open", inner, z_lo, z_hi,
+    out.append(_zone("open_ground", "ground", "open", inner, *zr("open"),
                      "play_space", ["remainder"]))
 
     order = {f: i for i, f in enumerate(PRECEDENCE)}
@@ -557,6 +661,11 @@ def surfaces(site_spec, *, nav_bake=None, radius_m=DEFAULT_CAPSULE_RADIUS_M,
         "bands": {k: dict(v) for k, v in BANDS.items()},
         "zones": zs,
         "exclusions": xs,
+        # The height a placement stands at. Not part of the manifest a planner
+        # writes (`surface-dressing/1` has no key for it); the planner reads it
+        # and puts the answer in each order's pos[2].
+        "tops": tops(site_spec),
+        "tops_rule": TOPS_RULE,
         "findings": mf + zf + xf,
     }
 

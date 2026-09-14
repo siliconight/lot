@@ -1430,6 +1430,135 @@ def ground_holes(site_spec, self_flooring=None):
     return holes
 
 
+# ---------------------------------------------------------------------------
+# The flat slabs a body walks on, as data
+# ---------------------------------------------------------------------------
+# Shared by the scene builder and by `site_surfaces.tops`, which tells the
+# dressing planner how high the surface is under a point. Cold run 9052 is why
+# that second reader exists: `site_surfaces` declared every zone at z 0, the
+# planner placed every one of 4,909 instances at z 0, and read off the shipped
+# scene 2,500 of them stood inside a slab -- 1,648 inside a 0.0974 m sidewalk
+# band, 739 in the road, 64 in a path, 49 in a kerb cut. A zone's own height
+# could not have fixed that: zones are boxes that overlap surfaces they do not
+# name. On the same run 627 instances stood on a different family's slab from
+# the one their zone names, and placing each at its zone's own surface would
+# still have left 618 more than 5 mm off. So the height comes from the slabs,
+# and the slabs come from the one function that draws them.
+#
+# Each slab is `{name, family, size, centre, yaw_deg, top}` in the GODOT frame
+# the box nodes take: `size` (x, y, z) and `centre` (x, y_height, z) exactly as
+# `_yaw_box_node` / `_box_node` are called, `yaw_deg` as passed to
+# `_yaw_box_node` (None for an axis-aligned `_box_node`), `top` the height of
+# the up face. The drawing reads the slab, so the drawing and the declaration
+# cannot drift apart without a test noticing.
+
+def _surface_slab(name, family, size, centre, yaw_deg, top):
+    return {"name": name, "family": family, "size": size, "centre": centre,
+            "yaw_deg": yaw_deg, "top": top}
+
+
+def path_slabs(site_spec):
+    """One slab per declared path, `path_<i>`, top at PATH_THICK."""
+    bld = {b["id"]: b for b in site_spec["buildings"]}
+    out = []
+    for i, p in enumerate(site_spec.get("paths", [])):
+        w = p.get("width", 3.0)
+        a = bld[p["from"]]["at"] if "from" in p else p["a"]
+        b2 = bld[p["to"]]["at"] if "to" in p else p["b"]
+        ax, ay = a
+        bx_, by_ = b2
+        cx, cy = (ax + bx_) / 2, (ay + by_) / 2
+        dx, dy = bx_ - ax, by_ - ay
+        length = math.hypot(dx, dy)
+        ang = math.degrees(math.atan2(dy, dx))
+        # path lies along its length (x), width across (z), thin (y)
+        # Extended DOWN by GROUND_SINK so it stays buried in the plate; the
+        # top face does not move, so every height check reads the same number.
+        out.append(_surface_slab(f"path_{i}", "path",
+                                 (length, PATH_THICK + GROUND_SINK, w),
+                                 (cx, (PATH_THICK - GROUND_SINK) / 2, -cy),
+                                 -ang, PATH_THICK))
+    return out
+
+
+def courtyard_slabs(site_spec):
+    """One axis-aligned slab per courtyard, top at COURT_THICK."""
+    out = []
+    for i, cdef in enumerate(site_spec.get("courtyards", [])):
+        cx, cy = cdef["at"]
+        sx, sy = cdef.get("size_x", 10), cdef.get("size_y", 10)
+        out.append(_surface_slab(f"courtyard_{i}", "courtyard",
+                                 (sx, COURT_THICK + GROUND_SINK, sy),
+                                 (cx, (COURT_THICK - GROUND_SINK) / 2, -cy),
+                                 None, COURT_THICK))
+    return out
+
+
+def street_slabs(street_roads):
+    """Per road, in draw order: its slab spans (`road`), then each kerb's
+    band pieces -- `sidewalk` at SIDEWALK_H, `kerbcut` at ROAD_THICK where
+    the kerb is dropped for a crossing."""
+    import site_streets
+    out = []
+    for road in street_roads:
+        i, w, ang = road.index, road.width, road.angle_deg
+        # the slab: the whole road, or from the far edge of the band of a
+        # road it ends on (`site_streets._slab`) -- two slabs lying
+        # coplanar over a junction's mouth would z-fight, and the other
+        # road's dropped kerb is that mouth's surface
+        # ... and less the boxes a lower-index road owns where it crosses
+        # through (an X): the slab and the band pieces stop at the box's
+        # edges and resume past them (`site_streets.drawn_spans`).
+        spans = site_streets.drawn_spans(road)
+        for k, (s0, s1) in enumerate(spans):
+            cx, cy = road.point((s0 + s1) / 2.0)
+            nm = f"road_{i}" if len(spans) == 1 else f"road_{i}_{k}"
+            out.append(_surface_slab(nm, "road",
+                                     (s1 - s0, ROAD_THICK + GROUND_SINK, w),
+                                     (cx, (ROAD_THICK - GROUND_SINK) / 2, -cy),
+                                     -ang, ROAD_THICK))
+        for kerb in road.kerbs:
+            pieces = [(t0, t1, is_cut, j) for j, (t0, t1, is_cut) in enumerate(kerb.spans)]
+            for t0, t1, is_cut, j in pieces:
+                t0, t1 = max(t0, road.slab[0]), min(t1, road.slab[1])
+                parts = site_streets._outside(t0, t1, road.gaps) if t1 > t0 else []
+                for kk, (p0, p1) in enumerate(parts):
+                    seg = p1 - p0
+                    if seg <= 0.05:
+                        continue
+                    scx, scy = road.point((p0 + p1) / 2.0, kerb.offset)
+                    h = ROAD_THICK if is_cut else SIDEWALK_H
+                    tag = f"{j}" if len(parts) == 1 else f"{j}_{kk}"
+                    nm = (f"kerbcut_{i}{kerb.side}_{tag}" if is_cut
+                          else f"sidewalk_{i}{kerb.side}_{tag}")
+                    out.append(_surface_slab(
+                        nm, "kerbcut" if is_cut else "sidewalk",
+                        (seg, h, road.sidewalk), (scx, h / 2, -scy), -ang, h))
+    return out
+
+
+def frontage_slabs(site_spec, street_roads, findings=None):
+    """One flush slab per `site_streets.frontages` strip, top at
+    FRONTAGE_THICK. `findings` receives what `frontages` reports."""
+    import site_streets
+    out = []
+    for n, fr in enumerate(site_streets.frontages(site_spec, street_roads,
+                                                  findings)):
+        road = next(r for r in street_roads if r.index == fr.road)
+        fcx, fcy = fr.centre(road)
+        out.append(_surface_slab(
+            f"frontage_{fr.road}{fr.side}_{n}", "frontage",
+            (fr.length, FRONTAGE_THICK + GROUND_SINK, fr.depth),
+            (fcx, (FRONTAGE_THICK - GROUND_SINK) / 2, -fcy), -road.angle_deg,
+            FRONTAGE_THICK))
+    return out
+
+
+#: The ground plate's up face (see GROUND_SINK). Outside every slab above,
+#: and inside the plate's rect, this is the surface.
+PLATE_TOP = -GROUND_SINK
+
+
 def _outdoor_nodes(site_spec, preview=False, self_flooring=None, skins=None,
                    cover_refs=None, signs=None):
     """(body_lines, subres_lines) for all Phase-2 outdoor geometry.
@@ -1445,7 +1574,6 @@ def _outdoor_nodes(site_spec, preview=False, self_flooring=None, skins=None,
     """
     body, sub = [], []
     skins = skins or {}
-    bld = {b["id"]: b for b in site_spec["buildings"]}
     if SIDEWALK_H > STEP_MAX:
         # RE-AIMED, not deleted. The old test asked whether the half-step band
         # had collapsed, which a kerb under the step ceiling makes unreachable
@@ -1492,32 +1620,15 @@ def _outdoor_nodes(site_spec, preview=False, self_flooring=None, skins=None,
             body += bl
             sub += sr
 
-    for i, p in enumerate(site_spec.get("paths", [])):
-        w = p.get("width", 3.0)
-        a = bld[p["from"]]["at"] if "from" in p else p["a"]
-        b2 = bld[p["to"]]["at"] if "to" in p else p["b"]
-        ax, ay = a
-        bx_, by_ = b2
-        cx, cy = (ax + bx_) / 2, (ay + by_) / 2
-        dx, dy = bx_ - ax, by_ - ay
-        length = math.hypot(dx, dy)
-        ang = math.degrees(math.atan2(dy, dx))
-        # path lies along its length (x), width across (z), thin (y)
-        # Extended DOWN by GROUND_SINK so it stays buried in the plate; the
-        # top face does not move, so every height check reads the same number.
-        bl, sr = _yaw_box_node(f"path_{i}",
-                               (length, PATH_THICK + GROUND_SINK, w),
-                               (cx, (PATH_THICK - GROUND_SINK) / 2, -cy), -ang,
+    # paths and courtyards: `path_slabs` / `courtyard_slabs` hold the geometry
+    for s in path_slabs(site_spec):
+        bl, sr = _yaw_box_node(s["name"], s["size"], s["centre"], s["yaw_deg"],
                                PATH_COLOR, skin=skins.get("path"))
         body += bl
         sub += sr
 
-    for i, cdef in enumerate(site_spec.get("courtyards", [])):
-        cx, cy = cdef["at"]
-        sx, sy = cdef.get("size_x", 10), cdef.get("size_y", 10)
-        bl, sr = _box_node(f"courtyard_{i}",
-                           (sx, COURT_THICK + GROUND_SINK, sy),
-                           (cx, (COURT_THICK - GROUND_SINK) / 2, -cy),
+    for s in courtyard_slabs(site_spec):
+        bl, sr = _box_node(s["name"], s["size"], s["centre"],
                            COURT_COLOR, skin=skins.get("courtyard"))
         body += bl
         sub += sr
@@ -1579,44 +1690,15 @@ def _outdoor_nodes(site_spec, preview=False, self_flooring=None, skins=None,
     street_roads = site_streets.roads(site_spec, street_findings)
     for f_ in street_findings:
         print(f"[lot] {f_}")
-    for road in street_roads:
-        i, w, ang = road.index, road.width, road.angle_deg
-        # the slab: the whole road, or from the far edge of the band of a
-        # road it ends on (`site_streets._slab`) -- two slabs lying
-        # coplanar over a junction's mouth would z-fight, and the other
-        # road's dropped kerb is that mouth's surface
-        # ... and less the boxes a lower-index road owns where it crosses
-        # through (an X): the slab and the band pieces stop at the box's
-        # edges and resume past them (`site_streets.drawn_spans`).
-        spans = site_streets.drawn_spans(road)
-        for k, (s0, s1) in enumerate(spans):
-            cx, cy = road.point((s0 + s1) / 2.0)
-            nm = f"road_{i}" if len(spans) == 1 else f"road_{i}_{k}"
-            bl, sr = _yaw_box_node(nm, (s1 - s0, ROAD_THICK + GROUND_SINK, w),
-                                   (cx, (ROAD_THICK - GROUND_SINK) / 2, -cy),
-                                   -ang, ROAD_COLOR, skin=skins.get("road"))
-            body += bl
-            sub += sr
-        for kerb in road.kerbs:
-            pieces = [(t0, t1, is_cut, j) for j, (t0, t1, is_cut) in enumerate(kerb.spans)]
-            for t0, t1, is_cut, j in pieces:
-                t0, t1 = max(t0, road.slab[0]), min(t1, road.slab[1])
-                parts = site_streets._outside(t0, t1, road.gaps) if t1 > t0 else []
-                for kk, (p0, p1) in enumerate(parts):
-                    seg = p1 - p0
-                    if seg <= 0.05:
-                        continue
-                    scx, scy = road.point((p0 + p1) / 2.0, kerb.offset)
-                    h = ROAD_THICK if is_cut else SIDEWALK_H
-                    tag = f"{j}" if len(parts) == 1 else f"{j}_{kk}"
-                    nm = (f"kerbcut_{i}{kerb.side}_{tag}" if is_cut
-                          else f"sidewalk_{i}{kerb.side}_{tag}")
-                    bl, sr = _yaw_box_node(
-                        nm, (seg, h, road.sidewalk), (scx, h / 2, -scy), -ang,
-                        SIDEWALK_COLOR,
-                        skin=skins.get("road" if is_cut else "sidewalk"))
-                    body += bl
-                    sub += sr
+    # the slabs and band pieces: `street_slabs` holds the geometry and says
+    # why each piece is where it is
+    for s in street_slabs(street_roads):
+        bl, sr = _yaw_box_node(
+            s["name"], s["size"], s["centre"], s["yaw_deg"],
+            ROAD_COLOR if s["family"] == "road" else SIDEWALK_COLOR,
+            skin=skins.get("sidewalk" if s["family"] == "sidewalk" else "road"))
+        body += bl
+        sub += sr
     # THE FRONTAGE: the walk carried on, flush, from a sidewalk's back edge
     # to the face of a building standing too close to it for the strip to be
     # a lot (`site_streets.frontages`). Flush rather than at kerb height, so
@@ -1624,15 +1706,9 @@ def _outdoor_nodes(site_spec, preview=False, self_flooring=None, skins=None,
     # sidewalk's skin, so the paved edge runs along the building and steps,
     # square, only at its corners.
     frontage_findings = []
-    for n, fr in enumerate(site_streets.frontages(site_spec, street_roads,
-                                                  frontage_findings)):
-        road = next(r for r in street_roads if r.index == fr.road)
-        fcx, fcy = fr.centre(road)
-        bl, sr = _yaw_box_node(
-            f"frontage_{fr.road}{fr.side}_{n}",
-            (fr.length, FRONTAGE_THICK + GROUND_SINK, fr.depth),
-            (fcx, (FRONTAGE_THICK - GROUND_SINK) / 2, -fcy), -road.angle_deg,
-            SIDEWALK_COLOR, skin=skins.get("sidewalk"))
+    for s in frontage_slabs(site_spec, street_roads, frontage_findings):
+        bl, sr = _yaw_box_node(s["name"], s["size"], s["centre"], s["yaw_deg"],
+                               SIDEWALK_COLOR, skin=skins.get("sidewalk"))
         body += bl
         sub += sr
     for f_ in frontage_findings:
