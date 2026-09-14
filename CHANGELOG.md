@@ -1,3 +1,87 @@
+## [0.71.0] - a building close to the sidewalk meets it
+
+The walker, cold run 9052 (rain), at the foot of the bank: the edge between
+the light paving and the dark ground runs straight, kinks on a diagonal, and
+runs on at a different offset -- "pathing here seems kind of random?".
+Measured before anything moved. This Lot's `assemble` on that run's candidate
+spec reproduces its `lot_assemble` scene byte for byte, and on the themed spec
+its `themed_site_assemble` scene, which is the `site.tscn` in the walk copy.
+Every paved polygon on the bank's front, in plan metres:
+
+- the north sidewalk band of road 0, y -26.15 to -23.15, x -78.5 to -25.1
+  (then the junction's dropped kerb to -13.9, then the band again);
+- the bank's door spur, `path_1`, x -53 to -49, y -23.6 to -22.15: 0.45 m of
+  it under the raised band, 1.0 m showing;
+- and nothing else. The bank's face is y -21.0 (`_footprint` 30 x 22), so the
+  2.15 m between it and the band was ground plate, and the plate wears the
+  lot's `asphalt_delco`.
+
+So the dogleg is the spur: 4 m of sidewalk skin standing 1.0 m proud of the
+band and stopping a metre short of the wall, whose side edges read as
+diagonals from eye height. The shop next door is the same shape deeper
+(`path_2`, 3.0 m showing in a 4.15 m strip).
+
+**The walk is paved to the face** (`site_streets.frontages`). A building face
+parallel to a sidewalk band, behind its back edge, less than `FRONTAGE_MAX`
+from it, gets the strip between them across the building's width: from the
+band's back edge to the face, within the stretch the band is drawn over (the
+slab, less its gaps and the junction boxes of roads crossing that kerb). The
+art direction's point 4 is the rule: commercial buildings meet the sidewalk,
+with parking beside or behind. `FRONTAGE_MAX` is `BAY_LENGTH`, 6.0 m -- a
+strip that cannot hold a parked car's length is residue, and a deeper one is
+the lot in front of a building, whose door path keeps meeting the sidewalk
+square. On 9052 the bank (2.15 m) and the shop (4.15 m) get one and the
+country club (13.15 m) keeps its lot and its 12.45 m spur.
+
+A corner building with a frontage on each of two crossing roads has the
+square between the strips, behind both bands, paved too, so the walk wraps
+the corner rather than leaving a notch of lot there (on cold run 9051's first
+candidate, the arena's corner at the cross street). A face that does not run
+along the road (a building at 45 degrees, whose footprint is an enclosing
+box, or a road off the plan axes), and a building with no measured footprint,
+get nothing. A strip that would overlap another building or another road is
+dropped and says so, `LOT_FRONTAGE_BLOCKED`; nothing on any cold-run
+candidate since 9040 (39 specs) raises it.
+
+The strip is drawn flush, `frontage_<road><side>_<n>`, at `FRONTAGE_THICK`
+(one surface tier above the courtyard, so a spur inside it is covered rather
+than z-fighting), in the sidewalk's skin. Flush rather than at kerb height so
+every door threshold and the navmesh stay where they were: the riser at the
+band's back edge is still there. `site_steps` counts `frontage_` as a walked
+surface, `site_surfaces` offers each strip to dressing as a `sidewalk` zone
+tagged `frontage`, and `site.markings.json` lists them.
+
+Measured after, cold run 9052's candidate: the greybox scene adds two
+`frontage_0L` bodies and changes nothing else -- `site_walk.tscn`,
+`site_navqa.tscn`, the gameplay, lights and slot manifests are byte-identical
+to 0.70.0's, and the assemble log is identical but for its output paths. The nav-QA walktest on
+the rebuilt scene: PASS, 3,149 navmesh polygons, every walker the distance
+the cold run's own walktest reported (players 364.6-368.1 m, 12/12). Lux
+re-applied (Heavy Rain) to both scenes and photographed with
+`tools/look_shots.py` from the same given stations: the bank's front is one
+straight edge from the band to the wall.
+
+Not changed, and said: the chain path b1 -> b2 still runs centre to centre at
+26 degrees across the lot between them; it is Level Factory's route, not a
+paved edge along the street, and not what the walker photographed. A path
+through a footprint was suspected of showing on the floors it runs under;
+frames inside both buildings show no band, so that is not a visible defect.
+Surface dressing is placed at y = 0 whatever the surface: on 9052, 1,549
+dressing instances already lie inside the raised sidewalk bands, and 39 more
+now lie under the 16 mm frontages -- that is the dressing layer's
+height, not this change's to fix.
+
+Tests (`test_site_frontage.py`, on 9052's spec): the bank and the shop get
+the exact strips and the club none; every sample between band and face
+across both buildings stands on a paved surface read back off the emitted
+scene (on 0.70.0, 244 of 276 were bare plate); beside the shop the paved edge
+turns square at its sides; a 45-degree building, an off-axis road and an
+unmeasured footprint get nothing; a kiosk in the strip drops it and says so;
+dressing sees the strips as sidewalk; the markings manifest names them; a
+corner building's corner square is paved. All eight fail on 0.70.0, and the
+corner test fails with the corner step removed. `test_step_thresholds` holds
+`FRONTAGE_THICK` to the walk ceiling beside the other flush slabs.
+
 ## [0.70.0] - a street of different cars, each facing the way its lane travels
 
 Zoo 0.79.0 rebuilt `simple_car` in four body styles and said what stood

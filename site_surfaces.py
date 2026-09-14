@@ -375,7 +375,8 @@ def zones(site_spec, *, ground=None, nav_bake=None, capsule=None):
     # along its kerb's centre line. A road with no sidewalk declares no
     # sidewalk zone.
     import site_streets
-    for road in site_streets.roads(site_spec):
+    street = site_streets.roads(site_spec)
+    for road in street:
         for j, rect in enumerate(corridor_boxes(road.a, road.b, road.width)):
             out.append(_zone(f"road_{road.index}_s{j:02d}", "ground", "road", rect,
                              z_lo, z_hi, "play_space",
@@ -389,6 +390,15 @@ def zones(site_spec, *, ground=None, nav_bake=None, capsule=None):
                                  "environmental_edge",
                                  ["street", "seam", f"road:{road.index}",
                                   f"kerb:{kerb.side}"]))
+    # the walk carried to a building's face is sidewalk, drawn from the same
+    # model: a strip the scene paves must not be offered as open plate
+    by_index = {r.index: r for r in street}
+    for n, fr in enumerate(site_streets.frontages(site_spec, street)):
+        out.append(_zone(f"frontage_{fr.road}{fr.side}_{n}", "sidewalk",
+                         "sidewalk", fr.rect(by_index[fr.road]), z_lo, z_hi,
+                         "environmental_edge",
+                         ["street", "frontage", f"road:{fr.road}",
+                          f"kerb:{fr.side}", f"building:{fr.building}"]))
 
     # --- wall bases: the seam where ground meets a building -----------------
     # The band is the footprint GROWN by one agent radius MINUS the footprint:

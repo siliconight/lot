@@ -128,7 +128,8 @@ def test_emitted_surfaces_are_walkable_or_steppable():
     walk = walk_max(r)
     for name, h in (("ROAD_THICK", lot_mod.ROAD_THICK),
                     ("PATH_THICK", lot_mod.PATH_THICK),
-                    ("COURT_THICK", lot_mod.COURT_THICK)):
+                    ("COURT_THICK", lot_mod.COURT_THICK),
+                    ("FRONTAGE_THICK", lot_mod.FRONTAGE_THICK)):
         assert h <= walk, f"{name} {h} is above the walk ceiling {walk:.4f}"
         assert lot_mod.SIDEWALK_H - h <= walk, (
             f"{name} {h} -> sidewalk {lot_mod.SIDEWALK_H} is "

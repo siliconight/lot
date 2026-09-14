@@ -21,6 +21,7 @@ Lot's own outdoor surfaces sit at:
     road                     ROAD_THICK
     path                     PATH_THICK
     courtyard                COURT_THICK
+    frontage                 FRONTAGE_THICK -- the walk carried to a face
     sidewalk    top 0.16     SIDEWALK_H   -- "concrete, raised curb"
 
 The three slabs are derived in lot.py from this limit rather than pinned, and
@@ -48,7 +49,7 @@ import re
 #: outdoor pass -- cover blocks, perimeter walls, blocker massing -- is an
 #: obstacle, and the height of an obstacle is not a step.
 WALKABLE_PREFIXES = ("Ground", "road_", "sidewalk_", "path_", "courtyard_",
-                     "kerbcut_")
+                     "kerbcut_", "frontage_")
 
 #: Ignore differences below this: coincident faces, float noise.
 FLUSH_M = 0.02

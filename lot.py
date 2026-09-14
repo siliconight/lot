@@ -547,13 +547,17 @@ SIDEWALK_H = round(STEP_MAX * KERB_FRACTION, 4)
 #: Flush -- but not zero. Two coplanar faces z-fight where a path crosses a
 #: road, so these tiers exist to separate them and for no other reason. 2 mm
 #: against a ~103 mm step ceiling is not a step, and check_steps will not see
-#: it. The ordering (road lowest, courtyard highest) is kept so overlaps
+#: it. The ordering (road lowest, frontage highest) is kept so overlaps
 #: resolve the way a reader expects.
 SURFACE_BASE = 0.010
 SURFACE_TIER = 0.002
 ROAD_THICK = SURFACE_BASE
 PATH_THICK = SURFACE_BASE + SURFACE_TIER
 COURT_THICK = SURFACE_BASE + 2 * SURFACE_TIER
+#: The walk carried to a building's face (`site_streets.frontages`). Above
+#: the path, because a door spur lies inside it and the frontage is the
+#: surface that should be seen there.
+FRONTAGE_THICK = SURFACE_BASE + 3 * SURFACE_TIER
 
 #: The rung below the ladder, for the one surface Lot does not own.
 #:
@@ -1613,6 +1617,26 @@ def _outdoor_nodes(site_spec, preview=False, self_flooring=None, skins=None,
                         skin=skins.get("road" if is_cut else "sidewalk"))
                     body += bl
                     sub += sr
+    # THE FRONTAGE: the walk carried on, flush, from a sidewalk's back edge
+    # to the face of a building standing too close to it for the strip to be
+    # a lot (`site_streets.frontages`). Flush rather than at kerb height, so
+    # every door threshold stays where the building put it; it wears the
+    # sidewalk's skin, so the paved edge runs along the building and steps,
+    # square, only at its corners.
+    frontage_findings = []
+    for n, fr in enumerate(site_streets.frontages(site_spec, street_roads,
+                                                  frontage_findings)):
+        road = next(r for r in street_roads if r.index == fr.road)
+        fcx, fcy = fr.centre(road)
+        bl, sr = _yaw_box_node(
+            f"frontage_{fr.road}{fr.side}_{n}",
+            (fr.length, FRONTAGE_THICK + GROUND_SINK, fr.depth),
+            (fcx, (FRONTAGE_THICK - GROUND_SINK) / 2, -fcy), -road.angle_deg,
+            SIDEWALK_COLOR, skin=skins.get("sidewalk"))
+        body += bl
+        sub += sr
+    for f_ in frontage_findings:
+        print(f"[lot] {f_}")
     # THE PAINT. Flat quads a hair above the road, tiled like every other
     # surface and with NO collision -- a marking is not a thing a body meets.
     # The quad is the decal's shape and place; with a `paint` skin (a

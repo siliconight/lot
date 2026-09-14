@@ -467,6 +467,196 @@ def roads(site_spec, findings=None) -> list:
     return out
 
 
+#: THE FRONTAGE. A building standing a few metres back from a sidewalk's
+#: back edge left that strip as bare plate, and the plate wears the lot's
+#: asphalt -- so the only light surface between the wall and the walk was a
+#: door spur, 4 m wide, standing 1.0 m (bank) or 3.0 m (strip retail) proud
+#: of the walk and stopping a metre short of the wall. Seen from the
+#: sidewalk at eye height its side edges read as diagonals and
+#: the paved edge as a dogleg (the walker, cold run 9052: "pathing here seems
+#: kind of random?"). The art direction's point 4 is that commercial
+#: buildings MEET the sidewalk, with parking beside or behind them.
+#:
+#: So the walk is paved to the face, across the building's width, wherever
+#: the strip between them is too shallow to be a lot. How shallow: a car
+#: parked nose-in needs its own length, and `BAY_LENGTH` is Lot's length of
+#: a parked car's space. A strip under that holds no car and is residue; a
+#: deeper one can be the lot in front of a building, and its door path
+#: keeps meeting the sidewalk square.
+FRONTAGE_MAX = BAY_LENGTH
+
+#: A strip thinner than this is a seam between two surfaces, not a strip.
+FRONTAGE_MIN = 0.05
+
+#: A building's rotation and a road's heading are both allowed this much
+#: slop, in degrees, when deciding a face runs parallel to the road. The
+#: footprint of a building at any other angle is its enclosing box
+#: (`site_extent.rotated_footprint`), which is not a face.
+PARALLEL_TOL_DEG = 0.01
+
+
+@dataclass
+class Frontage:
+    """The walk carried from a sidewalk's back edge to a building's face.
+
+    ``t0..t1`` metres along ``road``; ``back`` and ``face`` are signed
+    offsets across it (left +), the band's back edge and the wall."""
+    road: int
+    side: str
+    building: str
+    t0: float
+    t1: float
+    back: float
+    face: float
+
+    @property
+    def depth(self) -> float:
+        return abs(self.face - self.back)
+
+    @property
+    def length(self) -> float:
+        return self.t1 - self.t0
+
+    def centre(self, road):
+        return road.point((self.t0 + self.t1) / 2.0, (self.back + self.face) / 2.0)
+
+    def rect(self, road) -> tuple:
+        """(x0, y0, x1, y1): the plan AABB. Exact, since a frontage exists
+        only where the road runs along a plan axis."""
+        pts = [road.point(t, o) for t in (self.t0, self.t1)
+               for o in (self.back, self.face)]
+        xs, ys = [p[0] for p in pts], [p[1] for p in pts]
+        return (min(xs), min(ys), max(xs), max(ys))
+
+
+def _on_axis(deg: float) -> bool:
+    r = deg % 90.0
+    return min(r, 90.0 - r) <= PARALLEL_TOL_DEG
+
+
+def _overlap(a, b) -> bool:
+    return (min(a[2], b[2]) - max(a[0], b[0]) > 1e-6
+            and min(a[3], b[3]) - max(a[1], b[1]) > 1e-6)
+
+
+def _road_box(road) -> tuple:
+    """Plan AABB of a road's carriageway and both bands, end to end."""
+    half = road.width / 2.0 + road.sidewalk
+    pts = [road.point(t, o) for t in (0.0, road.length) for o in (-half, half)]
+    xs, ys = [p[0] for p in pts], [p[1] for p in pts]
+    return (min(xs), min(ys), max(xs), max(ys))
+
+
+def frontages(site_spec, roads_list, findings=None) -> list:
+    """Every `Frontage` on the site: a building face parallel to a sidewalk,
+    behind its back edge, less than `FRONTAGE_MAX` from it.
+
+    Along the road it spans the building, within the stretch the band is
+    drawn over (the slab, less its gaps and the junction boxes of roads
+    crossing that kerb), so it never paves a junction's mouth. A piece that
+    would overlap another building or another road's carriageway or bands is
+    dropped and said into ``findings``: that ground belongs to something
+    else, and deciding whose is not a paving question."""
+    import site_extent
+    rects = {}
+    for b in site_spec.get("buildings", []) or []:
+        rect = site_extent.rotated_footprint(b)
+        if rect is None or not _on_axis(float(b.get("rot", 0) or 0)):
+            continue
+        rects[str(b.get("id", "?"))] = rect
+    out = []
+    for road in roads_list:
+        if not road.sidewalk or not _on_axis(road.angle_deg):
+            continue
+        others = [_road_box(r) for r in roads_list if r is not road]
+        for kerb in road.kerbs:
+            back = kerb.sign * (road.width / 2.0 + road.sidewalk)
+            holes = list(road.gaps) + [crossing_box(c) for c in kerb.cuts
+                                       if c.kind == "road"]
+            for bid, (x0, y0, x1, y1) in rects.items():
+                ts, offs = [], []
+                for x, y in ((x0, y0), (x1, y0), (x0, y1), (x1, y1)):
+                    dx, dy = x - road.a[0], y - road.a[1]
+                    ts.append(dx * road.along[0] + dy * road.along[1])
+                    offs.append(dx * road.perp[0] + dy * road.perp[1])
+                near = min(offs) if kerb.sign > 0 else max(offs)
+                gap = (near - back) * kerb.sign
+                if not (FRONTAGE_MIN < gap < FRONTAGE_MAX):
+                    continue
+                t0 = max(min(ts), road.slab[0])
+                t1 = min(max(ts), road.slab[1])
+                if t1 - t0 <= FRONTAGE_MIN:
+                    continue
+                for p0, p1 in _outside(t0, t1, holes):
+                    if p1 - p0 <= FRONTAGE_MIN:
+                        continue
+                    fr = Frontage(road=road.index, side=kerb.side, building=bid,
+                                  t0=p0, t1=p1, back=back, face=near)
+                    box = fr.rect(road)
+                    blocked = [o for o, r in rects.items()
+                               if o != bid and _overlap(box, r)]
+                    if blocked or any(_overlap(box, r) for r in others):
+                        if findings is not None:
+                            findings.append(
+                                f"LOT_FRONTAGE_BLOCKED: the {fr.depth:.2f} m "
+                                f"strip between {bid}'s face and road "
+                                f"{road.index}'s {kerb.side} sidewalk "
+                                f"({p0:.1f}-{p1:.1f} m along it) overlaps "
+                                + (", ".join(blocked) if blocked
+                                   else "another road")
+                                + "; left unpaved.")
+                        continue
+                    out.append(fr)
+    _turn_corners(out, roads_list, rects, others_of={
+        r.index: [_road_box(o) for o in roads_list if o is not r]
+        for r in roads_list})
+    return out
+
+
+def _turn_corners(frs, roads_list, rects, others_of):
+    """Where one building has a frontage on each of two crossing roads, the
+    walk wraps its corner: the square between the two strips, behind both
+    bands, is paved too. Left out, a corner building meets both sidewalks
+    and keeps a notch of lot at the corner -- the same dogleg, turned 90
+    degrees. The square is added by running one strip on along its road to
+    the other road's band; it is kept only if it still overlaps nothing."""
+    by_index = {r.index: r for r in roads_list}
+
+    def along(road, p):
+        return ((p[0] - road.a[0]) * road.along[0]
+                + (p[1] - road.a[1]) * road.along[1])
+
+    for fa in frs:
+        ra = by_index[fa.road]
+        for fb in frs:
+            rb = by_index[fb.road]
+            if fb is fa or fb.building != fa.building or rb is ra:
+                continue
+            if abs(ra.along[0] * rb.along[0] + ra.along[1] * rb.along[1]) > 1e-6:
+                continue                                  # not crossing square
+            # fb's face and back edge, as stations along fa's road
+            face_a = along(ra, rb.point(fb.t0, fb.face))
+            back_a = along(ra, rb.point(fb.t0, fb.back))
+            # fa's face, as a station along fb's road: fb must reach it
+            face_b = along(rb, ra.point(fa.t0, fa.face))
+            if min(abs(fb.t0 - face_b), abs(fb.t1 - face_b)) > 1e-6:
+                continue
+            if abs(fa.t0 - face_a) <= 1e-6 and back_a < fa.t0:
+                t0, t1 = back_a, fa.t1
+            elif abs(fa.t1 - face_a) <= 1e-6 and back_a > fa.t1:
+                t0, t1 = fa.t0, back_a
+            else:
+                continue
+            grown = Frontage(road=fa.road, side=fa.side, building=fa.building,
+                             t0=t0, t1=t1, back=fa.back, face=fa.face)
+            box = grown.rect(ra)
+            if any(_overlap(box, r) for o, r in rects.items() if o != fa.building):
+                continue
+            if any(_overlap(box, r) for r in others_of[fa.road]):
+                continue
+            fa.t0, fa.t1 = t0, t1
+
+
 def _marking(kind, road, t, offset, along, across, color, **extra):
     x, y = road.point(t, offset)
     m = {"kind": kind, "road": road.index, "at": [round(x, 4), round(y, 4)],
@@ -611,4 +801,10 @@ def manifest(site_spec, roads_list=None, findings=None) -> dict:
                                        for c in k.cuts]} for k in r.kerbs]}
                   for r in rl],
         "markings": markings(rl),
+        "frontages": [{"road": f.road, "side": f.side, "building": f.building,
+                       "t": [round(f.t0, 4), round(f.t1, 4)],
+                       "depth": round(f.depth, 4),
+                       "rect": [round(v, 4) for v in f.rect(by_index[f.road])]}
+                      for by_index in [{r.index: r for r in rl}]
+                      for f in frontages(site_spec, rl, findings)],
     }
