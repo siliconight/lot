@@ -298,3 +298,20 @@ def test_a_cut_of_any_width_keeps_the_blank_blade_and_never_a_stop_sign():
     blanks = [p for p in pieces if p["species"] == "sign_post"
               and p["breaks"].startswith("crossing@")]
     assert blanks
+
+
+def test_every_hydrant_turns_its_pumper_outlet_to_the_road():
+    """Zoo 0.85.0's hydrant carries its pumper outlet on -Y, the face
+    `plate_facing` reads. Until 0.72.2 both kerbs wrote the road's angle, so
+    every R-kerb hydrant pointed its pumper at the buildings (cold run 9052's
+    `fire_hydrant_37`)."""
+    roads = site_streets.roads(_probe())
+    (road,) = roads
+    hydrants = [p for p in site_furniture.plan_furniture(roads)
+                if p["species"] == "fire_hydrant"]
+    assert {p["kerb"] for p in hydrants} == {"L", "R"}
+    for p in hydrants:
+        fx, fy = site_furniture.plate_facing(p["yaw"])
+        cx, cy = road.point(p["t"], 0.0)
+        toward = (cx - p["at"][0]) * fx + (cy - p["at"][1]) * fy
+        assert toward > 0, p

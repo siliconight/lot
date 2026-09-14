@@ -1,3 +1,23 @@
+## [0.72.2] - a hydrant turns its pumper outlet to the road
+
+Zoo 0.85.0 rebuilt `fire_hydrant` as an American dry-barrel hydrant with its
+4 1/2 in pumper outlet on the module's -Y, the face `plate_facing` reads, and
+said what stood between it and a street of them: Lot. The per-cut loop in
+`plan_furniture` wrote every hydrant at the road's own angle on both kerbs.
+At that yaw -Y points `(sin a, -cos a)`, which is `-perp`: toward the road
+from the L kerb (`sign` +1, left of travel) and toward the buildings from the
+R kerb. Cold run 9052's only hydrant, `fire_hydrant_37` (`cover_81`), stands
+on road 1's R kerb, so in the walk copy its pumper faced the shop fronts.
+
+The R kerb now turns the hydrant round, the same 180 degrees the bus
+shelter's `back` already carries. The footprint is unchanged (a half turn
+keeps the box). `test_every_hydrant_turns_its_pumper_outlet_to_the_road`
+checks every hydrant on `coldrun_kerb_probe` (both kerbs) points
+`plate_facing` at the road's centre line; it fails on 0.72.1.
+
+Not verified: no Godot frame of a turned hydrant yet; the next cold run's
+walk copy is the first.
+
 ## [0.72.1] - a diagonal path reaches the building it names
 
 Cold run 9052's chain path `path_0`, `b1` at plan (4, -10) to `b2` at

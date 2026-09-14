@@ -511,7 +511,11 @@ def plan_furniture(roads_list, buildings=(), markers=(), findings=None) -> list:
                 # tools/probe_street_control.py. A stop sign belongs to a
                 # junction approach (`plan_traffic_control`); the corner of
                 # a cut keeps the blank blade, whatever its width.
-                for species, dt, yaw_extra in (("fire_hydrant", half + 2.5, 0.0),
+                # the hydrant's pumper outlet is Zoo's -Y (0.85.0), which at
+                # the road's angle points -perp: at the road from the L kerb,
+                # at the buildings from the R kerb unless it is turned round
+                pumper = 0.0 if kerb.sign > 0 else 180.0
+                for species, dt, yaw_extra in (("fire_hydrant", half + 2.5, pumper),
                                                ("litter_bin", -(half + 1.5), 0.0),
                                                ("sign_post", half + 1.0, 90.0)):
                     w, d, h = SPECIES[species]
