@@ -1206,7 +1206,11 @@ def write_site_slots(site_spec, out_path):
     so the SAME Zoo kit build that dresses a building dresses the street.
 
     Only species pieces are slots; a square 0.58-form piece has no species
-    and stays the box it was. Returns the number of slots written."""
+    and stays the box it was. A piece's own ``style`` (a parked car's,
+    `site_parking.car_for_bay`) is the slot's; a piece with none is style 1,
+    as every slot was until 0.70.0. Zoo's `plan_kit` reads the slot's style
+    into the stem, so two styles of one shape are two modules. Returns the
+    number of slots written."""
     slots = []
     for i, cv in enumerate(site_spec.get("cover", []) or []):
         sp = cv.get("species")
@@ -1217,7 +1221,8 @@ def write_site_slots(site_spec, out_path):
         base = SIDEWALK_H if cv.get("base") == "sidewalk" else 0.0
         slots.append({
             "slot_id": f"cover_{i}", "role": "prop", "size_mod": "full",
-            "style": 1, "material": COVER_MATERIALS.get(sp, "metal_painted"),
+            "style": int(cv.get("style") or 1),
+            "material": COVER_MATERIALS.get(sp, "metal_painted"),
             "current_ref": "prop_greybox_01", "kit_axis": "theme",
             "species": sp,
             "transform": {"translation": [round(cx, 4), round(cy, 4),
@@ -1302,7 +1307,11 @@ def cover_module_refs(site_spec, prefix, out_dir=None):
         sp, dims = cv.get("species"), cv.get("dims")
         if not sp or not dims:
             continue
-        stem = cover_module_stem(sp, theme, style, dims)
+        # The piece's own style when it carries one, as `write_site_slots`
+        # wrote it on the slot Zoo built from; the site's style otherwise.
+        # At the site's one style a style-2 car would ask for the style-1
+        # file, which is another car or no file at all.
+        stem = cover_module_stem(sp, theme, int(cv.get("style") or style), dims)
         glb = os.path.abspath(os.path.join(str(cm["dir"]), stem + ".glb")).replace("\\", "/")
         if not os.path.isfile(glb):
             findings.append((CODE_COVER_MODULE_MISSING,

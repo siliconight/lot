@@ -1,3 +1,106 @@
+## [0.70.0] - a street of different cars, each facing the way its lane travels
+
+Zoo 0.79.0 rebuilt `simple_car` in four body styles and said what stood
+between it and a street of them: Lot. Measured before anything moved, by
+re-running this Lot's `assemble` on cold run 9050's candidate spec
+(`bank_block_001/candidate_seed_9050/site.json`) and checking the parking
+plan against that run's own `lot_assemble` output (Lot 0.69.4, commit
+2a689ff): identical, 42 cars. Every one was `site_parking.CAR`, 1.75 x 4.30
+x 1.45, and `write_site_slots` wrote `"style": 1` on every slot, so Zoo's
+`plan_kit` planned ONE car module for 42 bays (43 slots with the cover
+planner's car) and the street was one car forty-two times.
+
+And 19 of the 42 faced into the traffic. `plan_parking` gave both kerbs
+`road.angle_deg + 90`. Zoo's car is nose -Y (its recipe; and the built
+1.80 x 4.70 x 1.73 module puts the windshield at glTF +Z, the tail lamps and
+plate at -Z), and a slot yaw is a counterclockwise plan rotation (0.69.4,
+measured in Godot 4.7 on the sign blade, which faces -Y too), so the nose
+of a car at yaw is `(sin yaw, -cos yaw)` and at `angle + 90` it points +t
+on BOTH kerbs. Traffic keeps right: +t drives the R half, so every car on an
+L kerb pointed against its lane. Two instruments agree on the count: a probe
+reading the written slots against `site_streets.right_side` (19), and a
+sweep that uses no street table at all -- the car's offset from the centre
+line against its nose's right-hand normal -- which also found 4 of 11 on
+`coldrun_kerb_probe`, 11 of 22 on `gs_heist` and 17 of 36 on `vault_job`.
+
+**A car faces its lane.** `plan_parking` takes the lane's travel from the
+kerb (`lane_travel`: the kerb on a +t driver's right is `right_side(+1)`)
+and turns the nose along it (`yaw_facing`, the inverse of `nose`). On an
+east-west road the R kerb stays 90 and the L kerb is 270; on a north-south
+road 180 and 0. A left-hand site is still one table away. Lot has no
+perpendicular or lot bays -- `site_streets.bays` makes parallel bays only --
+and the cars the cover planner stands (`across_yaw`, turned across the
+sightline they break) are not parked in a lane and keep their rule.
+
+**A car per bay from a table.** `site_parking.CARS` holds four shapes --
+hatchback 1.60 x 3.80 x 1.40, the old default 1.75 x 4.30 x 1.45, sedan
+1.75 x 4.80 x 1.42, SUV 1.80 x 4.70 x 1.73, weighted 2:3:3:2 -- and
+`STYLES` is 2. Each shape is inside the bay (under 6.0 long, under 2.2
+wide), over `MIN_COVER_HEIGHT`, inside the genome's ranges, and -- read off
+Zoo 0.79.0's `car_forms.FORMS` -- the first, third and fourth each lie in
+exactly one body-style window (hatchback, sedan, SUV) while the default
+lies in two and Zoo's seed picks. The sizes are the ones Zoo's changelog
+proposed, near a Metro, a Taurus-class sedan and a first Explorer; they
+are not measurements of those cars. `car_for_bay` draws the row and the
+style from a SHA-1 of the road's index, its end points to the centimetre,
+the kerb and the bay -- not `hash()`, which is salted per process, and not
+the occupancy hash, whose value for the bay already decided the bay is
+occupied. A car that does not fit its bay (it would overlap what stands, or
+a marker's clearance) takes the longest smaller row that does and the
+record says `car_asked`; every smaller row lies inside the default car's
+rect, so every bay 0.69.4 filled is still filled -- on 9050 the same 42
+bays in the same order, and the furniture and cover plans equal to 0.69.4's.
+
+Why 8. Zoo seeds a module from its stem, and the stem is species, theme,
+style and dims -- nothing else Lot writes -- so a second car of one shape
+needs a second style, and the table times the styles bounds the parked-car
+modules at 8. Each is a Blender kit build and about 3,000 tris of unique
+mesh (Zoo measured 2,884-3,328 per style); instance tris are what they
+were, since the car count does not change. On 9050's 42 cars that is 8
+modules, 2 to 12 uses each. Zoo's own `plan_kit`, run on the slot manifest
+this writes, plans exactly the 8 stems `cover_module_refs` now resolves, no
+species fallbacks and no stem collisions. Zoo's pure `car_forms.resolve`
+predicts the eight as a two-door and a four-door hatchback, sedans at 4.30
+(style 1) and 4.80 (both), a hatchback at 4.30 (style 2) and two SUVs; the
+four style-1 builds Zoo made for its own changelog match that prediction in
+door count and cladding.
+
+**The slot contract.** A parked car's cover record carries `style` and
+`car` (and `car_asked` when it swapped). `write_site_slots` writes a piece's
+own style on its slot (1 when it has none, as before). `cover_module_refs`
+resolves a piece at its own style, falling back to the site's: at the
+site's one style a style-2 car asks for the style-1 file, which is another
+car. Zoo needs nothing new -- `plan_kit` already reads a slot's style into
+the stem (`int(s.get("style") or style or 1)`).
+
+Measured after, plan only (nothing standing, no markers), every Lot spec
+with parked cars: `coldrun_kerb_probe` 11 cars, 7 modules; `gs_heist` 22, 6;
+`vault_job` 36, 8; none against its lane.
+
+Not verified: no kit build of the eight and no Godot frame of the street;
+the facing is derived from 0.69.4's Godot measurement and the built GLB's
+node positions, not from a render of a parked car. Frame cost of eight
+unique car meshes on the walker's machine is not measured. A bay on a
+diagonal road still takes a footprint quantised to 0/90
+(`site_cover.footprint`), as it did.
+
+Tests (`test_site_parking.py`): every bay picks the same car, style and yaw
+in this process and in two interpreters at different `PYTHONHASHSEED`s; a
+street of six or more cars parks more than one module, counted on the slot
+manifest and bounded by the table; a parked car's kerb is on its nose's
+right on both kerbs of roads running each way and at 30 degrees, from
+geometry alone; every car lies inside its painted bay with a collision box
+of its own dims; the mix fills the bays the single car filled and says what
+it swapped; a piece resolves to the module of its own style. Against
+0.69.4's `site_parking.py` and `lot.py` all six fail -- the module, facing
+and style-resolution tests on the defect itself, the other three first on
+fields and a table that did not exist. Each was also broken deliberately
+against the new code and failed: a salted `hash()` for the SHA-1, a 6.2 m
+row, the default car's footprint for every car, no smaller car on a misfit,
+one yaw for both kerbs, the travel sign flipped, one shape at one style.
+Two 0.69.4 tests pinned the single car (yaw 90 on both kerbs, a 0.725 m
+slot centre) and now read the car's own dims and kerb.
+
 ## [0.69.4] - stop signs stand at junctions, by the street rules
 
 The walker, cold runs 9046 and 9048: stop signs in pairs at footpath
