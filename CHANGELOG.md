@@ -1,3 +1,94 @@
+## [0.74.0] - the blade gets a box, and the name it is built under
+
+0.73.0 named the legend every `sign_post` carries and said the two halves
+change together. This is Lot's side of that, and it lands FIRST on purpose --
+see below, because the order is the part of this change that could have gone
+wrong and 0.73.0 had only half the reason.
+
+THE SLOT WAS THE PLACEHOLDER'S BOX. `SPECIES["sign_post"]` is 0.10 x 0.10 x
+2.40 m, and its comment says what it is: "Dims are the Zoo genomes'
+defaults". Zoo's default was the pole `tools/new_species.py` minted, so the
+slot every post wrote was a pole-shaped hole -- and Zoo's `fit_exact` maps a
+module's bounds onto its slot exactly. A 30-inch pedestrian diamond built
+into that comes out ten centimetres across: the same defect as a bare pole,
+and harder to see in a frame than the bare pole was.
+
+`BLADE_DIMS` is the slot each blade asks for, and every number in it is a
+standard plus a mounting height rather than a choice:
+
+    no_parking     0.3048 x 0.060 x 2.4384   R8-3a at 12 x 12 in, bottom 7 ft
+    ped_crossing   1.0776 x 0.060 x 3.2112   W11-2 at 30 x 30 in over the
+                                             W16-7P plaque at 24 x 12 in,
+                                             bottoms at 7 ft and 5 ft
+    bus_stop       0.3048 x 0.060 x 2.5908   a 12 x 18 in transit flag, 7 ft
+
+Mounting heights are MUTCD Section 2A.18 (7 ft to the bottom of a major sign
+where parking or pedestrian movements occur, 5 ft to a plaque under it). **A
+30 x 30 in diamond is a 30 in SQUARE on its point**, so it needs 30 * sqrt(2)
+= 42.43 in of box and its top lands at 10.5 ft -- the crossing sign is three
+and a half times the width of the parking sign and a third again as tall,
+which is what those two signs are. Zoo's `core.sign_blade_forms.MODULE_DIMS`
+is this table; neither repo can import the other, so both pin the numbers to
+literals in their own tests.
+
+THE MODULE GREW; NOTHING MOVED. `FOOTPRINT["sign_post"]` is the pole, the way
+`FOOTPRINT["traffic_signal"]` has been since 0.72.0 for an 8 m mast arm whose
+slot box would otherwise lie across the carriageway. `_free`,
+`_clear_of_cuts` and a piece's `along` all read the footprint, so a 1.08 m
+diamond changes no station on any kerb and no line of the census; only `dims`
+(the slot Zoo builds to) and the module's height take the blade.
+`test_a_wider_blade_does_not_move_a_single_post` checks that against the
+pole's own numbers rather than against a recorded baseline, because a
+baseline is a copy of the thing under test.
+
+`cover_module_stem` SPELLS `_f<form>` NOW, and the other two mirrors did not
+have to change: `zoo_keeper.core.kit.module_stem` and
+`deli_counter.themed_tscn.module_stem` have both written it since Zoo 0.84.0.
+Checked rather than assumed -- Deli Counter 0.138.0 untouched resolves a
+sign-post slot to `prop_sign_post_delco_1997_01_w30_d6_h244_fno_parking`.
+This was the only one of the three that never grew it.
+
+WHY THIS SIDE GOES FIRST, AND WHY IT CARRIES A LADDER. 0.73.0's reason for
+holding back was sound: spelling `_f<form>` against a genome listing no forms
+resolves a name Zoo has not built, and every post falls to greybox. What it
+did not say is that landing ZOO first breaks it the other way round -- Zoo's
+`plan_kit` then builds ONLY the dressed name while this file asks for the
+plain one, and every post falls to greybox again. Both single-repo orders are
+worse than the bare pole they replace, so "they change together" is not an
+order, it is a hope.
+
+`cover_module_refs` asks for the dressed name and then the undressed one --
+the same ladder `deli_counter.themed_tscn.resolve_slot_choice` already climbs,
+cited there as the reason a resolver that cannot read a genome can still name
+every module the kit could have built. With that rung in, this release
+against Zoo 0.95.0 resolves the plain module and stands the bare pole that
+was there yesterday, and against Zoo 0.96.0 it stands the sign. The window
+between the two costs nothing and the order stops being load-bearing -- which
+is the point, because a cold run hashes both repos at `--begin` and nobody
+gets to sequence them by hand.
+
+A blade nobody has drawn gets the same treatment rather than a greybox: a
+street-name plate (MUTCD D3-1), when `roads[].name` exists to carry one, will
+drop through Zoo's `honour_dressing` into its `dressing_fallbacks` report and
+through this ladder onto the bare pole.
+
+MEASURED END TO END, through both repos: `central_vault`, `septa_station` and
+`warehouse_district` (12, 8 and 10 posts, all three blades between them). The
+stems Zoo's `plan_kit` plans and the stems `cover_module_stem` resolves are
+the same list on all three, with no species fallbacks and no dressing
+fallbacks. On the single-road `coldrun_kerb_probe` all 11 posts carry a blade
+and agree.
+
+Four tests fail on 0.73.0: the slot carries the blade's own box and the stem
+spells it, the blade table is the MUTCD arithmetic, a wider blade moves no
+post, and the resolver falls back from the dressed name to the plain one in
+both directions. Suite 536 passing.
+
+NOT VERIFIED HERE. Zoo 0.96.0 draws the blades and its own frames show the
+four posts against a ground plane; nothing has stood a street of them, and no
+walk package has been rebuilt. The `LOT_STOP_SIGN_OFFSET_SHORT` findings on
+`central_vault` are 0.73.0's and unrelated -- a 1 m sidewalk band, not a sign.
+
 ## [0.73.0] - a corner is one place, and a post carries a legend
 
 The walker, cold run 9060 (`club_block_001`, `_runs/walk_9060_rain`), on one

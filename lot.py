@@ -1211,7 +1211,7 @@ def _kit_index(module_dir: str) -> dict:
 
 
 def cover_module_stem(species: str, theme: str, style: int,
-                      dims) -> str:
+                      dims, form: str = None) -> str:
     """The file Zoo builds for a prop slot with a species hint, by NAME.
 
     THE THIRD COPY OF ONE RULE. `deli_counter/themed_tscn.module_stem` and
@@ -1223,9 +1223,23 @@ def cover_module_stem(species: str, theme: str, style: int,
     site's cover the way Deli Counter resolves a building's props: a prop
     slot with dims (w, d, h) in centimetres and a species becomes
     `prop_<species>_<theme>_<style:02d>_w<w>_d<d>_h<h>`.
+
+    ``form`` (0.74.0) is the slot's dressing, spelled `_f<form>` exactly as
+    the other two mirrors spell it. THEY DID NOT HAVE TO CHANGE: both
+    `kit.module_stem` and `themed_tscn.module_stem` have written `_f<form>`
+    since Zoo 0.84.0, and this was the only one of the three that never
+    grew it. 0.73.0 held it back because spelling it against a genome
+    listing no forms would have resolved a name Zoo had not built; what the
+    changelog did not say is that landing Zoo's half FIRST breaks it the
+    other way round, because `plan_kit` then builds only the dressed name
+    and this asked only for the plain one. `cover_module_refs` climbs the
+    dressed-then-plain ladder for that reason -- the same one
+    `deli_counter.themed_tscn.resolve_slot_choice` already climbs -- so this
+    side is safe against either Zoo and the order stops mattering.
     """
     w, d, h = (int(round(float(v) * 100)) for v in dims)
-    return f"prop_{species}_{theme}_{int(style):02d}_w{w}_d{d}_h{h}"
+    base = f"prop_{species}_{theme}_{int(style):02d}_w{w}_d{d}_h{h}"
+    return base + f"_f{form}" if form else base
 
 
 def write_site_slots(site_spec, out_path):
@@ -1262,14 +1276,13 @@ def write_site_slots(site_spec, out_path):
             "breaks": cv.get("breaks", ""),
         })
         # THE BLADE A POST CARRIES, as Zoo's dressing `form` (0.84.0):
-        # `site_furniture` names one on every `sign_post` it stands, and
-        # Zoo's `honour_dressing` drops a form the species' genome does not
-        # list and builds the plain module -- so writing it costs nothing
-        # today and lands in Zoo's `dressing_fallbacks` gap report, which is
-        # where the ask belongs. `cover_module_stem` does NOT yet spell
-        # `_f<form>`: it gains that in the same change as the genome, or Lot
-        # would resolve a name Zoo has not built and every post would fall
-        # back to its greybox.
+        # `site_furniture` names one on every `sign_post` it stands, Zoo
+        # 0.96.0's genome lists the three, and `cover_module_stem` spells
+        # `_f<form>` (0.74.0). A form no genome lists is still dropped by
+        # Zoo's `honour_dressing` and still lands in its `dressing_fallbacks`
+        # report, and `cover_module_refs` falls back to the undressed name,
+        # so a street-name blade nobody has drawn costs a bare pole rather
+        # than a greybox.
         if cv.get("blade"):
             slots[-1]["form"] = str(cv["blade"])
     doc = {
@@ -1350,12 +1363,27 @@ def cover_module_refs(site_spec, prefix, out_dir=None):
         # wrote it on the slot Zoo built from; the site's style otherwise.
         # At the site's one style a style-2 car would ask for the style-1
         # file, which is another car or no file at all.
-        stem = cover_module_stem(sp, theme, int(cv.get("style") or style), dims)
-        glb = os.path.abspath(os.path.join(str(cm["dir"]), stem + ".glb")).replace("\\", "/")
-        if not os.path.isfile(glb):
+        # THE DRESSED NAME, THEN THE PLAIN ONE. A post carrying a blade
+        # asks for `..._fno_parking` and falls back to the module a Zoo
+        # that cannot draw the blade still builds -- the bare pole, which is
+        # what stood here before 0.74.0. Without the ladder this file and
+        # Zoo's genome would have to land in the same instant or every post
+        # on the site goes to greybox, in whichever order they landed.
+        st = int(cv.get("style") or style)
+        tried = ([cover_module_stem(sp, theme, st, dims, form=cv["blade"])]
+                 if cv.get("blade") else [])
+        tried.append(cover_module_stem(sp, theme, st, dims))
+        stem, glb = None, None
+        for cand in tried:
+            path = os.path.abspath(os.path.join(str(cm["dir"]),
+                                                cand + ".glb")).replace("\\", "/")
+            if os.path.isfile(path):
+                stem, glb = cand, path
+                break
+        if stem is None:
             findings.append((CODE_COVER_MODULE_MISSING,
-                             f"cover_{i} ({sp}): no {stem}.glb in {cm['dir']}; "
-                             f"the box stays"))
+                             f"cover_{i} ({sp}): no {' or '.join(tried)}.glb "
+                             f"in {cm['dir']}; the box stays"))
             continue
         # THE INDEX'S VERDICT, READ. Zoo writes `site_kit.built.json` beside
         # the modules with a `status` per row; a module that failed exact

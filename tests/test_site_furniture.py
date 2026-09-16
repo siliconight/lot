@@ -441,20 +441,119 @@ def test_every_post_names_the_blade_it_carries_and_a_corner_holds_one_post():
 
 def test_the_slot_carries_the_blade_as_zoos_dressing_form(tmp_path):
     """Lot's half of the ask: the slot says which legend the post wants, in
-    the field Zoo's `honour_dressing` reads. Zoo's `sign_post` genome lists
-    no forms yet, so it drops the field and builds the plain module -- the
-    ask lands in Zoo's `dressing_fallbacks` report, which is where a gap
-    belongs."""
+    the field Zoo's `honour_dressing` reads, and the slot Zoo builds to is
+    the BLADE's box rather than the pole's.
+
+    0.73.0 wrote the form and deliberately left `_f<form>` out of the stem,
+    because against a genome listing no forms it would have resolved a name
+    Zoo had not built. Zoo 0.96.0 lists them, so the stem spells it -- and
+    `cover_module_refs` falls back to the undressed name, which is what
+    makes either landing order survivable.
+    """
     lot.assemble(os.path.join(SPECS, "coldrun_kerb_probe.json"), str(tmp_path))
     doc = json.loads((tmp_path / "coldrun_kerb_probe.slots.json").read_text(encoding="utf-8"))
     posts = [s for s in doc["slots"] if s["species"] == "sign_post"]
     assert posts
-    assert all(s.get("form") for s in posts), posts
-    # and the stem Lot resolves is still the one Zoo builds today: adding
-    # `_f<form>` here before the genome lists it would send every post back
-    # to its greybox
+    for s in posts:
+        blade = s.get("form")
+        assert blade in site_furniture.BLADE_DIMS, s
+        assert s["fit"]["dims"] == list(site_furniture.BLADE_DIMS[blade]), s
+        # centre-pivot: the slot's z is half the module's own height, which
+        # is now the sign's height and not the pole's
+        assert abs(s["transform"]["translation"][2]
+                   - (lot.SIDEWALK_H + s["fit"]["dims"][2] / 2.0)) < 1e-6
+    assert lot.cover_module_stem("sign_post", "delco_1997", 1,
+                                 (0.3048, 0.06, 2.4384), form="no_parking") \
+        == "prop_sign_post_delco_1997_01_w30_d6_h244_fno_parking"
+    # and a slot with no form is the name it always was
     assert "_f" not in lot.cover_module_stem("sign_post", "delco_1997", 1,
                                              (0.1, 0.1, 2.4))
+
+
+def test_the_blade_slots_are_the_mutcd_arithmetic():
+    """A sign's size and its mounting height are the standard; the slot is
+    what they add up to. Zoo's `core.sign_blade_forms.MODULE_DIMS` is this
+    table and cannot be imported from here, so both sides carry literals.
+
+    The 30 in pedestrian diamond is the one worth reading twice: a diamond
+    warning sign is a SQUARE on its point, so a 30 in sign needs 30*sqrt(2)
+    = 42.43 in of box, and its top lands at 10.5 ft.
+    """
+    inch = 0.0254
+    assert site_furniture.BLADE_DIMS == {
+        "no_parking": (0.3048, 0.060, 2.4384),
+        "ped_crossing": (1.0776, 0.060, 3.2112),
+        "bus_stop": (0.3048, 0.060, 2.5908)}
+    # TO A TENTH OF A MILLIMETRE, not exactly: this table is typed in metres
+    # and Zoo's is `12 * 0.0254`, which is 0.30479999999999996. The two
+    # spellings of one number meet at `int(round(w * 100))` in the stem, so
+    # the centimetre is what has to agree and the float does not.
+    for key, want in (("no_parking", (12 * inch, (84 + 12) * inch)),
+                      ("ped_crossing", (30 * math.sqrt(2) * inch,
+                                        (84 + 30 * math.sqrt(2)) * inch)),
+                      ("bus_stop", (12 * inch, (84 + 18) * inch))):
+        got = site_furniture.BLADE_DIMS[key]
+        assert abs(got[0] - want[0]) < 1e-4 and abs(got[2] - want[1]) < 1e-4
+        assert (int(round(got[0] * 100)), int(round(got[2] * 100)))             == (int(round(want[0] * 100)), int(round(want[1] * 100)))
+    assert set(site_furniture.BLADE_DIMS) == {
+        site_furniture.BLADE_AT_JUNCTION, site_furniture.BLADE_AT_PATH,
+        site_furniture.BLADE_AT_BUS_STOP}
+
+
+def test_a_wider_blade_does_not_move_a_single_post():
+    """The blade grew the MODULE, not the plan footprint. `_free`,
+    `_clear_of_cuts` and `along` all read the pole, the way
+    `FOOTPRINT["traffic_signal"]` has kept an 8 m mast arm from clearing the
+    sidewalk since 0.72.0 -- so a 1.08 m diamond changes no station and no
+    census. Measured against the pole's own numbers rather than against a
+    recorded baseline, because a baseline is a copy of the thing under test.
+    """
+    roads = site_streets.roads(_probe())
+    pieces = site_furniture.plan_furniture(roads)
+    posts = [p for p in pieces if p["species"] == "sign_post"]
+    assert posts
+    pole_w, pole_d, _pole_h = site_furniture.SPECIES["sign_post"]
+    for p in posts:
+        assert p["along"] in (pole_w, pole_d), p
+        sx, h, sy = p["size"]
+        assert (sx, sy) in ((pole_w, pole_d), (pole_d, pole_w)), p
+        # the greybox box stands as tall as the module it stands in for
+        assert h == p["dims"][2] == site_furniture.BLADE_DIMS[p["blade"]][2]
+        assert p["dims"][:2] == list(site_furniture.BLADE_DIMS[p["blade"]][:2])
+
+
+def test_the_resolver_falls_back_from_the_dressed_name_to_the_plain_one(tmp_path):
+    """THE RUNG THAT MAKES THE ORDER SURVIVABLE. Against a Zoo that draws
+    the blade, the dressed name is there and is used. Against one that does
+    not -- an older checkout, or a blade nobody has drawn yet -- only the
+    plain name is built, and the post keeps the bare pole instead of falling
+    all the way to greybox. Both directions, because only having one of them
+    is how a two-repo change goes wrong in exactly one order.
+    """
+    dims = list(site_furniture.BLADE_DIMS["no_parking"])
+    spec = {"cover": [{"at": [10.0, -4.0], "size": [0.1, dims[2], 0.1],
+                       "species": "sign_post", "yaw": 0.0, "dims": dims,
+                       "blade": "no_parking"}],
+            "cover_modules": {"dir": str(tmp_path), "theme": "delco_1997",
+                              "style": 1},
+            "buildings": []}
+    plain = "prop_sign_post_delco_1997_01_w30_d6_h244"
+    dressed = plain + "_fno_parking"
+
+    # neither built: the box stays, and the finding names BOTH names tried
+    refs, _ext, findings = lot.cover_module_refs(spec, "res://")
+    assert refs == {} and findings[0][0] == lot.CODE_COVER_MODULE_MISSING
+    assert dressed in findings[0][1] and plain in findings[0][1]
+
+    # only the plain one: the bare pole stands rather than a greybox
+    (tmp_path / (plain + ".glb")).write_bytes(b"glTF")
+    refs, _ext, findings = lot.cover_module_refs(spec, "", str(tmp_path / "a"))
+    assert findings == [] and refs == {0: "cover_" + plain}
+
+    # both: the dressed one wins
+    (tmp_path / (dressed + ".glb")).write_bytes(b"glTF")
+    refs, _ext, findings = lot.cover_module_refs(spec, "", str(tmp_path / "b"))
+    assert findings == [] and refs == {0: "cover_" + dressed}
 
 
 def test_every_hydrant_turns_its_pumper_outlet_to_the_road():

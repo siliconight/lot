@@ -90,6 +90,12 @@ FOOTPRINT = {t: (1.2, 1.2) for t in
 #: The signal is 8 m of arm about one pole, and its slot's box would lie
 #: across the carriageway. What a body meets is the pole.
 FOOTPRINT["traffic_signal"] = (0.7, 0.7)
+#: SAME REASON, ONE SIGN SMALLER (0.74.0). A post's slot is now the BLADE's
+#: box -- a 30 in pedestrian diamond is 1.08 m across the points -- and what
+#: a body meets is still 2.5 in of u-channel. Naming it here also pins
+#: `_free`, `_clear_of_cuts` and `along` to the pole, so every station on
+#: every kerb is where 0.73.0 put it and the census does not move.
+FOOTPRINT["sign_post"] = (0.1, 0.1)
 
 #: Where the 1990s kit stands, and why.
 #:   traffic_signal: on the corner of a signalised junction (a yielding
@@ -220,6 +226,39 @@ BLADE_AT_JUNCTION = "no_parking"
 BLADE_AT_PATH = "ped_crossing"
 BLADE_AT_BUS_STOP = "bus_stop"
 
+#: THE SLOT EACH BLADE ASKS FOR: (width, depth, height) in metres, and the
+#: mirror of Zoo's `core.sign_blade_forms.MODULE_DIMS`. Neither repo can
+#: import the other, so both pin these numbers to literals in their own
+#: tests (`test_the_blade_slots_are_the_mutcd_arithmetic` here,
+#: `test_the_module_dims_are_the_mutcd_arithmetic` there).
+#:
+#: A SIGN'S SIZE AND ITS MOUNTING HEIGHT ARE THE STANDARD and the slot is
+#: what they add up to. `SPECIES["sign_post"]`'s 0.10 x 0.10 x 2.40 was the
+#: PLACEHOLDER BOX's box, and it is the pole -- a blade built into it would
+#: have been squeezed to ten centimetres across by Zoo's `fit_exact`, which
+#: is the same defect as no blade at all and harder to see.
+#:
+#:   no_parking    R8-3a at 12 x 12 in, bottom at 7 ft (MUTCD 2A.18, a
+#:                 business or commercial area where parking or pedestrian
+#:                 movements occur) -> 0.3048 x 2.4384 m.
+#:   ped_crossing  W11-2 at 30 x 30 in over the W16-7P plaque at 24 x 12 in,
+#:                 the diamond's bottom at 7 ft and the plaque's at 5 ft. A
+#:                 30 in diamond is a 30 in SQUARE on its point, so it needs
+#:                 30 * sqrt(2) = 42.43 in of box -> 1.0776 x 3.2112 m. It is
+#:                 the biggest thing on the sidewalk that is not a lamp, and
+#:                 that is what a pedestrian crossing sign is.
+#:   bus_stop      a 12 x 18 in transit flag, bottom at 7 ft -> 0.3048 x
+#:                 2.5908 m. Not a MUTCD sign; no part of the Manual governs
+#:                 a transit agency's flag.
+#:
+#: The depth is Zoo's `MODULE_D`: the blade, the u-channel behind it, and the
+#: eleven planes it takes to keep them off each other's faces.
+BLADE_DIMS = {
+    "no_parking": (0.3048, 0.060, 2.4384),
+    "ped_crossing": (1.0776, 0.060, 3.2112),
+    "bus_stop": (0.3048, 0.060, 2.5908),
+}
+
 
 def tree_for(road) -> str:
     """The species this road is planted with: a stable hash of its own
@@ -283,6 +322,12 @@ def _piece(name, species, road, kerb, t, offset, yaw_extra=0.0, breaks="",
            blade=None):
     w, d, h = SPECIES[species]
     fw, fd = FOOTPRINT.get(species, (w, d))
+    # A BLADE HAS ITS OWN BOX (0.74.0). `dims` is the slot Zoo builds to and
+    # `size`/`along` are what the greybox draws and the spacing reads, so
+    # only the first of them takes the blade: the module grows to the sign
+    # and every station stays where the pole put it.
+    if blade in BLADE_DIMS:
+        w, d, h = BLADE_DIMS[blade]
     x, y = road.point(t, offset)
     yaw = (road.angle_deg + yaw_extra) % 360.0
     turned = int(round(yaw_extra)) % 180 == 90
