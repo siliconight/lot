@@ -4,6 +4,7 @@ builds. Every piece is taller than the step limit and carries collision,
 so the honesty rule holds by species rather than by a check.
 """
 import json
+import math
 import os
 import sys
 
@@ -64,7 +65,15 @@ def test_lamps_at_the_spacing_and_the_corner_set_at_every_cut():
                          ("litter_bin", by["litter_bin"]),
                          ("blade", blades)):
         assert 1 <= len(got) <= cuts, species
-    assert all(p["yaw"] == 90.0 for p in blades)              # faces the road
+    # THE BLADE FACES THE DRIVER IT IS FOR, not "the road". Until 0.73.0 every
+    # corner blade was written at yaw_extra 90, which `plate_facing` turns into
+    # +along: right for the L kerb, and edge-on-behind for the R kerb, whose
+    # lane carries the +t driver. The post is a bare pole so nothing saw it;
+    # the moment it carries a legend the facing is the legend.
+    for p in [b for b in blades if b["breaks"].startswith("crossing@")]:
+        travel = site_furniture._driver_on(road.kerb(p["kerb"]))
+        fx, fy = site_furniture.plate_facing(p["yaw"])
+        assert (fx * road.along[0] + fy * road.along[1]) * travel < -0.99, p
 
 
 def test_assemble_writes_the_furniture_as_slots_standing_on_the_kerb(tmp_path):
@@ -300,6 +309,154 @@ def test_a_cut_of_any_width_keeps_the_blank_blade_and_never_a_stop_sign():
     assert blanks
 
 
+#: Cold run 9060's `club_block_001` as `site_streets` reads it: a 173 m
+#: arterial and a 72.65 m side street ending on it, both 10 m wide with 3 m
+#: bands, and three buildings north of the arterial. The T's centre is plan
+#: (-25.5, -32.15) and its north-east corner is where the walker's screenshot
+#: was taken. The numbers are the spec's, not invented, so a change measured
+#: against the shipped site is reproducible here.
+CLUB_BLOCK = {
+    "name": "club_block_t", "ground": {"size_x": 192, "size_y": 93},
+    "buildings": [{"id": "b0", "at": [-59, -5]}, {"id": "b1", "at": [4, -5]},
+                  {"id": "b2", "at": [53, 5]}],
+    "roads": [{"a": [-86.5, -32.15], "b": [86.5, -32.15], "width": 10,
+               "sidewalk": 3},
+              {"a": [-25.5, -32.15], "b": [-25.5, 40.5], "width": 10,
+               "sidewalk": 3}],
+}
+
+
+def _pairs(pieces):
+    return [(a, b, math.hypot(a["at"][0] - b["at"][0], a["at"][1] - b["at"][1]))
+            for i, a in enumerate(pieces) for b in pieces[i + 1:]]
+
+
+def test_a_corner_where_two_kerb_lines_meet_stands_one_hydrant():
+    """The walker, cold run 9060: "we wouldn't have fire hydrants that close
+    to each other". Both roads of the T dropped their own kerb at the
+    junction and each stood a hydrant past its own cut, so the north-east
+    corner carried `cover_12` at Godot (-17.20, 24.60) and `cover_92` at
+    (-17.95, 23.85) -- plan (-17.20, -24.60) and (-17.95, -23.85), 1.06 m
+    apart. `plan_furniture` had no rule across roads: `_free` looked only at
+    the band the piece stood on."""
+    roads = site_streets.roads(CLUB_BLOCK)
+    pieces = site_furniture.plan_furniture(roads, CLUB_BLOCK["buildings"])
+    hydrants = [p for p in pieces if p["species"] == "fire_hydrant"]
+    assert hydrants, "the spacing rule must not leave the site with none"
+    # the corner the walker photographed: within a junction box of the T's
+    # centre, on its north-east side. A DISTANCE, not `corner_key` -- the key
+    # names a quadrant, so a hydrant 91 m down the same road is in the same
+    # one, and it only identifies a corner among the pieces a given crossing
+    # generated (which is all `plan_furniture` asks of it).
+    jx, jy = roads[0].point(61.0, 0.0)
+    corner = [p for p in hydrants
+              if math.hypot(p["at"][0] - jx, p["at"][1] - jy) < 15.0
+              and p["at"][0] >= jx and p["at"][1] >= jy]
+    assert len(corner) == 1, [p["at"] for p in corner]
+    # and nowhere on the site are two nearer than a spacing
+    close = [(a["at"], b["at"], round(d, 2)) for a, b, d in _pairs(hydrants)
+             if d < site_furniture.HYDRANT_MIN_SPACING]
+    assert close == [], close
+    # the rule is derived from the standard, not chosen
+    assert site_furniture.HYDRANT_MIN_SPACING == \
+        site_furniture.HYDRANT_SPACING_DESIGN / 2.0
+
+
+def test_the_spacing_rule_does_not_delete_a_streets_only_hydrant():
+    """A road whose every candidate is a corner's second hydrant would be
+    left bare by a plain minimum-spacing filter. The piece is moved along
+    the road's own kerb instead, and when no station on it is a spacing from
+    the rest the road says so rather than going quiet."""
+    roads = site_streets.roads(CLUB_BLOCK)
+    findings = []
+    pieces = site_furniture.plan_furniture(roads, CLUB_BLOCK["buildings"],
+                                           findings=findings)
+    hydrants = [p for p in pieces if p["species"] == "fire_hydrant"]
+    # THE CONJUNCTION IS THE CLAIM. 0.72.2 gives every road a hydrant and
+    # gives the corner two; a plain minimum-spacing filter would separate
+    # them and leave the side street bare. Both halves, or the rule is a
+    # trade rather than a fix.
+    assert {p["road"] for p in hydrants} == {r.index for r in roads}
+    assert [round(d, 2) for _a, _b, d in _pairs(hydrants)
+            if d < site_furniture.HYDRANT_MIN_SPACING] == []
+    moved = [p for p in hydrants if p["breaks"] == "spacing"]
+    assert moved, "the side street's corner hydrant should have been re-homed"
+    assert findings == [], findings        # a move is not a hole
+    # AND THE HOLE IS SAID WHEN IT IS ONE. A stem too short to hold a
+    # hydrant a spacing from the arterial's carries none, and says so rather
+    # than going quiet: 20 m of road against a 45.7 m rule.
+    stub = dict(CLUB_BLOCK, roads=[CLUB_BLOCK["roads"][0],
+                                   {"a": [-25.5, -32.15], "b": [-25.5, -12.15],
+                                    "width": 10, "sidewalk": 3}])
+    said = []
+    short = site_furniture.plan_furniture(site_streets.roads(stub),
+                                          stub["buildings"], findings=said)
+    assert [p for p in short if p["species"] == "fire_hydrant"]
+    assert [f for f in said if f.startswith("LOT_HYDRANT_NONE_ON_ROAD")], said
+
+
+def test_every_post_names_the_blade_it_carries_and_a_corner_holds_one_post():
+    """The walker, cold run 9060: "no signs on the stop signs here anymore?"
+    -- a screenshot of two bare poles. The site instanced five
+    `prop_sign_post_delco_1997_01_w10_d10_h240`, a 0.10 x 0.10 x 2.40 m pole
+    with no blade, and zero stop signs; two of the five stood 1.06 m apart at
+    one corner of the T and a third stood 1.6 m from the signal mast on
+    another. A post carries a legend or it is not there, and a corner carries
+    one post."""
+    roads = site_streets.roads(CLUB_BLOCK)
+    pieces = site_furniture.plan_furniture(roads, CLUB_BLOCK["buildings"])
+    posts = [p for p in pieces if p["species"] == "sign_post"]
+    assert posts
+    known = {site_furniture.BLADE_AT_JUNCTION, site_furniture.BLADE_AT_PATH,
+             site_furniture.BLADE_AT_BUS_STOP}
+    for p in posts:
+        assert p.get("blade") in known, p
+    # the blade a junction corner carries is the corner's, and a footpath
+    # cut's is the warning for a marked uncontrolled crossing
+    at_junction = [p for p in posts if p["breaks"].startswith("crossing@")
+                   and p["blade"] == site_furniture.BLADE_AT_JUNCTION]
+    assert at_junction
+    # ONE POST PER CORNER, counting the signal masts and the stop signs. Only
+    # the posts that stand AT a road-road crossing have a corner: a bus stop's
+    # flag is a `sign_post` too and keying it to the nearest junction would
+    # invent a corner it does not stand on.
+    keys = []
+    for p in pieces:
+        if p["species"] not in site_furniture.CORNER_POSTS:
+            continue
+        road = roads[p["road"]]
+        stations = [c.t for c in road.crossings if c.kind == "road"
+                    and p["breaks"] in (f"junction@{c.t:.1f}",
+                                        f"crossing@{c.t:.1f}")]
+        if not stations:
+            continue
+        keys.append(site_furniture.corner_key(road, stations[0], p["at"]))
+    assert keys and len(keys) == len(set(keys)), keys
+    # and no two posts anywhere are inside a body's width of each other
+    close = [(a["name"], b["name"], round(d, 2)) for a, b, d in _pairs(
+        [p for p in pieces if p["species"] in site_furniture.CORNER_POSTS])
+        if d < 2.0]
+    assert close == [], close
+
+
+def test_the_slot_carries_the_blade_as_zoos_dressing_form(tmp_path):
+    """Lot's half of the ask: the slot says which legend the post wants, in
+    the field Zoo's `honour_dressing` reads. Zoo's `sign_post` genome lists
+    no forms yet, so it drops the field and builds the plain module -- the
+    ask lands in Zoo's `dressing_fallbacks` report, which is where a gap
+    belongs."""
+    lot.assemble(os.path.join(SPECS, "coldrun_kerb_probe.json"), str(tmp_path))
+    doc = json.loads((tmp_path / "coldrun_kerb_probe.slots.json").read_text(encoding="utf-8"))
+    posts = [s for s in doc["slots"] if s["species"] == "sign_post"]
+    assert posts
+    assert all(s.get("form") for s in posts), posts
+    # and the stem Lot resolves is still the one Zoo builds today: adding
+    # `_f<form>` here before the genome lists it would send every post back
+    # to its greybox
+    assert "_f" not in lot.cover_module_stem("sign_post", "delco_1997", 1,
+                                             (0.1, 0.1, 2.4))
+
+
 def test_every_hydrant_turns_its_pumper_outlet_to_the_road():
     """Zoo 0.85.0's hydrant carries its pumper outlet on -Y, the face
     `plate_facing` reads. Until 0.72.2 both kerbs wrote the road's angle, so
@@ -315,3 +472,12 @@ def test_every_hydrant_turns_its_pumper_outlet_to_the_road():
         cx, cy = road.point(p["t"], 0.0)
         toward = (cx - p["at"][0]) * fx + (cy - p["at"][1]) * fy
         assert toward > 0, p
+    # and the one the spacing rule re-homes turns the same way: a second
+    # writer of a hydrant's yaw is a second chance to get it wrong
+    club = site_streets.roads(CLUB_BLOCK)
+    for p in [q for q in site_furniture.plan_furniture(club, CLUB_BLOCK["buildings"])
+              if q["species"] == "fire_hydrant"]:
+        r = club[p["road"]]
+        fx, fy = site_furniture.plate_facing(p["yaw"])
+        cx, cy = r.point(p["t"], 0.0)
+        assert (cx - p["at"][0]) * fx + (cy - p["at"][1]) * fy > 0, p

@@ -1,3 +1,111 @@
+## [0.73.0] - a corner is one place, and a post carries a legend
+
+The walker, cold run 9060 (`club_block_001`, `_runs/walk_9060_rain`), on one
+screenshot of the sidewalk beside `office_stepped`: "no signs on the stop
+signs here anymore?" and "we wouldn't have fire hydrants that close to each
+other". Two findings, one corner, one cause underneath both.
+
+MEASURED FIRST, off that run's own `site.tscn` and reproduced by re-running
+`lot_assemble`'s themed spec through 0.72.2 into a scratch project -- same
+node ids, same coordinates, so the before frames are the shipped build and
+not a lookalike. The site stands 5 `sign_post`, 1 `traffic_signal` and NO
+`stop_sign`. At the T's north-east corner `fire_hydrant` cover_12 (-17.20,
+-24.60) and cover_92 (-17.95, -23.85) stand **1.06 m** apart, and `sign_post`
+cover_14 and cover_93 the same 1.06 m apart. A third post, cover_86, stands
+1.6 m from the signal mast on the west corner.
+
+WHY THIS SITE HAS NO STOP SIGN, since the screenshot's word for the poles was
+"stop signs". `tools/probe_street_control.py` reports 3 junction legs, all
+three `signal`: road 1 ends on road 0, so the stem yields, and road 0 is an
+arterial (sidewalks and parking lanes), so `site_streets.approaches` puts the
+junction under a signal and no leg carries a stop sign. That is
+docs/STREET_RULES.md working, not failing. Across the 24 road specs in
+`specs/` there are 15 approaches -- 3 signal, 6 stop, 6 through -- and 6 stop
+signs, one per stop-controlled approach. The poles the walker photographed
+were never stop signs; they are the blank blade 0.69.4 left at a kerb cut.
+
+THE CORNER WAS PLANNED TWICE. Where two roads meet, each road's kerb is cut
+by the other, and `plan_furniture`'s per-cut loop furnished both cuts while
+`_free` looked only at the band the piece stood on. Nothing in the module had
+ever been asked a question about another road. `corner_key` now names a
+corner by the junction's own plan point and which plan quadrant of it a piece
+stands in -- both roads compute the same key from the same junction, so no
+distance threshold has to guess how big a corner is -- and a corner carries
+one hydrant, one bin, and ONE POST. A signal mast, a stop sign and a blade
+post are all posts; where one already stands the blade is not given a second
+pole a metre away. Every junction's control is now planned before any band,
+across the whole site, because the post that owns a corner is often the other
+road's.
+
+FIRE HYDRANT SPACING, derived and cited. NFPA 1 Table 18.5.1.1 and AWWA M17
+both state hydrant spacing as an AVERAGE for the district -- 500 ft (152 m)
+residential, and about 300 ft (91.4 m) in the commercial or high-value
+district ISO's grading schedule works to, which is what a Delco strip is.
+`HYDRANT_MIN_SPACING` is half that, 45.7 m: the least separation that can
+still be read as a spacing rather than as one hydrant written twice. No
+standard names a minimum because no engineer needs telling.
+
+The minimum alone is half a standard, and measured across the 24 specs it
+took the library from 92 hydrants to 43 -- which reads as the fix deleting
+hydrants. So the corner pass is followed by one that STANDS a hydrant
+wherever a street runs further than the design spacing from the nearest, and
+the library settles at 61 with no pair under 10 m (was 6 pairs, closest 1.06
+m). A road left with none by the corner rule is not silently emptied: its
+piece is MOVED to the first station on its own kerb at least a minimum from
+the rest, and a road that holds no such station says `LOT_HYDRANT_NONE_ON_ROAD`
+with the distance to the hydrant that covers it. On 9060 the side street's
+corner hydrant moves 51 m up its own L kerb; the census goes 2 -> 3 hydrants
+and 5 -> 3 posts.
+
+EVERY POST NAMES ITS BLADE. Zoo's `sign_post` recipe is still the placeholder
+box `tools/new_species.py` minted on 2026-09-12 -- a 0.10 x 0.10 x 2.40 m
+galvanised pole with nothing on it, which is what the walker saw. Lot's half
+is to say what each post is for, in the piece's `blade` field and on the slot
+as Zoo's dressing `form` (0.84.0): `no_parking` at a junction corner (no
+parking within 30 ft of a signal or stop sign, 75 Pa.C.S. 3353, MUTCD R7/R8 --
+the one corner sign that needs no street name), `ped_crossing` at a footpath
+cut Lot paints a crosswalk across and nothing controls (MUTCD W11-2 with the
+W16-7P arrow), and `bus_stop` on the stop's flag. A street-name blade (D3-1)
+is what a corner really carries and Lot cannot post one: no spec in `specs/`
+names a road, so a `roads[].name` branch would be a branch that cannot fire.
+
+`cover_module_stem` deliberately does NOT yet spell `_f<form>`. Zoo's genome
+lists no forms for `sign_post`, so `honour_dressing` drops the field and
+builds the plain module; spelling it here first would make Lot resolve a name
+Zoo has not built and send every post back to its greybox. The two change
+together. Until then the ask lands in Zoo's `dressing_fallbacks` report,
+which is where a gap belongs.
+
+THE BLADE FACES THE DRIVER IT IS FOR. Every corner blade was written at
+yaw_extra 90, which `plate_facing` turns into +along -- right for the L kerb,
+edge-on-behind for the R kerb, whose lane carries the +t driver. Nothing saw
+it because the post is a bare pole. `_driver_on` reads
+`site_streets.KEEP_RIGHT` and the yaw comes from `_facing_driver`, the same
+derivation `_stop_sign` uses. The bus stop's flag keeps its 90: it is a flag,
+not a sign for a driver, and it was also called `StopSign_` until now, which
+is exactly the kind of name that gets read back as evidence of traffic
+control it is not. It is `StopFlag_`.
+
+Five tests fail on 0.72.2: the corner stands one hydrant, the spacing rule
+leaves every road one AND no pair inside the minimum (the conjunction is the
+claim -- 0.72.2 passes the first half), a short stem that holds no station
+says so, every post names a known blade and no corner holds two posts, and
+the slot carries the blade as `form` while the stem stays `_f`-free. Suite
+534 passing.
+
+NOT VERIFIED. No blade exists to look at: the frames show one post where
+there were two, not a post with a sign on it, and they will not until Zoo
+draws the four legends. The before/after pair was shot through Lot's own
+`site_walk.tscn` (its WorldEnvironment and Sun, gl_compatibility), not
+through the shipped walk package, whose `mission.tscn` loads the Lux-lit
+`presentation/lux.applied.tscn` -- re-running Lux is another stage and
+another instrument. One residue is left standing and named rather than
+fixed: on `central_vault` two litter bins sit 3.56 m apart, attributed to a
+junction and a footpath crossing 14 m apart on the same street, each placing
+its bin toward the other. That is two crossings too close together, not one
+corner furnished twice, and a second constant for bins would be chosen rather
+than derived.
+
 ## [0.72.2] - a hydrant turns its pumper outlet to the road
 
 Zoo 0.85.0 rebuilt `fire_hydrant` as an American dry-barrel hydrant with its

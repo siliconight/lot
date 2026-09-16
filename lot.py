@@ -1261,6 +1261,17 @@ def write_site_slots(site_spec, out_path):
                     "pivot": "center", "openings": [], "collision": "convex"},
             "breaks": cv.get("breaks", ""),
         })
+        # THE BLADE A POST CARRIES, as Zoo's dressing `form` (0.84.0):
+        # `site_furniture` names one on every `sign_post` it stands, and
+        # Zoo's `honour_dressing` drops a form the species' genome does not
+        # list and builds the plain module -- so writing it costs nothing
+        # today and lands in Zoo's `dressing_fallbacks` gap report, which is
+        # where the ask belongs. `cover_module_stem` does NOT yet spell
+        # `_f<form>`: it gains that in the same change as the genome, or Lot
+        # would resolve a name Zoo has not built and every post would fall
+        # back to its greybox.
+        if cv.get("blade"):
+            slots[-1]["form"] = str(cv["blade"])
     doc = {
         "slot_manifest_version": "1.2.0",
         "building_id": "site",

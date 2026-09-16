@@ -144,6 +144,82 @@ SIGN_BEFORE_SHELTER = 1.0
 PIECE_GAP = 0.3           # daylight between two pieces along the band
 NUDGES = (0.0, 2.0, -2.0, 4.0, -4.0)   # a lamp or a tree steps along its band
 
+#: THE CORNER IS ONE PLACE, NOT TWO KERBS. Until 0.72.2 a corner piece was
+#: planned per KERB CUT and `_free` looked only at the band it stood on, so
+#: where two roads meet each road dropped its own kerb, and each cut stood
+#: its own hydrant, bin and blade a metre from the other road's. Measured on
+#: cold run 9060 (`club_block_001`, the T at plan (-25.5, -32.15)): road 0's
+#: L kerb and road 1's R kerb both furnished the junction's north-east
+#: corner, `fire_hydrant` cover_12 at (-17.20, -24.60) and cover_92 at
+#: (-17.95, -23.85) **1.06 m apart**, and `sign_post` cover_14 and cover_93
+#: the same 1.06 m apart ("we wouldn't have fire hydrants that close to each
+#: other", the walker).
+#:
+#: A corner is identified by the junction's own plan point and which plan
+#: quadrant of it the piece stands in -- both roads compute the same key from
+#: the same junction, so no distance threshold is needed to decide that two
+#: pieces are at one corner. `CORNER_TOL` only keeps two roads' float
+#: spellings of one junction together.
+CORNER_TOL = 1          # decimal places the junction's plan point is keyed on
+#: ONE POST PER CORNER. A signal mast, a stop sign and a blank blade are all
+#: posts, and a real corner carries one of them with everything it must say
+#: mounted on it. The order is the order of regulatory weight: a signal, then
+#: a stop sign, then a blade post. A `sign_post` is not stood at a corner
+#: another post already holds -- its legend belongs on that post (see
+#: `BLADE_AT_JUNCTION` and the Zoo gap in the changelog).
+CORNER_POSTS = ("traffic_signal", "stop_sign", "sign_post")
+#: One of each of these per corner, by the same key. They are not posts -- a
+#: hydrant beside a signal mast is a street, two hydrants is a defect.
+CORNER_ONE_EACH = ("fire_hydrant", "litter_bin")
+
+#: FIRE HYDRANT SPACING. NFPA 1 Table 18.5.1.1 and AWWA M17 both state
+#: hydrant spacing as an AVERAGE for the district rather than a fixed pitch:
+#: 500 ft (152 m) average in residential, and a commercial or high-value
+#: district laid out at about 300 ft (91.4 m), which is the figure ISO's
+#: grading schedule works to and the one a Delco commercial strip is built
+#: on. Two hydrants a metre apart are not a close pair, they are one hydrant
+#: written twice, and no standard names a minimum because no engineer needs
+#: telling. So Lot derives one: the least separation that can still be read
+#: as a SPACING is half the district's design spacing -- below that the
+#: second hydrant is a duplicate of the first rather than the next one along.
+HYDRANT_SPACING_DESIGN = 91.4                      # 300 ft, commercial district
+HYDRANT_MIN_SPACING = HYDRANT_SPACING_DESIGN / 2.0  # 45.7 m
+#: The step `_stand_hydrants` walks a kerb in, looking for a station at a
+#: spacing. It sets how precisely a hydrant lands, not whether it lands.
+HYDRANT_STEP = 2.0
+
+#: WHAT THE BLANK POLE CARRIES. 0.69.3 and 0.69.4 decided that a kerb cut is
+#: never a junction approach and so never carries a stop sign, and gave the
+#: cut's corner "the blank blade" -- a `sign_post`, which Zoo builds as a
+#: 0.10 x 0.10 x 2.40 m galvanised pole with nothing on it. That decision was
+#: right and the result reads as unfinished street furniture ("no signs on
+#: the stop signs here anymore?", the walker, cold run 9060). A post on an
+#: American sidewalk carries a legend or it is not there, so every `sign_post`
+#: Lot stands now names the one it carries, in its `blade` field and on the
+#: slot as the Zoo dressing `form`:
+#:
+#:   no_parking    at a junction corner. Parking is prohibited within 30 ft
+#:                 of a signal, stop sign or yield sign (75 Pa.C.S. 3353;
+#:                 MUTCD R7/R8 series), and the blade that says so is the one
+#:                 name-free sign every American corner carries. Lot's own
+#:                 `site_streets.bays` already keeps a bay `CROSSING_SETBACK`
+#:                 clear of the crossing BOX, which on a road cut is 14 m
+#:                 from the junction's centre -- beyond the 9.14 m the code
+#:                 asks -- so the blade and the bays agree.
+#:   ped_crossing  at a footpath cut, which Lot paints a crosswalk across and
+#:                 no signal or stop sign controls: MUTCD W11-2 with the
+#:                 W16-7P arrow, the warning for a marked uncontrolled
+#:                 crossing. It faces the driver it warns.
+#:   bus_stop      the stop's flag, before the shelter.
+#:
+#: A STREET-NAME BLADE (MUTCD D3-1) is what a corner really carries and Lot
+#: cannot post one: no spec in `specs/` names a road, so there is no name to
+#: put on it. When the spec grows `roads[].name` the corner blade becomes the
+#: name and `no_parking` moves to the signal mast beside it.
+BLADE_AT_JUNCTION = "no_parking"
+BLADE_AT_PATH = "ped_crossing"
+BLADE_AT_BUS_STOP = "bus_stop"
+
 
 def tree_for(road) -> str:
     """The species this road is planted with: a stable hash of its own
@@ -203,7 +279,8 @@ def _clear_of_markers(piece, markers) -> bool:
     return not any(site_cover._inside(tuple(m), rect) for m in markers)
 
 
-def _piece(name, species, road, kerb, t, offset, yaw_extra=0.0, breaks=""):
+def _piece(name, species, road, kerb, t, offset, yaw_extra=0.0, breaks="",
+           blade=None):
     w, d, h = SPECIES[species]
     fw, fd = FOOTPRINT.get(species, (w, d))
     x, y = road.point(t, offset)
@@ -211,11 +288,62 @@ def _piece(name, species, road, kerb, t, offset, yaw_extra=0.0, breaks=""):
     turned = int(round(yaw_extra)) % 180 == 90
     # plan footprint after the yaw, quantised the way cover is
     sx, sy = (fd, fw) if int(round(yaw)) % 180 == 90 else (fw, fd)
-    return {"name": name, "species": species, "at": [round(x, 3), round(y, 3)],
-            "yaw": round(yaw, 3), "dims": [w, d, h], "size": [sx, h, sy],
-            "base": "sidewalk", "road": road.index, "kerb": kerb.side,
-            "t": round(t, 3), "along": fd if turned else fw,
-            "source": "site_furniture", "breaks": breaks}
+    rec = {"name": name, "species": species, "at": [round(x, 3), round(y, 3)],
+           "yaw": round(yaw, 3), "dims": [w, d, h], "size": [sx, h, sy],
+           "base": "sidewalk", "road": road.index, "kerb": kerb.side,
+           "t": round(t, 3), "along": fd if turned else fw,
+           "source": "site_furniture", "breaks": breaks}
+    if blade:
+        rec["blade"] = blade
+    return rec
+
+
+def corner_key(road, station, at):
+    """Which junction corner the plan point ``at`` stands on, for the
+    road-road crossing at ``station`` along ``road``.
+
+    The key is the junction's own plan point, rounded to `CORNER_TOL` places,
+    and the sign of the piece's offset from it on each WORLD plan axis. Both
+    roads of a junction compute the junction point from their own frames and
+    get the same answer, so the two kerbs that meet at one corner produce one
+    key without any distance threshold being asked to decide it -- which is
+    the check that would have to guess how big a corner is.
+
+    Measured on cold run 9060's T at (-25.5, -32.15): road 0's L-kerb pieces
+    at (-18.70, -24.60) and road 1's R-kerb pieces at (-17.95, -25.35) both
+    key to (+1, +1), and road 1's L-kerb pieces at (-33.05, -25.35) to
+    (-1, +1) -- the other corner, which is where they are.
+
+    WHAT IT IS NOT: a quadrant is a half-plane pair, not a box, so a piece a
+    hundred metres down the same street keys to the same corner. It
+    identifies a corner only among the pieces one crossing GENERATED, each
+    of which stands within a cut's span of it by construction, and that is
+    all `plan_furniture` asks of it. A caller wanting "near this junction"
+    wants a distance.
+    """
+    jx, jy = road.point(station, 0.0)
+    return (round(jx, CORNER_TOL), round(jy, CORNER_TOL),
+            1 if at[0] >= jx else -1, 1 if at[1] >= jy else -1)
+
+
+def _junction_station(road, piece):
+    """The station of the road-road crossing on ``road`` that a control piece
+    stands at: the nearest one to the piece's own station, or None when the
+    road has no road-road crossing. The piece's `breaks` tag carries the
+    station too, rounded to a tenth for a human to read; a corner key is
+    worth computing from the geometry rather than from a printed string."""
+    stations = [c.t for c in road.crossings if c.kind == "road"]
+    if not stations:
+        return None
+    return min(stations, key=lambda t: abs(t - piece["t"]))
+
+
+def _driver_on(kerb) -> int:
+    """The direction of travel of the driver in the lane beside ``kerb``:
+    traffic keeps right (`site_streets.KEEP_RIGHT`), so the R kerb is on the
+    right of a driver travelling +t and the L kerb of one travelling -t."""
+    import site_streets
+    return 1 if kerb.side == site_streets.right_side(1) else -1
 
 
 def _facing_kerb(road, buildings):
@@ -268,8 +396,12 @@ def _bus_stop(road, kerb, placed, n, markers=()):
                              back, breaks=tag),
                       _piece(f"Bench_{n + 1}", "bench", road, kerb, t, bench_off, back,
                              breaks=tag),
-                      _piece(f"StopSign_{n + 2}", "sign_post", road, kerb, sign_t, outer,
-                             90.0, breaks=tag)]
+                      # the STOP'S FLAG, not a stop sign: it was called
+                      # `StopSign_` from 0.65.0 and is a `sign_post` at a bus
+                      # stop, which is exactly the kind of name that gets read
+                      # back as evidence of traffic control it is not
+                      _piece(f"StopFlag_{n + 2}", "sign_post", road, kerb, sign_t,
+                             outer, 90.0, breaks=tag, blade=BLADE_AT_BUS_STOP)]
             if all(_clear_of_markers(p, markers) for p in pieces):
                 return pieces
     return []
@@ -444,6 +576,22 @@ def plan_furniture(roads_list, buildings=(), markers=(), findings=None) -> list:
     out = []
     n = 0
     markers = [tuple(m) for m in markers]
+    # A CORNER IS ONE PLACE. `corner_posts` is the corners a post already
+    # stands on and `corner_taken` the (species, corner) pairs already
+    # furnished; `hydrants` every hydrant on the SITE, because the rule that
+    # was missing was a rule across roads (see CORNER_POSTS and
+    # HYDRANT_MIN_SPACING). `bands` keeps each band's pieces so a road left
+    # without a hydrant by the spacing rule can be given one further along.
+    corner_posts, corner_taken, hydrants, bands = set(), set(), [], {}
+    dropped_hydrants = []
+
+    def _hydrant_room(at):
+        """The nearest hydrant already standing, or None: (distance, piece)."""
+        if not hydrants:
+            return None
+        return min(((math.hypot(at[0] - p["at"][0], at[1] - p["at"][1]), p)
+                    for p in hydrants), key=lambda dp: dp[0])
+
     # A STREET PLANTS A DIFFERENT TREE ON THE CROSS STREET. `tree_for` is
     # a hash of one road, so on a two-road site it draws the same species
     # about one time in five -- cold run 9035 was one of those, and a
@@ -463,12 +611,26 @@ def plan_furniture(roads_list, buildings=(), markers=(), findings=None) -> list:
                     break
         planted.append(pick)
         species_for[road.index] = pick
+    # EVERY JUNCTION'S CONTROL FIRST, ACROSS THE SITE. A stop sign's station
+    # is set by the rules to within a metre or two, and a lamp's is not: the
+    # lamp steps along its band, so it is the lamp that steps. Asked before
+    # the band test so a road with no band says what it could not stand.
+    # Asked for EVERY road before any band, because the post that owns a
+    # corner may be planned from the other road: on a T the stem's signal
+    # mast stands on the corner the through road's kerb line reaches first,
+    # and per-road ordering decided which of the two won by their index.
+    controls, every_control = {}, []
     for road in roads_list:
-        # THE JUNCTION'S CONTROL FIRST. A stop sign's station is set by the
-        # rules to within a metre or two, and a lamp's is not: the lamp
-        # steps along its band, so it is the lamp that steps. Asked before
-        # the band test so a road with no band says what it could not stand.
-        control = plan_traffic_control(road, roads_list, markers, findings)
+        controls[road.index] = plan_traffic_control(road, roads_list, markers,
+                                                    findings, every_control)
+        every_control.extend(controls[road.index])
+    for road in roads_list:
+        for p in controls[road.index]:
+            station = _junction_station(road, p)
+            if station is not None:
+                corner_posts.add(corner_key(road, station, p["at"]))
+    for road in roads_list:
+        control = controls[road.index]
         if not road.sidewalk:
             continue
         species_tree = species_for[road.index]
@@ -510,23 +672,69 @@ def plan_furniture(roads_list, buildings=(), markers=(), findings=None) -> list:
                 # a signalised junction. Measured with
                 # tools/probe_street_control.py. A stop sign belongs to a
                 # junction approach (`plan_traffic_control`); the corner of
-                # a cut keeps the blank blade, whatever its width.
+                # a cut keeps a blade post, whatever its width -- and the
+                # blade is named, because Zoo's `sign_post` is a bare pole
+                # and a bare pole is not a thing an American street has.
                 # the hydrant's pumper outlet is Zoo's -Y (0.85.0), which at
                 # the road's angle points -perp: at the road from the L kerb,
                 # at the buildings from the R kerb unless it is turned round
                 pumper = 0.0 if kerb.sign > 0 else 180.0
+                # the blade faces the driver in the lane beside this kerb,
+                # the way `_stop_sign` turns a plate: `_facing_driver` is
+                # derived from `plate_facing`, which was measured in Godot
+                blade = BLADE_AT_JUNCTION if c.kind == "road" else BLADE_AT_PATH
+                blade_yaw = _facing_driver(_driver_on(kerb))
                 for species, dt, yaw_extra in (("fire_hydrant", half + 2.5, pumper),
                                                ("litter_bin", -(half + 1.5), 0.0),
-                                               ("sign_post", half + 1.0, 90.0)):
+                                               ("sign_post", half + 1.0, blade_yaw)):
                     w, d, h = SPECIES[species]
                     tt = c.t + dt
-                    if 0.5 < tt < road.length - 0.5 and _clear_of_cuts(tt, d / 2.0, kerb) \
-                            and _free(tt, max(w, d) / 2.0, placed):
-                        piece = _piece(f"{species}_{n}", species, road, kerb, tt,
-                                       outer, yaw_extra, breaks=f"crossing@{c.t:.1f}")
-                        if _clear_of_markers(piece, markers):
-                            placed.append(piece)
-                            n += 1
+                    if not (0.5 < tt < road.length - 0.5
+                            and _clear_of_cuts(tt, d / 2.0, kerb)
+                            and _free(tt, max(w, d) / 2.0, placed)):
+                        continue
+                    piece = _piece(f"{species}_{n}", species, road, kerb, tt,
+                                   outer, yaw_extra, breaks=f"crossing@{c.t:.1f}",
+                                   blade=blade if species == "sign_post" else None)
+                    if not _clear_of_markers(piece, markers):
+                        continue
+                    # THE CORNER, ONCE. Both kerbs that meet at a junction
+                    # corner are cut by the other road and each used to
+                    # furnish it: measured 1.06 m apart on cold run 9060.
+                    key = corner_key(road, c.t, piece["at"])
+                    # A SHARED CORNER IS THE RULE, NOT A FINDING. Every
+                    # junction has one, so saying it would print on every
+                    # run and mean nothing; what a reader needs is in the
+                    # census (`LOT_FURNITURE_PLACED`) and in
+                    # tools/probe_street_control.py.
+                    if species == "sign_post" and key in corner_posts:
+                        continue
+                    refused = None
+                    if species in CORNER_ONE_EACH and (species, key) in corner_taken:
+                        refused = "the corner already has one"
+                    near = (_hydrant_room(piece["at"])
+                            if species == "fire_hydrant" else None)
+                    if refused is None and near is not None \
+                            and near[0] < HYDRANT_MIN_SPACING:
+                        refused = f"{near[1]['name']} is {near[0]:.2f} m away"
+                    if refused is not None:
+                        # BOTH refusals are drops, and the guard below reads
+                        # this list: recording only the spacing one left a
+                        # road whose single candidate lost its CORNER looking
+                        # like a road that never wanted a hydrant, and the
+                        # re-placement never ran.
+                        if species == "fire_hydrant":
+                            dropped_hydrants.append((piece, near, refused))
+                        continue
+                    if species == "fire_hydrant":
+                        hydrants.append(piece)
+                    if species == "sign_post":
+                        corner_posts.add(key)
+                    elif species in CORNER_ONE_EACH:
+                        corner_taken.add((species, key))
+                    placed.append(piece)
+                    n += 1
+            bands[(road.index, kerb.side)] = (road, kerb, outer, placed)
             out.extend(placed)
             # the bus stop, on the kerb the buildings face
             if kerb is _facing_kerb(road, buildings):
@@ -536,6 +744,90 @@ def plan_furniture(roads_list, buildings=(), markers=(), findings=None) -> list:
                 out.extend(_stop_corner(road, kerb, stop, placed, markers))
         # a meter at every bay
         out.extend(plan_meters(road, markers))
+    # THE STANDARD IS AN AVERAGE SPACING, AND HALF OF IT IS NOT THE RULE.
+    # The minimum above only refuses; on its own it took the library's 24
+    # road specs from 92 hydrants to 43 (measured 2026-09-16), which reads
+    # as the fix deleting hydrants rather than spacing them. So the corners
+    # are followed by a pass that STANDS one wherever the street runs
+    # further than `HYDRANT_SPACING_DESIGN` from the nearest, which is what
+    # the design spacing means and what a 1990s commercial strip looks like.
+    for road in roads_list:
+        for piece in _stand_hydrants(road, bands, hydrants, markers,
+                                     HYDRANT_SPACING_DESIGN):
+            hydrants.append(piece)
+            out.append(piece)
+    # AND IT MUST NOT DELETE A STREET'S ONLY HYDRANT. A road whose every
+    # candidate was a corner's second hydrant, and which the fill pass found
+    # no room on, is left with none -- and "no hydrant on this street" is a
+    # different claim from "the hydrant is the one at the corner": the first
+    # is a hole, the second is a street. So the piece is MOVED rather than
+    # dropped, to the first station that is at least a minimum from the
+    # rest, and when the road holds no such station it says which hydrant
+    # covers it instead of going quiet.
+    for road in roads_list:
+        if any(p["road"] == road.index for p in hydrants):
+            continue
+        mine = [why for p, _n, why in dropped_hydrants if p["road"] == road.index]
+        if not mine:
+            continue          # this road never wanted one
+        moved = _stand_hydrants(road, bands, hydrants, markers,
+                                HYDRANT_MIN_SPACING, limit=1)
+        if moved:
+            hydrants.extend(moved)
+            out.extend(moved)
+            continue
+        near = _hydrant_room(road.point(road.length / 2.0, 0.0))
+        covered = (f"The nearest hydrant to its middle is {near[1]['name']} "
+                   f"at {near[0]:.1f} m." if near else
+                   "No road on this site carries one.")
+        _say(findings,
+             f"LOT_HYDRANT_NONE_ON_ROAD: road {road.index} carries no fire "
+             f"hydrant. Its {len(mine)} candidate(s) at the crossings were "
+             f"refused ({'; '.join(sorted(set(mine)))}), and no station along "
+             f"its kerbs is both clear of the cuts, the pieces and the markers "
+             f"and {HYDRANT_MIN_SPACING:.1f} m from the rest. " + covered)
+    return out
+
+
+def _stand_hydrants(road, bands, hydrants, markers, want, limit=None):
+    """Hydrants for ``road`` at the stations along its kerbs where the
+    nearest hydrant -- one already standing, or one this call has just stood
+    -- is further than ``want``, and which are clear of the dropped kerbs, of
+    what stands on that band and of the mission markers. At most ``limit``
+    of them when given.
+
+    With ``want`` at `HYDRANT_SPACING_DESIGN` this is the district's design
+    spacing laid along the street; with ``want`` at `HYDRANT_MIN_SPACING` it
+    is the smallest separation that still reads as a spacing, which is what
+    a road left with none by the corner rule is given. Walks from the road's
+    start in `HYDRANT_STEP` and takes the first station that qualifies, so
+    the same spec stands the same hydrants every run."""
+    w, d, _h = SPECIES["fire_hydrant"]
+    out = []
+    for kerb_side in ("L", "R"):
+        band = bands.get((road.index, kerb_side))
+        if band is None:
+            continue
+        _road, kerb, outer, placed = band
+        pumper = 0.0 if kerb.sign > 0 else 180.0
+        t = LAMP_START
+        while t < road.length - LAMP_START:
+            piece = _piece(f"fire_hydrant_{road.index}{kerb_side}{len(out)}",
+                           "fire_hydrant", road, kerb, t, outer, pumper,
+                           breaks="spacing")
+            t += HYDRANT_STEP
+            if not (_clear_of_cuts(piece["t"], d / 2.0, kerb)
+                    and _free(piece["t"], max(w, d) / 2.0, placed)
+                    and _clear_of_markers(piece, markers)):
+                continue
+            if any(math.hypot(piece["at"][0] - p["at"][0],
+                              piece["at"][1] - p["at"][1]) <= want
+                   for p in list(hydrants) + out):
+                continue
+            placed.append(piece)
+            out.append(piece)
+            if limit is not None and len(out) >= limit:
+                return out
     return out
 
 
