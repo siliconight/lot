@@ -13,6 +13,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import lot              # noqa: E402
 import site_furniture   # noqa: E402
 import site_streets     # noqa: E402
+from tests.glb_fixture import write_glb  # noqa: E402
 
 SPECS = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
                      "specs")
@@ -546,12 +547,12 @@ def test_the_resolver_falls_back_from_the_dressed_name_to_the_plain_one(tmp_path
     assert dressed in findings[0][1] and plain in findings[0][1]
 
     # only the plain one: the bare pole stands rather than a greybox
-    (tmp_path / (plain + ".glb")).write_bytes(b"glTF")
+    write_glb(tmp_path / (plain + ".glb"), plain)
     refs, _ext, findings = lot.cover_module_refs(spec, "", str(tmp_path / "a"))
     assert findings == [] and refs == {0: "cover_" + plain}
 
     # both: the dressed one wins
-    (tmp_path / (dressed + ".glb")).write_bytes(b"glTF")
+    write_glb(tmp_path / (dressed + ".glb"), dressed)
     refs, _ext, findings = lot.cover_module_refs(spec, "", str(tmp_path / "b"))
     assert findings == [] and refs == {0: "cover_" + dressed}
 

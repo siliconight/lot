@@ -13,6 +13,7 @@ import lot            # noqa: E402
 import site_cover     # noqa: E402
 import site_parking   # noqa: E402
 import site_streets   # noqa: E402
+from tests.glb_fixture import write_glb  # noqa: E402
 
 SPECS = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
                      "specs")
@@ -95,7 +96,7 @@ def test_assemble_parks_cars_and_writes_them_as_slots(tmp_path):
 
 def test_a_module_the_index_failed_keeps_its_box(tmp_path):
     stem = "prop_simple_car_delco_1997_01_w175_d430_h145"
-    (tmp_path / f"{stem}.glb").write_bytes(b"glTF")
+    write_glb(tmp_path / f"{stem}.glb", stem)
     (tmp_path / "site_kit.built.json").write_text(json.dumps({
         "modules": [{"stem": stem, "status": "fail"}]}), encoding="utf-8")
     spec = {"cover": [{"at": [1.0, 2.0], "size": [4.3, 1.45, 1.75], "species": "simple_car",
@@ -316,7 +317,7 @@ def test_a_piece_resolves_to_the_module_of_its_own_style(tmp_path):
              "yaw": 90.0, "dims": dims, "style": s} for s in (1, 2)]
     for s in (1, 2):
         stem = lot.cover_module_stem("simple_car", "delco_1997", s, dims)
-        (tmp_path / f"{stem}.glb").write_bytes(b"glTF")
+        write_glb(tmp_path / f"{stem}.glb", stem)
     spec = {"cover": cars, "buildings": [],
             "cover_modules": {"dir": str(tmp_path), "theme": "delco_1997", "style": 1}}
     refs, _ext, findings = lot.cover_module_refs(spec, "", str(tmp_path / "out"))

@@ -394,7 +394,17 @@ def build_pack(site_spec_path, out_dir=None, keep_folder=False, dc=None,
             rel = os.path.basename(str(src))
         dest = os.path.join(pack_dir, *rel.split("/"))
         os.makedirs(os.path.dirname(dest), exist_ok=True)
-        shutil.copy2(p, dest)
+        # A GLB IS NOT ONE FILE -- see `glb_deps`. Same defect as the cover
+        # copy in `lot.cover_module_refs`, on an asset path the site spec
+        # names rather than one Zoo built; this path is not on Level
+        # Factory's pipeline, so it was never measured shipping broken. It is
+        # fixed here anyway, because leaving one copy site right and the
+        # other wrong is how the next one is written wrong.
+        if str(p).lower().endswith(".glb"):
+            import glb_deps
+            glb_deps.copy_with_deps(p, dest)
+        else:
+            shutil.copy2(p, dest)
     for gd in ("lot_site_walk.gd", "lot_player.gd"):
         shutil.copy2(os.path.join(HERE, "godot", "addons", "lot", gd),
                      os.path.join(pack_dir, gd))

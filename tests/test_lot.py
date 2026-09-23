@@ -2,6 +2,7 @@
 import json, os, re, sys, hashlib
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import lot
+from tests.glb_fixture import write_glb  # noqa: E402
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SPECS = os.path.join(os.path.dirname(HERE), "specs")
@@ -584,8 +585,8 @@ def test_package_site_pack():
     except SystemExit as e:
         assert "a.glb" in str(e) and "shell.glb" in str(e)
     # stage assets next to the spec and build for real
-    open(os.path.join(d, "a.glb"), "wb").write(b"G")
-    open(os.path.join(d, "shell.glb"), "wb").write(b"G")
+    write_glb(os.path.join(d, "a.glb"), "a")
+    write_glb(os.path.join(d, "shell.glb"), "shell")
     json.dump({"markers": [], "rooms": [], "objectives": [], "loot": [],
                "zones": [], "vertical_links": [], "openings": [],
                "surfaces": [], "surface_roles": {}},
@@ -617,7 +618,7 @@ def test_package_reproducible_release():
                            "gameplay": "a.gameplay.json", "at": [0, 0]}]}
     sp = os.path.join(d, "site.json")
     json.dump(spec, open(sp, "w"))
-    open(os.path.join(d, "a.glb"), "wb").write(b"GLBBYTES")
+    write_glb(os.path.join(d, "a.glb"), "a")
     json.dump({"kit_name": "Deli Counter", "kit_version": "0.54.0",
                "spec": "a.json", "spec_sha256_16": "abcd1234abcd1234",
                "built_utc": "x"}, open(os.path.join(d, "a.manifest.json"), "w"))

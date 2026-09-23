@@ -1403,11 +1403,25 @@ def cover_module_refs(site_spec, prefix, out_dir=None):
             seen[stem] = f"cover_{stem}"
             ref_path = glb
             if out_dir:
+                import glb_deps
                 dest = os.path.join(out_dir, COVER_DIR)
                 os.makedirs(dest, exist_ok=True)
                 target = os.path.join(dest, stem + ".glb")
-                if not (os.path.exists(target) and _same_bytes(glb, target)):
-                    shutil.copyfile(glb, target)
+                # AND WHATEVER THE MODULE NAMES BESIDE ITSELF. The docstring
+                # above already states the rule this copy exists to satisfy --
+                # every stage that loads a Lot scene copies its siblings -- and
+                # a GLB's siblings grew: Zoo 1.2.0 writes a module's textures
+                # beside it under a relative glTF `uri` instead of inside its
+                # binary chunk. `copyfile` on the .glb alone left every cover
+                # piece in cold runs 9066-9069 naming a texture the package did
+                # not carry, 128 dead references on 9068 from this line.
+                #
+                # `_same_bytes` is not the skip test any more: the .glb can be
+                # byte-identical while a texture beside it is absent, which is
+                # exactly the state those four packages shipped in.
+                # `copy_with_deps` does its own per-file skip, by the hash Zoo
+                # already put in each texture's name.
+                glb_deps.copy_with_deps(glb, target)
                 ref_path = f"{prefix}{COVER_DIR}/{stem}.glb"
             ext.append(f'[ext_resource type="PackedScene" path="{ref_path}" '
                        f'id="{seen[stem]}"]')

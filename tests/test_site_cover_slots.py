@@ -18,6 +18,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import lot            # noqa: E402
 import site_cover     # noqa: E402
+from tests.glb_fixture import write_glb  # noqa: E402
 
 SPECS = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
                      "specs")
@@ -132,7 +133,9 @@ def test_a_missing_module_keeps_the_box_and_says_so(tmp_path):
 
 def test_a_built_module_stands_where_the_box_stood(tmp_path):
     glb = tmp_path / "prop_box_truck_delco_1997_01_w240_d600_h280.glb"
-    glb.write_bytes(b"glTF")
+    # A module shaped the way Zoo 1.2.0 emits one: its textures are files
+    # beside it, named by a relative glTF `uri`, not bytes inside it.
+    write_glb(glb, "cover", images=["_tex/metal_painted_fa269f8e.png"])
     spec = {"cover": [{"at": [10.0, -4.0], "size": [6.0, 2.8, 2.4],
                        "species": "box_truck", "yaw": 90.0, "dims": [2.4, 6.0, 2.8]},
                       {"at": [30.0, 5.0], "size": [6.0, 2.8, 2.4],
@@ -149,7 +152,15 @@ def test_a_built_module_stands_where_the_box_stood(tmp_path):
     # scene in one (cold run 9019: three modules built, none in the level)
     assert len(ext) == 1 and 'type="PackedScene"' in ext[0]
     assert 'path="cover/prop_box_truck_delco_1997_01_w240_d600_h280.glb"' in ext[0]
-    assert (out / "cover" / "prop_box_truck_delco_1997_01_w240_d600_h280.glb").read_bytes() == b"glTF"
+    staged = out / "cover" / "prop_box_truck_delco_1997_01_w240_d600_h280.glb"
+    assert staged.read_bytes() == glb.read_bytes()
+    # AND WHAT IT NAMES. Cold runs 9066-9069 shipped this file and not this
+    # line: 128 cover references in 9068's package resolving to nothing, and
+    # a level the walker reported as "around 90% graybox". A GLB is not one
+    # file.
+    assert (out / "cover" / "_tex" / "metal_painted_fa269f8e.png").is_file()
+    import glb_deps
+    assert glb_deps.unresolved(str(out)) == []
     assert lot.cover_module_refs(spec, "res://", str(out))[1][0].count('path="res://cover/') == 1
     body, sub = lot._outdoor_nodes(spec, cover_refs=refs)
     txt = "\n".join(body)

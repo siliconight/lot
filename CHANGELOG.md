@@ -1,3 +1,63 @@
+## [0.75.0] - every stage copies its siblings, and a GLB's siblings grew
+
+`cover_module_refs` stages a cover piece's module into `<out>/cover/` and
+references it beside the scene. Its docstring already carries the rule and
+the cold run that bought it: "0.59.0 referenced them by absolute path; cold
+run 9019 showed what that costs one stage on ... Every stage that loads a Lot
+scene copies its siblings."
+
+A GLB's siblings grew. Zoo 1.2.0 stopped embedding a module's images in its
+binary chunk and began writing them beside it, named by a relative glTF
+`images[].uri`. `shutil.copyfile` on the `.glb` went on moving one file where
+there were several, and every cover piece in Level Factory cold runs 9066
+through 9069 stood in the level naming a texture the package did not carry.
+Measured 2026-09-22 on 9068's shipped package: 128 dead references out of
+this line, in a level the walker reported as "around 90% graybox".
+
+### Whose defect it was, said plainly
+
+NOT THIS REPO'S, on that run. Level Factory's job store publishes a job's
+outputs by file SUFFIX, so Zoo's `.png` files never left the attempt
+directory and the kit this staging was pointed at had no textures in it to
+copy. Fixed in Level Factory 0.105.0. This line would have dropped them
+anyway the moment they arrived, which is why it is fixed here too: leaving
+one copy site right and the other wrong is how the next one gets written
+wrong.
+
+### What changed
+
+`glb_deps` is new -- read a GLB's JSON chunk, list what it names beside
+itself, copy a GLB with its dependencies, and report every unresolved
+reference under a directory. It is a duplicate of the file in `deli_counter`
+and deliberately so: neither repo imports the other and neither imports Zoo,
+and two spellings of one contract is the price of that. The gate that catches
+a drift between them reads the shipped package rather than either copy:
+`level_factory.packages.exporting.glb_refs`.
+
+`cover_module_refs` uses `copy_with_deps`. `_same_bytes` is no longer the
+skip test there: a `.glb` can be byte-identical while a texture beside it is
+absent, which is precisely the state those four packages shipped in.
+`copy_with_deps` does its own per-file skip, by the hash Zoo already put in
+each texture's name.
+
+`package.py`'s pack assembly copies a `.glb` the same way. That path is not
+on Level Factory's pipeline and was never measured shipping broken; it is
+fixed for the same reason.
+
+### Keyed on the document, not on a folder name
+
+`_tex` appears in `glb_deps` nowhere. The next asset class Zoo externalises
+is carried on the day it appears.
+
+### The `.glb` stubs in the tests
+
+Six fixtures wrote `b"glTF"` -- four bytes that begin with the magic and are
+not a container -- and became `GlbUnreadable` the moment the staging read
+them. A fixture that is not the format under test proves nothing about the
+format, so `tests/glb_fixture.write_glb` emits real minimal GLBs, and
+`test_a_built_module_stands_where_the_box_stood` now stages a module shaped
+the way Zoo 1.2.0 emits one and asserts the texture arrives beside it.
+
 ## [0.74.0] - the blade gets a box, and the name it is built under
 
 0.73.0 named the legend every `sign_post` carries and said the two halves
