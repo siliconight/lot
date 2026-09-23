@@ -1,3 +1,50 @@
+## [0.76.0] - a building's ladders reach the site
+
+COLD RUN 9075 FALSIFIED Dispatch 0.5.0's claim that a ladder's off-mesh nav
+link reaches the package. That release taught Dispatch's DELI COUNTER importer
+to carry them. A SITE mission runs the LOT importer, whose manifest is
+`lot.gameplay.json` -- and this file concatenated its buildings'
+`interactives` while dropping their `ladders` entirely. Measured on that
+package: 23 `gb_ladder` surfaces, `market_hall_a01` carrying a ladder with a
+`nav_link` in its shell, and `navigation_hints.json` reading `links: []`.
+
+Both sides' unit tests had passed. Nothing tested the seam.
+
+### Every position moves, or none should
+
+A ladder record carries twelve three-component points and a four-point plan
+rect, all in the building's own frame:
+
+    lower_anchor, upper_anchor
+    route_nodes/{lower_approach, lower_mount, climb_start, climb_end,
+                 upper_dismount, upper_route}
+    traversal_component/climb_axis[0..1]
+    nav_link/{start_position, end_position}
+    geometry/climb_rect[0..3]                    (x, y plan pairs)
+
+A nav link in site space beside route nodes in building space is worse than
+shipping nothing: an AI would path to where the ladder is not. They are listed
+explicitly rather than found by walking the record, and `_ladder_to_site`
+REFUSES on a numeric triple that is not in the list, so a field Deli Counter
+adds later cannot ride into the site untransformed. Verified by injecting one:
+it raises rather than carrying it.
+
+The record is deep-copied: `merge_gameplay` reads each building's file for
+several passes, and a shared nested dict would write site coordinates into the
+building's own gameplay.json.
+
+### Tested at the seam this time
+
+`test_ladders_reach_the_site.py` runs `merge_gameplay` against the real shell
+that shipped the ladder in 9075, and asserts the foot of the climb agrees
+across `lower_anchor`, `route_nodes.lower_approach` and
+`traversal_component.climb_axis` -- three independent routes through one
+record -- AND that it moved at all, since a pass that transformed nothing would
+satisfy the agreement. One test pins that the fixture shell still has a
+ladder, because its absence would make the rest pass vacuously; the first
+draft of those tests did exactly that, silently, because a building record
+without a `gameplay` key places fine and contributes nothing.
+
 ## [0.75.0] - every stage copies its siblings, and a GLB's siblings grew
 
 `cover_module_refs` stages a cover piece's module into `<out>/cover/` and
