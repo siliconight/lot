@@ -1413,12 +1413,12 @@ def cover_module_refs(site_spec, prefix, out_dir=None):
                 # a GLB's siblings grew: Zoo 1.2.0 writes a module's textures
                 # beside it under a relative glTF `uri` instead of inside its
                 # binary chunk. `copyfile` on the .glb alone left every cover
-                # piece in cold runs 9066-9069 naming a texture the package did
+                # piece in cold runs 9067-9069 naming a texture the package did
                 # not carry, 128 dead references on 9068 from this line.
                 #
                 # `_same_bytes` is not the skip test any more: the .glb can be
                 # byte-identical while a texture beside it is absent, which is
-                # exactly the state those four packages shipped in.
+                # exactly the state those three packages shipped in.
                 # `copy_with_deps` does its own per-file skip, by the hash Zoo
                 # already put in each texture's name.
                 glb_deps.copy_with_deps(glb, target)

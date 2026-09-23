@@ -9,8 +9,9 @@ scene copies its siblings."
 A GLB's siblings grew. Zoo 1.2.0 stopped embedding a module's images in its
 binary chunk and began writing them beside it, named by a relative glTF
 `images[].uri`. `shutil.copyfile` on the `.glb` went on moving one file where
-there were several, and every cover piece in Level Factory cold runs 9066
-through 9069 stood in the level naming a texture the package did not carry.
+there were several, and every cover piece in Level Factory cold runs 9067,
+9068 and 9069 stood in the level naming a texture the package did not carry.
+(9066 is clean: it was built three hours before the externalisation landed.)
 Measured 2026-09-22 on 9068's shipped package: 128 dead references out of
 this line, in a level the walker reported as "around 90% graybox".
 
@@ -36,7 +37,7 @@ a drift between them reads the shipped package rather than either copy:
 
 `cover_module_refs` uses `copy_with_deps`. `_same_bytes` is no longer the
 skip test there: a `.glb` can be byte-identical while a texture beside it is
-absent, which is precisely the state those four packages shipped in.
+absent, which is precisely the state those three packages shipped in.
 `copy_with_deps` does its own per-file skip, by the hash Zoo already put in
 each texture's name.
 

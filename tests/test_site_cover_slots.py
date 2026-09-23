@@ -154,7 +154,7 @@ def test_a_built_module_stands_where_the_box_stood(tmp_path):
     assert 'path="cover/prop_box_truck_delco_1997_01_w240_d600_h280.glb"' in ext[0]
     staged = out / "cover" / "prop_box_truck_delco_1997_01_w240_d600_h280.glb"
     assert staged.read_bytes() == glb.read_bytes()
-    # AND WHAT IT NAMES. Cold runs 9066-9069 shipped this file and not this
+    # AND WHAT IT NAMES. Cold runs 9067-9069 shipped this file and not this
     # line: 128 cover references in 9068's package resolving to nothing, and
     # a level the walker reported as "around 90% graybox". A GLB is not one
     # file.
