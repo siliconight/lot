@@ -1,3 +1,54 @@
+## 0.77.0 - the site graph includes the street, because the buildings do
+
+`build_graph` used building-to-building paths only and said so: "paths to raw
+points don't connect buildings and are ignored here". Level Factory emits a
+chain of those and DELIBERATELY drops any segment crossing a road -- cold run
+9049, where one cut across a cross street mid-block and read as a fake
+crosswalk -- giving every building a door path to the sidewalk instead. The
+street carried the connection and this function could not see it.
+
+Measured over every candidate site spec on disk before the change, by
+`tools/level_recipe_census.py`:
+
+    sites reporting an isolated building   65 of 79  ->  0 of 79
+    objective_approaches 0                 38 specs  ->   2
+    objective_approaches 1                 37 specs  ->   6
+    objective_approaches 2                  4 specs  ->  71
+
+Cold run 9077's shipped package -- a run reported as a genuine zero -- had
+`{b0: [b1], b1: [b0], b2: []}`, `isolated_buildings: ['b2']`, and printed
+"buildings with no declared path-route from 'b0': b2". It now reads a full
+triangle, no isolation, two approaches.
+
+WHAT COUNTS AS MEETING A STREET is the declared door path, not proximity. Lot
+already treats a path as where a building meets the ground -- `kerb_crossings`
+drops a kerb where one crosses a kerb line -- so a raw-point path with one end
+in a road's band (carriageway plus sidewalks) and the other at a building is
+that building's door onto that road. Proximity was the alternative and is
+worse: it needs a footprint the spec does not carry, and would connect a
+building that merely sits near a road it has no way onto.
+
+UNAMBIGUOUS OR NOT AT ALL. A path end matches a building only when the nearest
+centre is within half the distance to the runner-up. A tie means the spec does
+not say whose door it is, and an edge nobody declared is worse than a missing
+one.
+
+A CLIQUE PER ROAD, with the limit stated: it says these buildings share a
+street, not that they are adjacent along it. `street_members` carries the road
+index and a measure that needs "next door" will need distance along `t`.
+
+STRICTLY MORE PERMISSIVE, checked before writing and asserted in the tests:
+`gate()` raises BELOW two approaches, and `isolated_buildings` reports an
+absence. The street graph is a superset of the path graph, edge for edge.
+
+NOT A GATE. The recipe's `approaches: min 3` is still unmet on all 79 specs,
+and that reading is now about the level: three buildings on one street afford
+two directions to come from. A third needs a fourth building or a second street
+the buildings front -- and `_street_for` addresses every door to the front
+road, so a generated cross street has no addresses on it at all.
+
+542 + 12 passed.
+
 ## [0.76.0] - a building's ladders reach the site
 
 COLD RUN 9075 FALSIFIED Dispatch 0.5.0's claim that a ladder's off-mesh nav
