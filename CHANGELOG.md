@@ -1,3 +1,29 @@
+## 0.77.1 - a door can name its own building
+
+`street_members` inferred which building a door path belonged to from the
+nearest centre, requiring it to be twice as close as the runner-up so an
+ambiguous end joined nothing. That rule cannot answer for a wide shell: on
+`crossroads_9600`, b1 is 56 m across, so its own doorstep sits 29 m from its
+centre while its neighbour's centre is 39 m away. The door was dropped and the
+cross street kept only one of its two addresses.
+
+Level Factory 0.109.2 names the owner in a `building` key and this prefers it,
+falling back to inference for hand-authored specs that predate it.
+
+NOT `from`, and the difference is a shipped defect. `site_streets._endpoints`
+resolves `from` to the building's CENTRE, so a door carrying it would start
+inside the building, run out across the sidewalk, and `kerb_crossings` would
+read it as a street crossing -- every door dropped-kerbed, crosswalked and
+signed, which is cold run 9048 exactly. `building` is inert to that resolver.
+Checked after the change: kerb cuts on the first crossroads stayed at 3 for a T
+and 4 for an X, unmoved by five door paths.
+
+    street_members before   {0: [b0, b1, b2], 1: []}
+    after LF 0.109.2        {0: [b0, b1, b2], 1: [b0]}
+    after this              {0: [b0, b1, b2], 1: [b0, b1]}
+
+554 passed.
+
 ## 0.77.0 - the site graph includes the street, because the buildings do
 
 `build_graph` used building-to-building paths only and said so: "paths to raw

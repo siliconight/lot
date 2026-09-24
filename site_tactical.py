@@ -112,7 +112,16 @@ def street_members(site_spec):
             for i, road in enumerate(roads):
                 if not _point_on_road(end, road):
                     continue
-                bid = _building_at(other, centres)
+                # DECLARED BEATS INFERRED. Level Factory names the door's owner
+                # in `building` -- not `from`, which `site_streets._endpoints`
+                # would resolve to the building's centre and turn every door
+                # into a street crossing. Inference stays for hand-authored
+                # specs that predate the key, and it cannot always answer: a
+                # wide shell's own doorstep is nearer its neighbour's centre
+                # than the rule allows.
+                bid = p.get("building")
+                if bid not in centres:
+                    bid = _building_at(other, centres)
                 if bid is not None:
                     out[i].add(bid)
     return out
