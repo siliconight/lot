@@ -499,6 +499,36 @@
       "acoustic": "Glass",
       "absorption": 0.1,
       "damping": 0.05
+    },
+    {
+      "id": "wood",
+      "acoustic": "Wood",
+      "absorption": null,
+      "damping": null
+    },
+    {
+      "id": "carpet",
+      "acoustic": "Curtain",
+      "absorption": 0.85,
+      "damping": 0.75
+    },
+    {
+      "id": "tile",
+      "acoustic": "Concrete",
+      "absorption": 0.3,
+      "damping": 0.2
+    },
+    {
+      "id": "ceiling_tile",
+      "acoustic": "Curtain",
+      "absorption": 0.9,
+      "damping": 0.8
+    },
+    {
+      "id": "plaster",
+      "acoustic": "Drywall",
+      "absorption": 0.45,
+      "damping": 0.4
     }
   ],
   "surfaces": [
@@ -1905,6 +1935,303 @@
         "absorption": 0.35,
         "damping": 0.25
       }
+    },
+    {
+      "node": "workbench_rc37d2655_1_col",
+      "material": {
+        "id": "wood",
+        "acoustic": "Wood",
+        "absorption": null,
+        "damping": null
+      }
+    },
+    {
+      "node": "cabinet_tool_rc37d2655_2_col",
+      "material": {
+        "id": "wood",
+        "acoustic": "Wood",
+        "absorption": null,
+        "damping": null
+      }
+    },
+    {
+      "node": "shelf_run_rc37d2655_3_col",
+      "material": {
+        "id": "wood",
+        "acoustic": "Wood",
+        "absorption": null,
+        "damping": null
+      }
+    },
+    {
+      "node": "cabinet_tool_rc37d2655_4_col",
+      "material": {
+        "id": "wood",
+        "acoustic": "Wood",
+        "absorption": null,
+        "damping": null
+      }
+    },
+    {
+      "node": "shelf_run_rc37d2655_5_col",
+      "material": {
+        "id": "wood",
+        "acoustic": "Wood",
+        "absorption": null,
+        "damping": null
+      }
+    },
+    {
+      "node": "pallets_rc37d2655_6_col",
+      "material": {
+        "id": "wood",
+        "acoustic": "Wood",
+        "absorption": null,
+        "damping": null
+      }
+    },
+    {
+      "node": "pallets_rc37d2655_7_col",
+      "material": {
+        "id": "wood",
+        "acoustic": "Wood",
+        "absorption": null,
+        "damping": null
+      }
+    },
+    {
+      "node": "pallets_rc37d2655_8_col",
+      "material": {
+        "id": "wood",
+        "acoustic": "Wood",
+        "absorption": null,
+        "damping": null
+      }
+    },
+    {
+      "node": "shelf_run_rd3f62382_1_col",
+      "material": {
+        "id": "wood",
+        "acoustic": "Wood",
+        "absorption": null,
+        "damping": null
+      }
+    },
+    {
+      "node": "cabinet_supply_rd3f62382_2_col",
+      "material": {
+        "id": "wood",
+        "acoustic": "Wood",
+        "absorption": null,
+        "damping": null
+      }
+    },
+    {
+      "node": "shelf_run_rd3f62382_3_col",
+      "material": {
+        "id": "wood",
+        "acoustic": "Wood",
+        "absorption": null,
+        "damping": null
+      }
+    },
+    {
+      "node": "cabinet_file_rd3f62382_4_col",
+      "material": {
+        "id": "wood",
+        "acoustic": "Wood",
+        "absorption": null,
+        "damping": null
+      }
+    },
+    {
+      "node": "cartons_rd3f62382_5_col",
+      "material": {
+        "id": "wood",
+        "acoustic": "Wood",
+        "absorption": null,
+        "damping": null
+      }
+    },
+    {
+      "node": "cartons_rd3f62382_6_col",
+      "material": {
+        "id": "wood",
+        "acoustic": "Wood",
+        "absorption": null,
+        "damping": null
+      }
+    },
+    {
+      "node": "desk_r27d8e619_1_col",
+      "material": {
+        "id": "wood",
+        "acoustic": "Wood",
+        "absorption": null,
+        "damping": null
+      }
+    },
+    {
+      "node": "chair_set_r27d8e619_1_1_col",
+      "material": {
+        "id": "wood",
+        "acoustic": "Wood",
+        "absorption": null,
+        "damping": null
+      }
+    },
+    {
+      "node": "cabinet_file_r27d8e619_2_col",
+      "material": {
+        "id": "wood",
+        "acoustic": "Wood",
+        "absorption": null,
+        "damping": null
+      }
+    },
+    {
+      "node": "shelf_run_r27d8e619_3_col",
+      "material": {
+        "id": "wood",
+        "acoustic": "Wood",
+        "absorption": null,
+        "damping": null
+      }
+    },
+    {
+      "node": "cabinet_file_r27d8e619_4_col",
+      "material": {
+        "id": "wood",
+        "acoustic": "Wood",
+        "absorption": null,
+        "damping": null
+      }
+    },
+    {
+      "node": "cabinet_file_r27d8e619_5_col",
+      "material": {
+        "id": "wood",
+        "acoustic": "Wood",
+        "absorption": null,
+        "damping": null
+      }
+    },
+    {
+      "node": "desk_r27d8e619_6_col",
+      "material": {
+        "id": "wood",
+        "acoustic": "Wood",
+        "absorption": null,
+        "damping": null
+      }
+    },
+    {
+      "node": "cartons_r27d8e619_7_col",
+      "material": {
+        "id": "wood",
+        "acoustic": "Wood",
+        "absorption": null,
+        "damping": null
+      }
+    },
+    {
+      "node": "shelf_run_rde4c5b55_1_col",
+      "material": {
+        "id": "wood",
+        "acoustic": "Wood",
+        "absorption": null,
+        "damping": null
+      }
+    },
+    {
+      "node": "shelf_run_rde4c5b55_2_col",
+      "material": {
+        "id": "wood",
+        "acoustic": "Wood",
+        "absorption": null,
+        "damping": null
+      }
+    },
+    {
+      "node": "cabinet_file_rde4c5b55_3_col",
+      "material": {
+        "id": "wood",
+        "acoustic": "Wood",
+        "absorption": null,
+        "damping": null
+      }
+    },
+    {
+      "node": "cartons_rde4c5b55_4_col",
+      "material": {
+        "id": "wood",
+        "acoustic": "Wood",
+        "absorption": null,
+        "damping": null
+      }
+    },
+    {
+      "node": "cartons_rde4c5b55_5_col",
+      "material": {
+        "id": "wood",
+        "acoustic": "Wood",
+        "absorption": null,
+        "damping": null
+      }
+    },
+    {
+      "node": "stair_guard_side_0_col",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "stair_guard_rail_1_col",
+      "material": {
+        "id": "wood",
+        "acoustic": "Wood",
+        "absorption": null,
+        "damping": null
+      }
+    },
+    {
+      "node": "stair_guard_side_2_col",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
+    },
+    {
+      "node": "stair_guard_rail_3_col",
+      "material": {
+        "id": "wood",
+        "acoustic": "Wood",
+        "absorption": null,
+        "damping": null
+      }
+    },
+    {
+      "node": "stair_guard_rail_4_col",
+      "material": {
+        "id": "wood",
+        "acoustic": "Wood",
+        "absorption": null,
+        "damping": null
+      }
+    },
+    {
+      "node": "stair_guard_back_5_col",
+      "material": {
+        "id": "concrete",
+        "acoustic": "Concrete",
+        "absorption": 0.7,
+        "damping": 0.6
+      }
     }
   ],
   "interactives": [
@@ -1934,6 +2261,10 @@
       ],
       "source": "inferred",
       "reversible": false,
+      "collision_per_state": {
+        "intact": true,
+        "breached": false
+      },
       "material": "drywall",
       "breach_class": "soft_wall",
       "building": "auto_shop_a02"
@@ -1964,6 +2295,10 @@
       ],
       "source": "inferred",
       "reversible": false,
+      "collision_per_state": {
+        "intact": true,
+        "breached": false
+      },
       "material": "drywall",
       "breach_class": "soft_wall",
       "building": "auto_shop_a02"
@@ -1999,6 +2334,10 @@
       ],
       "source": "inferred",
       "reversible": true,
+      "collision_per_state": {
+        "closed": true,
+        "open": false
+      },
       "building": "auto_shop_a02"
     },
     {
@@ -2032,6 +2371,10 @@
       ],
       "source": "inferred",
       "reversible": true,
+      "collision_per_state": {
+        "closed": true,
+        "open": false
+      },
       "building": "auto_shop_a02"
     },
     {
@@ -2065,6 +2408,10 @@
       ],
       "source": "inferred",
       "reversible": true,
+      "collision_per_state": {
+        "closed": true,
+        "open": false
+      },
       "building": "auto_shop_a02"
     },
     {
@@ -2093,6 +2440,10 @@
       ],
       "source": "inferred",
       "reversible": false,
+      "collision_per_state": {
+        "intact": true,
+        "breached": false
+      },
       "material": "drywall",
       "breach_class": "soft_wall",
       "building": "auto_shop_a02"
@@ -2128,6 +2479,10 @@
       ],
       "source": "inferred",
       "reversible": true,
+      "collision_per_state": {
+        "closed": true,
+        "open": false
+      },
       "building": "auto_shop_a02"
     },
     {
@@ -2161,6 +2516,10 @@
       ],
       "source": "inferred",
       "reversible": true,
+      "collision_per_state": {
+        "closed": true,
+        "open": false
+      },
       "building": "auto_shop_a02"
     },
     {
@@ -2194,6 +2553,10 @@
       ],
       "source": "inferred",
       "reversible": true,
+      "collision_per_state": {
+        "closed": true,
+        "open": false
+      },
       "building": "auto_shop_a02"
     }
   ],
@@ -2208,6 +2571,7 @@
       "channels": 1,
       "roof_access": false,
       "transfer": false,
+      "underside": "solid",
       "floors_served": [
         0,
         1
@@ -2215,19 +2579,19 @@
       "footprint_polygon": [
         [
           6.5,
-          5.3
+          6.0
         ],
         [
           11.5,
-          5.3
+          6.0
         ],
         [
           11.5,
-          7.7
+          7.2
         ],
         [
           6.5,
-          7.7
+          7.2
         ]
       ],
       "clear_width_m": 1.2,
@@ -2260,13 +2624,13 @@
           "story": 0,
           "rect": [
             11.5,
-            6.5,
+            6.0,
             12.7,
-            7.7
+            7.2
           ],
           "point": [
             12.1,
-            7.1,
+            6.6,
             0.0
           ],
           "dir": [
@@ -2279,13 +2643,13 @@
           "story": 1,
           "rect": [
             4.5,
-            6.5,
+            6.0,
             5.7,
-            7.7
+            7.2
           ],
           "point": [
             5.1,
-            7.1,
+            6.6,
             3.6
           ],
           "dir": [
@@ -2297,12 +2661,12 @@
       "nav_endpoints": {
         "lower": [
           12.1,
-          7.1,
+          6.6,
           0.0
         ],
         "upper": [
           5.1,
-          7.1,
+          6.6,
           3.6
         ]
       },
@@ -3036,6 +3400,39 @@
     "parts_rack": "prop",
     "tool_bench": "prop",
     "office_desk": "prop",
+    "workbench_rc37d2655_1": "prop",
+    "cabinet_tool_rc37d2655_2": "prop",
+    "shelf_run_rc37d2655_3": "prop",
+    "cabinet_tool_rc37d2655_4": "prop",
+    "shelf_run_rc37d2655_5": "prop",
+    "pallets_rc37d2655_6": "prop",
+    "pallets_rc37d2655_7": "prop",
+    "pallets_rc37d2655_8": "prop",
+    "shelf_run_rd3f62382_1": "prop",
+    "cabinet_supply_rd3f62382_2": "prop",
+    "shelf_run_rd3f62382_3": "prop",
+    "cabinet_file_rd3f62382_4": "prop",
+    "cartons_rd3f62382_5": "prop",
+    "cartons_rd3f62382_6": "prop",
+    "desk_r27d8e619_1": "prop",
+    "chair_set_r27d8e619_1_1": "prop",
+    "cabinet_file_r27d8e619_2": "prop",
+    "shelf_run_r27d8e619_3": "prop",
+    "cabinet_file_r27d8e619_4": "prop",
+    "cabinet_file_r27d8e619_5": "prop",
+    "desk_r27d8e619_6": "prop",
+    "cartons_r27d8e619_7": "prop",
+    "shelf_run_rde4c5b55_1": "prop",
+    "shelf_run_rde4c5b55_2": "prop",
+    "cabinet_file_rde4c5b55_3": "prop",
+    "cartons_rde4c5b55_4": "prop",
+    "cartons_rde4c5b55_5": "prop",
+    "stair_guard_side_0": "prop",
+    "stair_guard_rail_1": "prop",
+    "stair_guard_side_2": "prop",
+    "stair_guard_rail_3": "prop",
+    "stair_guard_rail_4": "prop",
+    "stair_guard_back_5": "prop",
     "parapet_N_t0_0": "wall",
     "parapet_N_t0_1": "wall",
     "parapet_N_t0_2": "wall",

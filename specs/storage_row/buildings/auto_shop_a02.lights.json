@@ -1,5 +1,5 @@
 {
-  "light_manifest_version": "1.1.0",
+  "light_manifest_version": "1.2.0",
   "building_id": "auto_shop_a02",
   "theme": "greybox",
   "space": "Blender Z-up, meters; rot_y = degrees about up; pos is the fixture location -- for a ceiling row, hung below the slab's underside, not below the floor above",
@@ -24,6 +24,25 @@
       "reacts_to_alarm": true
     },
     {
+      "id": "service_bay_ambient",
+      "type": "room_ambient",
+      "source": "derived",
+      "pos": [
+        0.0,
+        -2.5,
+        1.65
+      ],
+      "rot_y": 0.0,
+      "room": "service_bay",
+      "size": [
+        26.0,
+        13.0,
+        3.3
+      ],
+      "color": null,
+      "reacts_to_alarm": false
+    },
+    {
       "id": "parts_back_bulbs",
       "type": "pendant",
       "source": "derived",
@@ -40,6 +59,25 @@
       },
       "drop": 2.6,
       "reacts_to_alarm": true
+    },
+    {
+      "id": "parts_back_ambient",
+      "type": "room_ambient",
+      "source": "derived",
+      "pos": [
+        0.0,
+        6.5,
+        1.65
+      ],
+      "rot_y": 0.0,
+      "room": "parts_back",
+      "size": [
+        26.0,
+        5.0,
+        3.3
+      ],
+      "color": null,
+      "reacts_to_alarm": false
     },
     {
       "id": "upper_office_ceiling",
@@ -60,6 +98,25 @@
       "reacts_to_alarm": true
     },
     {
+      "id": "upper_office_ambient",
+      "type": "room_ambient",
+      "source": "derived",
+      "pos": [
+        0.0,
+        5.5,
+        5.25
+      ],
+      "rot_y": 0.0,
+      "room": "upper_office",
+      "size": [
+        26.0,
+        7.0,
+        3.3
+      ],
+      "color": null,
+      "reacts_to_alarm": false
+    },
+    {
       "id": "upper_storage_ceiling",
       "type": "fluorescent",
       "source": "derived",
@@ -76,6 +133,25 @@
       },
       "drop": 3.2,
       "reacts_to_alarm": true
+    },
+    {
+      "id": "upper_storage_ambient",
+      "type": "room_ambient",
+      "source": "derived",
+      "pos": [
+        0.0,
+        -3.5,
+        5.25
+      ],
+      "rot_y": 0.0,
+      "room": "upper_storage",
+      "size": [
+        26.0,
+        11.0,
+        3.3
+      ],
+      "color": null,
+      "reacts_to_alarm": false
     },
     {
       "id": "ext_0_W_window_1",
@@ -179,7 +255,7 @@
       "source": "derived",
       "pos": [
         -3.9,
-        -9.15,
+        -9.3,
         3.25
       ],
       "rot_y": 270.0,
@@ -192,7 +268,7 @@
       "source": "derived",
       "pos": [
         9.1,
-        -9.15,
+        -9.3,
         2.45
       ],
       "rot_y": 270.0,
@@ -204,7 +280,7 @@
       "type": "wall_pack",
       "source": "derived",
       "pos": [
-        13.15,
+        13.3,
         -5.4,
         2.45
       ],
