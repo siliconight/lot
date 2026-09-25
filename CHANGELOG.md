@@ -1,3 +1,44 @@
+## 0.78.0 - the ground gets wet, because the ground is Lot's
+
+`ground_skins` honours `wet_ground` on a site spec: `albedo` and `roughness`
+point at the pack's `wet_albedo` and `wet_roughness` where it has them.
+
+WHERE THIS BELONGS WAS ESTABLISHED BY COLD RUN 9079, not by reasoning. The
+chooser was wired into Zoo first (Zoo 1.3.0, LF 0.113.0) on the assumption that
+wetting Zoo's packs wets the road. The shipped package refuted it: 170 distinct
+`M_Skin` materials across 247 GLBs and ZERO ending `_wet`, because Zoo skinned
+24 kinds -- canvas, carpet, ceiling tile, concrete, drywall, glass, leather,
+metal, plaster, plastic, rubber, tile, vegetation, velvet, wallpaper, wood and
+the rest -- and not one is a ground kind. `--wet` was passed, was honoured, and
+had nothing to choose. The brief said `weather: rain`, Lux rained, the road
+shipped dry.
+
+`site.tscn` carries that road: `StandardMaterial3D` nodes whose
+`albedo_texture` is an `ExtResource` pointing at `skins/asphalt_delco_albedo
+.png` and `skins/sidewalk_delco_albedo.png`, written from the records this
+function builds by reading the pack manifest directly. So the substitution has
+to exist here as well. Lot imports nothing of Zoo's and vice versa; what must
+not drift between them is the map NAMES Pixelcoat writes, and those are the
+pack contract, asserted by a test in each.
+
+COSTS NOTHING. `_copy_maps` copies whatever the record names, so the wet PNG
+lands in `skins/` and the material samples it -- same slots, same
+`meters_per_tile`, same `alpha_mode`, no extra texture, no extra material, no
+extra draw call. Tests assert the record is otherwise identical field for
+field.
+
+A FAMILY WHOSE PACK HAS NO WET MAPS IS UNTOUCHED, so `wet_ground` is safe to
+set for a whole site: on a delco_1997 library the ground and path move and the
+courtyard's brick does not. Which families are wet is Pixelcoat's decision,
+carried in the grammar.
+
+AND IT SAYS SO EITHER WAY. `LOT_GROUND_SKIN_WET` reports what was substituted,
+and a site that asked for wet ground and got NONE is reported too -- because
+that is a level raining on a dry road, and it shipped once without a word.
+
+`tests/test_wet_ground.py`, 13 tests; 5 fail against the unfixed resolver.
+Suite 567 passing.
+
 ## 0.77.1 - a door can name its own building
 
 `street_members` inferred which building a door path belonged to from the

@@ -1002,6 +1002,17 @@ def sign_size(facade_w: float):
 #: theme and does not read Pixelcoat's profiles -- only the pack it was handed.
 SKIN_FAMILIES = ("ground", "path", "courtyard", "road", "sidewalk", "paint")
 
+#: The wet variant Pixelcoat >= 0.47.0 writes beside the dry maps, and which
+#: map each stands in for. Resolved only when the spec asks; a pack without
+#: them is read exactly as before.
+#:
+#: THE SAME TABLE ZOO CARRIES, and the duplication is deliberate rather than
+#: careless: Lot reads a pack manifest directly and imports nothing of Zoo's,
+#: so a shared constant would mean one tool depending on the other for a
+#: two-entry dict. What must not drift is the NAMES Pixelcoat writes, and
+#: those are the pack contract.
+WET_SUBSTITUTIONS = {"albedo": "wet_albedo", "roughness": "wet_roughness"}
+
 
 def ground_skins(site_spec):
     """Resolve the spec's `ground_skins` pack directories into skin records.
@@ -1018,6 +1029,12 @@ def ground_skins(site_spec):
     there.
     """
     raw = site_spec.get("ground_skins") or {}
+    # WET WHEN THE SPEC ASKS. Cold run 9079 shipped a level whose brief said
+    # `weather: rain`, whose sky rained, and whose road was dry -- the chooser
+    # had been wired into Zoo, which does not skin the ground. This is the
+    # tool that does.
+    want_wet = bool(site_spec.get("wet_ground"))
+    wet_used = []
     skins, findings = {}, []
     for fam, pack_dir in raw.items():
         if fam not in SKIN_FAMILIES:
@@ -1052,6 +1069,20 @@ def ground_skins(site_spec):
         def _abs(fname):
             return os.path.abspath(os.path.join(pack_dir, fname)).replace("\\", "/")
 
+        if want_wet:
+            # Point `albedo` and `roughness` at the wet files, where the pack
+            # has them AND the file is on disk -- the same guard the dry maps
+            # get above, for the same reason: a named map that was never
+            # written should fall back to what exists rather than resolve to a
+            # missing path. `_copy_maps` then copies whatever the record
+            # names, so the wet PNG lands in `skins/` and the material samples
+            # it. No extra texture, no extra material, no extra draw call.
+            for dry_key, wet_key in WET_SUBSTITUTIONS.items():
+                fname = maps.get(wet_key)
+                if fname and os.path.isfile(os.path.join(pack_dir, str(fname))):
+                    maps[dry_key] = fname
+                    wet_used.append(f"{fam}.{dry_key}")
+
         hints = pk.get("import_hints") or {}
         skins[fam] = {
             "id": f"skin_{fam}",
@@ -1065,8 +1096,26 @@ def ground_skins(site_spec):
             # alpha scissor; anything else is opaque
             "alpha_mode": (hints.get("transparency") or {}).get("alpha_mode"),
         }
+    # SAID OUT LOUD, either way. A site that asked for wet ground and got none
+    # is a level that rains on a dry road, and that shipped once already
+    # without a word -- so a request that matched nothing is a finding, and a
+    # request that matched is printed with what it moved.
+    if want_wet:
+        if wet_used:
+            findings.append((CODE_GROUND_SKIN_WET,
+                             "wet ground: " + ", ".join(sorted(wet_used))))
+        else:
+            findings.append((CODE_GROUND_SKIN_WET,
+                             "wet ground asked for and NO pack carried a wet "
+                             "map; every outdoor family ships dry"))
     return skins, findings
 
+
+#: Reported when a spec asks for wet ground -- with what moved, or with the
+#: fact that nothing did. INFO rather than a warning: a dry site is not
+#: broken, and a site whose packs carry no wet maps is the ordinary case for
+#: every theme but the ones Pixelcoat has authored.
+CODE_GROUND_SKIN_WET = "LOT_GROUND_SKIN_WET"
 
 SKINS_DIR = "skins"
 
