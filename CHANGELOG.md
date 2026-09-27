@@ -1,3 +1,73 @@
+## 0.79.0 - a streetlight shines out of the pole that is standing there
+
+MEASURED FIRST, on cold run 9087's walk copy, with `pole_vs_light.gd`:
+
+    POLE/LIGHT: 54 streetlight light(s), 48 streetlight prop mesh(es)
+       min 3.50 m   median 24.93 m   mean 30.62 m   max 93.68 m
+       lights with a pole within 1.0 m: 0 of 54
+
+Not one exterior light in the level came out of a lamp. The walker found it
+from the inside -- standing at the map edge in two hard cone edges washing the
+boundary wall: "a reminder that light should comes from light sources, i don't
+know where this light is coming from", and then "it could be that there is a
+mismatch of placement because it looks like the street lamps dont have that
+light coming from them".
+
+IT IS ONE REPO WITH TWO FUNCTIONS THAT DO NOT READ EACH OTHER, which is worth
+saying because the first diagnosis was that this needed a new site-level Zoo
+fixture stage in Level Factory. `site_furniture.plan_furniture` stands
+`streetlight` cover pieces along the kerb bands, nudged clear of the dropped
+kerbs and the mission markers; `lot._streetlight_anchors` derived light ROWS
+from the path graph and from a ring 2 m inside the ground rect. Both are Lot.
+`merge_lights` already runs after `plan_furniture` has extended
+`site_spec["cover"]`, so the poles were sitting in the same dict the whole
+time.
+
+So the poles ARE the anchors now: one light per lamp, at the lamp's plan
+point, at the lamp's yaw, at the height of its lens. Coincident by
+construction rather than by two formulas agreeing.
+
+* `STREETLIGHT_H = 6.0` is gone. A pole's height comes from the piece.
+* `STREETLIGHT_LENS_DROP = 0.175` is new, and derived rather than chosen:
+  `zoo/zoo_keeper/recipes/streetlight.py` builds the species centred, and in
+  a SLOT (`fit_exact`, which is how the site kit stands these) the pole top
+  is at local `h/2 - 0.18`, the shoebox head fills the last 0.18 to the
+  module's top, and the lens protrudes to `h/2 - 0.175`. A light at the
+  module top would be inside the head, and the head would shadow its own
+  spot. Zoo's `tests/test_streetlight_lens_drop.py` fails if that moves, and
+  checks this file for the matching number when both repos are present.
+* the anchor carries `"hardware": "slot:cover_<i>"`, naming the slot that
+  stands its pole. Zoo 1.6.0 reads it and skips the anchor, so the day a
+  site-level fixture job exists it does not stand a second pole inside the
+  first.
+* `row` is `{count: 1, spacing: 0}`. A row cannot describe these: `_nudged`
+  moves a pole clear of a kerb cut or a marker, so the spacing along a kerb
+  is not constant, and a `{count, spacing}` pair would put most of the
+  lights back off the poles again.
+
+WHAT WENT AWAY WITH THE ROWS, said here rather than discovered later:
+
+* the PERIMETER RING lit the boundary wall from nothing. That is the frame
+  the walker was standing in. The map edge is now lit by the moon alone.
+  Standing poles out there is a placement decision for `site_furniture`, and
+  it is the right way to light a boundary; faking it from the light side is
+  not, and is what this release removes.
+* the PATH ROWS lit the path graph, which is not where the street furniture
+  is -- that is the 24.93 m median above.
+* a site whose roads carry no sidewalk band stands no lamps and so now gets
+  no exterior lighting at all. `write_site` prints `LOT_NO_EXTERIOR_LIGHTS`
+  saying so, because that is a real state and a row of lights from nowhere is
+  not a fix for it.
+
+Light count on the shipped kerb line goes 54 -> 48, each one on a pole.
+
+Tests: `test_lights_stand_on_the_poles_the_site_stands` is the walk-copy
+probe as a unit test -- it plans the kerb line from `coldrun_kerb_probe.json`,
+merges, and asserts every light is within 1 mm of a pole, at the lens height,
+carrying a `hardware` tag that names a slot the manifest actually writes.
+`test_lights_no_pole_means_no_exterior_light_rather_than_a_row` asserts the
+removed behaviour is gone. Both fail against 0.78.0's `lot.py`.
+
 ## 0.78.0 - the ground gets wet, because the ground is Lot's
 
 `ground_skins` honours `wet_ground` on a site spec: `albedo` and `roughness`
