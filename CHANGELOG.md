@@ -1,3 +1,17 @@
+## 0.81.0 - the price pylon Lot asks for is 3.4 m wide
+
+The walker, 2026-09-29: "yes, make the pylon bigger". `SPECIES["price_pylon"]`
+follows Zoo 1.26.0's genome default, 2.4 x 0.5 x 6.5 -> 3.4 x 0.7 x 9.0 --
+the width the name needs to read past ~14 m (Zoo 1.25.0 measured the limit
+of a 2.4 m face). Placement is unchanged in rule: behind the sidewalk band,
+`PYLON_SETBACK + w / 2` off its back edge (0.5 m further back now), along
+the road, clear of cuts, footprints, corridors and pieces.
+
+`tests/test_site_furniture.py`: the assembled pylon slot carries the
+table's dims and stands on the ground at half its height, read from the
+table rather than pinned to 1.19.0's numbers; the table-equals-genome test
+caught the change before this release (it failed against Zoo 1.26.0).
+
 ## 0.80.0 - a gas station's price pylon stands at its road frontage
 
 The walker, 2026-09-28: "do the price pylon next". Zoo 1.19.0 grew the

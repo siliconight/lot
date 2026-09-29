@@ -667,6 +667,8 @@ def test_assemble_stands_a_pylon_for_a_building_with_a_canopy(tmp_path):
     pylons = [s for s in doc["slots"] if s.get("species") == "price_pylon"]
     assert len(pylons) == 1, [s.get("species") for s in doc["slots"]]
     s = pylons[0]
-    assert s["fit"]["dims"] == [2.4, 0.5, 6.5] and s["fit"]["collision"] == "convex"
-    assert abs(s["transform"]["translation"][2] - 3.25) < 1e-6
+    assert s["fit"]["dims"] == list(site_furniture.SPECIES["price_pylon"])
+    assert s["fit"]["collision"] == "convex"
+    # standing on the ground: its centre half its height up (0.81.0: 9.0 m)
+    assert abs(s["transform"]["translation"][2] - site_furniture.SPECIES["price_pylon"][2] / 2.0) < 1e-6
     assert abs(s["transform"]["rot_y"] % 180.0 - 90.0) < 1e-6

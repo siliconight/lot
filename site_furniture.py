@@ -73,8 +73,9 @@ SPECIES = {
     "london_plane": (5.0, 5.0, 6.5),
     "callery_pear": (3.0, 3.0, 5.5),
     # THE GAS STATION'S PRICE PYLON (Zoo 1.19.0), at its road frontage
-    # (`plan_pylons`). The genome's default.
-    "price_pylon": (2.4, 0.5, 6.5),
+    # (`plan_pylons`). The genome's default: 3.4 x 0.7 x 9.0 since Zoo 1.26.0
+    # (0.81.0), the width the name needs to read past ~14 m.
+    "price_pylon": (3.4, 0.7, 9.0),
 }
 
 #: The trees a road may be planted with, in the order a hash picks from.
@@ -923,7 +924,8 @@ def _stop_corner(road, kerb, stop, placed, markers=()):
 # canopy's side, at the station the canopy's centre projects to -- stepped
 # along by `PYLON_STEPS` when something is in the way -- and BEHIND the
 # sidewalk band, `PYLON_SETBACK` off its back edge: a 2.4 m face across a
-# 3 m band would leave 0.6 m, under `site_cover`'s 1.2 m passable gap.
+# 3 m band would leave 0.6 m, under `site_cover`'s 1.2 m passable gap (and
+# the 3.4 m face of 0.81.0 would leave none).
 #
 # FACING: along the road, `yaw_extra` 90, so each of its two faces reads to
 # the drivers coming one way (`plate_facing(yaw) . road.along = +/-1`).
