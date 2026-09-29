@@ -1,3 +1,26 @@
+## 0.82.0 - a cover's test point is where a body takes cover
+
+Cold run 9109 FAILED: the art leg ended blocked, JOB_PREFLIGHT_REFUSED --
+Level Factory's ground-contact pre-flight found `LT_CoverTestPoints/Cover_147`
+with no ground beneath it, and Laser Tag would have refused the map. That
+point is the price pylon's. `_lasertag_hook_nodes` wrote every cover's test
+point at half the COVER's height; 0.81.0's 9 m pylon put it 4.5 m up, over
+the pre-flight's `MAX_DROP` of 4.0. At 2.4 x 6.5 it had been 3.25 m up and
+passed -- a defect every cover under 8 m hid.
+
+WHAT THE POINT IS FOR decides its height. Laser Tag's bot walks to the
+nearest cover point under fire (`LT_BotPlayerController`, nearest by 3-D
+distance from its body), so the point is where a BODY takes cover, not the
+cover's centre: half of min(the cover's height, a player's height from the
+agent contract, `_player_metric("height_m")`). Every cover no taller than a
+body is unchanged; the planner's 2.0 m blocks move from 1.0 to 0.9 m, and a
+tall piece -- the pylon, a street tree -- stands its point at a body's centre.
+
+`tests/test_cover_hooks.py`: a cover taller than a body puts its point at a
+body's centre, at 3 m and at the pylon's 9 m (superseding the pinned 1.5 m
+for a 3 m cover, recorded in the test); the other tests derive their heights
+from the same rule. Without the change three fail.
+
 ## 0.81.0 - the price pylon Lot asks for is 3.4 m wide
 
 The walker, 2026-09-29: "yes, make the pylon bigger". `SPECIES["price_pylon"]`

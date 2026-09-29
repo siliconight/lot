@@ -36,6 +36,12 @@ def _cover_ys(text):
                 r'transform = Transform3D\(([^)]*)\)', text)]
 
 
+def _point(height):
+    """Where a cover of this height puts its point (0.82.0): half of what
+    shelters a body."""
+    return min(height, lot._player_metric("height_m", 1.8)) / 2.0
+
+
 PIECES = [{"at": [18.079, -4.55], "size": [2.0, 2.0, 2.0], "source": "site_cover"},
           {"at": [-34.78, 1.43], "size": [2.0, 2.0, 2.0], "source": "site_cover"}]
 
@@ -44,7 +50,8 @@ def test_a_basement_objective_does_not_drag_the_cover_underground():
     """THE DEFECT. Same cover, an objective 3.1 m down, and the points used to
     follow it there."""
     ys = _cover_ys(_hooks(-3.10, PIECES))
-    assert ys == [1.0, 1.0], ys
+    # a 2 m cube: half of min(2.0, a body's height) -- 0.9 since 0.82.0
+    assert ys == [_point(2.0)] * 2, ys
 
 
 def test_the_points_do_not_move_when_the_objective_does():
@@ -56,19 +63,31 @@ def test_the_points_do_not_move_when_the_objective_does():
 
 
 def test_the_point_agrees_with_the_body_lot_writes():
-    """`_box_node` puts the body at `sy / 2` -- half its own height. The point
-    reads the same size, because two writers of one thing disagreeing is what
-    produced this."""
-    tall = [{"at": [0.0, 0.0], "size": [2.0, 3.0, 2.0]}]
-    assert _cover_ys(_hooks(-3.10, tall)) == [1.5]
+    """`_box_node` puts the body at `sy / 2` -- half its own height -- and a
+    cover no taller than a player's body puts its point there too."""
+    low = [{"at": [0.0, 0.0], "size": [2.0, 1.2, 2.0]}]
+    assert _cover_ys(_hooks(-3.10, low)) == [0.6]
+
+
+def test_a_cover_taller_than_a_body_puts_its_point_at_a_bodys_centre():
+    """0.82.0, SUPERSEDING "the point is always half the cover's height"
+    (this test pinned 1.5 for a 3 m cover). Laser Tag's bot walks to these
+    under fire, so the point is where a BODY takes cover: half the height of
+    what shelters one. Cold run 9109: the 9 m price pylon's point stood 4.5 m
+    up, over Level Factory's MAX_DROP of 4.0, and the pre-flight refused the
+    map."""
+    body = lot._player_metric("height_m", 1.8)
+    for h in (3.0, 9.0):
+        tall = [{"at": [0.0, 0.0], "size": [3.4, h, 0.7]}]
+        assert _cover_ys(_hooks(0.0, tall)) == [body / 2.0], h
 
 
 def test_the_height_is_the_second_component():
     """`size` is written in the GODOT frame -- (x, height, y) -- which
     `site_cover.Cover.as_spec` states outright. Reading the third would be
     right only while cover is a cube, which it is today and need not be."""
-    oblong = [{"at": [0.0, 0.0], "size": [1.0, 2.5, 4.0]}]
-    assert _cover_ys(_hooks(0.0, oblong)) == [1.25]
+    oblong = [{"at": [0.0, 0.0], "size": [4.0, 1.5, 1.0]}]
+    assert _cover_ys(_hooks(0.0, oblong)) == [0.75]
 
 
 def test_a_piece_with_no_size_falls_back_to_the_planner_default():
@@ -76,7 +95,7 @@ def test_a_piece_with_no_size_falls_back_to_the_planner_default():
     silently land at zero."""
     import site_cover
     ys = _cover_ys(_hooks(-3.10, [{"at": [4.0, 4.0]}]))
-    assert ys == [site_cover.COVER_HEIGHT / 2.0]
+    assert ys == [_point(site_cover.COVER_HEIGHT)]
 
 
 def test_no_planned_cover_still_emits_the_rosette_around_the_objective():

@@ -2573,6 +2573,16 @@ def _lasertag_hook_nodes(pos, site_spec=None, enemy_count=6, lateral=1.5,
             else:
                 import site_cover
                 height = site_cover.COVER_HEIGHT
+            # A BODY'S CENTRE, NOT THE COVER'S (0.82.0). Laser Tag's bot walks
+            # to the nearest of these under fire (`LT_BotPlayerController`,
+            # by 3-D distance from its body), so a cover point is where a body
+            # takes cover -- half the height of what shelters a body, never
+            # higher. It was half the COVER's height, which agreed with the
+            # body `_box_node` writes and was a body-height point for every
+            # cover under ~2 m. The 9 m price pylon (0.81.0) put its point
+            # 4.5 m up, over Level Factory's MAX_DROP of 4.0: cold run 9109's
+            # pre-flight refused the map (JOB_PREFLIGHT_REFUSED, Cover_147).
+            height = min(height, _player_metric("height_m", 1.8))
             body += _hook(f"Cover_{i}", "LT_CoverTestPoints",
                           (cx, cy, height / 2.0))
     else:
