@@ -545,6 +545,32 @@ def _streetlight_anchors(site_spec):
     return anchors
 
 
+def forecourts(site_spec, base_dir):
+    """``[(building id, (x, y))]``: every building whose lights manifest
+    carries a `canopy_lights` anchor -- Deli Counter's own gas-station test
+    (a `canopy_roof` volume derives one) -- with the canopy's centre in site
+    space. Read from the JSON both the greybox and the themed runs share, not
+    from the GLB solids, which the two read differently."""
+    out = []
+    for b in site_spec.get("buildings") or []:
+        ref = _lights_ref_for(b)
+        if not ref:
+            continue
+        lp = os.path.join(base_dir, ref)
+        if not os.path.exists(lp):
+            continue
+        with open(lp, encoding="utf-8") as f:
+            lm = json.load(f)
+        placement = {"at": b["at"], "rot": b.get("rot", 0)}
+        for a in lm.get("anchors", []):
+            if a.get("type") == "canopy_lights":
+                x, y, z = a.get("pos", [0.0, 0.0, 0.0])
+                wx, wy, _wz = _place_point(x, y, z, placement)
+                out.append((b["id"], (round(wx, 4), round(wy, 4))))
+                break
+    return out
+
+
 def merge_lights(site_spec, base_dir):
     """Merge every building's <name>.lights.json into one site-level lighting
     manifest: each anchor offset to world space and id-namespaced by building
@@ -1542,7 +1568,9 @@ COVER_MATERIALS = {"box_truck": "metal_painted", "cargo_container": "metal_paint
                    # the 1990s street kit (site_furniture)
                    "stop_sign": "metal_bare", "traffic_signal": "metal_painted",
                    "mailbox": "metal_painted", "newspaper_box": "metal_painted",
-                   "parking_meter": "metal_painted", "payphone": "metal_painted"}
+                   "parking_meter": "metal_painted", "payphone": "metal_painted",
+                   # the gas station's price pylon (site_furniture.plan_pylons)
+                   "price_pylon": "metal_painted"}
 
 
 COVER_DIR = "cover"
@@ -3094,6 +3122,25 @@ def assemble(site_spec_path, out_dir=None, walkable=False, navqa=False,
                                               list(cover_points.values()),
                                               furniture_findings)
     site_spec.setdefault("cover", []).extend(furniture)
+    # THE GAS STATION'S PRICE PYLON (site_furniture.plan_pylons): at each
+    # forecourt's road frontage, behind the band, facing along the road,
+    # clear of paths, footprints, what already stands and the markers
+    _standing0 = []
+    for cv in site_spec["cover"]:
+        sx, _sy, sz = cv.get("size", COVER)
+        _standing0.append((cv["at"][0] - sx / 2.0, cv["at"][1] - sz / 2.0,
+                           cv["at"][0] + sx / 2.0, cv["at"][1] + sz / 2.0))
+    import site_spawns as _site_spawns
+    pylons = site_furniture.plan_pylons(
+        site_streets.roads(site_spec), forecourts(site_spec, base_dir),
+        list(cover_points.values()), standing=_standing0,
+        keep_out=site_furniture.path_corridors(site_spec) + _site_spawns.footprints(site_spec, margin=0.5),
+        findings=furniture_findings)
+    site_spec["cover"].extend(pylons)
+    furniture = furniture + pylons
+    for _p in pylons:
+        print(f"[lot] LOT_PYLON_PLACED: {_p['name']} at ({_p['at'][0]}, {_p['at'][1]}) "
+              f"yaw {_p['yaw']} on road {_p['road']} kerb {_p['kerb']}")
     merged["furniture_plan"] = {"placed": furniture, "findings": furniture_findings}
     # a junction approach whose control could not be stood by the street
     # rules (docs/STREET_RULES.md) is said, not silently left bare

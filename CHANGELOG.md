@@ -1,3 +1,47 @@
+## 0.80.0 - a gas station's price pylon stands at its road frontage
+
+The walker, 2026-09-28: "do the price pylon next". Zoo 1.19.0 grew the
+species -- FLAPPHAS in lights over three grades to the nine-tenths, both
+faces lit -- and docs/SET_DRESSING_REFERENCES.md names the owners: "Zoo (a
+species) plus Lot (at the frontage, facing the road)". Planned read-only
+first (docs/proposals/PRICE_PYLON_PLACEMENT.md) against Lot's source and
+cold run 9101's package.
+
+WHICH SITES: every building whose lights manifest carries a `canopy_lights`
+anchor (`forecourts`) -- Deli Counter derives one from a `canopy_roof`
+volume, so it is Deli Counter's own gas-station test -- read from the JSON
+the greybox and themed runs share, not from GLB solids, which the two read
+differently (906 against 1,742 colliders on 9101).
+
+WHERE (`site_furniture.plan_pylons`): on the road nearest the canopy, on the
+kerb of the canopy's side, at the station the canopy's centre projects to,
+BEHIND the sidewalk band by `PYLON_SETBACK` 0.3 m -- a 2.4 m face across a
+3 m band would leave 0.6 m, under `site_cover`'s 1.2 m passable gap -- on the
+ground (`base: "plate"`; `_piece` writes "sidewalk", which would float it
+0.11 m). Turned `yaw_extra` 90, so its two faces point along the road, one
+to each direction of traffic (`plate_facing . along = +/-1`). Stepped along
+by up to 12 m when a dropped kerb, a building footprint, a path's corridor
+(`path_corridors`), a standing piece (+ `PIECE_GAP`) or a mission marker is
+in the way; otherwise `LOT_PYLON_NO_ROOM` (or `_NO_FRONTAGE`), never forced.
+THE PATH CHECK IS EXPLICIT because `LOT_STEP_BLOCKS_A_ROUTE` reads walkable
+prefixes only and cannot see a prop: a pylon across a door path would have
+passed silently.
+
+It joins the kerb line's cover before parking and the cover planner read
+what stands, so the slot, the Zoo kit build, the module resolution and the
+navmesh take it with no further change. `COVER_MATERIALS["price_pylon"]` is
+the genome's own `metal_painted`, so the stem carries no `_m`.
+
+MEASURED on cold run 9101's site spec: gas_station_a02's pylon at (92.0,
+-33.5), road 0's north kerb, t 198, yaw 90, face . along = 1.0 -- where the
+plan predicted. `tests/test_site_furniture.py`: behind the band facing along
+the road, steps off a door path or is refused and said, Lot's dims are
+Zoo's genome's, and `assemble` writes the slot (dims, convex, z 3.25, turned
+90). 4 of the new tests fail without the change; suite 572 passed.
+
+NOT MEASURED: that it reads from down the road at night, and what it costs
+in draws -- the next cold run.
+
 ## 0.79.0 - a streetlight shines out of the pole that is standing there
 
 MEASURED FIRST, on cold run 9087's walk copy, with `pole_vs_light.gd`:

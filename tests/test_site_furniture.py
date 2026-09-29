@@ -581,3 +581,92 @@ def test_every_hydrant_turns_its_pumper_outlet_to_the_road():
         fx, fy = site_furniture.plate_facing(p["yaw"])
         cx, cy = r.point(p["t"], 0.0)
         assert (cx - p["at"][0]) * fx + (cy - p["at"][1]) * fy > 0, p
+
+
+# --- the price pylon ----------------------------------------------------------------
+
+
+class _Kerbless:
+    pass
+
+
+def test_one_pylon_per_forecourt_behind_the_band_facing_along_the_road():
+    """The gas station's pylon (Zoo 1.19.0): at the road frontage nearest the
+    canopy, BEHIND the sidewalk band, both faces along the road, on the
+    ground rather than the sidewalk, clear of the band's cuts."""
+    roads = site_streets.roads(_probe())
+    (road,) = roads
+    got = site_furniture.plan_pylons(roads, [("gas", (76.0, 32.0))])
+    assert len(got) == 1
+    p = got[0]
+    assert p["species"] == "price_pylon" and p["base"] == "plate"
+    assert tuple(p["dims"]) == site_furniture.SPECIES["price_pylon"]
+    fx, fy = site_furniture.plate_facing(p["yaw"])
+    assert abs(fx * road.along[0] + fy * road.along[1]) > 0.99
+    # the probe's L band is y 5..8: the pylon's whole footprint is behind it
+    x, y = p["at"]
+    sx, _h, sy = p["size"]
+    assert y - sy / 2.0 >= 8.0 + site_furniture.PYLON_SETBACK - 1e-9, p
+    kerb = road.kerb(p["kerb"])
+    assert site_furniture._clear_of_cuts(p["t"], p["along"] / 2.0, kerb)
+
+
+def test_a_pylon_keeps_off_a_door_path_and_steps_along_or_is_refused():
+    roads = site_streets.roads(_probe())
+    free = site_furniture.plan_pylons(roads, [("gas", (76.0, 32.0))])[0]
+    x, y = free["at"]
+    # a door path straight across its station: it steps along the road
+    door = {"paths": [{"a": [x, y - 4.0], "b": [x, y + 4.0], "width": 2.0}]}
+    moved = site_furniture.plan_pylons(roads, [("gas", (76.0, 32.0))],
+                                       keep_out=site_furniture.path_corridors(door))
+    assert moved and abs(moved[0]["at"][0] - x) >= 1.5, moved
+    # a keep-out over every station: refused and said, never forced
+    findings = []
+    walled = site_furniture.plan_pylons(roads, [("gas", (76.0, 32.0))],
+                                        keep_out=[(x - 20.0, y - 5.0, x + 20.0, y + 5.0)],
+                                        findings=findings)
+    assert walled == [] and any("LOT_PYLON_NO_ROOM" in f for f in findings), findings
+
+
+def test_the_pylon_lots_table_names_is_zoos_at_its_dims():
+    zoo = os.path.join(os.path.dirname(os.path.dirname(
+        os.path.dirname(os.path.abspath(__file__)))), "zoo",
+        "zoo_keeper", "genome", "species", "price_pylon.json")
+    if not os.path.isfile(zoo):
+        import pytest
+        pytest.skip("no sibling zoo checkout")
+    g = json.load(open(zoo, encoding="utf-8"))
+    dims = tuple(round(g["dimensions"][k]["default"], 3) for k in ("width", "depth", "height"))
+    assert dims == site_furniture.SPECIES["price_pylon"]
+    assert lot.COVER_MATERIALS["price_pylon"] == g["materials"]["default"]
+
+
+def test_assemble_stands_a_pylon_for_a_building_with_a_canopy(tmp_path):
+    """A building whose lights manifest carries a `canopy_lights` anchor (Deli
+    Counter's own gas-station test) gets a pylon slot: the species at its
+    dims, convex, standing on the ground (z = h/2), turned along the road."""
+    spec = _probe()
+    for b in spec["buildings"]:
+        for k in ("spec", "glb", "gameplay"):
+            if k in b:
+                b[k] = os.path.join(SPECS, b[k])
+    gas = next(b for b in spec["buildings"] if b["id"] == "gas")
+    lights = tmp_path / "gas.lights.json"
+    # the gas building stands at (76, 44) turned 180: a canopy 12 m on its
+    # local +y side lands at (76, 32), between it and the road at y = 0
+    lights.write_text(json.dumps({"anchors": [{"id": "canopy_roof_lights", "type": "canopy_lights",
+                                               "pos": [0.0, 12.0, 4.9], "size": [20.0, 10.0]}]}),
+                      encoding="utf-8")
+    gas["lights"] = str(lights)
+    sp = tmp_path / "pylon_probe.json"
+    sp.write_text(json.dumps(spec), encoding="utf-8")
+    assert lot.forecourts(spec, str(tmp_path)) == [("gas", (76.0, 32.0))]
+    lot.assemble(str(sp), str(tmp_path / "out"))
+    # the outputs are named for the spec's `name`, not its file
+    doc = json.loads((tmp_path / "out" / (spec["name"] + ".slots.json")).read_text(encoding="utf-8"))
+    pylons = [s for s in doc["slots"] if s.get("species") == "price_pylon"]
+    assert len(pylons) == 1, [s.get("species") for s in doc["slots"]]
+    s = pylons[0]
+    assert s["fit"]["dims"] == [2.4, 0.5, 6.5] and s["fit"]["collision"] == "convex"
+    assert abs(s["transform"]["translation"][2] - 3.25) < 1e-6
+    assert abs(s["transform"]["rot_y"] % 180.0 - 90.0) < 1e-6

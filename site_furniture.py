@@ -72,6 +72,9 @@ SPECIES = {
     "honey_locust": (4.5, 4.5, 6.0),
     "london_plane": (5.0, 5.0, 6.5),
     "callery_pear": (3.0, 3.0, 5.5),
+    # THE GAS STATION'S PRICE PYLON (Zoo 1.19.0), at its road frontage
+    # (`plan_pylons`). The genome's default.
+    "price_pylon": (2.4, 0.5, 6.5),
 }
 
 #: The trees a road may be planted with, in the order a hash picks from.
@@ -905,3 +908,116 @@ def _stop_corner(road, kerb, stop, placed, markers=()):
             placed.append(piece)
             out.append(piece)
     return out
+
+
+# --- the price pylon ---------------------------------------------------------------
+#
+# A GAS STATION'S PRICE PYLON STANDS AT ITS ROAD FRONTAGE. The walker,
+# 2026-09-28: "do the price pylon next"; docs/SET_DRESSING_REFERENCES.md:
+# "Tall, freestanding, at the kerb where a driver reads it before the
+# building ... Owner: Zoo (a species) plus Lot (at the frontage, facing the
+# road)". Zoo 1.19.0 grew the species; this stands one per forecourt, planned
+# in docs/proposals/PRICE_PYLON_PLACEMENT.md.
+#
+# WHERE: on the road nearest the forecourt's canopy, on the kerb of the
+# canopy's side, at the station the canopy's centre projects to -- stepped
+# along by `PYLON_STEPS` when something is in the way -- and BEHIND the
+# sidewalk band, `PYLON_SETBACK` off its back edge: a 2.4 m face across a
+# 3 m band would leave 0.6 m, under `site_cover`'s 1.2 m passable gap.
+#
+# FACING: along the road, `yaw_extra` 90, so each of its two faces reads to
+# the drivers coming one way (`plate_facing(yaw) . road.along = +/-1`).
+#
+# CLEAR OF: every dropped kerb (`_clear_of_cuts`), every building footprint
+# and every path's corridor (`keep_out`) -- `LOT_STEP_BLOCKS_A_ROUTE` cannot
+# see a prop, so a pylon across a door path would pass silently -- every
+# piece already standing (`PIECE_GAP`), and every mission marker. Refused
+# and said, never forced.
+
+PYLON_SPECIES = "price_pylon"
+PYLON_SETBACK = 0.3
+PYLON_STEPS = (0.0, 2.0, -2.0, 4.0, -4.0, 6.0, -6.0, 8.0, -8.0, 10.0, -10.0, 12.0, -12.0)
+
+
+def _rects_overlap(a, b):
+    return not (a[2] <= b[0] or b[2] <= a[0] or a[3] <= b[1] or b[3] <= a[1])
+
+
+def _piece_rect(piece):
+    x, y = piece["at"]
+    sx, _h, sy = piece["size"]
+    return (x - sx / 2.0, y - sy / 2.0, x + sx / 2.0, y + sy / 2.0)
+
+
+def path_corridors(site_spec, step=0.5):
+    """Rects covering every path's corridor, ``width/2`` either side of its
+    line, sampled every ``step`` metres -- a superset of the corridor, so a
+    rect clear of these is clear of the path."""
+    import site_streets
+    bld = {b["id"]: b for b in site_spec.get("buildings") or [] if "id" in b}
+    out = []
+    for p in site_spec.get("paths") or []:
+        try:
+            (ax, ay), (bx, by) = site_streets._endpoints(p, bld)
+        except (KeyError, TypeError):
+            continue
+        half = float(p.get("width", 6.0)) / 2.0
+        n = max(1, int(math.hypot(bx - ax, by - ay) / step))
+        for i in range(n + 1):
+            x = ax + (bx - ax) * i / n
+            y = ay + (by - ay) * i / n
+            out.append((x - half, y - half, x + half, y + half))
+    return out
+
+
+def plan_pylons(roads_list, forecourts, markers=(), standing=(), keep_out=(), findings=None):
+    """One `price_pylon` per forecourt: ``forecourts`` is ``[(building id,
+    (x, y) canopy centre)]``. Returns the pieces placed; a forecourt with no
+    road band, or no clear station, is said into ``findings``."""
+    placed = []
+    w, d, _h = SPECIES[PYLON_SPECIES]
+    for bid, (cx, cy) in forecourts:
+        best = None
+        for road in roads_list:
+            if not road.kerbs or not road.sidewalk:
+                continue
+            t = max(0.0, min(road.length, (cx - road.a[0]) * road.along[0] + (cy - road.a[1]) * road.along[1]))
+            px, py = road.point(t)
+            dist = math.hypot(cx - px, cy - py)
+            if best is None or dist < best[0]:
+                best = (dist, road, t)
+        if best is None:
+            _say(findings, f"LOT_PYLON_NO_FRONTAGE: no road with a sidewalk for {bid}'s forecourt")
+            continue
+        _dist, road, t0 = best
+        side = (cx - road.a[0]) * road.perp[0] + (cy - road.a[1]) * road.perp[1]
+        kerb = next((k for k in road.kerbs if k.sign == (1 if side >= 0 else -1)), None)
+        if kerb is None:
+            _say(findings, f"LOT_PYLON_NO_FRONTAGE: road {road.index} has no kerb on {bid}'s side")
+            continue
+        offset = kerb.sign * (road.width / 2.0 + road.sidewalk + PYLON_SETBACK + w / 2.0)
+        lo, hi = road.slab if road.slab != (0.0, 0.0) else (0.0, road.length)
+        piece = None
+        for dt in PYLON_STEPS:
+            s = t0 + dt
+            if s - d / 2.0 < lo or s + d / 2.0 > hi or not _clear_of_cuts(s, d / 2.0, kerb):
+                continue
+            cand = _piece(f"Pylon_{bid}", PYLON_SPECIES, road, kerb, s, offset, 90.0,
+                          breaks=f"forecourt {bid}")
+            # it stands BEHIND the band, on the ground, not on the sidewalk
+            cand["base"] = "plate"
+            r = _piece_rect(cand)
+            if any(_rects_overlap(r, k) for k in keep_out):
+                continue
+            if any(_rects_overlap(r, site_cover._grow(sr, PIECE_GAP)) for sr in standing):
+                continue
+            if not _clear_of_markers(cand, markers):
+                continue
+            piece = cand
+            break
+        if piece is None:
+            _say(findings, f"LOT_PYLON_NO_ROOM: no clear station for {bid}'s pylon within "
+                           f"{max(PYLON_STEPS):.0f} m of its forecourt on road {road.index}")
+            continue
+        placed.append(piece)
+    return placed
