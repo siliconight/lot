@@ -1610,7 +1610,7 @@ COVER_MATERIALS = {"box_truck": "metal_painted", "cargo_container": "metal_paint
                    # the gas station's price pylon (site_furniture.plan_pylons)
                    "price_pylon": "metal_painted",
                    # the handbills (site_posters): paper, the genome's own kind
-                   "poster_wall": "paper"}
+                   "poster_wall": "paper", "pole_flyers": "paper"}
 
 
 COVER_DIR = "cover"

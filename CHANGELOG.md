@@ -1,3 +1,41 @@
+## 0.86.0 - poles papered in tiers, with sleeves of flyers
+
+Cold run 9118 stood one flat 0.30 m bill on every other 0.12 m pole, and it
+read as a small sign. The walker sent six photographs of flyers on real poles
+and the placement guide asks for "a loose vertical stack"; Zoo 1.34.0 drew
+`pole_flyers`, a sleeve of handbills curved round a pole. This hangs them.
+
+TIERS, BY POLE. Each streetlight and sign post is `bare`, a `pair`, a
+`stack` or a `wrap`, by a hash of its name (30/35/22/13 %), one tier denser
+within `JUNCTION_M` (10 m) of another road -- the corner poles are "a known
+place for flyers". The sleeve is centred on the pole; its diameter clears the
+pole with Zoo's four layers of paper (a sign post's clearance is its
+u-channel's half-diagonal, 0.0707 m, not its half-width).
+
+NO SHARED CENTRELINE, WITHIN REACH. The placement guide calls "a repeated
+perfect centerline across all buildings" a procedural tell, and every piece
+0.84.0 hung was centred at the eye. A pair starts at the head (1.22 m), a
+stack at the chest (0.86), a wrap at the knee (0.36), each moving by up to
+0.1 m pole to pole; paper stops at 2.1 m ("Posters placed far above reach
+need a reason"), and on a sign post a hand under its blade. A sleeve's
+centre is rounded DOWN, because rounded to nearest it lifted a top 0.4 mm
+past the blade's limit (caught by the reach test).
+
+THE FRONT FACES THE MOON, by 0.85.0's rule, for the pair's and the stack's
+front sheets; a wrap is paper all round.
+
+Replaced: the flat pole bill, `SHEET_W`, `BAND_POLE`, `POLE_EVERY`. The wall
+runs are unchanged. Every number mirrored from Zoo is pinned when Zoo is
+beside this repo: the sleeve's layers, the tiers against Zoo's forms, the stem
+`plan_kit` builds for every pole species x tier, and Zoo's planner filling
+every slot shape Lot writes, the innermost paper clear of the pole.
+
+Tests (`tests/test_site_posters.py`, 25): the front on the sidewalk face when
+lit and round the pole when not; every front faces the light; poles papered
+in all three tiers with some bare; a junction pole one tier denser; tiers on
+different centrelines, every top within reach and under a blade; the pins.
+Against 0.85.0's module, 8 fail.
+
 ## 0.85.0 - a pole's handbill goes on the face the moon lights
 
 Cold run 9117 stood all 21 hung posters and measured them at night: every
