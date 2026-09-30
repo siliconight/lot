@@ -92,12 +92,43 @@ VARIANTS = 4
 POLES = {"streetlight": 0.06, "sign_post": 0.05}
 #: One pole in this many carries a handbill.
 POLE_EVERY = 2
+#: THE NIGHT'S KEY LIGHT, as Lux's `delco_night` preset sets it (0.85.0): the
+#: moon at elevation 38, azimuth 300 degrees. Cold run 9117 measured what it
+#: means for paper: of 21 hung posters, every one facing south or west read
+#: 43-101 luma at its centre and every one facing north read 0.0 -- the moon
+#: reaches the faces turned toward it and the night has little else. Pinned
+#: against the preset file in tests/test_site_posters.py when Lux is beside
+#: this repo; `light_from` is Lux's own convention.
+NIGHT_ELEVATION_DEG = 38.0
+NIGHT_AZIMUTH_DEG = 300.0
+#: How squarely a face must turn to the key light to count as lit: a dot
+#: product in plan. 9117's least-lit measured faces (south, 0.50 to the moon)
+#: read 43-68; its dark ones faced away (-0.50 and below). A quarter keeps a
+#: face that grazes the light from counting.
+LIT_MIN = 0.25
 
 CODE_ALLEY_POSTERS = "LOT_ALLEY_POSTERS"
 
 
 def _h(*k):
     return zlib.crc32("|".join(str(v) for v in k).encode("utf-8")) & 0xFFFFFFFF
+
+
+def light_from(elevation_deg=NIGHT_ELEVATION_DEG, azimuth_deg=NIGHT_AZIMUTH_DEG):
+    """The plan direction (unit) from a surface TOWARD the key light, by
+    Lux's convention (`lux_root._preset_key_dir`: rotate about up by the
+    azimuth, then about the rotated x by minus the elevation; the light lies
+    along +Z of that basis), with plan = Godot (x, -z), normalised in plan.
+    For `delco_night`, (-0.866, -0.500): west-south-west, which is what 9117
+    measured lit. (The 3-D vector is (-0.682, 0.616, 0.394) in Godot.)"""
+    a, e = math.radians(azimuth_deg), math.radians(elevation_deg)
+    # +Z of R_x'(-e) * R_y(a), worked out: the basis's z column
+    gx = math.sin(a) * math.cos(e)
+    gz = math.cos(a) * math.cos(e)
+    # (Godot +Z after the yaw is (sin a, 0, cos a); the pitch about the
+    # rotated x keeps its plan direction and scales it by cos e.)
+    n = math.hypot(gx, gz) or 1.0
+    return (gx / n, -gz / n)
 
 
 def facing_yaw(nx, ny):
@@ -345,12 +376,22 @@ def plan_pole_bills(site_spec, roads, findings=None):
                 best = (d, q)
         if best is None or best[0] < 1e-6:
             continue
-        nx, ny = (px - best[1][0]) / best[0], (py - best[1][1]) / best[0]
+        ax, ay = (px - best[1][0]) / best[0], (py - best[1][1]) / best[0]
+        # A LIT FACE (0.85.0; the walker: "Lot picks a lit face for the pole
+        # bills"). A pole has four faces; in order of preference the sidewalk
+        # side, the two along the road, the road side -- and the first that
+        # turns to the night's key light by `LIT_MIN` takes the bill.
+        lx, ly = LIGHT
+        faces = (("sidewalk", ax, ay), ("along", -ay, ax), ("along", ay, -ax),
+                 ("road", -ax, -ay))
+        side, nx, ny = next(((f, x, y) for f, x, y in faces if x * lx + y * ly >= LIT_MIN),
+                            max(faces, key=lambda f_: f_[1] * lx + f_[2] * ly))
         off = POLES[sp] + AIR + DEPTH / 2.0
         name = f"pole_bill_{i}"
         out.append(_record(name, (px + nx * off, py + ny * off), facing_yaw(nx, ny),
                            (SHEET_W, DEPTH, BAND_POLE), EYE, host=f"pole:cover_{i}",
-                           base=cv.get("base")))
+                           base=cv.get("base"), face=side,
+                           lit=round(nx * lx + ny * ly, 3)))
     if findings is not None:
         findings.append(f"{CODE_ALLEY_POSTERS}: {len(out)} handbill(s) on poles")
     return out
@@ -365,6 +406,9 @@ def _record(name, at, yaw, dims, z, host, base=None, **extra):
            "source": "site_posters"}
     rec.update(extra)
     return rec
+
+
+LIGHT = light_from()
 
 
 def plan(site_spec, merged, roads, findings=None):

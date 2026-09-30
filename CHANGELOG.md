@@ -1,3 +1,35 @@
+## 0.85.0 - a pole's handbill goes on the face the moon lights
+
+Cold run 9117 stood all 21 hung posters and measured them at night: every
+one facing south or west read 43-101 luma at its centre, every one facing
+north 0.0, and one of three facing east was lit (by something other than
+the moon). The walker, from three options: "Lot picks a lit face for the
+pole bills".
+
+THE LIGHT, DERIVED. `delco_night` sets the key light -- the moon -- at
+elevation 38, azimuth 300 (`NIGHT_ELEVATION_DEG`, `NIGHT_AZIMUTH_DEG`, pinned
+against the preset file when Lux is beside this repo). `light_from` is Lux's
+own convention (`lux_root._preset_key_dir`), with plan = Godot (x, -z): the
+plan direction toward the moon is (-0.866, -0.500), west-south-west -- which
+lights south and west faces and not north or east, exactly what 9117
+measured (a test holds the derivation to that measurement).
+
+THE FACE. A pole has four; in order of preference the sidewalk side, the two
+along the road, the road side, and the first turned to the light by
+`LIT_MIN` (0.25; 9117's least-lit measured faces were 0.50, its dark ones
+-0.50 and below) takes the bill. A pole south of an east-west road keeps its
+sidewalk face; one north of it, whose sidewalk face points north, puts the
+bill round the pole on its west face. Each record says which (`face`) and by
+how much (`lit`).
+
+Wall runs are unchanged: a building's back wall is the wall it has, and the
+walker's call was for the poles.
+
+Tests (`tests/test_site_posters.py`): the sidewalk face kept when lit; the
+bill turned to the west when the sidewalk face is dark; every bill faces the
+light by `LIT_MIN`; the light lights what 9117 measured lit; the two numbers
+are Lux's. Against 0.84.1's module the new ones fail.
+
 ## 0.84.1 - a pole's handbill is one sheet tall
 
 Cold run 9116, the first to build 0.84.0's hung posters: the six wall runs

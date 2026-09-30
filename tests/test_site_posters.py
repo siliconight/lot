@@ -113,23 +113,76 @@ def test_a_road_between_two_buildings_makes_it_a_street():
 # --- the poles ------------------------------------------------------------------------------
 
 
-def test_a_pole_bill_faces_away_from_the_road_on_the_pole_s_face():
+def _poles(y, n=12):
     import site_streets
     spec = {"name": "t", "buildings": [], "roads": [{"a": [0, 0], "b": [100, 0], "width": 8.0,
                                                     "sidewalk": True}]}
     roads = site_streets.roads(spec, [])
-    spec["cover"] = [{"name": f"lamp_{k}", "species": "streetlight", "at": [5.0 + 8 * k, 6.0],
-                      "base": "sidewalk"} for k in range(12)]
-    bills = P.plan_pole_bills(spec, roads)
-    # every other pole, by a hash of its name: some and not all
-    assert 0 < len(bills) < 12
+    spec["cover"] = [{"name": f"lamp_{k}", "species": "streetlight", "at": [5.0 + 8 * k, y],
+                      "base": "sidewalk"} for k in range(n)]
+    return spec, roads
+
+
+def _check_on_face(spec, bills, normal):
     for r in bills:
         i = int(r["host"].split("_")[-1])
         px, py = spec["cover"][i]["at"]
-        assert abs(r["at"][0] - px) < 1e-9
-        assert abs(r["at"][1] - (py + P.POLES["streetlight"] + P.AIR + P.DEPTH / 2)) < 1e-9
-        assert site_furniture.plate_facing(r["yaw"]) == pytest.approx((0.0, 1.0))
+        off = P.POLES["streetlight"] + P.AIR + P.DEPTH / 2
+        assert r["at"] == pytest.approx([px + normal[0] * off, py + normal[1] * off])
+        assert site_furniture.plate_facing(r["yaw"]) == pytest.approx(normal)
         assert r["dims"] == [P.SHEET_W, P.DEPTH, P.BAND_POLE] and r["base"] == "sidewalk"
+
+
+def test_a_pole_bill_takes_the_sidewalk_face_when_the_moon_lights_it():
+    """Poles south of the road: the sidewalk face points south, which the
+    night's key light reaches (0.50 in plan) -- the bill stays on it."""
+    spec, roads = _poles(-6.0)
+    bills = P.plan_pole_bills(spec, roads)
+    assert 0 < len(bills) < 12            # every other pole, by its name's hash
+    assert all(r["face"] == "sidewalk" for r in bills)
+    _check_on_face(spec, bills, (0.0, -1.0))
+
+
+def test_a_pole_bill_turns_to_a_lit_face_when_the_sidewalk_s_is_dark():
+    """Poles north of the road: the sidewalk face points north, which 9117
+    measured at 0.0 luma on 8 of 8 pieces. The bill goes round the pole to
+    the first lit face in preference order -- along the road, west."""
+    spec, roads = _poles(6.0)
+    bills = P.plan_pole_bills(spec, roads)
+    assert bills and all(r["face"] == "along" and r["lit"] >= P.LIT_MIN for r in bills)
+    _check_on_face(spec, bills, (-1.0, 0.0))
+
+
+def test_every_pole_bill_faces_the_key_light():
+    for y in (-6.0, 6.0):
+        spec, roads = _poles(y)
+        for r in P.plan_pole_bills(spec, roads):
+            n = site_furniture.plate_facing(r["yaw"])
+            assert n[0] * P.LIGHT[0] + n[1] * P.LIGHT[1] >= P.LIT_MIN, r
+
+
+def test_the_key_light_lights_what_9117_measured_lit():
+    """Of 21 hung posters in cold run 9117, south- and west-facing read 43-101
+    luma at centre, north-facing 0.0. The derived direction must agree."""
+    lx, ly = P.light_from()
+    dot = lambda n: n[0] * lx + n[1] * ly
+    assert dot((0, -1)) >= P.LIT_MIN and dot((-1, 0)) >= P.LIT_MIN
+    assert dot((0, 1)) < 0 and dot((1, 0)) < 0
+
+
+def test_the_key_light_is_lux_s_night():
+    lux = os.environ.get("LOT_LUX_ROOT") or os.path.join(
+        os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "lux")
+    path = os.path.join(lux, "addons", "lux", "presets", "delco_night.tres")
+    if not os.path.isfile(path):
+        pytest.skip("lux repo not found (set LOT_LUX_ROOT)")
+    got = {}
+    for line in open(path, encoding="utf-8"):
+        k, _, v = line.partition(" = ")
+        if k in ("sun_elevation_deg", "sun_azimuth_deg"):
+            got[k] = float(v)
+    assert got == {"sun_elevation_deg": P.NIGHT_ELEVATION_DEG,
+                   "sun_azimuth_deg": P.NIGHT_AZIMUTH_DEG}, got
 
 
 # --- hung, not cover --------------------------------------------------------------------------
