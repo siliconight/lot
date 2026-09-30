@@ -198,8 +198,25 @@ def test_the_bands_and_the_sheet_are_zoo_s():
     from zoo_keeper.core import poster_art as PA
     from zoo_keeper.core import poster_wall_forms as F
     assert F.band_height("alley", 2) == P.BAND_WALL
-    assert F.band_height("alley", 1) == P.BAND_POLE
+    assert PA.SIZES_M["alley"][1] == P.BAND_POLE        # one sheet, no wander
     assert PA.SIZES_M["alley"][0] == P.SHEET_W
+
+
+def test_zoo_fills_every_slot_lot_asks_for():
+    """Zoo builds to exact fit and refuses a module that does not fill its
+    slot. Cold run 9116 found the pole slot's band (0.52) was one no single
+    sheet fills, and all four pole modules failed; this asks Zoo's planner
+    the same question, for both slot shapes, every variant, before a run."""
+    _zoo()
+    from zoo_keeper.core import poster_wall_forms as F
+    from zoo_keeper.core import prims as PR
+    shapes = [(P.SHEET_W, P.BAND_POLE)] + [(w / 10.0, P.BAND_WALL)
+                                           for w in range(int(P.RUN_MIN * 10), int(P.RUN_MAX * 10) + 1)]
+    for w, h in shapes:
+        for v in range(P.VARIANTS):
+            g = F.plan(w, P.DEPTH, h, "alley", v, f"t{v}")
+            lo, hi = PR.bounds(g["prims"])
+            assert abs((hi[0] - lo[0]) - w) <= F.FIT_TOL and abs((hi[2] - lo[2]) - h) <= F.FIT_TOL,                 (w, h, v, hi[0] - lo[0], hi[2] - lo[2])
 
 
 def test_the_stem_is_the_one_zoo_builds():

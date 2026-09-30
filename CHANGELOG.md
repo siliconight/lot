@@ -1,3 +1,20 @@
+## 0.84.1 - a pole's handbill is one sheet tall
+
+Cold run 9116, the first to build 0.84.0's hung posters: the six wall runs
+built and stood, and all four pole modules FAILED Zoo's exact fit --
+"height=0.420m != exact target 0.520m" -- so no pole carried a bill. The
+slot asked for `band_height("alley", 1)`, which is a sheet plus the wander a
+run of several spreads down a band; one sheet cannot fill it without being
+stretched, and Zoo refused rather than stretch. `BAND_POLE` is now one
+sheet's own height, `poster_art.SIZES_M["alley"][1]` (0.42). Measured in
+Zoo's planner: a lone sheet misfits 0.52 in 12 of 12 variant/key cases and
+fits 0.42 in all of them.
+
+New test, `test_zoo_fills_every_slot_lot_asks_for`: Zoo's planner must fill
+both slot shapes Lot writes -- the pole's, and every wall run 0.9-3.0 m --
+in every variant, within Zoo's fit tolerance. It fails on 0.84.0's 0.52; it
+is the test that would have caught this before a run instead of in one.
+
 ## 0.84.0 - handbills on the back-of-house walls and the poles
 
 The walker, 2026-09-29, choosing where posters go: "exterior alley walls and

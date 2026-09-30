@@ -54,11 +54,16 @@ WALL_THICK = 0.3
 AIR = 0.004
 #: Zoo's `poster_wall` genome: the depth a run is built at.
 DEPTH = 0.01
-#: Zoo `poster_wall_forms.band_height("alley", 2)` and `("alley", 1)`: a
-#: two-course collage on a wall, one sheet on a pole. Pinned against Zoo in
-#: tests/test_site_posters.py when Zoo is beside this repo.
+#: The band a slot asks Zoo to fill. A wall: `poster_wall_forms.band_height
+#: ("alley", 2)`, a two-course collage whose sheets wander down it. A pole:
+#: ONE sheet's own height (`poster_art.SIZES_M["alley"][1]`), not
+#: `band_height("alley", 1)` -- that band is a sheet plus the WANDER a run of
+#: several spreads across, and one sheet cannot fill it. 0.84.0 asked for
+#: 0.52 and Zoo's exact fit refused all four pole modules in cold run 9116
+#: ("height=0.420m != exact target 0.520m"); Zoo's planner fills 0.42 in
+#: every variant. Pinned against Zoo in tests/test_site_posters.py.
 BAND_WALL = 0.814
-BAND_POLE = 0.52
+BAND_POLE = 0.42
 #: One alley sheet's width (Zoo `poster_art.SIZES_M["alley"][0]`).
 SHEET_W = 0.30
 #: A gap a body walks and a wall faces across: under ALLEY_MIN two buildings
