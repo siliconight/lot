@@ -364,6 +364,79 @@ def test_enterability_no_route_warns_not_gates():
     print("  enterability no-route warning (not a gate): OK")
 
 
+# --- the labels a BUILD writes (Lot 0.83.0) ---------------------------------------
+#
+# Every test above uses the bare side ("S"), which only `preview.py` writes.
+# Deli Counter's build writes `ext_<story>_<side>` and `int_<story>_<n>`, and
+# until 0.83.0 neither was read: a built entry's outward normal was (0, 0), so
+# its approach point was the doorway, and a partition door -- inside its own
+# building, which the neighbour test skips -- always read as clear. Measured
+# over the 28 site specs through `merge_gameplay`: 929 entries counted, all 929
+# clear; with the labels read, 420 (the storey-0 exterior ones), their approach
+# points 1.5 m out.
+
+_DOOR = {"kind": "door", "width": 1.2, "height": 2.2, "sill": 0.0}
+
+
+def test_the_labels_a_build_writes_are_read():
+    import site_enterability as SE
+    assert SE.wall_of("ext_0_S") == (True, 0, "S")
+    assert SE.wall_of("ext_1_N") == (True, 1, "N")
+    assert SE.wall_of("int_0_3") == (False, 0, None)
+    assert SE.wall_of("int_-1_0") == (False, -1, None)
+    assert SE.wall_of("W", 0) == (True, 0, "W")          # preview's
+    assert SE.wall_of("S", 1) == (True, 1, "S")          # its storey from the opening
+    for bad in (None, "", "ext_0_Q", "ext_x_S", "south", "ext_0"):
+        assert SE.wall_of(bad) is None, bad
+
+
+def test_a_built_door_s_approach_is_in_front_of_it():
+    """A neighbour 0.5 m off B's south face: the doorway is clear of it, the
+    1.5 m in front of the door is not. Read at the doorway (0.82.0), B passed."""
+    import site_enterability as SE
+    bldgs = [{"id": "B", "at": [0, 0], "rot": 0, "footprint": [10, 10]},
+             {"id": "A", "at": [0, -10.5], "rot": 0, "footprint": [10, 10]}]
+    ops = [dict(_DOOR, building="B", wall="ext_0_S", story=0, x=0, y=-5)]
+    rep = SE.analyze({"name": "t", "buildings": bldgs}, _merged_with(bldgs, ops))
+    assert any("walled in" in e for e in rep["errors"]), rep
+    (entry, approach, _wall), = SE._approach_points({}, _merged_with(bldgs, ops))["B"]
+    assert entry == (0.0, -5.0) and abs(approach[1] - (-5.0 - SE.APPROACH_CLEARANCE)) < 1e-9
+
+
+def test_a_partition_door_is_not_a_way_in():
+    """B's only exterior door is blocked; its interior door does not rescue it
+    (0.82.0 counted the partition door as a clear entry and passed B)."""
+    import site_enterability as SE
+    bldgs = [{"id": "B", "at": [0, 0], "rot": 0, "footprint": [10, 10]},
+             {"id": "A", "at": [0, -10.5], "rot": 0, "footprint": [10, 10]}]
+    ops = [dict(_DOOR, building="B", wall="ext_0_S", story=0, x=0, y=-5),
+           dict(_DOOR, building="B", wall="int_0_0", story=0, x=1.0, y=0.5)]
+    rep = SE.analyze({"name": "t", "buildings": bldgs}, _merged_with(bldgs, ops))
+    assert any("walled in" in e for e in rep["errors"]), rep
+    assert rep["buildings"][0]["valid_entries"] == 1
+
+
+def test_an_upper_storey_door_is_not_a_way_in_from_the_ground():
+    """Deli Counter's `enterability.ground_entries` counts storey 0 only."""
+    import site_enterability as SE
+    bldgs = [{"id": "B", "at": [0, 0], "rot": 0, "footprint": [10, 10]}]
+    ops = [dict(_DOOR, building="B", wall="ext_1_N", story=1, x=0, y=5),
+           dict(_DOOR, building="B", wall="N", story=1, x=2, y=5)]
+    rep = SE.analyze({"name": "t", "buildings": bldgs}, _merged_with(bldgs, ops))
+    assert rep["buildings"][0]["valid_entries"] == 0
+    assert any("no usable entry" in w for w in rep["warnings"]), rep["warnings"]
+
+
+def test_a_label_the_gate_cannot_read_is_said_not_guessed():
+    import site_enterability as SE
+    bldgs = [{"id": "B", "at": [0, 0], "rot": 0, "footprint": [10, 10]}]
+    ops = [dict(_DOOR, building="B", wall="facade_front", story=0, x=0, y=-5),
+           dict(_DOOR, building="B", wall="ext_0_S", story=0, x=2, y=-5)]
+    rep = SE.analyze({"name": "t", "buildings": bldgs}, _merged_with(bldgs, ops))
+    assert any("facade_front" in w and "cannot read" in w for w in rep["warnings"]), rep
+    assert rep["buildings"][0]["valid_entries"] == 1
+
+
 def test_scene_building_instances_tscn():
     """A building referenced by `scene` (a .tscn) is instanced in the site
     .tscn exactly like a `glb` building, and shared scenes dedup to one

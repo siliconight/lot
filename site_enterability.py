@@ -51,6 +51,35 @@ _WALL_NORMAL = {"N": (0.0, 1.0), "S": (0.0, -1.0),
                 "E": (1.0, 0.0), "W": (-1.0, 0.0)}
 
 
+def wall_of(label, story=None):
+    """``(exterior, story, side)`` for an opening's ``wall`` label, or None
+    when the label is not one this module can read.
+
+    THE LABELS THERE ARE, read off every gameplay.json under this repo when
+    this was written (86 files, 1,253 openings): Deli Counter's build writes
+    ``ext_<story>_<side>`` (738) and ``int_<story>_<n>`` for a partition
+    (430, storey -1 among them); `preview.py` synthesizes the bare side,
+    ``N``/``S``/``E``/``W`` (85), with the storey in the opening's own
+    ``story``. Until Lot 0.83.0 only the bare side was looked up, so every
+    BUILT entry's outward normal was (0, 0): its approach point was the
+    doorway itself, and an interior door -- whose doorway is inside its own
+    building, which the neighbour test skips -- always read as clear."""
+    s = str(label or "")
+    if s in _WALL_NORMAL:
+        return True, int(story or 0), s
+    parts = s.split("_")
+    if len(parts) == 3 and parts[0] in ("ext", "int"):
+        try:
+            st = int(parts[1])
+        except ValueError:
+            return None
+        if parts[0] == "int":
+            return False, st, None
+        if parts[2] in _WALL_NORMAL:
+            return True, st, parts[2]
+    return None
+
+
 def _rot(x, y, deg):
     r = math.radians(deg)
     c, s = math.cos(r), math.sin(r)
@@ -99,14 +128,27 @@ def _seg_dist(px, py, ax, ay, bx, by):
     return math.hypot(px - (ax + t * dx), py - (ay + t * dy))
 
 
-def _approach_points(site_spec, merged):
+def _approach_points(site_spec, merged, unread=None):
     """Per building: list of (entry_world_xy, approach_world_xy, wall) for every
-    valid entry. Uses merged openings (building-local x/y) + placements."""
+    valid entry. Uses merged openings (building-local x/y) + placements.
+
+    An entry is a storey-0 EXTERIOR opening, as Deli Counter's
+    enterability.py counts one (`ground_entries`: "All ground-floor (story 0)
+    exterior openings"). An opening whose wall label `wall_of` cannot read is not
+    guessed at: it is appended to ``unread`` so `analyze` can say so."""
     placements = {b["id"]: b for b in merged["buildings"]}
     out = {bid: [] for bid in placements}
     for op in merged.get("openings", []):
         bid = op.get("building")
         if bid not in placements or not _opening_is_entry(op):
+            continue
+        where = wall_of(op.get("wall"), op.get("story"))
+        if where is None:
+            if unread is not None:
+                unread.append((bid, op.get("wall")))
+            continue
+        exterior, story, side = where
+        if not exterior or story != 0:
             continue
         b = placements[bid]
         at, rot = b["at"], b.get("rot", 0)
@@ -114,7 +156,7 @@ def _approach_points(site_spec, merged):
         ex, ey = _rot(op.get("x", 0.0), op.get("y", 0.0), rot)
         ex, ey = ex + at[0], ey + at[1]
         # outward normal in world
-        nx, ny = _WALL_NORMAL.get(op.get("wall"), (0.0, 0.0))
+        nx, ny = _WALL_NORMAL[side]
         wnx, wny = _rot(nx, ny, rot)
         ax = ex + wnx * APPROACH_CLEARANCE
         ay = ey + wny * APPROACH_CLEARANCE
@@ -161,10 +203,15 @@ def _near_route(site_spec, merged, px, py):
 def analyze(site_spec, merged):
     """Return a report dict: per-building approach status + errors/warnings.
     Never raises. `gate` raises on the errors this collects."""
-    approaches = _approach_points(site_spec, merged)
+    unread = []
+    approaches = _approach_points(site_spec, merged, unread)
     bounds = _perimeter_bounds(site_spec)
     others = {b["id"]: b for b in merged["buildings"]}
     buildings, errors, warnings = [], [], []
+    for bid, label in sorted(set((b, str(w)) for b, w in unread)):
+        warnings.append(
+            f"building '{bid}' has an opening on wall '{label}', a label this "
+            "gate cannot read -- it was not counted as an entry.")
 
     for bid, entries in approaches.items():
         if not entries:

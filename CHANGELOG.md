@@ -1,3 +1,40 @@
+## 0.83.0 - an entry is read off the wall label a build writes
+
+Found surveying Lot for poster placement: `site_enterability` looked an
+opening's wall up in `{"N","S","E","W"}`, and Deli Counter's build writes
+`ext_<story>_<side>` and `int_<story>_<n>`. Only `preview.py`'s synthesized
+openings carry the bare side. Read off every gameplay.json in this repo (86
+files, 1,253 openings): 738 `ext_*`, 430 `int_*`, 85 bare.
+
+WHAT IT COST. A built entry's outward normal was (0, 0), so its approach point
+was the doorway itself, and the walled-in gate asked whether a DOORWAY stood
+inside a neighbour's footprint -- never whether the 1.5 m in front of it did.
+And every partition door counted as an entry: its doorway is inside its own
+building, which the neighbour test skips, so it always read as clear. A
+building whose every exterior door was blocked passed on an interior one.
+
+NOW `wall_of` reads all three spellings into (exterior, storey, side), and an
+entry is a storey-0 exterior opening -- Deli Counter's own rule
+(`enterability.ground_entries`). A label it cannot read is not guessed at: it
+is left out and named in a warning.
+
+MEASURED over the 28 site specs through `merge_gameplay`, 0.82.0 against
+0.83.0: entries counted 929 -> 420, all of them clear before and after; 420
+approach points moved 1.5 m out in front of their doors; no walled-in verdict
+changed. 26 "no authored path leads to a clear entry" warnings appear on 18
+sites, and each is attributed: on 22 only partition doors had ever satisfied
+the route check (a partition doorway sits near the building's centre, where
+the authored paths start), on 2 an upper-storey door and partition doors, on
+2 a ground door whose approach, 1.5 m out, is off the path. They are warnings
+the check always owed and never gave. Whether a route drawn centre to centre
+is the right model for "a path leads to the door" is a separate question.
+
+Tests (`tests/test_lot.py`): the three spellings and six it must refuse; a
+door whose doorway is clear and whose approach is not (walled in; 0.82.0
+passed it); a blocked building with a partition door (walled in; 0.82.0
+passed it); upper-storey doors are not ground entries; an unreadable label is
+named, not counted. All five fail against 0.82.0's module.
+
 ## 0.82.0 - a cover's test point is where a body takes cover
 
 Cold run 9109 FAILED: the art leg ended blocked, JOB_PREFLIGHT_REFUSED --
