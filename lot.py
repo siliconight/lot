@@ -1462,7 +1462,7 @@ def _kit_index(module_dir: str) -> dict:
 
 
 def cover_module_stem(species: str, theme: str, style: int,
-                      dims, form: str = None) -> str:
+                      dims, form: str = None, variant: int = None) -> str:
     """The file Zoo builds for a prop slot with a species hint, by NAME.
 
     THE THIRD COPY OF ONE RULE. `deli_counter/themed_tscn.module_stem` and
@@ -1490,7 +1490,11 @@ def cover_module_stem(species: str, theme: str, style: int,
     """
     w, d, h = (int(round(float(v) * 100)) for v in dims)
     base = f"prop_{species}_{theme}_{int(style):02d}_w{w}_d{d}_h{h}"
-    return base + f"_f{form}" if form else base
+    # ``variant`` (0.84.0) is Zoo's `_n<variant>`, after the form and added
+    # only when non-zero -- `kit.module_stem`'s own rule -- so no name built
+    # before it moves. First caller: the hung posters (`site_posters`).
+    stem = base + (f"_f{form}" if form else "")
+    return stem + (f"_n{int(variant)}" if variant else "")
 
 
 def write_site_slots(site_spec, out_path):
@@ -1536,6 +1540,40 @@ def write_site_slots(site_spec, out_path):
         # than a greybox.
         if cv.get("blade"):
             slots[-1]["form"] = str(cv["blade"])
+    n_cover = len(slots)
+    # THE HUNG PIECES (0.84.0, `site_posters`): paper on an alley wall or a
+    # pole. Not cover -- they live in their own list so nothing that reads
+    # cover as cover ever sees them -- but slots all the same, so the kit
+    # build that makes the street makes them. The slot stands at the
+    # record's own mount height, with no collision, and carries Zoo's
+    # dressing: the family as `form`, the sheet order as `variant`.
+    for i, hv in enumerate(site_spec.get("hung", []) or []):
+        sp, dims = hv.get("species"), hv.get("dims")
+        if not sp or not dims or len(dims) < 3:
+            continue
+        cx, cy = hv["at"]
+        base = SIDEWALK_H if hv.get("base") == "sidewalk" else 0.0
+        slot = {
+            "slot_id": f"hung_{i}", "role": "prop", "size_mod": "full",
+            "style": int(hv.get("style") or 1),
+            "material": COVER_MATERIALS.get(sp, "metal_painted"),
+            "current_ref": "prop_greybox_01", "kit_axis": "theme",
+            "species": sp,
+            "transform": {"translation": [round(cx, 4), round(cy, 4),
+                                          round(base + float(hv["z"]), 4)],
+                          "rot_y": float(hv.get("yaw") or 0.0),
+                          "scale": [1.0, 1.0, 1.0]},
+            "fit": {"dims": [float(dims[0]), float(dims[1]), float(dims[2])],
+                    "pivot": "center", "openings": [], "collision": "none"},
+        }
+        if hv.get("form"):
+            slot["form"] = str(hv["form"])
+        if hv.get("variant"):
+            slot["variant"] = int(hv["variant"])
+        slots.append(slot)
+    coverage = {"prop/site_cover": n_cover}
+    if len(slots) > n_cover:
+        coverage["prop/site_hung"] = len(slots) - n_cover
     doc = {
         "slot_manifest_version": "1.2.0",
         "building_id": "site",
@@ -1543,7 +1581,7 @@ def write_site_slots(site_spec, out_path):
         "module_library": "art/zoo",
         "module_size": 2.0,
         "space": "spec/Blender Z-up raw coords; rot_y = degrees about up",
-        "coverage": {"prop/site_cover": len(slots)},
+        "coverage": coverage,
         "slots": slots,
     }
     with open(out_path, "w", encoding="utf-8") as fh:
@@ -1570,13 +1608,15 @@ COVER_MATERIALS = {"box_truck": "metal_painted", "cargo_container": "metal_paint
                    "mailbox": "metal_painted", "newspaper_box": "metal_painted",
                    "parking_meter": "metal_painted", "payphone": "metal_painted",
                    # the gas station's price pylon (site_furniture.plan_pylons)
-                   "price_pylon": "metal_painted"}
+                   "price_pylon": "metal_painted",
+                   # the handbills (site_posters): paper, the genome's own kind
+                   "poster_wall": "paper"}
 
 
 COVER_DIR = "cover"
 
 
-def cover_module_refs(site_spec, prefix, out_dir=None):
+def cover_module_refs(site_spec, prefix, out_dir=None, key="cover"):
     """Which cover pieces have a built module to stand in for the box.
 
     The spec's ``cover_modules`` names the Zoo kit build's directory, theme
@@ -1608,7 +1648,9 @@ def cover_module_refs(site_spec, prefix, out_dir=None):
         return refs, ext, findings
     index = _kit_index(str(cm["dir"]))
     seen = {}
-    for i, cv in enumerate(site_spec.get("cover", []) or []):
+    # ``key`` (0.84.0): "cover", or "hung" for `site_posters`' pieces --
+    # the same resolution, a list of its own, refs keyed by its own index.
+    for i, cv in enumerate(site_spec.get(key, []) or []):
         sp, dims = cv.get("species"), cv.get("dims")
         if not sp or not dims:
             continue
@@ -1623,9 +1665,19 @@ def cover_module_refs(site_spec, prefix, out_dir=None):
         # Zoo's genome would have to land in the same instant or every post
         # on the site goes to greybox, in whichever order they landed.
         st = int(cv.get("style") or style)
-        tried = ([cover_module_stem(sp, theme, st, dims, form=cv["blade"])]
-                 if cv.get("blade") else [])
-        tried.append(cover_module_stem(sp, theme, st, dims))
+        form = cv.get("blade") or cv.get("form")
+        tried = []
+        if form and cv.get("variant"):
+            tried.append(cover_module_stem(sp, theme, st, dims, form=form,
+                                           variant=cv["variant"]))
+        if form:
+            tried.append(cover_module_stem(sp, theme, st, dims, form=form))
+        # A HUNG PIECE STOPS AT ITS FORM. A poster run's plain name is
+        # another family's art (Zoo draws `poster_wall` with no form as the
+        # club's), so an alley slot with no alley module is drawn as nothing,
+        # and said, rather than as a strip club's poster in an alley.
+        if key == "cover" or not form:
+            tried.append(cover_module_stem(sp, theme, st, dims))
         stem, glb = None, None
         for cand in tried:
             path = os.path.abspath(os.path.join(str(cm["dir"]),
@@ -1635,7 +1687,7 @@ def cover_module_refs(site_spec, prefix, out_dir=None):
                 break
         if stem is None:
             findings.append((CODE_COVER_MODULE_MISSING,
-                             f"cover_{i} ({sp}): no {' or '.join(tried)}.glb "
+                             f"{key}_{i} ({sp}): no {' or '.join(tried)}.glb "
                              f"in {cm['dir']}; the box stays"))
             continue
         # THE INDEX'S VERDICT, READ. Zoo writes `site_kit.built.json` beside
@@ -1649,7 +1701,7 @@ def cover_module_refs(site_spec, prefix, out_dir=None):
         verdict = index.get(stem)
         if verdict is not None and verdict.get("status") not in ("pass", "warn"):
             findings.append((CODE_COVER_MODULE_FAILED,
-                             f"cover_{i} ({sp}): {stem} built with status "
+                             f"{key}_{i} ({sp}): {stem} built with status "
                              f"{verdict.get('status')!r}; the box stays"))
             continue
         if stem not in seen:
@@ -1895,7 +1947,7 @@ PLATE_TOP = -GROUND_SINK
 
 
 def _outdoor_nodes(site_spec, preview=False, self_flooring=None, skins=None,
-                   cover_refs=None, signs=None):
+                   cover_refs=None, signs=None, hung_refs=None):
     """(body_lines, subres_lines) for all Phase-2 outdoor geometry.
 
     `self_flooring` is the set of building ids whose geometry demonstrably
@@ -2009,6 +2061,20 @@ def _outdoor_nodes(site_spec, preview=False, self_flooring=None, skins=None,
                            COVER_COLOR)
         body += bl
         sub += sr
+
+    # THE HUNG PIECES (0.84.0, `site_posters`): the module Zoo built, at the
+    # record's own height. One with no module is not drawn -- a centimetre
+    # box on a wall stands in for nothing -- and the resolver has said so.
+    hung_refs = hung_refs or {}
+    for i, hv in enumerate(site_spec.get("hung", []) or []):
+        if i not in hung_refs:
+            continue
+        base = SIDEWALK_H if hv.get("base") == "sidewalk" else 0.0
+        xform = _godot_transform(tuple(hv["at"]), float(hv.get("yaw") or 0.0),
+                                 z=base + float(hv["z"]))
+        body += [f'[node name="hung_{i}" parent="." '
+                 f'instance=ExtResource("{hung_refs[i]}")]',
+                 f'transform = Transform3D({xform})', '']
 
     # roads: the street grid the block is built on (DELCO/Philly grain). A road
     # is a flat asphalt strip between two points, optionally with raised concrete
@@ -2227,10 +2293,16 @@ def write_godot_scene(site_spec, merged, out_path, glb_dir=".", preview=False,
     for code, msg in cover_findings:
         print(f"[lot] {code}: {msg}")
     res_lines += cover_ext
+    hung_refs, hung_ext, hung_findings = cover_module_refs(
+        site_spec, prefix, os.path.dirname(os.path.abspath(out_path)), key="hung")
+    for code, msg in hung_findings:
+        print(f"[lot] {code}: {msg}")
+    # a module both lists use is declared once
+    res_lines += [ln for ln in hung_ext if ln not in res_lines]
 
     outdoor_body, outdoor_sub = _outdoor_nodes(
         site_spec, preview=preview, self_flooring=self_flooring, skins=skins,
-        cover_refs=cover_refs, signs=signs)
+        cover_refs=cover_refs, signs=signs, hung_refs=hung_refs)
 
     building_body, building_sub = [], []
     if preview:
@@ -3271,6 +3343,19 @@ def assemble(site_spec_path, out_dir=None, walkable=False, navqa=False,
         print("[lot] LOT_NO_EXTERIOR_LIGHTS: no streetlight pole on this "
               "site, so nothing lights the street; the moon and the "
               "buildings' own facade lights are all there is")
+
+    # THE HANDBILLS (0.84.0, `site_posters`): on the alley walls and the
+    # poles, once the street's poles stand and the buildings' openings are
+    # merged. Their own list, never `cover`.
+    import site_posters
+    import site_streets as _poster_streets
+    poster_findings = []
+    site_spec["hung"] = site_posters.plan(site_spec, merged,
+                                          _poster_streets.roads(site_spec),
+                                          poster_findings)
+    merged["poster_plan"] = {"placed": site_spec["hung"]}
+    for f_ in poster_findings:
+        print(f"[lot] {f_}")
 
     tscn_out = os.path.join(out_dir, f"{site_spec['name']}.tscn")
     write_godot_scene(site_spec, merged, tscn_out, preview=preview,

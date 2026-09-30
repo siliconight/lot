@@ -1,3 +1,66 @@
+## 0.84.0 - handbills on the back-of-house walls and the poles
+
+The walker, 2026-09-29, choosing where posters go: "exterior alley walls and
+poles" among four places; 2026-09-30, "do the alley walls and poles next".
+Zoo draws them (`poster_wall` in its `alley` form: day-glo handbills, two
+courses on a wall, torn and taped); Deli Counter 0.163.0 hung the three
+interior families. This is the outdoor one. New: `site_posters.py`.
+
+HUNG, NOT COVER. Everything in `site_spec["cover"]` is read as something a
+body hides behind -- pacing counts it, the cover test points come from it,
+the audit and the layout lint read it -- so a poster in that list would have
+been a tactical object. The runs go to `site_spec["hung"]`, which only three
+places read: `write_site_slots` (a `hung_<i>` slot at the record's own mount
+height, collision none, the family as `form`, the sheet order as `variant`),
+`cover_module_refs(key="hung")`, and `_outdoor_nodes` (the module, or nothing:
+a centimetre box on a wall stands in for no poster). A hung piece's module
+ladder stops at its form, because `poster_wall` with no form is the club's
+art. `cover_module_stem` spells Zoo's `_n<variant>`, added only when
+non-zero, so no existing name moves (pinned: the sign post's).
+
+WHICH WALLS, MEASURED FIRST. Lot had no word for an alley or a rear facade.
+The first rule -- a side facing another building across 1.5-12 m of walkable
+ground with no road in it -- placed ZERO runs over Lot's 28 site specs and
+Level Factory's `club_block_014` lot: generated lots stand buildings in a row
+25-45 m apart or offset on both axes, and the "commercial -> alley ->
+rowhomes" seam is unimplemented (docs/LEVEL_RECIPE.md). A rule that cannot
+fire is indistinguishable from one that passed, so an alley wall is read as a
+building's BACK-OF-HOUSE wall: a true alley first (up to two runs), then the
+rear (opposite the side the sign faces, `sign_placement`'s rule), then a side
+wall; two runs a building in all. Never the street facade; never a stretch
+with under 1.5 m in front of it (a neighbour or the plate's edge); never over
+a storey-0 opening, read through `site_enterability.wall_of` (0.83.0). Over
+the 28 specs: 142 runs on 24 sites, 0 of them true alleys; the four without
+any carry no footprints to read.
+
+THE POLES: every other streetlight and sign post (a hash of the piece's name,
+so adding a pole moves no other), one alley sheet at the eye on the face away
+from the road, 4 mm off the pole (Zoo's streetlight pole is a 0.06 m cylinder
+at the slot's centre, the sign post a 0.10 m channel).
+
+FACING, from the measured convention: a run faces plan `(sin yaw, -cos yaw)`
+(`site_furniture.plate_facing`, read in Godot 4.7), and Zoo's poster run faces
+local -y like a blade (its front quad sits at y = -d/2); `facing_yaw` is the
+inverse, tested against `plate_facing` itself.
+
+Numbers mirrored from other repos, each pinned when that repo is beside this
+one: Zoo's bands (`band_height("alley", 2)` 0.814, `("alley", 1)` 0.52) and
+sheet width 0.30; the stem `plan_kit` builds for a hung slot; Deli Counter's
+eye height 1.6 and wall thickness 0.3 (not pinned: Lot imports nothing of
+Deli Counter's, as `site_enterability`'s body-fit numbers).
+
+Assembled end to end on deli_block into a scratch directory: 6 wall runs, 7
+pole bills, 13 `hung` slots beside 50 cover slots. No hung node is drawn
+until Zoo has built the modules: the cold run is the first place they stand.
+
+Tests: `tests/test_site_posters.py` (17): a true alley papered on the facing
+stretch and split by the door (worked by hand, and the door's control); the
+street facade never papered, the rear first; a party wall left bare; a road
+makes it a street; pole bills away from the road on the pole's face; hung
+slots with no collision at their own height and a manifest unchanged without
+them; the stem and its variant; no fallback to another family's art; the
+bands, sheet and stem are Zoo's.
+
 ## 0.83.0 - an entry is read off the wall label a build writes
 
 Found surveying Lot for poster placement: `site_enterability` looked an
