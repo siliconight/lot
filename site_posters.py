@@ -114,7 +114,15 @@ BLADE_CLEAR = round(2.4384 - 0.3048 - 0.05, 4)
 #: How papered a pole is, by a hash of its name: the share of poles at each
 #: tier; and one tier denser near a junction -- the corner poles are where a
 #: street's flyers go ("a known place for flyers", the placement guide).
-TIER_SHARE = (0.30, 0.35, 0.22, 0.13)
+#:
+#: 0.86.1, the walker after cold run 9119 (22 of 28 poles papered): "tune it
+#: down 50%...not every pole should have posters". The papered tiers' shares
+#: halved, their mix kept (35/22/13 -> 17.5/11/6.5, bare 30 -> 65 %); and the
+#: junction no longer papers a BARE pole -- it makes a papered one denser.
+#: Measured over 4,000 names with 30 % of poles at a junction: 79 % papered
+#: before, 54 % with the shares halved alone (the junction bump turned bare
+#: corners into pairs), 34 % with both.
+TIER_SHARE = (0.65, 0.175, 0.11, 0.065)
 JUNCTION_M = 10.0
 #: THE NIGHT'S KEY LIGHT, as Lux's `delco_night` preset sets it (0.85.0): the
 #: moon at elevation 38, azimuth 300 degrees. Cold run 9117 measured what it
@@ -407,15 +415,15 @@ def _near_junction(roads, px, py, own):
 
 
 def tier_for(name, junction):
-    """The pole's tier: `TIER_SHARE` by a hash of its name, one denser at a
-    junction."""
+    """The pole's tier: `TIER_SHARE` by a hash of its name; at a junction one
+    denser, if it carries paper at all."""
     u = (_h(name, "tier") % 10000) / 10000.0
     acc, t = 0.0, 0
     for t, share in enumerate(TIER_SHARE):
         acc += share
         if u < acc:
             break
-    if junction:
+    if junction and t > 0:
         t = min(len(TIERS) - 1, t + 1)
     return TIERS[t]
 

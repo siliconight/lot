@@ -1,3 +1,17 @@
+## 0.86.1 - a third of the poles papered, not four in five
+
+The walker, after cold run 9119 stood flyers on 22 of 28 poles: "tune it down
+50%...not every pole should have posters". `TIER_SHARE` halves the papered
+tiers and keeps their mix (pair 35 -> 17.5 %, stack 22 -> 11, wrap 13 ->
+6.5; bare 30 -> 65). Halving alone was not enough: with 30 % of poles at a
+junction, measured over 4,000 names, 79 % were papered before and 54 % after,
+because the junction rule turned a bare corner pole into a pair. A junction
+now makes a PAPERED pole one tier denser and leaves a bare one bare: 34 %,
+junction or not.
+
+Tests: a junction pole denser but a bare one bare; about a third of poles
+papered (30-40 %), junction or not.
+
 ## 0.86.0 - poles papered in tiers, with sleeves of flyers
 
 Cold run 9118 stood one flat 0.30 m bill on every other 0.12 m pole, and it

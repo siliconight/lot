@@ -176,13 +176,27 @@ def test_poles_are_papered_in_tiers_some_bare():
     assert 0 < len(sleeves) < 40                          # some poles bare
 
 
-def test_a_junction_pole_is_papered_denser():
-    """A pole within `JUNCTION_M` of another road runs one tier denser: the
-    corner is where a street's flyers go."""
-    for k in range(40):
+def test_a_junction_pole_is_papered_denser_but_a_bare_one_stays_bare():
+    """A papered pole within `JUNCTION_M` of another road runs one tier
+    denser: the corner is where a street's flyers go. A bare one stays bare
+    (0.86.1): promoting it is how 0.86.0 papered 79 % of 9119's poles."""
+    for k in range(80):
         name = f"lamp_{k}"
         plain, corner = P.tier_for(name, False), P.tier_for(name, True)
-        assert P.TIERS.index(corner) == min(len(P.TIERS) - 1, P.TIERS.index(plain) + 1)
+        if plain == "bare":
+            assert corner == "bare", name
+        else:
+            assert P.TIERS.index(corner) == min(len(P.TIERS) - 1, P.TIERS.index(plain) + 1)
+
+
+def test_about_a_third_of_poles_carry_paper():
+    """The walker after 9119: "tune it down 50%...not every pole should have
+    posters". Over many names, junction or not, about a third are papered."""
+    import collections
+    for junction in (False, True):
+        c = collections.Counter(P.tier_for(f"pole_{k}", junction) for k in range(4000))
+        papered = 1 - c["bare"] / 4000
+        assert 0.30 <= papered <= 0.40, (junction, papered)
 
 
 def test_no_shared_centreline_and_within_reach():
