@@ -51,6 +51,19 @@ def test_a_run_faces_where_it_is_asked_to(n):
 # --- the walls ------------------------------------------------------------------------------
 
 
+def test_wall_runs_are_not_all_at_one_height_and_none_is_out_of_reach():
+    """0.87.0, the placement guide: "identical ... height ... on every wall"
+    is the tell, and "posters placed far above reach need a reason"."""
+    assert 0.0 in P.WALL_STEPS
+    for s in P.WALL_STEPS:
+        assert P.EYE + s + P.BAND_WALL / 2 <= P.REACH + 1e-9, s
+        assert P.EYE + s - P.BAND_WALL / 2 >= 0.8, s           # not on the ground
+    names = [f"alley_poster_b{b}_{side}_{k}" for b in range(12) for side in "NESW" for k in range(2)]
+    heights = {P.wall_height(n) for n in names}
+    assert heights == {round(P.EYE + s, 3) for s in P.WALL_STEPS}, heights
+    assert P.wall_height(names[0]) == P.wall_height(names[0])
+
+
 def test_a_true_alley_is_papered_on_the_stretch_the_neighbour_faces_clear_of_its_door():
     """A and B stand 2 m apart, A's north face to B's south; A's door is in
     the middle of that face. Worked by hand: the facing stretch 15..25 less a
@@ -66,7 +79,9 @@ def test_a_true_alley_is_papered_on_the_stretch_the_neighbour_faces_clear_of_its
         assert r["faces"] == "B" and abs(r["gap"] - 2.0) < 1e-9
         assert abs(r["at"][1] - (5.0 + P.WALL_THICK / 2 + P.AIR + P.DEPTH / 2)) < 1e-9
         assert site_furniture.plate_facing(r["yaw"]) == pytest.approx((0.0, 1.0))
-        assert r["z"] == P.EYE and r["form"] == "alley" and r["species"] == "poster_wall"
+        # 0.87.0: at the eye plus the run's own step
+        assert r["z"] == P.wall_height(r["name"]) and r["z"] - P.EYE in [pytest.approx(s) for s in P.WALL_STEPS]
+        assert r["form"] == "alley" and r["species"] == "poster_wall"
 
 
 def test_the_door_is_what_splits_the_run():

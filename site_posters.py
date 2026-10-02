@@ -110,6 +110,10 @@ START_JITTER = 0.1
 #: its blade (Lot's MUTCD blades are 0.3048 m tall at the top of a 2.4384 m
 #: post), a hand clear of it.
 REACH = 2.1
+#: NOT EVERY WALL RUN AT ONE HEIGHT (0.87.0): a run's centre is the eye plus
+#: one of these, by its own name (`wall_height`). The highest puts the band's
+#: top at EYE + 0.09 + BAND_WALL / 2 = 2.097, under `REACH`.
+WALL_STEPS = (-0.30, -0.15, 0.0, 0.09)
 BLADE_CLEAR = round(2.4384 - 0.3048 - 0.05, 4)
 #: How papered a pole is, by a hash of its name: the share of poles at each
 #: tier; and one tier denser near a junction -- the corner poles are where a
@@ -378,7 +382,7 @@ def plan_alley_walls(site_spec, merged, roads, findings=None):
                         extra.update(faces=oid, gap=round(gap, 3))
                         alleys += 1
                     out.append(_record(name, (x, y), facing_yaw(nx, ny),
-                                       (w, DEPTH, BAND_WALL), EYE,
+                                       (w, DEPTH, BAND_WALL), wall_height(name),
                                        host=f"wall:{b['id']}:{side}", **extra))
                     placed += 1
                     placed_b += 1
@@ -386,6 +390,14 @@ def plan_alley_walls(site_spec, merged, roads, findings=None):
         findings.append(f"{CODE_ALLEY_POSTERS}: {len(out)} run(s) on back-of-house walls, "
                         f"{alleys} of them facing a neighbour across an alley")
     return out
+
+
+def wall_height(name):
+    """The height of a wall run's centre: the eye plus the step its name
+    takes. The name is the building, the side and the run's ordinal on it,
+    so the height is the same on every plan of the same site."""
+    k = (zlib.crc32(str(name).encode("utf-8")) & 0xFFFFFFFF) % len(WALL_STEPS)
+    return round(EYE + WALL_STEPS[k], 3)
 
 
 def _nearest(roads, px, py):

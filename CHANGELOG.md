@@ -1,3 +1,18 @@
+## 0.87.0 - an alley's poster runs are not all pasted at one height
+
+The poster pass the walker queued 2026-09-30 ("we can make them better later
+right?"), Lot's part. Every wall run was pasted with its centre on the
+camera's eye, 1.6 m -- the placement guide's "identical spacing, height,
+rotation, or mounting pattern on every wall". The poles already start their
+tiers at different heights; the walls did not.
+
+`site_posters.wall_height(name)`: the eye plus one of `WALL_STEPS` (-0.30 /
+-0.15 / 0 / +0.09), by the run's own name. The highest puts the band's top
+at 2.097 m, under `REACH` 2.1. Nothing else about a run moves.
+
+Tests: the steps include level, none passes reach or drops to the ground,
+48 names draw every step, and a planned run is at its own name's height.
+
 ## 0.86.1 - a third of the poles papered, not four in five
 
 The walker, after cold run 9119 stood flyers on 22 of 28 poles: "tune it down
