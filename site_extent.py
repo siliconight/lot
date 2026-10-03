@@ -226,9 +226,11 @@ def content(site_spec):
              for b in site_spec.get("buildings") or []}
 
     def _ends(defn):
-        a = at_of.get(defn.get("from")) if "from" in defn else _point(defn.get("a"))
-        b = at_of.get(defn.get("to")) if "to" in defn else _point(defn.get("b"))
-        return a, b
+        # the one reader (0.88.0): resolved a/b first, centres otherwise
+        import site_paths
+        a, b = site_paths.endpoints_or_none(
+            defn, {k: {"at": v} for k, v in at_of.items() if v is not None})
+        return _point(a), _point(b)
 
     for kind, width_key, default_w in (("paths", "width", 3.0),
                                        ("roads", "width", 9.0)):

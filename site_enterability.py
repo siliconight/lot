@@ -185,9 +185,9 @@ def _near_route(site_spec, merged, px, py):
     if not paths and not courts:
         return True
     bld = {b["id"]: b for b in merged["buildings"]}
+    import site_paths
     for p in paths:
-        a = bld[p["from"]]["at"] if "from" in p else p.get("a")
-        b2 = bld[p["to"]]["at"] if "to" in p else p.get("b")
+        a, b2 = site_paths.endpoints_or_none(p, bld)
         if a is None or b2 is None:
             continue
         if _seg_dist(px, py, a[0], a[1], b2[0], b2[1]) <= p.get("width", 3.0) / 2 + 1.0:

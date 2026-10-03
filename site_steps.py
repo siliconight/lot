@@ -71,12 +71,12 @@ def routes(site_spec):
     check at all: nobody reads an instrument that is always red.
 
     Site space is (x, y_plan); Godot is (x, -y_plan)."""
+    import site_paths
     bld = {b["id"]: b for b in site_spec.get("buildings", []) or []}
     out = []
     for p in site_spec.get("paths", []) or []:
         try:
-            a = bld[p["from"]]["at"] if "from" in p else p["a"]
-            b = bld[p["to"]]["at"] if "to" in p else p["b"]
+            a, b = site_paths.endpoints(p, bld)
         except (KeyError, TypeError):
             continue
         out.append(((float(a[0]), -float(a[1])),

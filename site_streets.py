@@ -176,9 +176,9 @@ class Road:
 
 
 def _endpoints(rec, bld):
-    a = bld[rec["from"]]["at"] if "from" in rec else rec["a"]
-    b = bld[rec["to"]]["at"] if "to" in rec else rec["b"]
-    return (float(a[0]), float(a[1])), (float(b[0]), float(b[1]))
+    # the one reader (0.88.0): resolved a/b first, centres otherwise
+    import site_paths
+    return site_paths.endpoints(rec, bld)
 
 
 def kerb_crossings(site_spec, bld, origin, along, perp, offset, length, width,

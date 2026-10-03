@@ -268,12 +268,12 @@ def _path_segments(site_spec):
     manifest declares `spec/Blender Z-up raw coords`, and silently mixing the
     two is the exact class of bug this repo has already paid for twice.
     """
+    import site_paths
     bld = {b["id"]: b for b in site_spec.get("buildings", []) or []}
     out = []
     for i, p in enumerate(site_spec.get("paths", []) or []):
         try:
-            a = bld[p["from"]]["at"] if "from" in p else p["a"]
-            b = bld[p["to"]]["at"] if "to" in p else p["b"]
+            a, b = site_paths.endpoints(p, bld)
         except (KeyError, TypeError):
             continue
         label = (f"{p.get('from', 'a')}_{p.get('to', 'b')}"

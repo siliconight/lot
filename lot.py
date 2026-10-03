@@ -1841,12 +1841,13 @@ def _surface_slab(name, family, size, centre, yaw_deg, top):
 
 def path_slabs(site_spec):
     """One slab per declared path, `path_<i>`, top at PATH_THICK."""
+    import site_paths
     bld = {b["id"]: b for b in site_spec["buildings"]}
     out = []
     for i, p in enumerate(site_spec.get("paths", [])):
         w = p.get("width", 3.0)
-        a = bld[p["from"]]["at"] if "from" in p else p["a"]
-        b2 = bld[p["to"]]["at"] if "to" in p else p["b"]
+        # the resolved ends (0.88.0): a door, where the facade has one
+        a, b2 = site_paths.endpoints(p, bld)
         ax, ay = a
         bx_, by_ = b2
         cx, cy = (ax + bx_) / 2, (ay + by_) / 2
@@ -3083,6 +3084,16 @@ def assemble(site_spec_path, out_dir=None, walkable=False, navqa=False,
 
     merged = merge_gameplay(site_spec, base_dir)
     merged["tactical"] = tactical_report
+
+    # Every path end that belongs to a building meets one of its doors
+    # (0.88.0). Here, after the merge that knows the doors and before
+    # anything reads a path: the slabs, the surface zones, the step and
+    # kerb gates, the plate extent and the enterability route check all
+    # read the same resolved ends from the spec's own path records.
+    import site_paths
+    for f_ in site_paths.snap_to_doors(site_spec, merged):
+        tactical_report.setdefault("findings", []).append(f_)
+        print(f"[lot] {f_['code']}: {f_['message']}")
 
     # Ground policy: a hole is cut under a building only where its geometry is
     # known to bring collision. A plain shell.glb brings none, and cutting
