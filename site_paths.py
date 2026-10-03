@@ -62,6 +62,17 @@ FACING_DOT = 0.7
 #: The findings' category, in the shape `site_extent._finding` writes.
 CATEGORY = "site_paths"
 
+#: The width a walk between two doors is drawn at when the site has no road
+#: to take a sidewalk's width from, in metres. Level Factory's sidewalk
+#: (`road_grammar.SIDEWALK_WIDTH`) is 3.0 and every site it writes carries
+#: that on its roads, which is what `_walk_width` reads first.
+WALK_WIDTH = 3.0
+
+#: Two doors whose offset across the walk is within this are joined by one
+#: straight leg down the middle, in metres: a jog a quarter of a metre deep
+#: is a kink, not a corner.
+ALIGNED_TOL = 0.25
+
 
 def _unit(x, y):
     n = math.hypot(x, y)
@@ -118,6 +129,51 @@ def _facing_door(entries, origin, leaving):
     return best
 
 
+def _walk_width(site_spec, p):
+    """The width a door-to-door walk is drawn at: the narrowest sidewalk the
+    site's roads declare, never wider than the path was authored."""
+    walks = [float(r.get("sidewalk") or 0.0) for r in site_spec.get("roads", []) or []]
+    walks = [s for s in walks if s > 0.0]
+    return min(float(p.get("width", WALK_WIDTH)), min(walks) if walks else WALK_WIDTH)
+
+
+def _walk_legs(a, b, leaving, w):
+    """The legs ``[(a, b, width)]`` of a walk from door point `a` to door
+    point `b`, square to the axis `a`'s door faces along: out from each door
+    and one jog between. None when the doors are closer along that axis
+    than the walk is wide (no room to run out before turning).
+
+    THE CORNERS BELONG TO THE LEGS THAT RUN OUT FROM THE DOORS. Each of those
+    is drawn half a width past the jog's line, and the jog is drawn between
+    them, so the three slabs tile the corner squares and no two lie coplanar
+    over the same ground (which z-fights; `street_slabs` avoids it the same
+    way at a junction's mouth)."""
+    along_x = abs(leaving[0]) >= abs(leaving[1])
+    (au, av), (bu, bv) = ((a[0], a[1]), (b[0], b[1])) if along_x else ((a[1], a[0]), (b[1], b[0]))
+
+    def pt(u, v):
+        return [u, v] if along_x else [v, u]
+
+    du, dv = bu - au, bv - av
+    if abs(du) < w:
+        return None
+    if abs(dv) <= ALIGNED_TOL:
+        vm = (av + bv) / 2.0
+        return [(pt(au, vm), pt(bu, vm), w)]
+    if abs(dv) < w:
+        # too shallow for a jog: one leg down the middle, wide enough to
+        # reach both doors
+        vm = (av + bv) / 2.0
+        return [(pt(au, vm), pt(bu, vm), w + abs(dv))]
+    su = 1.0 if du > 0 else -1.0
+    sv = 1.0 if dv > 0 else -1.0
+    um = (au + bu) / 2.0
+    legs = [(pt(au, av), pt(um + su * w / 2.0, av), w),
+            (pt(um, av + sv * w / 2.0), pt(um, bv - sv * w / 2.0), w),
+            (pt(um - su * w / 2.0, bv), pt(bu, bv), w)]
+    return [leg for leg in legs if math.dist(leg[0], leg[1]) > 1e-6]
+
+
 def snap_to_doors(site_spec, merged):
     """Rewrite every path's ``a``/``b`` in `site_spec` so each end that
     belongs to a building meets one of that building's doors. Returns the
@@ -126,11 +182,13 @@ def snap_to_doors(site_spec, merged):
     bld = {b["id"]: b for b in site_spec.get("buildings", []) or []}
     entries = _entries(site_spec, merged)
     findings = []
+    extra = {}      # authored index -> the further legs of its walk
     for i, p in enumerate(site_spec.get("paths", []) or []):
         a, b = endpoints_or_none(p, bld)
         if a is None:
             continue
         snapped = {}
+        normals = {}
         if "from" in p and "to" in p:
             # a building path: each end leaves toward the other building
             ends = {"a": (p["from"], a, b), "b": (p["to"], b, a)}
@@ -143,6 +201,7 @@ def snap_to_doors(site_spec, merged):
                 (ex, ey), (nx, ny), wall = door
                 p[key] = [ex + nx * DOOR_STANDOFF, ey + ny * DOOR_STANDOFF]
                 snapped[key] = wall
+                normals[key] = (nx, ny)
             # A HALF-SNAPPED PATH CARRIES BOTH POINTS. `endpoints` reads a/b
             # only when both are there, so writing the one end that found a
             # door would lose it again to the centres; the end that found
@@ -151,6 +210,21 @@ def snap_to_doors(site_spec, merged):
                 for key, (_bid, here, _there) in ends.items():
                     if key not in snapped:
                         p[key] = [here[0], here[1]]
+            # BOTH ENDS AT A DOOR: THE WALK IS DRAWN SQUARE (0.89.0). A band
+            # at the authored width laid door to door crossed the lot on a
+            # diagonal (the walker: "these look goofy"). It is drawn as legs
+            # at the sidewalk's width instead: out from each door along its
+            # facing and one jog between. The record keeps its ids and its
+            # authored width as `route_width`; the further legs follow it
+            # in the list as plain point paths naming the route in `leg_of`.
+            if len(snapped) == 2:
+                legs = _walk_legs(p["a"], p["b"], normals["a"], _walk_width(site_spec, p))
+                if legs:
+                    p["route_width"] = p.get("width")
+                    p["a"], p["b"], p["width"] = legs[0]
+                    extra[i] = [{"a": la, "b": lb, "width": lw,
+                                 "leg_of": [p["from"], p["to"]]}
+                                for la, lb, lw in legs[1:]]
         elif p.get("building") in bld:
             # a door spur: the end nearer its owner is the door end; it
             # leaves toward the far end; the whole spur slides sideways
@@ -174,6 +248,12 @@ def snap_to_doors(site_spec, merged):
             continue
         if snapped:
             p["snapped"] = snapped
+    if extra:
+        out = []
+        for i, p in enumerate(site_spec.get("paths", []) or []):
+            out.append(p)
+            out.extend(extra.get(i, []))
+        site_spec["paths"] = out
     return findings
 
 
