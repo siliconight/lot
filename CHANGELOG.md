@@ -1,3 +1,35 @@
+## 0.92.0 - what the ground is for, measured
+
+The walker, 2026-10-03, filing `docs/reference/LAND_PRESSURE_AND_SPATIAL_LOGIC.md`:
+"this should directly inform Lot". The guide's rules -- every piece of open
+land has a visible role, frontage is used, variation is correlated, the
+tools state their measurements -- had no measurement here. `site_landuse.
+census(site_spec, merged)` is one, and changes nothing.
+
+One boundary, the resolved plate, on a 0.5 m grid; each cell takes the
+first use whose DRAWN geometry holds it: a building's footprint, then the
+slabs `site_surfaces.tops` declares (road, kerb cut, sidewalk, frontage,
+walk or landing, courtyard); the rest is `remainder`, ground with no role.
+Reported: each use's area and share, the largest connected piece of
+remainder, coverage, each building's nearest neighbour exterior to
+exterior, and per road the buildings that front it (within `FRONT_REACH`,
+30 m), their setback from the back of walk and its spread, the frontage
+they occupy on each side, and whether each has a ground door facing it. A
+surface family it does not know is listed, not silently counted.
+
+`tools/landuse_census.py` (at the factory root) runs it over every lot on
+disk. The 36 distinct lots: remainder median 68 % of the plate (53-88 %),
+coverage median 14 %, a building line spreading up to 26 m along one road,
+and a ground door facing the road on 67 of 126 fronting buildings. The plan
+these numbers lead to is `docs/proposals/LAND_USE_DESIGN.md`.
+
+`tests/test_site_landuse.py`: every cell one use and the building its
+footprint; a road and its sidewalks counted as theirs (the first draft of
+this test expected the road to span the plate, and the census was right:
+the plate runs on past a road's ends); the building line and door facing
+read per road; separation exterior to exterior; an unknown family said.
+Suite 628.
+
 ## 0.91.0 - a walk leads to a door, and a side door gets a landing
 
 The walker, 2026-10-03, walking 0.90.0, with a frame of the bank's west
