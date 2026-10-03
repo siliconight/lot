@@ -194,8 +194,9 @@ def kerb_crossings(site_spec, bld, origin, along, perp, offset, length, width,
     px, py = perp
     kx, ky = ox + px * offset, oy + py * offset
     out = []
+    import site_paths
     crossers = [(p, float(p.get("width", 6.0)), "path", 0.0, -1)
-                for p in site_spec.get("paths", []) or []]
+                for p in site_paths.drawn(site_spec)]
     crossers += [(r, float(r.get("width", 9.0)), "road", float(r.get("sidewalk") or 0.0), ri)
                  for ri, r in enumerate(site_spec.get("roads", []) or [])]
     for p, pw, kind, psw, crosser in crossers:

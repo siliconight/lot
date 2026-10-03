@@ -1857,7 +1857,8 @@ def path_slabs(site_spec):
     import site_paths
     bld = {b["id"]: b for b in site_spec["buildings"]}
     out = []
-    for i, p in enumerate(site_spec.get("paths", [])):
+    # what is drawn (0.91.0): a walk to a door, a landing at one
+    for i, p in enumerate(site_paths.drawn(site_spec)):
         w = p.get("width", 3.0)
         # the resolved ends (0.88.0): a door, where the facade has one
         a, b2 = site_paths.endpoints(p, bld)

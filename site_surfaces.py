@@ -271,7 +271,7 @@ def _path_segments(site_spec):
     import site_paths
     bld = {b["id"]: b for b in site_spec.get("buildings", []) or []}
     out = []
-    for i, p in enumerate(site_spec.get("paths", []) or []):
+    for i, p in enumerate(site_paths.drawn(site_spec)):
         try:
             a, b = site_paths.endpoints(p, bld)
         except (KeyError, TypeError):

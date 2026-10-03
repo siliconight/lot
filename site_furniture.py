@@ -959,10 +959,11 @@ def path_corridors(site_spec, step=0.5):
     """Rects covering every path's corridor, ``width/2`` either side of its
     line, sampled every ``step`` metres -- a superset of the corridor, so a
     rect clear of these is clear of the path."""
+    import site_paths
     import site_streets
     bld = {b["id"]: b for b in site_spec.get("buildings") or [] if "id" in b}
     out = []
-    for p in site_spec.get("paths") or []:
+    for p in site_paths.drawn(site_spec):
         try:
             (ax, ay), (bx, by) = site_streets._endpoints(p, bld)
         except (KeyError, TypeError):

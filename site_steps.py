@@ -74,7 +74,7 @@ def routes(site_spec):
     import site_paths
     bld = {b["id"]: b for b in site_spec.get("buildings", []) or []}
     out = []
-    for p in site_spec.get("paths", []) or []:
+    for p in site_paths.drawn(site_spec):
         try:
             a, b = site_paths.endpoints(p, bld)
         except (KeyError, TypeError):

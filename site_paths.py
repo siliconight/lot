@@ -1,77 +1,87 @@
 """
-site_paths.py  --  where a path's ends are, decided once
-========================================================
+site_paths.py  --  where a walk goes, decided once
+==================================================
 A site spec declares a path two ways: ``{"from": id, "to": id}`` between
 buildings, or ``{"a": [x, y], "b": [x, y]}`` between points (Level Factory's
-door spur, which also names its owner in ``building``). Seven readers in
-this repo resolved the first form to the buildings' CENTRES, each in its own
-line, and drew, zoned, gated and kerb-cut a corridor that ran from the middle
-of one building to the middle of the next. The walker, 2026-10-03, on cold
-run 9139's lot: "sidewalks don't consistently lead up to doors which seems
-random" and, after the first look, "lot still not drawing walkways to open
-doorways". It was not random: the spur to the bank ran at the bank's centre
-x while its doors sat metres to the side, and the wide path between two
-buildings met each at whatever point of the facade the centre line crossed.
+door spur, which also names its owner in ``building``). This module decides
+what each becomes on the ground, once, after the gameplay merge, and every
+reader that draws or measures a walk asks it.
 
-THE BUILDING KNOWS WHERE ITS DOORS ARE. `site_enterability._approach_points`
-reads every storey-0 exterior entry out of the merged gameplay with its
-outward normal; this module uses that answer and nothing it would have to
-guess. `snap_to_doors` runs once in `assemble`, after the gameplay merge and
-before anything reads a path, and writes the resolved ``a``/``b`` into the
-spec's own path records (the ids stay, so the connectivity graph and the
-surface labels do not move). `endpoints` is the one reader every consumer
-calls: ``a``/``b`` when a path carries them, the centres otherwise -- so a
-hand-authored spec that predates this resolves exactly as it did.
+THE HISTORY, kept because each step answered the one before:
 
-What a snap does, per path end that belongs to a building:
+  * to 0.87.0 seven readers resolved ``from``/``to`` to the buildings'
+    CENTRES, so a walk met a facade wherever the centre line crossed it;
+  * 0.88.0 moved each end to the nearest way in on the facade it met;
+  * 0.89.0 drew the walk between two doors as square legs at the
+    sidewalk's width -- the walker: "these look goofy" of the diagonal band;
+  * 0.91.0, this. The walker, walking 0.90.0: "still have sidewalks going to
+    walls", and of the legs between two side doors, "looks better, but you
+    should do some research as to what looks more natural on a path between
+    the sides of 2 buildings ... (not the normal path that customers would
+    likely take)".
 
-  * the end LEAVES the building in some direction -- a spur's, away from its
-    owner toward its far end; a building path's, toward the other building;
-  * the entries whose outward normal faces that way (within `FACING_DOT`)
-    are the doors on the facade the path meets;
-  * the nearest of them to the path's own line wins;
-  * a spur slides sideways along the facade until it runs at that door, its
-    standoff from the face kept as authored; a building path's end becomes
-    the point `DOOR_STANDOFF` in front of that door.
+WHAT THE RESEARCH SAID (`docs/findings/entry_paths/NOTES.md`): design codes
+ask for a continuous walk along a facade with a CUSTOMER entrance, tied to
+the street's sidewalk; a site walk crosses open pavement only where it must,
+square to the aisle, and the aisle itself is never the walkway; building
+codes put a level LANDING outside every exterior door -- at least the door's
+width and 36 in deep, 60 x 60 in for an accessible one -- with the lot's own
+pavement past it. Two separate businesses' side doors are not joined by a
+walk.
 
-A facade with no door is said (`LOT_PATH_END_OFF_DOOR`) and the end stays
-where it was: a path that reaches a blank wall is a defect this cannot fix
-by inventing a door, and the finding is what the brief or the building's
-author needs to see.
+WHAT 0.91.0 DOES WITH THAT:
+
+  * A WALK LEADS TO A DOOR. Only an opening of kind ``door`` that a body
+    fits through counts (`site_enterability._opening_is_entry` and the
+    kind): a breach is a wall a team blows through, a vaultable window is a
+    window, a garage is for a truck -- the gate counts all three as ways in,
+    and the walker's frame of the bank's west wall was a walk to a breach.
+  * A DOOR SPUR slides along the facade to the nearest door facing the way
+    it leaves, and its near end runs to the wall (`DOOR_BURY` into it, so
+    the slab's end face is hidden) instead of stopping a metre short.
+  * A SPUR WITH NO DOOR TO MEET IS NOT DRAWN. Its record stays, marked
+    ``drawn: False``: the street graph reads it to know the building meets
+    that road, and that is still true.
+  * A BUILDING PATH IS NOT DRAWN. Two neighbours' side doors get a landing
+    each, not a walk across the lot. The record stays for the connectivity
+    graph, as above.
+  * EVERY DOOR NO WALK REACHES GETS A LANDING: a slab from the wall out
+    `LANDING_DEPTH` along the door's normal, the door's width plus
+    `LANDING_SIDE` each side, never under `LANDING_MIN`. It is appended to
+    the spec's paths as a point path naming its building in ``landing_of``
+    (not ``building``: that key means a door spur to the street).
+
+`drawn(site_spec)` is the list a reader that draws or measures a walk
+iterates; `endpoints(p, bld)` resolves one record. The connectivity graph
+(`site_tactical`) and the plate's extent keep reading every record.
 
 Site space throughout: plan (x, y), metres. Godot is (x, -y).
 """
 from __future__ import annotations
 import math
 
-#: How far in front of its door's face a building path ends, in metres. The
-#: figure Level Factory's door spur uses for its own near end (`road_grammar.
-#: _spurs`: ``face - 1.0``), so a snapped building path and a spur stop the
-#: same distance short of the wall and the ground in front of a door reads
-#: as one thing. `site_enterability.APPROACH_CLEARANCE` (1.5) is the space a
-#: body needs there, not where the slab ends; a slab ending 1.0 m out leaves
-#: that space clear.
-DOOR_STANDOFF = 1.0
-
-#: A door faces a path's leaving direction when the dot of its outward normal
-#: with that direction is at least this. 0.7 is about 45 degrees: a door on
-#: the facade the path meets, never one round the corner, with room for a
-#: building rotated off the row.
+#: A door faces a spur's leaving direction when the dot of its outward
+#: normal with that direction is at least this: about 45 degrees.
 FACING_DOT = 0.7
+
+#: How far a slab that meets a wall runs INTO it, in metres, so its end face
+#: sits inside the wall's solid rather than on its plane. Lot cuts the
+#: ground 0.45 m inside a footprint (`lot.GROUND_HOLE_INSET`), so the ground
+#: is under it.
+DOOR_BURY = 0.05
+
+#: A landing outside a door: 60 in deep (the accessible landing, ICC A117.1
+#: / the IBC's 36 in minimum rounded up to it), the door's width plus a foot
+#: each side, and never narrower than 60 in.
+LANDING_DEPTH = 1.525
+LANDING_SIDE = 0.3
+LANDING_MIN = 1.525
+
+#: The opening kinds a walk may lead to.
+DOOR_KINDS = ("door",)
 
 #: The findings' category, in the shape `site_extent._finding` writes.
 CATEGORY = "site_paths"
-
-#: The width a walk between two doors is drawn at when the site has no road
-#: to take a sidewalk's width from, in metres. Level Factory's sidewalk
-#: (`road_grammar.SIDEWALK_WIDTH`) is 3.0 and every site it writes carries
-#: that on its roads, which is what `_walk_width` reads first.
-WALK_WIDTH = 3.0
-
-#: Two doors whose offset across the walk is within this are joined by one
-#: straight leg down the middle, in metres: a jog a quarter of a metre deep
-#: is a kink, not a corner.
-ALIGNED_TOL = 0.25
 
 
 def _unit(x, y):
@@ -82,8 +92,7 @@ def _unit(x, y):
 def endpoints(p, bld):
     """``((ax, ay), (bx, by))`` for a path record: its own ``a``/``b`` when it
     carries both, else the centres of its ``from``/``to`` buildings. Raises
-    KeyError or TypeError when neither resolves, like the inline readers it
-    replaces did, so callers that skip such a record still can."""
+    KeyError or TypeError when neither resolves."""
     if p.get("a") is not None and p.get("b") is not None:
         a, b = p["a"], p["b"]
     else:
@@ -100,169 +109,117 @@ def endpoints_or_none(p, bld):
         return None, None
 
 
-def _entries(site_spec, merged):
-    """{building id: [(entry (x, y), outward normal (nx, ny), wall)]} for
-    every storey-0 exterior entry, from the enterability gate's own reading."""
-    import site_enterability
-    out = {}
-    for bid, rows in site_enterability._approach_points(site_spec, merged).items():
-        lst = []
-        for (ex, ey), (ax, ay), wall in rows:
-            lst.append(((ex, ey), _unit(ax - ex, ay - ey), wall))
-        out[bid] = lst
+def drawn(site_spec):
+    """The path records a reader that draws or measures a walk iterates:
+    every record not marked ``drawn: False``."""
+    return [p for p in site_spec.get("paths", []) or [] if p.get("drawn", True)]
+
+
+def doors(site_spec, merged):
+    """{building id: [((x, y), (nx, ny), half width, wall)]}: every storey-0
+    exterior opening of a `DOOR_KINDS` kind a body fits through, in site
+    space, with its outward normal."""
+    import site_enterability as SE
+    placements = {b["id"]: b for b in merged.get("buildings", []) or []}
+    out = {bid: [] for bid in placements}
+    for op in merged.get("openings", []) or []:
+        bid = op.get("building")
+        if bid not in placements or op.get("kind") not in DOOR_KINDS:
+            continue
+        if not SE._opening_is_entry(op):
+            continue
+        where = SE.wall_of(op.get("wall"), op.get("story"))
+        if where is None:
+            continue
+        exterior, story, side = where
+        if not exterior or story != 0:
+            continue
+        b = placements[bid]
+        at, rot = b["at"], b.get("rot", 0)
+        ex, ey = SE._rot(op.get("x", 0.0), op.get("y", 0.0), rot)
+        nx, ny = SE._rot(*SE._WALL_NORMAL[side], rot)
+        out[bid].append(((ex + at[0], ey + at[1]), _unit(nx, ny),
+                         float(op.get("width") or 1.0) / 2.0, op.get("wall")))
     return out
 
 
 def _facing_door(entries, origin, leaving):
-    """The entry whose normal faces `leaving` and which lies nearest the line
+    """The door whose normal faces `leaving` and which lies nearest the line
     through `origin` along `leaving`; None when no door faces that way."""
     lx, ly = leaving
     best, best_d = None, None
-    for (ex, ey), (nx, ny), wall in entries:
+    for e in entries:
+        (ex, ey), (nx, ny) = e[0], e[1]
         if nx * lx + ny * ly < FACING_DOT:
             continue
-        # perpendicular distance from the door to the path's line
         vx, vy = ex - origin[0], ey - origin[1]
         d = abs(vx * ly - vy * lx)
         if best is None or d < best_d:
-            best, best_d = ((ex, ey), (nx, ny), wall), d
+            best, best_d = e, d
     return best
 
 
-def _walk_width(site_spec, p):
-    """The width a door-to-door walk is drawn at: the narrowest sidewalk the
-    site's roads declare, never wider than the path was authored."""
-    walks = [float(r.get("sidewalk") or 0.0) for r in site_spec.get("roads", []) or []]
-    walks = [s for s in walks if s > 0.0]
-    return min(float(p.get("width", WALK_WIDTH)), min(walks) if walks else WALK_WIDTH)
-
-
-def _walk_legs(a, b, leaving, w):
-    """The legs ``[(a, b, width)]`` of a walk from door point `a` to door
-    point `b`, square to the axis `a`'s door faces along: out from each door
-    and one jog between. None when the doors are closer along that axis
-    than the walk is wide (no room to run out before turning).
-
-    THE CORNERS BELONG TO THE LEGS THAT RUN OUT FROM THE DOORS. Each of those
-    is drawn half a width past the jog's line, and the jog is drawn between
-    them, so the three slabs tile the corner squares and no two lie coplanar
-    over the same ground (which z-fights; `street_slabs` avoids it the same
-    way at a junction's mouth)."""
-    along_x = abs(leaving[0]) >= abs(leaving[1])
-    (au, av), (bu, bv) = ((a[0], a[1]), (b[0], b[1])) if along_x else ((a[1], a[0]), (b[1], b[0]))
-
-    def pt(u, v):
-        return [u, v] if along_x else [v, u]
-
-    du, dv = bu - au, bv - av
-    if abs(du) < w:
-        return None
-    if abs(dv) <= ALIGNED_TOL:
-        vm = (av + bv) / 2.0
-        return [(pt(au, vm), pt(bu, vm), w)]
-    if abs(dv) < w:
-        # too shallow for a jog: one leg down the middle, wide enough to
-        # reach both doors
-        vm = (av + bv) / 2.0
-        return [(pt(au, vm), pt(bu, vm), w + abs(dv))]
-    su = 1.0 if du > 0 else -1.0
-    sv = 1.0 if dv > 0 else -1.0
-    um = (au + bu) / 2.0
-    legs = [(pt(au, av), pt(um + su * w / 2.0, av), w),
-            (pt(um, av + sv * w / 2.0), pt(um, bv - sv * w / 2.0), w),
-            (pt(um - su * w / 2.0, bv), pt(bu, bv), w)]
-    return [leg for leg in legs if math.dist(leg[0], leg[1]) > 1e-6]
+def landing(door, bid):
+    """The landing record outside one door."""
+    (ex, ey), (nx, ny), hw, wall = door
+    w = max(LANDING_MIN, 2.0 * hw + 2.0 * LANDING_SIDE)
+    return {"a": [ex - nx * DOOR_BURY, ey - ny * DOOR_BURY],
+            "b": [ex + nx * LANDING_DEPTH, ey + ny * LANDING_DEPTH],
+            "width": w, "landing_of": bid, "wall": wall}
 
 
 def snap_to_doors(site_spec, merged):
-    """Rewrite every path's ``a``/``b`` in `site_spec` so each end that
-    belongs to a building meets one of that building's doors. Returns the
-    findings (``{"code", "severity", "category", "message"}``) for ends it
-    had to leave alone."""
+    """Decide what every path in `site_spec` becomes, in place, and append a
+    landing at every door no walk reaches. Returns the findings
+    (``{"code", "severity", "category", "message"}``) for spurs left undrawn."""
     bld = {b["id"]: b for b in site_spec.get("buildings", []) or []}
-    entries = _entries(site_spec, merged)
+    by_bid = doors(site_spec, merged)
+    served = set()
     findings = []
-    extra = {}      # authored index -> the further legs of its walk
     for i, p in enumerate(site_spec.get("paths", []) or []):
+        if p.get("landing_of"):
+            continue
+        if "from" in p and "to" in p:
+            # two neighbours' side doors get a landing each, not a walk
+            p["drawn"] = False
+            continue
+        if p.get("building") not in bld:
+            continue
         a, b = endpoints_or_none(p, bld)
         if a is None:
             continue
-        snapped = {}
-        normals = {}
-        if "from" in p and "to" in p:
-            # a building path: each end leaves toward the other building
-            ends = {"a": (p["from"], a, b), "b": (p["to"], b, a)}
-            for key, (bid, here, there) in ends.items():
-                leaving = _unit(there[0] - here[0], there[1] - here[1])
-                door = _facing_door(entries.get(bid, []), here, leaving)
-                if door is None:
-                    findings.append(_off_door(i, p, key, bid, "its centre"))
-                    continue
-                (ex, ey), (nx, ny), wall = door
-                p[key] = [ex + nx * DOOR_STANDOFF, ey + ny * DOOR_STANDOFF]
-                snapped[key] = wall
-                normals[key] = (nx, ny)
-            # A HALF-SNAPPED PATH CARRIES BOTH POINTS. `endpoints` reads a/b
-            # only when both are there, so writing the one end that found a
-            # door would lose it again to the centres; the end that found
-            # none is written as the centre it stays at.
-            if snapped:
-                for key, (_bid, here, _there) in ends.items():
-                    if key not in snapped:
-                        p[key] = [here[0], here[1]]
-            # BOTH ENDS AT A DOOR: THE WALK IS DRAWN SQUARE (0.89.0). A band
-            # at the authored width laid door to door crossed the lot on a
-            # diagonal (the walker: "these look goofy"). It is drawn as legs
-            # at the sidewalk's width instead: out from each door along its
-            # facing and one jog between. The record keeps its ids and its
-            # authored width as `route_width`; the further legs follow it
-            # in the list as plain point paths naming the route in `leg_of`.
-            if len(snapped) == 2:
-                legs = _walk_legs(p["a"], p["b"], normals["a"], _walk_width(site_spec, p))
-                if legs:
-                    p["route_width"] = p.get("width")
-                    p["a"], p["b"], p["width"] = legs[0]
-                    extra[i] = [{"a": la, "b": lb, "width": lw,
-                                 "leg_of": [p["from"], p["to"]]}
-                                for la, lb, lw in legs[1:]]
-        elif p.get("building") in bld:
-            # a door spur: the end nearer its owner is the door end; it
-            # leaves toward the far end; the whole spur slides sideways
-            bid = p["building"]
-            at = bld[bid]["at"]
-            near_key, far_key = ("a", "b") if math.dist(a, at) <= math.dist(b, at) else ("b", "a")
-            here, there = (a, b) if near_key == "a" else (b, a)
-            leaving = _unit(there[0] - here[0], there[1] - here[1])
-            door = _facing_door(entries.get(bid, []), here, leaving)
-            if door is None:
-                findings.append(_off_door(i, p, near_key, bid, "where it was authored"))
-                continue
-            (ex, ey), _n, wall = door
-            vx, vy = ex - here[0], ey - here[1]
-            along = vx * leaving[0] + vy * leaving[1]
-            sx, sy = vx - along * leaving[0], vy - along * leaving[1]
-            p["a"] = [a[0] + sx, a[1] + sy]
-            p["b"] = [b[0] + sx, b[1] + sy]
-            snapped[near_key] = wall
-        else:
+        bid = p["building"]
+        at = bld[bid]["at"]
+        near_key = "a" if math.dist(a, at) <= math.dist(b, at) else "b"
+        here, there = (a, b) if near_key == "a" else (b, a)
+        leaving = _unit(there[0] - here[0], there[1] - here[1])
+        door = _facing_door(by_bid.get(bid, []), here, leaving)
+        if door is None:
+            p["drawn"] = False
+            findings.append(_no_door(i, p, bid))
             continue
-        if snapped:
-            p["snapped"] = snapped
-    if extra:
-        out = []
-        for i, p in enumerate(site_spec.get("paths", []) or []):
-            out.append(p)
-            out.extend(extra.get(i, []))
-        site_spec["paths"] = out
+        (ex, ey), _n, _hw, wall = door
+        # slide sideways onto the door's line, then run the near end to it
+        vx, vy = ex - here[0], ey - here[1]
+        along = vx * leaving[0] + vy * leaving[1]
+        sx, sy = vx - along * leaving[0], vy - along * leaving[1]
+        near = [ex - leaving[0] * DOOR_BURY, ey - leaving[1] * DOOR_BURY]
+        far = [there[0] + sx, there[1] + sy]
+        p["a"], p["b"] = (near, far) if near_key == "a" else (far, near)
+        p["snapped"] = {near_key: wall}
+        served.add((bid, wall, round(ex, 3), round(ey, 3)))
+    for bid in sorted(by_bid):
+        for d in by_bid[bid]:
+            (ex, ey), _n, _hw, wall = d
+            if (bid, wall, round(ex, 3), round(ey, 3)) in served:
+                continue
+            site_spec.setdefault("paths", []).append(landing(d, bid))
     return findings
 
 
-def _off_door(i, p, key, bid, stays):
-    label = (f"{p.get('from')}->{p.get('to')}" if "from" in p
-             else f"spur of {p.get('building')}")
+def _no_door(i, p, bid):
     return {"code": "LOT_PATH_END_OFF_DOOR", "severity": "minor",
             "category": CATEGORY,
-            "message": (f"path {i} ({label}): building '{bid}' has no ground "
-                        f"door on the face this path meets at end '{key}'; the "
-                        f"end stays at {stays} and the walkway reaches a blank "
-                        "wall.")}
+            "message": (f"path {i} (spur of {bid}): building '{bid}' has no "
+                        "ground door on the face this spur meets; the walk is "
+                        "not drawn (its record stays for the street graph).")}

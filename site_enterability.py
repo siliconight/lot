@@ -186,7 +186,11 @@ def _near_route(site_spec, merged, px, py):
         return True
     bld = {b["id"]: b for b in merged["buildings"]}
     import site_paths
-    for p in paths:
+    # a walk that is drawn, and not a landing (0.91.0): a landing is where
+    # a door meets the lot, not a way to it
+    for p in site_paths.drawn(site_spec):
+        if p.get("landing_of"):
+            continue
         a, b2 = site_paths.endpoints_or_none(p, bld)
         if a is None or b2 is None:
             continue
