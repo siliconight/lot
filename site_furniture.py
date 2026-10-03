@@ -76,6 +76,10 @@ SPECIES = {
     # (`plan_pylons`). The genome's default: 3.4 x 0.7 x 9.0 since Zoo 1.26.0
     # (0.81.0), the width the name needs to read past ~14 m.
     "price_pylon": (3.4, 0.7, 9.0),
+    # THE DUMPSTER (Zoo 1.58.0), against a building's back or side
+    # (`site_dumpsters.plan_dumpsters`). The genome's default, a 3-yard
+    # front-load container.
+    "dumpster": (1.83, 1.1, 1.3),
 }
 
 #: The trees a road may be planted with, in the order a hash picks from.

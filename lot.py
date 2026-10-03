@@ -1540,6 +1540,11 @@ def write_site_slots(site_spec, out_path):
         # than a greybox.
         if cv.get("blade"):
             slots[-1]["form"] = str(cv["blade"])
+        # A PIECE'S OWN VARIANT (0.90.0): a dumpster's hauler, which is its
+        # paint. Zoo reads the slot's `variant` into the stem as `_n<v>`,
+        # non-zero only, so no slot written before this moves.
+        if cv.get("variant"):
+            slots[-1]["variant"] = int(cv["variant"])
     n_cover = len(slots)
     # THE HUNG PIECES (0.84.0, `site_posters`): paper on an alley wall or a
     # pole. Not cover -- they live in their own list so nothing that reads
@@ -1609,6 +1614,8 @@ COVER_MATERIALS = {"box_truck": "metal_painted", "cargo_container": "metal_paint
                    "parking_meter": "metal_painted", "payphone": "metal_painted",
                    # the gas station's price pylon (site_furniture.plan_pylons)
                    "price_pylon": "metal_painted",
+                   # the dumpster at a building's service side (site_dumpsters)
+                   "dumpster": "metal_painted",
                    # the handbills (site_posters): paper, the genome's own kind
                    "poster_wall": "paper", "pole_flyers": "paper"}
 
@@ -1676,6 +1683,12 @@ def cover_module_refs(site_spec, prefix, out_dir=None, key="cover"):
         # another family's art (Zoo draws `poster_wall` with no form as the
         # club's), so an alley slot with no alley module is drawn as nothing,
         # and said, rather than as a strip club's poster in an alley.
+        # ...and a piece with a variant and no form asks for its own
+        # module before the plain one (0.90.0): the second hauler's
+        # dumpster, falling back to the first's rather than to a box.
+        if not form and cv.get("variant"):
+            tried.append(cover_module_stem(sp, theme, st, dims,
+                                           variant=cv["variant"]))
         if key == "cover" or not form:
             tried.append(cover_module_stem(sp, theme, st, dims))
         stem, glb = None, None
@@ -3231,6 +3244,23 @@ def assemble(site_spec_path, out_dir=None, walkable=False, navqa=False,
         findings=furniture_findings)
     site_spec["cover"].extend(pylons)
     furniture = furniture + pylons
+    # A DUMPSTER AT EACH BUILDING'S SERVICE SIDE (site_dumpsters, 0.90.0):
+    # against the back or a side, never a street face, clear of every
+    # way in, of the paths and walks, of what already stands, of the
+    # markers, and on the plate. After the street and the pylons so it
+    # yields to them; before the cover planner so it stands in its
+    # measurement, as the street does.
+    import site_dumpsters
+    dumpsters = site_dumpsters.plan_dumpsters(
+        site_spec, merged, site_streets.roads(site_spec), list(cover_points.values()),
+        standing=_standing0 + [site_furniture._piece_rect(_p) for _p in pylons],
+        keep_out=site_furniture.path_corridors(site_spec),
+        ground=extent.rect, findings=furniture_findings)
+    site_spec["cover"].extend(dumpsters)
+    furniture = furniture + dumpsters
+    for _p in dumpsters:
+        print(f"[lot] LOT_DUMPSTER_PLACED: {_p['name']} at ({_p['at'][0]}, {_p['at'][1]}) "
+              f"yaw {_p['yaw']} against {_p['building']}'s {_p['wall']} wall, hauler {_p['variant']}")
     for _p in pylons:
         print(f"[lot] LOT_PYLON_PLACED: {_p['name']} at ({_p['at'][0]}, {_p['at'][1]}) "
               f"yaw {_p['yaw']} on road {_p['road']} kerb {_p['kerb']}")
