@@ -269,8 +269,24 @@ def test_spawn_objective_and_extraction_all_become_exclusions():
 
 
 def test_exclusion_radius_is_site_covers_number():
+    """The markers' circles; a cover piece is its footprint (0.96.0)."""
     xs, _ = SS.exclusions(spec())
-    assert {e["radius_m"] for e in xs} == {site_cover.MARKER_CLEARANCE}
+    assert {e["radius_m"] for e in xs if "radius_m" in e} == {site_cover.MARKER_CLEARANCE}
+    assert all("aabb" in e and "radius_m" not in e for e in xs if e["tag"] == "cover_edge")
+
+
+def test_a_standing_piece_excludes_its_footprint_and_not_a_ring():
+    """A 4.3 x 1.75 m parked car at (10, 0): a point on its roof is
+    excluded, a point 0.5 m off its side is not -- the 3 m circle this
+    replaced reached 3.0 m from the centre, 2.1 m past the side. The
+    literals are the geometry."""
+    s = spec()
+    s["cover"] = [{"at": [10, 0], "size": [4.3, 1.45, 1.75]}]
+    xs, _ = SS.exclusions(s)
+    assert SS.excluded((10.0, 0.5), xs) == ["cover_edge"]
+    assert SS.excluded((10.0, 0.875 + 0.5), xs) == []
+    assert SS.excluded((12.0, 0.0), xs) == ["cover_edge"]
+    assert SS.excluded((12.15 + 0.1, 0.0), xs) == []
 
 
 def test_excluded_reports_the_tags_it_tested():

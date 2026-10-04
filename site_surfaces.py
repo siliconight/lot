@@ -619,18 +619,28 @@ def exclusions(site_spec, *, capsule=None):
             "aabb": _aabb(fp, 0.0, cap["unassisted_step_max_m"]),
         })
 
+    # A STANDING PIECE KEEPS DRESSING OUT OF ITSELF (0.96.0), its own
+    # footprint as `assemble` stands it, no radius. Until 0.95.0 this was
+    # a `MARKER_CLEARANCE` (3 m) circle from the centre, "a cover piece
+    # whose base is buried in scatter stops reading as cover" -- never live,
+    # because the surfaces job read the authored spec, which carries no
+    # cover. Live on cold run 9143 it met 164 lamps, trees, benches and
+    # parked cars and cleared every kerb line in a 3 m ring (exclusion
+    # refusals 493 -> 2,061). Scatter is at most the `low` band (0.30 m)
+    # and cover at least `site_cover.MIN_COVER_HEIGHT` (1.3 m), so it
+    # cannot bury one; what it must not do is stand inside one.
+    import lot as _lot
     for i, c in enumerate(site_spec.get("cover", []) or []):
         at = c.get("at")
         if not at:
             continue
+        sx, _sy, sz = c.get("size") or _lot.COVER
+        x, y = float(at[0]), float(at[1])
         out.append({
             "tag": "cover_edge",
             "declared_by": "lot",
-            "pos": [float(at[0]), float(at[1]), 0.0],
-            # site_cover's own clearance for a placed marker. A cover piece
-            # whose base is buried in scatter stops reading as cover, and
-            # cover that does not read is the same as cover that is not there.
-            "radius_m": site_cover.MARKER_CLEARANCE,
+            "aabb": _aabb((x - sx / 2.0, y - sz / 2.0, x + sx / 2.0, y + sz / 2.0),
+                          0.0, cap["unassisted_step_max_m"]),
         })
 
     for key, tag in (("spawn", "spawn"), ("objective", "objective"),
