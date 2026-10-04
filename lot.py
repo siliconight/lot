@@ -731,6 +731,8 @@ SIDEWALK_COLOR = (0.55, 0.55, 0.57)    # 0.551 -- concrete, raised curb
 GROUND_COLOR = (0.30, 0.32, 0.34)      # 0.317 -- the plate everything is read against
 PATH_COLOR = (0.53, 0.47, 0.40)        # 0.478 -- a walked surface; warm cast names it
 COURT_COLOR = (0.48, 0.52, 0.55)       # 0.514 -- path's band, cool cast names it apart
+#: A service pad (`site_yards`): plain concrete, greyer than the walk.
+YARD_COLOR = (0.50, 0.50, 0.48)
 PERIM_COLOR = (0.87, 0.88, 0.90)       # 0.879 -- the edge of the world: bright, flat, dead
 COVER_COLOR = (0.18, 0.55, 0.22)       # 0.448 -- a MARKER: chroma finds it, value is free
 
@@ -760,6 +762,10 @@ SURFACE_TIER = 0.002
 ROAD_THICK = SURFACE_BASE
 PATH_THICK = SURFACE_BASE + SURFACE_TIER
 COURT_THICK = SURFACE_BASE + 2 * SURFACE_TIER
+#: A service pad under a dumpster (`site_yards`, 0.93.0). It shares the
+#: courtyard's tier because `plan_yards` never lets a pad overlap any
+#: other drawn surface, so there is no coplanar face for a tier to part.
+YARD_THICK = COURT_THICK
 #: The walk carried to a building's face (`site_streets.frontages`). Above
 #: the path, because a door spur lies inside it and the frontage is the
 #: surface that should be seen there.
@@ -1070,7 +1076,7 @@ def sign_size(facade_w: float):
 #: which material kind a family wears is the caller's decision (Level Factory
 #: maps ground -> asphalt, path -> sidewalk), because Lot does not know the
 #: theme and does not read Pixelcoat's profiles -- only the pack it was handed.
-SKIN_FAMILIES = ("ground", "path", "courtyard", "road", "sidewalk", "paint")
+SKIN_FAMILIES = ("ground", "path", "courtyard", "road", "sidewalk", "paint", "yard")
 
 #: The wet variant Pixelcoat >= 0.47.0 writes beside the dry maps, and which
 #: map each stands in for. Resolved only when the spec asks; a pack without
@@ -1896,6 +1902,20 @@ def courtyard_slabs(site_spec):
     return out
 
 
+def yard_slabs(site_spec):
+    """One axis-aligned slab per service pad (`site_yards`, 0.93.0),
+    `yard_<i>`, top at YARD_THICK -- a courtyard's shape."""
+    out = []
+    for i, y in enumerate(site_spec.get("yards", []) or []):
+        cx, cy = y["at"]
+        sx, sy = y["size_x"], y["size_y"]
+        out.append(_surface_slab(f"yard_{i}", "yard",
+                                 (sx, YARD_THICK + GROUND_SINK, sy),
+                                 (cx, (YARD_THICK - GROUND_SINK) / 2, -cy),
+                                 None, YARD_THICK))
+    return out
+
+
 def street_slabs(street_roads):
     """Per road, in draw order: its slab spans (`road`), then each kerb's
     band pieces -- `sidewalk` at SIDEWALK_H, `kerbcut` at ROAD_THICK where
@@ -2032,6 +2052,13 @@ def _outdoor_nodes(site_spec, preview=False, self_flooring=None, skins=None,
     for s in courtyard_slabs(site_spec):
         bl, sr = _box_node(s["name"], s["size"], s["centre"],
                            COURT_COLOR, skin=skins.get("courtyard"))
+        body += bl
+        sub += sr
+
+    # the service pads under the dumpsters (`site_yards`, 0.93.0)
+    for s in yard_slabs(site_spec):
+        bl, sr = _box_node(s["name"], s["size"], s["centre"],
+                           YARD_COLOR, skin=skins.get("yard"))
         body += bl
         sub += sr
 
@@ -2284,6 +2311,7 @@ def write_godot_scene(site_spec, merged, out_path, glb_dir=".", preview=False,
     present = {"ground": bool(site_spec.get("ground")),
                "path": bool(site_spec.get("paths")),
                "courtyard": bool(site_spec.get("courtyards")),
+               "yard": bool(site_spec.get("yards")),
                "road": bool(site_spec.get("roads")),
                "sidewalk": any(r.get("sidewalk") for r in site_spec.get("roads") or []),
                # the markings' paint: wherever there is a road to paint.
@@ -3262,6 +3290,28 @@ def assemble(site_spec_path, out_dir=None, walkable=False, navqa=False,
     for _p in dumpsters:
         print(f"[lot] LOT_DUMPSTER_PLACED: {_p['name']} at ({_p['at'][0]}, {_p['at'][1]}) "
               f"yaw {_p['yaw']} against {_p['building']}'s {_p['wall']} wall, hauler {_p['variant']}")
+    # ...ON A CONCRETE PAD (site_yards, 0.93.0): the ground under and in
+    # front of each dumpster, clear of every surface already drawn, of
+    # the neighbours, of what stands and of the plate's edge. Drawn as
+    # `yard` slabs; the plate under them stops being remainder.
+    import site_surfaces as _yard_surfaces
+    import site_yards
+    _yard_findings = []
+    _standing_y = []
+    for cv in site_spec["cover"]:
+        sx, _sy, sz = cv.get("size", COVER)
+        _standing_y.append((cv["at"][0] - sx / 2.0, cv["at"][1] - sz / 2.0,
+                            cv["at"][0] + sx / 2.0, cv["at"][1] + sz / 2.0))
+    yards = site_yards.plan_yards(
+        site_spec, dumpsters, _yard_surfaces.tops(site_spec, ground=extent),
+        standing=_standing_y, ground=extent.rect, findings=_yard_findings)
+    site_spec["yards"] = list(site_spec.get("yards") or []) + yards
+    merged["yard_plan"] = {"placed": yards, "findings": _yard_findings}
+    for _y in yards:
+        print(f"[lot] LOT_YARD_PLACED: pad {_y['size_x']} x {_y['size_y']} m at "
+              f"({_y['at'][0]}, {_y['at'][1]}) under {_y['dumpster']}, apron {_y['apron']} m")
+    for f_ in _yard_findings:
+        print(f"[lot] {f_}")
     for _p in pylons:
         print(f"[lot] LOT_PYLON_PLACED: {_p['name']} at ({_p['at'][0]}, {_p['at'][1]}) "
               f"yaw {_p['yaw']} on road {_p['road']} kerb {_p['kerb']}")

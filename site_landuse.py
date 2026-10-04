@@ -17,7 +17,8 @@ geometry holds its centre:
     rotated_footprint`);
   * the drawn ground, from `site_surfaces.tops` -- the same slabs Lot draws,
     by family: ``road``, ``kerbcut``, ``sidewalk``, ``frontage``, ``path``
-    (a walk or a landing), ``courtyard``;
+    (a walk or a landing), ``courtyard``, ``yard`` (a service pad,
+    `site_yards`);
   * ``remainder`` -- plate with none of the above. The guide's "unexplained
     parcel area".
 
@@ -43,7 +44,8 @@ import math
 CELL = 0.5
 
 #: First use wins, in this order.
-USES = ("building", "road", "kerbcut", "sidewalk", "frontage", "path", "courtyard", "remainder")
+USES = ("building", "road", "kerbcut", "sidewalk", "frontage", "path", "courtyard", "yard",
+        "remainder")
 
 #: A building FRONTS a road when its face toward the road is within this of
 #: the road's back of walk, in metres: Level Factory stands a face `FRONTAGE`
