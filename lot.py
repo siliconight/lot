@@ -3538,6 +3538,13 @@ def assemble(site_spec_path, out_dir=None, walkable=False, navqa=False,
     tscn_out = os.path.join(out_dir, f"{site_spec['name']}.tscn")
     write_godot_scene(site_spec, merged, tscn_out, preview=preview,
                       portable=portable, self_flooring=self_flooring)
+    # THE SPEC AS DRAWN (0.95.0): walks resolved to their doors, the pads,
+    # the fields and their driveways, the cover -- what the scene above
+    # holds, which the authored spec does not. `site_surfaces.py` reads it
+    # from here, so the dressing is planned on the ground that exists.
+    drawn_out = os.path.join(out_dir, f"{site_spec['name']}.site.drawn.json")
+    with open(drawn_out, "w", encoding="utf-8") as f:
+        json.dump(site_spec, f, indent=1)
     # The site's own slot manifest: its cover, as prop slots Zoo builds to
     # (roadmap 22). Written beside the scene the way Deli Counter writes a
     # building's, so the same kit build serves both.

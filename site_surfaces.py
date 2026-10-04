@@ -56,6 +56,7 @@ CODE_FOOTPRINT_UNKNOWN = "LOT_SURFACE_FOOTPRINT_UNKNOWN"
 CODE_NO_DRESSABLE_ZONE = "LOT_SURFACE_NO_DRESSABLE_ZONE"
 CODE_MARKER_UNRESOLVED = "LOT_SURFACE_MARKER_UNRESOLVED"
 CODE_FOOTPRINTS_MERGED = "LOT_SURFACE_FOOTPRINTS_MERGED"
+CODE_SPEC_AS_DRAWN = "LOT_SURFACE_SPEC_AS_DRAWN"
 
 # The player this site is built for. Same defaults the rest of Lot uses; a
 # caller with a different agent contract passes its own.
@@ -94,6 +95,9 @@ DENSITY_BY_ZONE = {
     # road was open ground to this module.
     "sidewalk": "high",
     "road": "low",
+    # A parking field (0.95.0): its aisle is a carriageway, so a road's
+    # reading, not open ground's.
+    "parking": "low",
     "wall_base": "high",
     "courtyard": "medium",
     "perimeter": "very_high",
@@ -104,8 +108,8 @@ DENSITY_BY_ZONE = {
 # so a point can be inside several; `zone_for` resolves by this order and the
 # emitted list is in it. A path crossing a wall base is still a path -- the
 # thing that matters there is that the route stays legible.
-PRECEDENCE = ("path", "sidewalk", "wall_base", "road", "courtyard", "perimeter",
-              "open")
+PRECEDENCE = ("path", "sidewalk", "wall_base", "road", "parking", "courtyard",
+              "perimeter", "open")
 
 
 def annotate_footprints(site_spec, base_dir):
@@ -452,6 +456,7 @@ def zones(site_spec, *, ground=None, nav_bake=None, capsule=None):
         "road": lot.ROAD_THICK,
         "wall_base": lot.PLATE_TOP,
         "courtyard": lot.COURT_THICK,
+        "parking": lot.FIELD_THICK,
         "perimeter": lot.PLATE_TOP,
         "open": lot.PLATE_TOP,
     }
@@ -547,6 +552,13 @@ def zones(site_spec, *, ground=None, nav_bake=None, capsule=None):
                                    float(c.get("size_y", 0.0)))
         out.append(_zone(f"courtyard_{i}", "ground", "courtyard", rect,
                          *zr("courtyard"), "play_space", ["courtyard"]))
+
+    # --- parking fields (0.95.0): the lot is not open ground ---------------
+    for i, f in enumerate(site_spec.get("fields", []) or []):
+        rect = tuple(float(v) for v in f["rect"])
+        out.append(_zone(f"field_{i}", "ground", "parking", rect,
+                         *zr("parking"), "play_space",
+                         ["parking", f"road:{f['road']}"]))
 
     # --- perimeter: outside the content, by definition -----------------------
     # `required_rect` is content + CLEARANCE. Anything beyond it is ground no
@@ -761,9 +773,25 @@ def main(argv=None):
 
     base = a.base_dir if a.base_dir is not None else os.path.dirname(
         os.path.abspath(a.spec))
+    # THE SITE AS DRAWN (0.95.0). The spec handed in is the authored one;
+    # `assemble` resolves walks, adds pads and fields, and writes what it
+    # drew beside its scene. Planning dressing on the authored spec put
+    # walk zones on walks the scene does not have (cold run 9142: 6
+    # declared, 9 drawn, none at the same stations) and never saw a field.
+    drawn = (os.path.join(base, f"{spec.get('name', 'site')}.site.drawn.json")
+             if base else None)
+    as_drawn = bool(drawn and os.path.isfile(drawn))
+    if as_drawn:
+        with open(drawn, encoding="utf-8") as fh:
+            spec = json.load(fh)
     out = surfaces(spec, nav_bake=nav, radius_m=a.radius_m,
                    floor_max_angle_deg=a.floor_max_angle_deg,
                    base_dir=base or None)
+    if as_drawn:
+        out["findings"].append(_finding(
+            CODE_SPEC_AS_DRAWN, "info",
+            f"planned on the site as assemble drew it ({drawn}), not on "
+            f"the authored spec {a.spec}"))
     text = json.dumps(out, indent=1, sort_keys=False)
     if a.out:
         with open(a.out, "w", encoding="utf-8", newline="\n") as fh:
