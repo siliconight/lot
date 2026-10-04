@@ -49,7 +49,7 @@ import re
 #: outdoor pass -- cover blocks, perimeter walls, blocker massing -- is an
 #: obstacle, and the height of an obstacle is not a step.
 WALKABLE_PREFIXES = ("Ground", "road_", "sidewalk_", "path_", "courtyard_",
-                     "kerbcut_", "frontage_", "yard_")
+                     "kerbcut_", "frontage_", "yard_", "field_")
 
 #: Ignore differences below this: coincident faces, float noise.
 FLUSH_M = 0.02

@@ -409,7 +409,7 @@ def tops(site_spec, *, ground=None):
                              (x1 - x0, y1 - y0), 0.0, lot.PLATE_TOP))
     street = site_streets.roads(site_spec)
     for s in (lot.path_slabs(site_spec) + lot.courtyard_slabs(site_spec)
-              + lot.yard_slabs(site_spec)
+              + lot.yard_slabs(site_spec) + lot.field_slabs(site_spec)
               + lot.street_slabs(street)
               + lot.frontage_slabs(site_spec, street)):
         sx, _sy, sz = s["size"]

@@ -733,6 +733,8 @@ PATH_COLOR = (0.53, 0.47, 0.40)        # 0.478 -- a walked surface; warm cast na
 COURT_COLOR = (0.48, 0.52, 0.55)       # 0.514 -- path's band, cool cast names it apart
 #: A service pad (`site_yards`): plain concrete, greyer than the walk.
 YARD_COLOR = (0.50, 0.50, 0.48)
+#: A parking field (`site_fields`): the lot's asphalt, a shade off the road.
+FIELD_COLOR = (0.30, 0.30, 0.31)
 PERIM_COLOR = (0.87, 0.88, 0.90)       # 0.879 -- the edge of the world: bright, flat, dead
 COVER_COLOR = (0.18, 0.55, 0.22)       # 0.448 -- a MARKER: chroma finds it, value is free
 
@@ -766,6 +768,12 @@ COURT_THICK = SURFACE_BASE + 2 * SURFACE_TIER
 #: courtyard's tier because `plan_yards` never lets a pad overlap any
 #: other drawn surface, so there is no coplanar face for a tier to part.
 YARD_THICK = COURT_THICK
+#: A parking field (`site_fields`, 0.94.0): at the road's own height, so the
+#: asphalt runs on from the carriageway through the driveway's dropped
+#: kerb into the field, and the bay lines sit at `MARKING_Y` over it as
+#: the road's paint does over the road. `plan_fields` never lets a field
+#: overlap another drawn surface, so the shared tier makes no coplanar face.
+FIELD_THICK = ROAD_THICK
 #: The walk carried to a building's face (`site_streets.frontages`). Above
 #: the path, because a door spur lies inside it and the frontage is the
 #: surface that should be seen there.
@@ -1076,7 +1084,8 @@ def sign_size(facade_w: float):
 #: which material kind a family wears is the caller's decision (Level Factory
 #: maps ground -> asphalt, path -> sidewalk), because Lot does not know the
 #: theme and does not read Pixelcoat's profiles -- only the pack it was handed.
-SKIN_FAMILIES = ("ground", "path", "courtyard", "road", "sidewalk", "paint", "yard")
+SKIN_FAMILIES = ("ground", "path", "courtyard", "road", "sidewalk", "paint", "yard",
+                 "parking")
 
 #: The wet variant Pixelcoat >= 0.47.0 writes beside the dry maps, and which
 #: map each stands in for. Resolved only when the spec asks; a pack without
@@ -1916,6 +1925,20 @@ def yard_slabs(site_spec):
     return out
 
 
+def field_slabs(site_spec):
+    """One slab per parking field (`site_fields`, 0.94.0), `field_<i>`, top
+    at FIELD_THICK, turned to its road: local x runs along the road."""
+    out = []
+    for i, f in enumerate(site_spec.get("fields", []) or []):
+        cx, cy = f["at"]
+        sx, sy = f["size"]
+        out.append(_surface_slab(f"field_{i}", "parking",
+                                 (sx, FIELD_THICK + GROUND_SINK, sy),
+                                 (cx, (FIELD_THICK - GROUND_SINK) / 2, -cy),
+                                 f["yaw_deg"], FIELD_THICK))
+    return out
+
+
 def street_slabs(street_roads):
     """Per road, in draw order: its slab spans (`road`), then each kerb's
     band pieces -- `sidewalk` at SIDEWALK_H, `kerbcut` at ROAD_THICK where
@@ -2055,6 +2078,13 @@ def _outdoor_nodes(site_spec, preview=False, self_flooring=None, skins=None,
         body += bl
         sub += sr
 
+    # the parking fields in the gaps (`site_fields`, 0.94.0)
+    for s in field_slabs(site_spec):
+        bl, sr = _yaw_box_node(s["name"], s["size"], s["centre"], s["yaw_deg"],
+                               FIELD_COLOR, skin=skins.get("parking"))
+        body += bl
+        sub += sr
+
     # the service pads under the dumpsters (`site_yards`, 0.93.0)
     for s in yard_slabs(site_spec):
         bl, sr = _box_node(s["name"], s["size"], s["centre"],
@@ -2172,6 +2202,21 @@ def _outdoor_nodes(site_spec, preview=False, self_flooring=None, skins=None,
         offset = (paint_offset(f"{m['road']}|{m['kind']}|{m['at'][0]:.3f}|{m['at'][1]:.3f}")
                   if paint else None)
         bl, sr = _yaw_quad_node(f"mark_{n}_{m['kind']}", (along, across),
+                                (m["at"][0], MARKING_Y, -m["at"][1]),
+                                m["yaw"], tuple(m["color"]), skin=paint,
+                                uv_offset=offset)
+        body += bl
+        sub += sr
+
+    # THE FIELDS' BAY LINES (`site_fields`, 0.94.0): the road's paint, the
+    # road's quads, at the road's height -- a field sits at it.
+    import site_fields as _site_fields
+    for n, m in enumerate(_site_fields.markings(site_spec.get("fields") or [], street_roads)):
+        along, across = m["size"]
+        paint = skins.get("paint")
+        offset = (paint_offset(f"{m['field']}|{m['kind']}|{m['at'][0]:.3f}|{m['at'][1]:.3f}")
+                  if paint else None)
+        bl, sr = _yaw_quad_node(f"fmark_{n}_{m['kind']}", (along, across),
                                 (m["at"][0], MARKING_Y, -m["at"][1]),
                                 m["yaw"], tuple(m["color"]), skin=paint,
                                 uv_offset=offset)
@@ -2312,6 +2357,7 @@ def write_godot_scene(site_spec, merged, out_path, glb_dir=".", preview=False,
                "path": bool(site_spec.get("paths")),
                "courtyard": bool(site_spec.get("courtyards")),
                "yard": bool(site_spec.get("yards")),
+               "parking": bool(site_spec.get("fields")),
                "road": bool(site_spec.get("roads")),
                "sidewalk": any(r.get("sidewalk") for r in site_spec.get("roads") or []),
                # the markings' paint: wherever there is a road to paint.
@@ -3248,6 +3294,45 @@ def assemble(site_spec_path, out_dir=None, walkable=False, navqa=False,
     # planned before the cover planner runs, and stand in its measurement,
     # so a truck in the road is the exception -- a line nothing on the
     # street could break -- rather than the rule.
+    # A PARKING FIELD IN A GAP BETWEEN BUILDINGS (site_fields, 0.94.0),
+    # BEFORE the street's furniture: its driveway is a kerb cut, and the
+    # lamps, the trees and the kerb lane's bays already step round a cut.
+    # The pylons, dumpsters and pads planned after it keep off it.
+    import site_enterability as _fe
+    import site_extent as _fx
+    import site_fields
+    import site_streets as _fs
+    import site_surfaces as _fsurf
+    _rects_f = {}
+    for _b in site_spec.get("buildings", []) or []:
+        _r = _fx.rotated_footprint(_b)
+        if _r is not None:
+            _rects_f[_b["id"]] = _r
+    _standing_f = []
+    for cv in site_spec.get("cover", []) or []:
+        sx, _sy, sz = cv.get("size", COVER)
+        _standing_f.append((cv["at"][0] - sx / 2.0, cv["at"][1] - sz / 2.0,
+                            cv["at"][0] + sx / 2.0, cv["at"][1] + sz / 2.0))
+    fields = site_fields.plan_fields(site_spec, _fs.roads(site_spec),
+                                     _fsurf.tops(site_spec, ground=extent), _rects_f,
+                                     standing=_standing_f, ground=extent.rect)
+    site_spec["fields"] = fields
+    site_spec["driveways"] = [f["driveway"] for f in fields]
+    _aps = [ap for rows in _fe._approach_points(site_spec, merged).values() for (_e, ap, _w) in rows]
+    field_cars = site_fields.plan_cars(fields, _fs.roads(site_spec), list(cover_points.values()),
+                                       _aps, standing=_standing_f,
+                                       enemies=[p for n, p in cover_points.items()
+                                                if n.startswith("Enemy_")])
+    _c0 = len(site_spec.setdefault("cover", []))
+    site_spec["cover"].extend(field_cars)
+    # the cars and the scene nodes they become (`cover_<i>`), so a probe can
+    # find them in a built package
+    merged["field_plan"] = {"placed": fields, "cars": field_cars,
+                           "cover_index": list(range(_c0, _c0 + len(field_cars)))}
+    for _f in fields:
+        print(f"[lot] LOT_FIELD_PLACED: {_f['name']} on road {_f['road']} kerb {_f['side']}, "
+              f"{_f['bays']} bay(s) a side, {sum(1 for c in field_cars if c['field'] == _f['name'])} car(s)")
+    _field_rects = [tuple(f["rect"]) for f in fields]
     import site_furniture
     import site_parking
     import site_streets
@@ -3269,7 +3354,8 @@ def assemble(site_spec_path, out_dir=None, walkable=False, navqa=False,
     pylons = site_furniture.plan_pylons(
         site_streets.roads(site_spec), forecourts(site_spec, base_dir),
         list(cover_points.values()), standing=_standing0,
-        keep_out=site_furniture.path_corridors(site_spec) + _site_spawns.footprints(site_spec, margin=0.5),
+        keep_out=site_furniture.path_corridors(site_spec) + _site_spawns.footprints(site_spec, margin=0.5)
+        + _field_rects,
         findings=furniture_findings)
     site_spec["cover"].extend(pylons)
     furniture = furniture + pylons
@@ -3283,7 +3369,7 @@ def assemble(site_spec_path, out_dir=None, walkable=False, navqa=False,
     dumpsters = site_dumpsters.plan_dumpsters(
         site_spec, merged, site_streets.roads(site_spec), list(cover_points.values()),
         standing=_standing0 + [site_furniture._piece_rect(_p) for _p in pylons],
-        keep_out=site_furniture.path_corridors(site_spec),
+        keep_out=site_furniture.path_corridors(site_spec) + _field_rects,
         ground=extent.rect, findings=furniture_findings)
     site_spec["cover"].extend(dumpsters)
     furniture = furniture + dumpsters

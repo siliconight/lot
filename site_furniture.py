@@ -712,6 +712,10 @@ def plan_furniture(roads_list, buildings=(), markers=(), findings=None) -> list:
                 t += LAMP_SPACING
             # per cut: a hydrant past it, a bin before it, a sign at its edge
             for c in sorted(kerb.cuts, key=lambda c: c.t):
+                # a parking field's driveway (0.94.0) is not a crossing:
+                # nobody is meant to cross there, so no hydrant, bin or blade
+                if c.kind == "driveway":
+                    continue
                 half = c.span / 2.0 + CUT_CLEARANCE
                 # offsets are from the dropped kerb's EDGE, which already
                 # carries CUT_CLEARANCE; `_clear_of_cuts` adds it again, so a

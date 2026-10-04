@@ -114,8 +114,10 @@ def test_assemble_writes_the_markings_manifest(tmp_path):
     doc = json.loads((tmp_path / "coldrun_kerb_probe.markings.json").read_text(encoding="utf-8"))
     assert doc["schema"] == "site-markings/1"
     assert len(doc["roads"]) == 1 and doc["roads"][0]["kerbs"][0]["cuts"]
+    # 0.94.0: the probe's gaps hold a parking field, whose bay lines are
+    # in the manifest beside the road's paint
     assert {m["kind"] for m in doc["markings"]} == {"edge_line", "centre_line", "crosswalk_bar",
-                                                    "stop_bar", "bay_tick"}
+                                                    "stop_bar", "bay_tick", "bay_line"}
 
 
 def test_a_spec_without_roads_paints_nothing():

@@ -199,6 +199,11 @@ def kerb_crossings(site_spec, bld, origin, along, perp, offset, length, width,
                 for p in site_paths.drawn(site_spec)]
     crossers += [(r, float(r.get("width", 9.0)), "road", float(r.get("sidewalk") or 0.0), ri)
                  for ri, r in enumerate(site_spec.get("roads", []) or [])]
+    # A PARKING FIELD'S DRIVEWAY (`site_fields`, 0.94.0): from the
+    # carriageway's edge to the back of walk, so it drops the one kerb it
+    # crosses and never meets the centre line -- no crosswalk, no stop bar
+    crossers += [(d, float(d.get("width", 7.3)), "driveway", 0.0, -1)
+                 for d in site_spec.get("driveways", []) or []]
     for p, pw, kind, psw, crosser in crossers:
         try:
             (pax, pay), (pbx, pby) = _endpoints(p, bld)
@@ -784,6 +789,11 @@ def _outside(t0, t1, holes):
     return spans
 
 
+def _field_markings(site_spec, rl):
+    import site_fields
+    return site_fields.markings(site_spec.get("fields") or [], rl)
+
+
 def manifest(site_spec, roads_list=None, findings=None) -> dict:
     """`<site>.markings.json`: the roads and their paint, in spec space."""
     rl = roads_list if roads_list is not None else roads(site_spec, findings)
@@ -801,7 +811,8 @@ def manifest(site_spec, roads_list=None, findings=None) -> dict:
                                         "sidewalk": c.sidewalk, "terminal": c.terminal}
                                        for c in k.cuts]} for k in r.kerbs]}
                   for r in rl],
-        "markings": markings(rl),
+        # the road's paint, then the parking fields' bay lines (0.94.0)
+        "markings": markings(rl) + _field_markings(site_spec, rl),
         "frontages": [{"road": f.road, "side": f.side, "building": f.building,
                        "t": [round(f.t0, 4), round(f.t1, 4)],
                        "depth": round(f.depth, 4),
