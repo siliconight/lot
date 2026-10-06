@@ -68,12 +68,9 @@ def empties(site_spec) -> list:
     for i, bk in enumerate(site_spec.get("blockers") or []):
         if not bk.get("empty"):
             continue
-        at = bk.get("at")
-        if not at:
+        rect = site_extent.blocker_rect(bk)
+        if rect is None:
             continue
-        rect = site_extent.rect_of(float(at[0]), float(at[1]),
-                                   float(bk.get("size_x", 12.0) or 12.0),
-                                   float(bk.get("size_y", 12.0) or 12.0))
         rot = (float(bk.get("rot", 0) or 0) % 360 + 360) % 360
         axis = 1 if int(round(rot)) % 180 == 90 else 0
         out.append((str(bk.get("id", f"blocker_{i}")), rect, axis))
@@ -134,6 +131,37 @@ def front_line(axis, members, roads_list, ground=None):
     return (hi, +1) if d_hi <= d_lo else (lo, -1)
 
 
+def shut_band(axis, front, sign, ground):
+    """The plan rect a row's fences shut off from the street: from the plate's
+    edge behind the row up to its front line, across the plate's whole width
+    along the row.
+
+    `plan_fences` leaves a row open rather than strand a mission marker in
+    it, and `site_spawns.place_enemies` never places an enemy in it (0.97.3).
+    Both ask this one function: an enemy pushed into the strip behind a row
+    is a spawn nobody can reach, and the fence check only saw markers
+    outside the houses.
+    """
+    lo_i = 1 if axis == 0 else 0
+    band = list(ground)
+    if sign > 0:
+        band[lo_i + 2] = front           # from the plate's edge up to the front
+    else:
+        band[lo_i] = front
+    return tuple(band)
+
+
+def shut_bands(site_spec, roads_list, ground) -> list:
+    """`shut_band` for every Empty row on the site; none without a plate."""
+    if not ground:
+        return []
+    out = []
+    for axis, members in rows(site_spec):
+        front, sign = front_line(axis, members, roads_list, ground)
+        out.append(shut_band(axis, front, sign, ground))
+    return out
+
+
 def _strip(axis, s0, s1, front, sign):
     """The plan rect a run from ``s0`` to ``s1`` along the axis occupies,
     flush with the front line on the row's side of it."""
@@ -190,11 +218,9 @@ def plan_fences(site_spec, roads_list, ground, body, keep_out=(), markers=(),
     # every blocker, Empty or not: a row's end run stops at another row's
     # houses. A gap's own two houses only touch its strip, which is no overlap.
     for bk in site_spec.get("blockers") or []:
-        at = bk.get("at")
-        if at:
-            keep.append(site_extent.rect_of(float(at[0]), float(at[1]),
-                                            float(bk.get("size_x", 12.0) or 12.0),
-                                            float(bk.get("size_y", 12.0) or 12.0)))
+        rect = site_extent.blocker_rect(bk)
+        if rect:
+            keep.append(rect)
     placed = []
     for r_ix, (axis, members) in enumerate(rows(site_spec)):
         front, sign = front_line(axis, members, roads_list, ground)
@@ -203,12 +229,7 @@ def plan_fences(site_spec, roads_list, ground, body, keep_out=(), markers=(),
         # spawn, objective or enemy nobody can reach. Leave the row open and
         # say so rather than strand it.
         if ground:
-            lo_i = 1 if axis == 0 else 0
-            band = list(ground)
-            if sign > 0:
-                band[lo_i + 2] = front           # from the plate's edge up to the front
-            else:
-                band[lo_i] = front
+            band = shut_band(axis, front, sign, ground)
             houses = [r for _e, r in members]
             stranded = [m for m in markers
                         if band[0] < m[0] < band[2] and band[1] < m[1] < band[3]

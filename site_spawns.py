@@ -201,6 +201,43 @@ def footprints(site_spec, margin: float = WALL_MARGIN) -> list:
     return rects
 
 
+def blocker_rects(site_spec, margin: float = WALL_MARGIN) -> list:
+    """Every blocker's rect (`site_extent.blocker_rect`), grown by ``margin``
+    as a building's footprint is.
+
+    A blocker is solid filler, and an Empty is a house with its doors shut
+    (Level Factory 0.143.0): nothing inside either is reachable. `footprints`
+    reads `buildings` only, and that admitted an enemy into an Empty on all
+    four candidates Laser Tag refused on UNREACHABLE_SPAWN in cold runs 9164
+    to 9186 (0.97.3).
+    """
+    import site_extent
+    rects = []
+    for bk in site_spec.get("blockers") or []:
+        rect = site_extent.blocker_rect(bk)
+        if rect:
+            rects.append(site_extent.grow(rect, margin) if margin else rect)
+    return rects
+
+
+def solid_rects(site_spec, margin: float = WALL_MARGIN) -> list:
+    """What a spawn is kept out of: the buildings' footprints and the
+    blockers. The crew's spawns and the enemies ask `outdoors()` of this."""
+    return footprints(site_spec, margin) + blocker_rects(site_spec, margin)
+
+
+def shut_band_rects(site_spec, margin: float = WALL_MARGIN) -> list:
+    """The ground behind every Empty row's front line, grown by ``margin``:
+    what the row's fences shut off from the street, by the function
+    `plan_fences` asks (`site_fences.shut_bands`)."""
+    import site_extent
+    import site_fences
+    import site_streets
+    ground = site_extent.resolve(site_spec).rect
+    return [site_extent.grow(b, margin) if margin else b
+            for b in site_fences.shut_bands(site_spec, site_streets.roads(site_spec), ground)]
+
+
 def ground_rect(site_spec, margin: float = EDGE_MARGIN):
     """The walkable extent of the site, inset by ``margin``, or ``None``.
 
@@ -695,7 +732,7 @@ def crew_spawns(site_spec, spawn, count: int, *,
         return placed
 
     ground = ground_rect(site_spec)
-    rects = footprints(site_spec)
+    rects = solid_rects(site_spec)
     z = base[2] if len(base) > 2 else GROUND_Z
     for _ in range(count - 1):
         chosen = None
@@ -746,7 +783,7 @@ def clear_crew_spawn(site_spec, positions, *, max_push: float = MAX_PUSH,
     spawn = positions.get("spawn")
     if spawn is None:
         return positions, []
-    rects = footprints(site_spec)
+    rects = solid_rects(site_spec)
     ground = ground_rect(site_spec)
     if ground is None and not rects:
         # Nothing known to place against. `place_enemies` says the same of the
@@ -820,7 +857,14 @@ def place_enemies(site_spec, positions, *, enemy_count: int = 6,
              for k in ("spawn", "objective", "extraction")]
     lengths = [max(1e-6, math.dist(a, b)) for a, b in zip(route, route[1:])]
     total = sum(lengths)
-    rects = footprints(site_spec)
+    # NOT INSIDE AN EMPTY, NOT BEHIND ITS ROW (0.97.3). Every candidate Laser
+    # Tag refused on UNREACHABLE_SPAWN in cold runs 9164 to 9186 -- four --
+    # was an enemy pushed off the route into an Empty, which `footprints`
+    # cannot see: 9186's seed_9205 Enemy_5, 24.0 m into e9. Keeping the
+    # Empties out alone put 9174's seed_9061 Enemy_4 and Enemy_5 behind the
+    # row's front line, on ground the row's fences shut off, so the band the
+    # fences are planned against is kept out too.
+    rects = solid_rects(site_spec) + shut_band_rects(site_spec)
     ground = ground_rect(site_spec)
     spawn = route[0]
 

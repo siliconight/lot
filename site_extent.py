@@ -176,6 +176,21 @@ def _point(value):
         return None
 
 
+def blocker_rect(bk):
+    """A blocker's plan rect, or None when it has no position.
+
+    A blocker's ``size_x``/``size_y`` are WORLD extents, 12 m each when
+    unsaid, so no rotation applies. The ground (`content`), the fences
+    (`site_fences`) and the spawns (`site_spawns`) all ask here; each used to
+    spell the rule out itself (0.97.3).
+    """
+    at = _point(bk.get("at"))
+    if at is None:
+        return None
+    return rect_of(at[0], at[1], float(bk.get("size_x", 12.0) or 12.0),
+                   float(bk.get("size_y", 12.0) or 12.0))
+
+
 def content(site_spec):
     """``(labelled_rects, unknown_ids)`` -- everything the ground must carry.
 
@@ -198,13 +213,10 @@ def content(site_spec):
         rects.append((bid, rect))
 
     for i, bk in enumerate(site_spec.get("blockers") or []):
-        at = _point(bk.get("at"))
-        if at is None:
+        rect = blocker_rect(bk)
+        if rect is None:
             continue
-        sx = float(bk.get("size_x", 12.0) or 12.0)
-        sy = float(bk.get("size_y", 12.0) or 12.0)
-        rects.append((str(bk.get("id", f"blocker_{i}")),
-                      rect_of(at[0], at[1], sx, sy)))
+        rects.append((str(bk.get("id", f"blocker_{i}")), rect))
 
     for i, cdef in enumerate(site_spec.get("courtyards") or []):
         at = _point(cdef.get("at"))
