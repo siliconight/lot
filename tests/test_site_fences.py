@@ -83,6 +83,25 @@ def test_a_row_with_a_marker_behind_it_is_left_open_and_said():
     assert len(got) == 3 and findings == []
 
 
+def test_the_fence_does_not_grow_the_plate_it_marks():
+    """0.97.1. Cold run 9183's plate went 246 -> 254 m: the end runs reach
+    the plate's edge, and counted as content they asked for CLEARANCE past
+    themselves, so each ended 4 m short of the moved perimeter."""
+    import site_extent
+    site = {"name": "t", "buildings": [], "roads": [_EW_ROAD],
+            "blockers": [_empty("e0", -10, -4), _empty("e1", -1, 5)],
+            "ground": {"size_x": 60, "size_y": 100}}
+    before = site_extent.resolve(site).rect
+    fences = SF.plan_fences(site, site_streets.roads(site), before, BODY)
+    assert any("end" in f["breaks"] for f in fences)
+    site["cover"] = fences
+    assert site_extent.resolve(site).rect == before
+    # and the end runs still reach it, within the centimetre a run's length
+    # is quantised to
+    xs = [f["at"][0] + s * f["dims"][0] / 2 for f in fences for s in (-1, 1)]
+    assert abs(min(xs) - before[0]) < SF.QUANTUM and abs(max(xs) - before[2]) < SF.QUANTUM
+
+
 def test_a_row_facing_x_runs_along_y():
     ns_road = {"a": [10, -50], "b": [10, 50], "width": 10.0, "sidewalk": 3.0}
     got, _ = _plan([_empty("e0", 20, 32, -10, -4, rot=90), _empty("e1", 20, 32, -1, 5, rot=90)],

@@ -1,3 +1,35 @@
+## 0.97.1 - a fence does not grow the plate it marks the edge of
+
+**Cold run 9183, measured on its own scenes.** The greybox `site.tscn` and
+the themed one both stood `perim_S` at 254 m. 9182, the same candidate
+without fences, stood it at 246 m.
+
+**The mechanism** (`site_extent.required_rect`). The ground carries the union
+of everything on the site grown by `CLEARANCE` (4 m), and every cover piece
+is in that union.
+- 0.97.0's end runs reach the plate's edge by design.
+- Re-resolved with the fences standing, the plate grew 4 m past each one.
+- Each end fence then stopped 4 m short of the perimeter wall. That left a
+  walk-around at both ends of the row, which is exactly what the end runs
+  were for.
+- The `LOT_GROUND_EXTENDED` line still said 246 m, because it was printed by
+  the resolve before the fences stood.
+
+**The fix:** `content` leaves out cover that `site_fences` placed. A fence
+marks the playable edge; it is not content the ground has to carry clearance
+around.
+
+**Re-assembled** with this checkout on 9183's own `site.json` (seed_9181):
+`perim_S` is 246 m, and the 13.0 m end run stops at x -123.0, where
+`perim_W` stands.
+
+**Tests:** `tests/test_site_fences.py::test_the_fence_does_not_grow_the_plate_it_marks`.
+It resolves the ground, plans the fences, resolves again with them standing,
+and asserts the rect is unchanged and the end runs still reach it. It fails
+on 0.97.0.
+
+**Suite:** 661 passed (0.97.0's 660 and this test).
+
 ## 0.97.0 - the fence at the playable edge: an Empty row's gaps
 
 **The walker, 2026-10-04:** "I like the idea of a fence between playable

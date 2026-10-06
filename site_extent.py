@@ -218,6 +218,12 @@ def content(site_spec):
         at = _point(cv.get("at"))
         if at is None:
             continue
+        # A FENCE IS THE EDGE, NOT CONTENT (0.97.1). `site_fences` runs a
+        # row's end fences out to the plate's edge by design; counted here,
+        # they grew the plate by CLEARANCE past themselves and each stopped
+        # 4 m short of the new perimeter (cold run 9183: 246 -> 254 m).
+        if cv.get("source") == "site_fences":
+            continue
         sz = cv.get("size") or (1.0, 1.0, 1.0)
         rects.append((f"cover_{i}", rect_of(at[0], at[1], float(sz[0]),
                                             float(sz[2] if len(sz) > 2 else sz[1]))))
