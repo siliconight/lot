@@ -1,3 +1,16 @@
+## 0.97.4 - the root test moves under tests/, and the `--out-dir/` directory goes
+
+Repo hygiene (`docs/findings/repo_hygiene_2026-10/` at the factory root).
+- `test_ladders_reach_the_site.py` stood at the root beside `tests/`. It is
+  under `tests/` now, with `HERE` pointing at the repo root as the other
+  tests' path line does; it ran 5 passed there and the suite 669.
+- A tracked directory literally named `--out-dir/` held one assembled
+  `example_compound.tscn`: an `assemble` run given the flag's name as its
+  value. Nothing read it (the tests assemble `specs/example_compound.json`
+  into a temp dir). Removed.
+
+**Suite:** 669 passed, as 0.97.3.
+
 ## 0.97.3 - no spawn inside an Empty, and no enemy behind an Empty row's front line
 
 **Every refusal was the same defect.** Laser Tag refused four candidates in
