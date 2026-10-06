@@ -17,7 +17,8 @@ import json
 import os
 import sys
 
-HERE = os.path.dirname(os.path.abspath(__file__))
+# the repo root: this test moved from there into tests/ (0.97.4)
+HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, HERE)
 
 import lot as L  # noqa: E402
