@@ -1632,7 +1632,10 @@ COVER_MATERIALS = {"box_truck": "metal_painted", "cargo_container": "metal_paint
                    # the dumpster at a building's service side (site_dumpsters)
                    "dumpster": "metal_painted",
                    # the handbills (site_posters): paper, the genome's own kind
-                   "poster_wall": "paper", "pole_flyers": "paper"}
+                   "poster_wall": "paper", "pole_flyers": "paper",
+                   # the fence at the playable edge (site_fences, 0.97.0):
+                   # galvanised steel; the fabric is its own kind in Zoo
+                   "chain_link_fence": "metal_bare"}
 
 
 COVER_DIR = "cover"
@@ -3422,6 +3425,29 @@ def assemble(site_spec_path, out_dir=None, walkable=False, navqa=False,
     if parked:
         print(f"[lot] LOT_PARKING_PLACED: {len(parked)} car(s) parked in the "
               f"kerb lanes' bays")
+    # THE FENCE AT THE PLAYABLE EDGE (site_fences, 0.97.0): every gap a
+    # player fits through in an Empty row, and each row's ends out to the
+    # plate, closed by Zoo's chain-link fence along the row's front line.
+    # After the street, the furniture and the cars, so it stands clear of
+    # them; before the cover planner, which measures with it standing.
+    import site_fences
+    fence_findings = []
+    fences = site_fences.plan_fences(
+        site_spec, site_streets.roads(site_spec), extent.rect,
+        2.0 * float(_agent()["characters"]["player"]["radius_m"]),
+        keep_out=(site_furniture.path_corridors(site_spec)
+                  + _site_spawns.footprints(site_spec, margin=0.0) + _field_rects),
+        markers=list(cover_points.values()), findings=fence_findings)
+    site_spec["cover"].extend(fences)
+    merged["fence_plan"] = {"placed": fences, "findings": fence_findings}
+    for cv in fences:
+        sx, _sy, sz = cv["size"]
+        standing.append((cv["at"][0] - sx / 2.0, cv["at"][1] - sz / 2.0,
+                         cv["at"][0] + sx / 2.0, cv["at"][1] + sz / 2.0))
+        print(f"[lot] LOT_FENCE_PLACED: {cv['name']} {cv['dims'][0]} m at "
+              f"({cv['at'][0]}, {cv['at'][1]}) yaw {cv['yaw']}, {cv['breaks']}")
+    for f_ in fence_findings:
+        print(f"[lot] {f_}")
     if furniture:
         from collections import Counter as _Counter
         _by = _Counter(f["species"] for f in furniture)
