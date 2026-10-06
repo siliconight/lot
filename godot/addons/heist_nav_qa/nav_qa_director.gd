@@ -367,6 +367,11 @@ const STOREY_BAND := 0.6
 const STAND_SEARCH_M := 6.0
 const STAND_STEP_M := 0.5
 const STAND_DIRS := 12
+# How far above or below an anchor a ladder or a drop can be the way in: the
+# library's longest ladder (8.0 m, measured 2026-10-06 over
+# deli_counter/build/*.gameplay.json) and one storey band. Further than that,
+# the floor found is not one a ladder joins to this anchor.
+const VERTICAL_REACH_M := 8.0 + STOREY_BAND
 
 
 func _stand_at(map: RID, q: Vector3, plane_y: float) -> Variant:
@@ -481,9 +486,44 @@ func _reaches(map: RID, from_snapped: Vector3, to_snapped: Vector3,
 		return true
 	if strict:
 		return false
-	var h_gap := Vector2(pe.x - to_snapped.x, pe.z - to_snapped.z).length()
-	var v_gap := absf(pe.y - to_snapped.y)
-	return h_gap <= SNAP_MAX * 1.5 and v_gap > 1.0
+	return _vertical_access(map, from_snapped, to_snapped) != null
+
+
+func _vertical_access(map: RID, from_pt: Vector3, target: Vector3) -> Variant:
+	## Standing room on another storey straight under or over `target`, within
+	## VERTICAL_REACH_M, that a strict route from `from_pt` reaches -- or null.
+	##
+	## THIS USED TO BE READ OFF THE END OF THE PATH TO `target`. For an
+	## unreachable target Godot returns a path to the nearest point it reached,
+	## and in 4.7 that fallback can fail inside the engine ("It's not expect to
+	## not find the most reachable polygons", nav_mesh_queries_3d.cpp:404) and
+	## return a path that stops beside the start. Cold run 9185: deli_a03's
+	## objective passed from proxy_1 and failed from home, in one navmesh, and
+	## 9179 had passed it from both (roadmap 189). The question is about the
+	## anchor, so it is asked of the anchor.
+	#
+	# Asked HEIGHT BY HEIGHT, nearest first, keeping the old concession's
+	# window (1.5 x SNAP_MAX across, more than 1 m up or down). One closest
+	# point to the whole column found the floor under the anchor's own foot
+	# every time, and so failed a drop from a ledge 2.7 m out that the old
+	# rule passed -- 9185 seed_9003's proxy_2->proxy_3.
+	var dy := 1.0 + STAND_STEP_M
+	while dy <= VERTICAL_REACH_M:
+		for dir in [-1.0, 1.0]:
+			var sgn: float = dir
+			var c := NavigationServer3D.map_get_closest_point(
+				map, target + Vector3(0.0, sgn * dy, 0.0))
+			# map_get_closest_point answers Vector3.ZERO when it has nothing.
+			if c == Vector3.ZERO and target.distance_to(Vector3.ZERO) > STAND_STEP_M:
+				continue
+			if Vector2(c.x - target.x, c.z - target.z).length() > SNAP_MAX * 1.5:
+				continue
+			if absf(c.y - target.y) <= 1.0:
+				continue
+			if _reaches(map, from_pt, c, true):
+				return c
+		dy += STAND_STEP_M
+	return null
 
 
 func _anchor_reachability(map: RID, home: Vector3, proxies: Array) -> Array:
@@ -727,17 +767,18 @@ func _prove_path(map: RID, label: String, a: Vector3, b: Vector3) -> Dictionary:
 	var endgap := path[path.size() - 1].distance_to(sb)
 	if endgap > SNAP_MAX:
 		var pe := path[path.size() - 1]
-		var h_gap := Vector2(pe.x - sb.x, pe.z - sb.z).length()
-		var v_gap := absf(pe.y - sb.y)
-		if h_gap <= SNAP_MAX * 1.5 and v_gap > 1.0:
-			# walkable route reaches directly below/above the anchor; the
-			# remaining gap is pure vertical = ladder/drop access. That
-			# traversal is game code (climb volumes), gated by Deli
-			# Counter's ladder checks -- report as intel, don't fail.
+		# A walkable route to standing room directly below or above the
+		# anchor; the remaining gap is pure vertical = ladder/drop access.
+		# That traversal is game code (climb volumes), gated by Deli
+		# Counter's ladder checks -- report as intel, don't fail. Decided by
+		# _vertical_access, never by where `path` stopped (Lot 0.97.2).
+		var va: Variant = _vertical_access(map, sa, sb)
+		if va != null:
+			var vv: Vector3 = va
 			return {"leg": label, "ok": true, "vertical_access": true,
 					"stand_offset_m": snappedf(far, 0.01),
 					"detail": "walkable to (%.1f, %.1f, %.1f); %.1f m VERTICAL access (ladder/drop) to anchor at (%.1f, %.1f, %.1f)"
-					% [pe.x, pe.y, pe.z, v_gap, sb.x, sb.y, sb.z]}
+					% [vv.x, vv.y, vv.z, absf(vv.y - sb.y), sb.x, sb.y, sb.z]}
 		return {"leg": label, "ok": false,
 				"stand_offset_m": snappedf(far, 0.01),
 				"detail": "path stops %.2f m short (disjoint islands): ends (%.1f, %.1f, %.1f), target stands at (%.1f, %.1f, %.1f), raw target (%.1f, %.1f, %.1f)"
