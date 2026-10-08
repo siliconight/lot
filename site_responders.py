@@ -87,6 +87,18 @@ LANE_MARGIN = 0.5
 #: along. `SHIFT_SPEED_MPH` is STATED, a residential street's posted speed.
 SHIFT_SPEED_MPH = 25.0
 SHIFT_RATE = 120.0 / SHIFT_SPEED_MPH ** 2
+#: THE PLANNER CHECKS THE BOXES IT RECORDS (0.100.1). `plan` writes a stop's
+#: and a lane's boxes to `RECORD_DIGITS` decimals, and the read-back
+#: (`blocked`) checks those -- so the planner rounds each box once, here,
+#: and checks the rounded one, and a steered lane clears what it passes by
+#: `RECORD_PRECISION`, which rounding cannot undo.
+#: 0.100.0 checked unrounded boxes and cleared an edge by 1e-6 m. On cold
+#: run 9206's seed_9080 the record rounded a box's edge onto the getaway
+#: van's: -28.22 against `cover_rects`' -26.92 - 1.3 = -28.220000000000002.
+#: The read-back reported the van in the lane, LOT_RESPONDER_BLOCKED, major,
+#: by 3.6e-15 m.
+RECORD_DIGITS = 3
+RECORD_PRECISION = 10.0 ** -RECORD_DIGITS
 #: Lane a stop must leave behind the vehicle: twice its length, so it is
 #: seen to drive in. Chosen, not derived.
 ENTRY_RUN = 2.0 * VEHICLE[2]
@@ -134,6 +146,12 @@ def _to_segment(p, a, b) -> tuple:
     return math.dist(p, q), q
 
 
+def _recorded(box) -> tuple:
+    """``box`` as the record writes it, to `RECORD_DIGITS` decimals: the value
+    the planner checks, so the value the read-back checks is the same one."""
+    return tuple(round(v, RECORD_DIGITS) for v in box)
+
+
 def _interval(rect, road, axis) -> tuple:
     """(lo, hi): plan ``rect``'s extent along ``axis`` (the road's `along`
     or `perp`), measured from `road.a` -- its four corners projected, exact."""
@@ -178,7 +196,7 @@ def _needs(road, travel, off, width, slices, blocking, limit) -> list:
             moved = False
             for lo, hi in banned:
                 if lo < s < hi:
-                    s = hi + 1e-6
+                    s = hi + RECORD_PRECISION
                     moved = True
         out.append(s if s <= limit else None)
     return out
@@ -251,7 +269,7 @@ def _best_stop(road, t_entry, travel, way_back, anchors, standing,
     t = t_entry + travel * (ENTRY_RUN + d / 2.0)
     while lo + d / 2.0 - 1e-9 <= t <= hi - d / 2.0 + 1e-9:
         rear, front = t - d / 2.0, t + d / 2.0
-        stop = _box(road, t, off, d, body + 2.0 * DOOR_ROOM)
+        stop = _recorded(_box(road, t, off, d, body + 2.0 * DOOR_ROOM))
         centre = road.point(t, off)
         ok = (not any(not (front <= j0 or rear >= j1) for j0, j1 in junctions)
               and all(math.dist(centre, a) >= site_audit.CAMP_RADIUS for a in anchors)
@@ -295,7 +313,7 @@ def _lane(road, t_entry, travel, off, sign, lane_w, t_lane, grid, needs, blockin
         while j + 1 < len(slices) and abs(shifts[j + 1] - shifts[i]) < 1e-9:
             j += 1
         a, b = slices[i][0], slices[j][1]
-        boxes.append(_box(road, (a + b) / 2.0, off - sign * shifts[i], abs(b - a), lane_w))
+        boxes.append(_recorded(_box(road, (a + b) / 2.0, off - sign * shifts[i], abs(b - a), lane_w)))
         i = j + 1
     if any(_overlaps(box, r) for box in boxes for r in blocking):
         return None
@@ -355,8 +373,8 @@ def plan(site_spec, positions, findings=None) -> list:
             "stop": [round(centre[0], 3), round(centre[1], 3)],
             "yaw": site_parking.yaw_facing(travel * road.along[0], travel * road.along[1]),
             "vehicle": [w, d, h],
-            "stop_box": [round(v, 3) for v in stop],
-            "lane_boxes": [[round(v, 3) for v in box] for box in lane],
+            "stop_box": list(stop),
+            "lane_boxes": [list(box) for box in lane],
             "lane_shift": round(shift, 3),
             "toward": [round(toward[0], 3), round(toward[1], 3)],
             "to_way_back": round(dist, 3),

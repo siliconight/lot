@@ -1,0 +1,576 @@
+{
+ "blockers": [
+  {
+   "archetype": "gs_empty_rowhome_d",
+   "at": [
+    -91.85,
+    -46.72
+   ],
+   "empty": true,
+   "glb": "buildings/gs_empty_rowhome_d.glb",
+   "id": "e0",
+   "rot": 180,
+   "size_x": 6.3,
+   "size_y": 12.3
+  },
+  {
+   "archetype": "gs_empty_rowhome_g",
+   "at": [
+    -85.65,
+    -46.72
+   ],
+   "empty": true,
+   "glb": "buildings/gs_empty_rowhome_g.glb",
+   "id": "e1",
+   "rot": 180,
+   "size_x": 6.1,
+   "size_y": 12.3
+  },
+  {
+   "archetype": "gs_empty_rowhome_e",
+   "at": [
+    -79.7,
+    -46.72
+   ],
+   "empty": true,
+   "glb": "buildings/gs_empty_rowhome_e.glb",
+   "id": "e2",
+   "rot": 180,
+   "size_x": 5.8,
+   "size_y": 12.3
+  },
+  {
+   "archetype": "gs_empty_rowhome_j",
+   "at": [
+    -73.55,
+    -46.72
+   ],
+   "empty": true,
+   "glb": "buildings/gs_empty_rowhome_j.glb",
+   "id": "e3",
+   "rot": 180,
+   "size_x": 6.5,
+   "size_y": 12.3
+  },
+  {
+   "archetype": "gs_empty_rowhome_f",
+   "at": [
+    -67.15,
+    -46.72
+   ],
+   "empty": true,
+   "glb": "buildings/gs_empty_rowhome_f.glb",
+   "id": "e4",
+   "rot": 180,
+   "size_x": 6.3,
+   "size_y": 12.3
+  },
+  {
+   "archetype": "gs_empty_rowhome_c",
+   "at": [
+    -60.6,
+    -46.72
+   ],
+   "empty": true,
+   "glb": "buildings/gs_empty_rowhome_c.glb",
+   "id": "e5",
+   "rot": 180,
+   "size_x": 6.8,
+   "size_y": 12.3
+  },
+  {
+   "archetype": "gs_empty_rowhome_b",
+   "at": [
+    -54.3,
+    -46.72
+   ],
+   "empty": true,
+   "glb": "buildings/gs_empty_rowhome_b.glb",
+   "id": "e6",
+   "rot": 180,
+   "size_x": 5.8,
+   "size_y": 12.3
+  },
+  {
+   "archetype": "gs_empty_rowhome_h",
+   "at": [
+    -45.1,
+    -46.72
+   ],
+   "empty": true,
+   "glb": "buildings/gs_empty_rowhome_h.glb",
+   "id": "e7",
+   "rot": 180,
+   "size_x": 6.6,
+   "size_y": 12.3
+  },
+  {
+   "archetype": "gs_empty_rowhome_i",
+   "at": [
+    -38.6,
+    -46.72
+   ],
+   "empty": true,
+   "glb": "buildings/gs_empty_rowhome_i.glb",
+   "id": "e8",
+   "rot": 180,
+   "size_x": 6.4,
+   "size_y": 12.3
+  },
+  {
+   "archetype": "gs_empty_rowhome_k",
+   "at": [
+    -32.45,
+    -46.72
+   ],
+   "empty": true,
+   "glb": "buildings/gs_empty_rowhome_k.glb",
+   "id": "e9",
+   "rot": 180,
+   "size_x": 5.9,
+   "size_y": 12.3
+  },
+  {
+   "archetype": "gs_empty_rowhome_l",
+   "at": [
+    -26.15,
+    -46.72
+   ],
+   "empty": true,
+   "glb": "buildings/gs_empty_rowhome_l.glb",
+   "id": "e10",
+   "rot": 180,
+   "size_x": 6.7,
+   "size_y": 12.3
+  },
+  {
+   "archetype": "gs_empty_rowhome_a",
+   "at": [
+    -19.65,
+    -46.72
+   ],
+   "empty": true,
+   "glb": "buildings/gs_empty_rowhome_a.glb",
+   "id": "e11",
+   "rot": 180,
+   "size_x": 6.3,
+   "size_y": 12.3
+  },
+  {
+   "archetype": "gs_empty_rowhome_l",
+   "at": [
+    -13.15,
+    -46.72
+   ],
+   "empty": true,
+   "glb": "buildings/gs_empty_rowhome_l.glb",
+   "id": "e12",
+   "rot": 180,
+   "size_x": 6.7,
+   "size_y": 12.3
+  },
+  {
+   "archetype": "gs_empty_rowhome_e",
+   "at": [
+    -3.9,
+    -46.72
+   ],
+   "empty": true,
+   "glb": "buildings/gs_empty_rowhome_e.glb",
+   "id": "e13",
+   "rot": 180,
+   "size_x": 5.8,
+   "size_y": 12.3
+  },
+  {
+   "archetype": "gs_empty_rowhome_h",
+   "at": [
+    2.3,
+    -46.72
+   ],
+   "empty": true,
+   "glb": "buildings/gs_empty_rowhome_h.glb",
+   "id": "e14",
+   "rot": 180,
+   "size_x": 6.6,
+   "size_y": 12.3
+  },
+  {
+   "archetype": "gs_empty_rowhome_a",
+   "at": [
+    8.75,
+    -46.72
+   ],
+   "empty": true,
+   "glb": "buildings/gs_empty_rowhome_a.glb",
+   "id": "e15",
+   "rot": 180,
+   "size_x": 6.3,
+   "size_y": 12.3
+  },
+  {
+   "archetype": "gs_empty_rowhome_d",
+   "at": [
+    15.05,
+    -46.72
+   ],
+   "empty": true,
+   "glb": "buildings/gs_empty_rowhome_d.glb",
+   "id": "e16",
+   "rot": 180,
+   "size_x": 6.3,
+   "size_y": 12.3
+  },
+  {
+   "archetype": "gs_empty_rowhome_i",
+   "at": [
+    21.4,
+    -46.72
+   ],
+   "empty": true,
+   "glb": "buildings/gs_empty_rowhome_i.glb",
+   "id": "e17",
+   "rot": 180,
+   "size_x": 6.4,
+   "size_y": 12.3
+  },
+  {
+   "archetype": "gs_empty_rowhome_k",
+   "at": [
+    27.55,
+    -46.72
+   ],
+   "empty": true,
+   "glb": "buildings/gs_empty_rowhome_k.glb",
+   "id": "e18",
+   "rot": 180,
+   "size_x": 5.9,
+   "size_y": 12.3
+  },
+  {
+   "archetype": "gs_empty_rowhome_g",
+   "at": [
+    36.55,
+    -46.72
+   ],
+   "empty": true,
+   "glb": "buildings/gs_empty_rowhome_g.glb",
+   "id": "e19",
+   "rot": 180,
+   "size_x": 6.1,
+   "size_y": 12.3
+  },
+  {
+   "archetype": "gs_empty_rowhome_c",
+   "at": [
+    43.0,
+    -46.72
+   ],
+   "empty": true,
+   "glb": "buildings/gs_empty_rowhome_c.glb",
+   "id": "e20",
+   "rot": 180,
+   "size_x": 6.8,
+   "size_y": 12.3
+  },
+  {
+   "archetype": "gs_empty_rowhome_j",
+   "at": [
+    49.65,
+    -46.72
+   ],
+   "empty": true,
+   "glb": "buildings/gs_empty_rowhome_j.glb",
+   "id": "e21",
+   "rot": 180,
+   "size_x": 6.5,
+   "size_y": 12.3
+  },
+  {
+   "archetype": "gs_empty_rowhome_b",
+   "at": [
+    55.8,
+    -46.72
+   ],
+   "empty": true,
+   "glb": "buildings/gs_empty_rowhome_b.glb",
+   "id": "e22",
+   "rot": 180,
+   "size_x": 5.8,
+   "size_y": 12.3
+  },
+  {
+   "archetype": "gs_empty_rowhome_f",
+   "at": [
+    61.85,
+    -46.72
+   ],
+   "empty": true,
+   "glb": "buildings/gs_empty_rowhome_f.glb",
+   "id": "e23",
+   "rot": 180,
+   "size_x": 6.3,
+   "size_y": 12.3
+  },
+  {
+   "archetype": "gs_empty_rowhome_a",
+   "at": [
+    68.15,
+    -46.72
+   ],
+   "empty": true,
+   "glb": "buildings/gs_empty_rowhome_a.glb",
+   "id": "e24",
+   "rot": 180,
+   "size_x": 6.3,
+   "size_y": 12.3
+  },
+  {
+   "archetype": "gs_empty_rowhome_c",
+   "at": [
+    74.7,
+    -46.72
+   ],
+   "empty": true,
+   "glb": "buildings/gs_empty_rowhome_c.glb",
+   "id": "e25",
+   "rot": 180,
+   "size_x": 6.8,
+   "size_y": 12.3
+  },
+  {
+   "archetype": "gs_empty_rowhome_d",
+   "at": [
+    81.25,
+    -46.72
+   ],
+   "empty": true,
+   "glb": "buildings/gs_empty_rowhome_d.glb",
+   "id": "e26",
+   "rot": 180,
+   "size_x": 6.3,
+   "size_y": 12.3
+  },
+  {
+   "archetype": "gs_empty_rowhome_i",
+   "at": [
+    90.6,
+    -46.72
+   ],
+   "empty": true,
+   "glb": "buildings/gs_empty_rowhome_i.glb",
+   "id": "e27",
+   "rot": 180,
+   "size_x": 6.4,
+   "size_y": 12.3
+  }
+ ],
+ "buildings": [
+  {
+   "archetype": "strip_club_a02",
+   "at": [
+    -54,
+    -9.42
+   ],
+   "front": {
+    "reason": "tagged front",
+    "wall": "S"
+   },
+   "gameplay": "C:\\Projects\\gabagool_studios\\gabagool_factory\\deli_counter\\build\\strip_club_a02.gameplay.json",
+   "glb": "buildings/strip_club_a02.glb",
+   "id": "b0",
+   "rot": 0,
+   "street_reach": 11.15
+  },
+  {
+   "archetype": "pharmacy_a01",
+   "at": [
+    -5,
+    -11.42
+   ],
+   "front": {
+    "reason": "tagged front",
+    "wall": "S"
+   },
+   "gameplay": "C:\\Projects\\gabagool_studios\\gabagool_factory\\deli_counter\\build\\pharmacy_a01.gameplay.json",
+   "glb": "buildings/pharmacy_a01.glb",
+   "id": "b1",
+   "rot": 0,
+   "street_reach": 9.15
+  },
+  {
+   "archetype": "gas_station_a02",
+   "at": [
+    57,
+    11.43
+   ],
+   "front": {
+    "reason": "tagged front",
+    "wall": "S"
+   },
+   "gameplay": "C:\\Projects\\gabagool_studios\\gabagool_factory\\deli_counter\\build\\gas_station_a02.gameplay.json",
+   "glb": "buildings/gas_station_a02.glb",
+   "id": "b2",
+   "rot": 0,
+   "street_reach": 32.0
+  }
+ ],
+ "candidate_seed": 9080,
+ "cover": [
+  {
+   "at": [
+    -9.0,
+    -26.92
+   ],
+   "breaks": "bays L14-15 on road 0",
+   "dims": [
+    2.6,
+    6.8,
+    3.05
+   ],
+   "size": [
+    6.8,
+    3.05,
+    2.6
+   ],
+   "source": "getaway_van",
+   "species": "step_van",
+   "style": 1,
+   "yaw": 270.0
+  }
+ ],
+ "crew_size": 4,
+ "extraction": "b1",
+ "ground": {
+  "size_x": 198,
+  "size_y": 114
+ },
+ "mode": "heist",
+ "name": "site",
+ "objective": "b0",
+ "objective_from": "archetype",
+ "pacing": {
+  "target_minutes": [
+   25,
+   35
+  ]
+ },
+ "paths": [
+  {
+   "from": "b0",
+   "to": "b1",
+   "width": 8.0
+  },
+  {
+   "a": [
+    -54.0,
+    -21.57
+   ],
+   "b": [
+    -54.0,
+    -23.02
+   ],
+   "building": "b0",
+   "width": 4.0
+  },
+  {
+   "a": [
+    -5.0,
+    -21.57
+   ],
+   "b": [
+    -5.0,
+    -23.02
+   ],
+   "building": "b1",
+   "width": 4.0
+  },
+  {
+   "a": [
+    57.0,
+    -21.57
+   ],
+   "b": [
+    57.0,
+    -23.02
+   ],
+   "building": "b2",
+   "width": 4.0
+  },
+  {
+   "a": [
+    8.150000005960464,
+    -11.420000000000002
+   ],
+   "b": [
+    13.025000002980232,
+    -11.420000000000002
+   ],
+   "building": "b1",
+   "width": 4.0
+  },
+  {
+   "a": [
+    33.0,
+    11.43
+   ],
+   "b": [
+    28.125000002980233,
+    11.43
+   ],
+   "building": "b2",
+   "width": 4.0
+  }
+ ],
+ "perimeter": {
+  "height": 3
+ },
+ "road_grammar": "",
+ "road_grammar_resolved": {
+  "asked": "",
+  "got": "T",
+  "known": true
+ },
+ "roads": [
+  {
+   "a": [
+    -99.0,
+    -30.57
+   ],
+   "b": [
+    99.0,
+    -30.57
+   ],
+   "sidewalk": 3.0,
+   "width": 10.0
+  },
+  {
+   "a": [
+    20.575000002980232,
+    -30.57
+   ],
+   "b": [
+    20.575000002980232,
+    45.5
+   ],
+   "sidewalk": 3.0,
+   "width": 10.0
+  }
+ ],
+ "route_shape": "push_then_backtrack",
+ "schema": "lot.site.v0.18",
+ "site_id": "club_block_014",
+ "site_shape": "street_block",
+ "site_shape_resolved": {
+  "asked": "street_block",
+  "degenerates_to": null,
+  "expressible": true,
+  "got": "row",
+  "known": true
+ },
+ "spawn": "b1",
+ "target_minutes": [
+  25,
+  35
+ ]
+}

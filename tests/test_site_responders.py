@@ -52,6 +52,11 @@ OBJECTIVE = (-46.0, 9.25, -3.9)
 FIXTURE_9204 = os.path.join(HERE, "fixtures", "club_block_014_seed_9181.site.json")
 SPAWN_9204 = (73.85, -17.95, 0.0)
 OBJECTIVE_9204 = (-50.0, 5.0, 0.0)
+#: Cold run 9206's seed_9080: the input site and the getaway van as placed,
+#: and the crew's points from the job's `site_walk.tscn` (0.100.1).
+FIXTURE_9080 = os.path.join(HERE, "fixtures", "club_block_014_seed_9080.site.json")
+SPAWN_9080 = (-10.65, -24.37, 0.0)
+OBJECTIVE_9080 = (-47.0, -9.42, -3.3)
 #: Zoo, where the factory keeps it beside this repo.
 ZOO = os.path.join(os.path.dirname(os.path.dirname(HERE)), "zoo")
 
@@ -234,10 +239,11 @@ def test_the_lane_steers_round_the_van_on_9204():
         return min(vals), max(vals)
 
     # the van's edge nearest the centre line, and the shift that clears it
+    # by the record's precision (0.100.1)
     v0, v1 = across(van)
     near = v0 if off > 0 else v1
     need = abs(off) + w / 2.0 - abs(near)
-    assert a["lane_shift"] == pytest.approx(need, abs=1e-3)
+    assert a["lane_shift"] == pytest.approx(need + site_responders.RECORD_PRECISION, abs=1e-6)
     assert 0.6 < need < 0.7                        # 0.648 m: 0.45 + the mirror and margin growth
     boxes = a["lane_boxes"]
     assert not any(_overlaps(box, van) for box in boxes)
@@ -250,6 +256,31 @@ def test_the_lane_steers_round_the_van_on_9204():
     assert shifts[-1] == pytest.approx(0.0, abs=1e-9)
     limit = site_responders.shift_limit(road0, off, w)
     assert max(shifts) <= limit
+
+
+def test_what_the_planner_keeps_the_read_back_finds_clear():
+    """Cold run 9206's seed_9080: a lane steered round the getaway van. 0.100.0
+    cleared the van by 1e-6 m and rounded the record's box onto the van's
+    edge, and `blocked` reported the van in the lane -- LOT_RESPONDER_BLOCKED,
+    major -- by 3.6e-15 m. The planner now checks the boxes it records, and
+    a steered lane clears what it passes by the record's precision."""
+    spec = json.load(open(FIXTURE_9080, encoding="utf-8"))
+    findings = []
+    arrivals = site_responders.plan(spec, {"spawn": SPAWN_9080, "extraction": SPAWN_9080,
+                                           "objective": OBJECTIVE_9080}, findings)
+    assert len(arrivals) == 3 and findings == []
+    assert site_responders.blocked(arrivals, spec["cover"]) == []
+    steered = [a for a in arrivals if a["lane_shift"] > 0]
+    assert len(steered) == 1
+    van = _slot(spec["cover"][0])
+    for box in steered[0]["lane_boxes"]:
+        if box[0] < van[2] and van[0] < box[2]:       # beside the van along the road
+            gap = max(van[1] - box[3], box[1] - van[3])
+            assert gap >= site_responders.RECORD_PRECISION / 2.0, (box, van, gap)
+    # every box in a record is already at the record's precision
+    for a in arrivals:
+        for _part, box in _boxes(a):
+            assert list(site_responders._recorded(box)) == list(box)
 
 
 def test_a_shift_ramps_up_before_and_down_after():
