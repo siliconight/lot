@@ -1,0 +1,5027 @@
+{
+ "blockers": [
+  {
+   "archetype": "gs_empty_rowhome_j",
+   "at": [
+    -86.25,
+    -40.3
+   ],
+   "empty": true,
+   "glb": "buildings/gs_empty_rowhome_j.glb",
+   "id": "e0",
+   "rot": 180,
+   "size_x": 6.5,
+   "size_y": 12.3
+  },
+  {
+   "archetype": "gs_empty_rowhome_h",
+   "at": [
+    -79.7,
+    -40.3
+   ],
+   "empty": true,
+   "glb": "buildings/gs_empty_rowhome_h.glb",
+   "id": "e1",
+   "rot": 180,
+   "size_x": 6.6,
+   "size_y": 12.3
+  },
+  {
+   "archetype": "gs_empty_rowhome_g",
+   "at": [
+    -73.35,
+    -40.3
+   ],
+   "empty": true,
+   "glb": "buildings/gs_empty_rowhome_g.glb",
+   "id": "e2",
+   "rot": 180,
+   "size_x": 6.1,
+   "size_y": 12.3
+  },
+  {
+   "archetype": "gs_empty_rowhome_i",
+   "at": [
+    -67.1,
+    -40.3
+   ],
+   "empty": true,
+   "glb": "buildings/gs_empty_rowhome_i.glb",
+   "id": "e3",
+   "rot": 180,
+   "size_x": 6.4,
+   "size_y": 12.3
+  },
+  {
+   "archetype": "gs_empty_rowhome_l",
+   "at": [
+    -60.55,
+    -40.3
+   ],
+   "empty": true,
+   "glb": "buildings/gs_empty_rowhome_l.glb",
+   "id": "e4",
+   "rot": 180,
+   "size_x": 6.7,
+   "size_y": 12.3
+  },
+  {
+   "archetype": "gs_empty_rowhome_k",
+   "at": [
+    -54.25,
+    -40.3
+   ],
+   "empty": true,
+   "glb": "buildings/gs_empty_rowhome_k.glb",
+   "id": "e5",
+   "rot": 180,
+   "size_x": 5.9,
+   "size_y": 12.3
+  },
+  {
+   "archetype": "gs_empty_rowhome_f",
+   "at": [
+    -48.15,
+    -40.3
+   ],
+   "empty": true,
+   "glb": "buildings/gs_empty_rowhome_f.glb",
+   "id": "e6",
+   "rot": 180,
+   "size_x": 6.3,
+   "size_y": 12.3
+  },
+  {
+   "archetype": "gs_empty_rowhome_a",
+   "at": [
+    -38.85,
+    -40.3
+   ],
+   "empty": true,
+   "glb": "buildings/gs_empty_rowhome_a.glb",
+   "id": "e7",
+   "rot": 180,
+   "size_x": 6.3,
+   "size_y": 12.3
+  },
+  {
+   "archetype": "gs_empty_rowhome_d",
+   "at": [
+    -32.55,
+    -40.3
+   ],
+   "empty": true,
+   "glb": "buildings/gs_empty_rowhome_d.glb",
+   "id": "e8",
+   "rot": 180,
+   "size_x": 6.3,
+   "size_y": 12.3
+  },
+  {
+   "archetype": "gs_empty_rowhome_c",
+   "at": [
+    -26.0,
+    -40.3
+   ],
+   "empty": true,
+   "glb": "buildings/gs_empty_rowhome_c.glb",
+   "id": "e9",
+   "rot": 180,
+   "size_x": 6.8,
+   "size_y": 12.3
+  },
+  {
+   "archetype": "gs_empty_rowhome_b",
+   "at": [
+    -19.7,
+    -40.3
+   ],
+   "empty": true,
+   "glb": "buildings/gs_empty_rowhome_b.glb",
+   "id": "e10",
+   "rot": 180,
+   "size_x": 5.8,
+   "size_y": 12.3
+  },
+  {
+   "archetype": "gs_empty_rowhome_e",
+   "at": [
+    -13.9,
+    -40.3
+   ],
+   "empty": true,
+   "glb": "buildings/gs_empty_rowhome_e.glb",
+   "id": "e11",
+   "rot": 180,
+   "size_x": 5.8,
+   "size_y": 12.3
+  },
+  {
+   "archetype": "gs_empty_rowhome_a",
+   "at": [
+    -4.85,
+    -40.3
+   ],
+   "empty": true,
+   "glb": "buildings/gs_empty_rowhome_a.glb",
+   "id": "e12",
+   "rot": 180,
+   "size_x": 6.3,
+   "size_y": 12.3
+  },
+  {
+   "archetype": "gs_empty_rowhome_h",
+   "at": [
+    1.6,
+    -40.3
+   ],
+   "empty": true,
+   "glb": "buildings/gs_empty_rowhome_h.glb",
+   "id": "e13",
+   "rot": 180,
+   "size_x": 6.6,
+   "size_y": 12.3
+  },
+  {
+   "archetype": "gs_empty_rowhome_e",
+   "at": [
+    7.8,
+    -40.3
+   ],
+   "empty": true,
+   "glb": "buildings/gs_empty_rowhome_e.glb",
+   "id": "e14",
+   "rot": 180,
+   "size_x": 5.8,
+   "size_y": 12.3
+  },
+  {
+   "archetype": "gs_empty_rowhome_k",
+   "at": [
+    13.65,
+    -40.3
+   ],
+   "empty": true,
+   "glb": "buildings/gs_empty_rowhome_k.glb",
+   "id": "e15",
+   "rot": 180,
+   "size_x": 5.9,
+   "size_y": 12.3
+  },
+  {
+   "archetype": "gs_empty_rowhome_f",
+   "at": [
+    19.75,
+    -40.3
+   ],
+   "empty": true,
+   "glb": "buildings/gs_empty_rowhome_f.glb",
+   "id": "e16",
+   "rot": 180,
+   "size_x": 6.3,
+   "size_y": 12.3
+  },
+  {
+   "archetype": "gs_empty_rowhome_j",
+   "at": [
+    26.15,
+    -40.3
+   ],
+   "empty": true,
+   "glb": "buildings/gs_empty_rowhome_j.glb",
+   "id": "e17",
+   "rot": 180,
+   "size_x": 6.5,
+   "size_y": 12.3
+  },
+  {
+   "archetype": "gs_empty_rowhome_l",
+   "at": [
+    32.75,
+    -40.3
+   ],
+   "empty": true,
+   "glb": "buildings/gs_empty_rowhome_l.glb",
+   "id": "e18",
+   "rot": 180,
+   "size_x": 6.7,
+   "size_y": 12.3
+  },
+  {
+   "archetype": "gs_empty_rowhome_b",
+   "at": [
+    39.0,
+    -40.3
+   ],
+   "empty": true,
+   "glb": "buildings/gs_empty_rowhome_b.glb",
+   "id": "e19",
+   "rot": 180,
+   "size_x": 5.8,
+   "size_y": 12.3
+  },
+  {
+   "archetype": "gs_empty_rowhome_i",
+   "at": [
+    48.1,
+    -40.3
+   ],
+   "empty": true,
+   "glb": "buildings/gs_empty_rowhome_i.glb",
+   "id": "e20",
+   "rot": 180,
+   "size_x": 6.4,
+   "size_y": 12.3
+  },
+  {
+   "archetype": "gs_empty_rowhome_d",
+   "at": [
+    54.45,
+    -40.3
+   ],
+   "empty": true,
+   "glb": "buildings/gs_empty_rowhome_d.glb",
+   "id": "e21",
+   "rot": 180,
+   "size_x": 6.3,
+   "size_y": 12.3
+  },
+  {
+   "archetype": "gs_empty_rowhome_c",
+   "at": [
+    61.0,
+    -40.3
+   ],
+   "empty": true,
+   "glb": "buildings/gs_empty_rowhome_c.glb",
+   "id": "e22",
+   "rot": 180,
+   "size_x": 6.8,
+   "size_y": 12.3
+  },
+  {
+   "archetype": "gs_empty_rowhome_g",
+   "at": [
+    67.45,
+    -40.3
+   ],
+   "empty": true,
+   "glb": "buildings/gs_empty_rowhome_g.glb",
+   "id": "e23",
+   "rot": 180,
+   "size_x": 6.1,
+   "size_y": 12.3
+  },
+  {
+   "archetype": "gs_empty_rowhome_e",
+   "at": [
+    73.4,
+    -40.3
+   ],
+   "empty": true,
+   "glb": "buildings/gs_empty_rowhome_e.glb",
+   "id": "e24",
+   "rot": 180,
+   "size_x": 5.8,
+   "size_y": 12.3
+  },
+  {
+   "archetype": "gs_empty_rowhome_j",
+   "at": [
+    79.55,
+    -40.3
+   ],
+   "empty": true,
+   "glb": "buildings/gs_empty_rowhome_j.glb",
+   "id": "e25",
+   "rot": 180,
+   "size_x": 6.5,
+   "size_y": 12.3
+  }
+ ],
+ "buildings": [
+  {
+   "archetype": "bank_branch_a04",
+   "at": [
+    -54,
+    1.0
+   ],
+   "front": {
+    "reason": "tagged front",
+    "wall": "S"
+   },
+   "gameplay": "C:\\Projects\\gabagool_studios\\gabagool_factory\\deli_counter\\build\\bank_branch_a04.gameplay.json",
+   "glb": "buildings/bank_branch_a04.glb",
+   "id": "b0",
+   "rot": 0,
+   "street_reach": 15.15,
+   "_footprint": [
+    40.0,
+    30.0
+   ]
+  },
+  {
+   "archetype": "parking_garage",
+   "at": [
+    -5,
+    0.03
+   ],
+   "front": {
+    "reason": "widest door, tie to the south",
+    "wall": "S"
+   },
+   "gameplay": "C:\\Projects\\gabagool_studios\\gabagool_factory\\deli_counter\\build\\parking_garage.gameplay.json",
+   "glb": "buildings/parking_garage.glb",
+   "id": "b1",
+   "rot": 0,
+   "street_reach": 14.175,
+   "_footprint": [
+    36.0,
+    28.0
+   ]
+  },
+  {
+   "archetype": "rail_station_a03",
+   "at": [
+    60,
+    -1.0
+   ],
+   "front": {
+    "reason": "tagged front",
+    "wall": "S"
+   },
+   "gameplay": "C:\\Projects\\gabagool_studios\\gabagool_factory\\deli_counter\\build\\rail_station_a03.gameplay.json",
+   "glb": "buildings/rail_station_a03.glb",
+   "id": "b2",
+   "rot": 0,
+   "street_reach": 13.15,
+   "_footprint": [
+    46.0,
+    26.0
+   ]
+  }
+ ],
+ "candidate_seed": 9256,
+ "crew_size": 4,
+ "extraction": "b1",
+ "ground": {
+  "size_x": 187,
+  "size_y": 101
+ },
+ "mode": "heist",
+ "name": "site",
+ "objective": "b0",
+ "objective_from": "archetype",
+ "pacing": {
+  "target_minutes": [
+   25,
+   35
+  ]
+ },
+ "paths": [
+  {
+   "from": "b0",
+   "to": "b1",
+   "width": 8.0,
+   "drawn": false
+  },
+  {
+   "a": [
+    -54.0,
+    -13.95
+   ],
+   "b": [
+    -54.0,
+    -16.599999999999998
+   ],
+   "building": "b0",
+   "width": 4.0,
+   "snapped": {
+    "a": "ext_0_S"
+   }
+  },
+  {
+   "a": [
+    11.0,
+    -13.92
+   ],
+   "b": [
+    11.0,
+    -16.599999999999998
+   ],
+   "building": "b1",
+   "width": 4.0,
+   "snapped": {
+    "a": "ext_0_S"
+   }
+  },
+  {
+   "a": [
+    51.0,
+    -13.95
+   ],
+   "b": [
+    51.0,
+    -16.599999999999998
+   ],
+   "building": "b2",
+   "width": 4.0,
+   "snapped": {
+    "a": "ext_0_S"
+   }
+  },
+  {
+   "a": [
+    12.95,
+    0.03
+   ],
+   "b": [
+    17.46249999552965,
+    0.03
+   ],
+   "building": "b1",
+   "width": 4.0,
+   "snapped": {
+    "a": "ext_0_E"
+   }
+  },
+  {
+   "a": [
+    35.849999994039536,
+    -1.0
+   ],
+   "b": [
+    32.56249999552965,
+    -1.0
+   ],
+   "building": "b2",
+   "width": 4.0,
+   "drawn": false
+  },
+  {
+   "a": [
+    -34.05,
+    8.5
+   ],
+   "b": [
+    -32.475,
+    8.5
+   ],
+   "width": 1.85,
+   "landing_of": "b0",
+   "wall": "ext_0_E"
+  },
+  {
+   "a": [
+    -73.95,
+    -5.0
+   ],
+   "b": [
+    -75.525,
+    -5.0
+   ],
+   "width": 1.85,
+   "landing_of": "b0",
+   "wall": "ext_0_W"
+  },
+  {
+   "a": [
+    -19.5,
+    13.979999999999999
+   ],
+   "b": [
+    -19.5,
+    15.555
+   ],
+   "width": 1.7000000000000002,
+   "landing_of": "b1",
+   "wall": "ext_0_N"
+  },
+  {
+   "a": [
+    -22.95,
+    0.03
+   ],
+   "b": [
+    -24.525,
+    0.03
+   ],
+   "width": 1.7000000000000002,
+   "landing_of": "b1",
+   "wall": "ext_0_W"
+  },
+  {
+   "a": [
+    46.0,
+    11.95
+   ],
+   "b": [
+    46.0,
+    13.525
+   ],
+   "width": 2.2,
+   "landing_of": "b2",
+   "wall": "ext_0_N"
+  },
+  {
+   "a": [
+    76.0,
+    11.95
+   ],
+   "b": [
+    76.0,
+    13.525
+   ],
+   "width": 1.85,
+   "landing_of": "b2",
+   "wall": "ext_0_N"
+  }
+ ],
+ "perimeter": {
+  "height": 3
+ },
+ "road_grammar": "",
+ "road_grammar_resolved": {
+  "asked": "",
+  "got": "T",
+  "known": true
+ },
+ "roads": [
+  {
+   "a": [
+    -93.5,
+    -24.15
+   ],
+   "b": [
+    93.5,
+    -24.15
+   ],
+   "sidewalk": 3.0,
+   "width": 10.0
+  },
+  {
+   "a": [
+    25.01249999552965,
+    -24.15
+   ],
+   "b": [
+    25.01249999552965,
+    32.5
+   ],
+   "sidewalk": 3.0,
+   "width": 10.0
+  }
+ ],
+ "route_shape": "push_then_backtrack",
+ "schema": "lot.site.v0.18",
+ "site_id": "bank_block_001",
+ "site_shape": "street_block",
+ "site_shape_resolved": {
+  "asked": "street_block",
+  "degenerates_to": null,
+  "expressible": true,
+  "got": "row",
+  "known": true
+ },
+ "spawn": "b1",
+ "target_minutes": [
+  25,
+  35
+ ],
+ "cover": [
+  {
+   "at": [
+    21.362,
+    -0.15
+   ],
+   "size": [
+    2.6,
+    3.05,
+    6.8
+   ],
+   "source": "getaway_van",
+   "species": "step_van",
+   "yaw": 0.0,
+   "dims": [
+    2.6,
+    6.8,
+    3.05
+   ],
+   "style": 1,
+   "breaks": "bays L3-4 on road 1"
+  },
+  {
+   "at": [
+    34.362,
+    15.85
+   ],
+   "size": [
+    1.75,
+    1.42,
+    4.8
+   ],
+   "source": "site_fields",
+   "species": "simple_car",
+   "yaw": 0.0,
+   "dims": [
+    1.75,
+    4.8,
+    1.42
+   ],
+   "style": 1,
+   "car": "sedan",
+   "field": "field_0",
+   "breaks": "bay A0 of field_0"
+  },
+  {
+   "at": [
+    37.062,
+    15.85
+   ],
+   "size": [
+    1.75,
+    1.42,
+    4.8
+   ],
+   "source": "site_fields",
+   "species": "simple_car",
+   "yaw": 0.0,
+   "dims": [
+    1.75,
+    4.8,
+    1.42
+   ],
+   "style": 1,
+   "car": "sedan",
+   "field": "field_0",
+   "breaks": "bay A1 of field_0"
+  },
+  {
+   "at": [
+    39.762,
+    15.85
+   ],
+   "size": [
+    1.75,
+    1.45,
+    4.3
+   ],
+   "source": "site_fields",
+   "species": "simple_car",
+   "yaw": 0.0,
+   "dims": [
+    1.75,
+    4.3,
+    1.45
+   ],
+   "style": 2,
+   "car": "compact",
+   "field": "field_0",
+   "breaks": "bay A2 of field_0"
+  },
+  {
+   "at": [
+    42.462,
+    15.85
+   ],
+   "size": [
+    1.75,
+    1.42,
+    4.8
+   ],
+   "source": "site_fields",
+   "species": "simple_car",
+   "yaw": 0.0,
+   "dims": [
+    1.75,
+    4.8,
+    1.42
+   ],
+   "style": 2,
+   "car": "sedan",
+   "field": "field_0",
+   "breaks": "bay A3 of field_0"
+  },
+  {
+   "at": [
+    34.362,
+    28.65
+   ],
+   "size": [
+    1.75,
+    1.42,
+    4.8
+   ],
+   "source": "site_fields",
+   "species": "simple_car",
+   "yaw": 180.0,
+   "dims": [
+    1.75,
+    4.8,
+    1.42
+   ],
+   "style": 1,
+   "car": "sedan",
+   "field": "field_0",
+   "breaks": "bay B0 of field_0"
+  },
+  {
+   "at": [
+    39.762,
+    28.65
+   ],
+   "size": [
+    1.75,
+    1.42,
+    4.8
+   ],
+   "source": "site_fields",
+   "species": "simple_car",
+   "yaw": 180.0,
+   "dims": [
+    1.75,
+    4.8,
+    1.42
+   ],
+   "style": 2,
+   "car": "sedan",
+   "field": "field_0",
+   "breaks": "bay B2 of field_0"
+  },
+  {
+   "name": "Lamp_0",
+   "species": "streetlight",
+   "at": [
+    -88.5,
+    -16.6
+   ],
+   "yaw": 0.0,
+   "dims": [
+    0.7,
+    0.3,
+    6.0
+   ],
+   "size": [
+    0.7,
+    6.0,
+    0.3
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "L",
+   "t": 5.0,
+   "along": 0.7,
+   "source": "site_furniture",
+   "breaks": ""
+  },
+  {
+   "name": "Tree_1",
+   "species": "callery_pear",
+   "at": [
+    -76.0,
+    -16.85
+   ],
+   "yaw": 0.0,
+   "dims": [
+    3.0,
+    3.0,
+    5.5
+   ],
+   "size": [
+    1.2,
+    5.5,
+    1.2
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "L",
+   "t": 17.5,
+   "along": 1.2,
+   "source": "site_furniture",
+   "breaks": ""
+  },
+  {
+   "name": "Lamp_2",
+   "species": "streetlight",
+   "at": [
+    -63.5,
+    -16.6
+   ],
+   "yaw": 0.0,
+   "dims": [
+    0.7,
+    0.3,
+    6.0
+   ],
+   "size": [
+    0.7,
+    6.0,
+    0.3
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "L",
+   "t": 30.0,
+   "along": 0.7,
+   "source": "site_furniture",
+   "breaks": ""
+  },
+  {
+   "name": "Tree_3",
+   "species": "callery_pear",
+   "at": [
+    -51.0,
+    -16.85
+   ],
+   "yaw": 0.0,
+   "dims": [
+    3.0,
+    3.0,
+    5.5
+   ],
+   "size": [
+    1.2,
+    5.5,
+    1.2
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "L",
+   "t": 42.5,
+   "along": 1.2,
+   "source": "site_furniture",
+   "breaks": ""
+  },
+  {
+   "name": "Lamp_4",
+   "species": "streetlight",
+   "at": [
+    -38.5,
+    -16.6
+   ],
+   "yaw": 0.0,
+   "dims": [
+    0.7,
+    0.3,
+    6.0
+   ],
+   "size": [
+    0.7,
+    6.0,
+    0.3
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "L",
+   "t": 55.0,
+   "along": 0.7,
+   "source": "site_furniture",
+   "breaks": ""
+  },
+  {
+   "name": "Tree_5",
+   "species": "callery_pear",
+   "at": [
+    -26.0,
+    -16.85
+   ],
+   "yaw": 0.0,
+   "dims": [
+    3.0,
+    3.0,
+    5.5
+   ],
+   "size": [
+    1.2,
+    5.5,
+    1.2
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "L",
+   "t": 67.5,
+   "along": 1.2,
+   "source": "site_furniture",
+   "breaks": ""
+  },
+  {
+   "name": "Lamp_6",
+   "species": "streetlight",
+   "at": [
+    -13.5,
+    -16.6
+   ],
+   "yaw": 0.0,
+   "dims": [
+    0.7,
+    0.3,
+    6.0
+   ],
+   "size": [
+    0.7,
+    6.0,
+    0.3
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "L",
+   "t": 80.0,
+   "along": 0.7,
+   "source": "site_furniture",
+   "breaks": ""
+  },
+  {
+   "name": "Tree_7",
+   "species": "callery_pear",
+   "at": [
+    -1.0,
+    -16.85
+   ],
+   "yaw": 0.0,
+   "dims": [
+    3.0,
+    3.0,
+    5.5
+   ],
+   "size": [
+    1.2,
+    5.5,
+    1.2
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "L",
+   "t": 92.5,
+   "along": 1.2,
+   "source": "site_furniture",
+   "breaks": ""
+  },
+  {
+   "name": "Lamp_8",
+   "species": "streetlight",
+   "at": [
+    11.5,
+    -16.6
+   ],
+   "yaw": 0.0,
+   "dims": [
+    0.7,
+    0.3,
+    6.0
+   ],
+   "size": [
+    0.7,
+    6.0,
+    0.3
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "L",
+   "t": 105.0,
+   "along": 0.7,
+   "source": "site_furniture",
+   "breaks": ""
+  },
+  {
+   "name": "Lamp_9",
+   "species": "streetlight",
+   "at": [
+    36.5,
+    -16.6
+   ],
+   "yaw": 0.0,
+   "dims": [
+    0.7,
+    0.3,
+    6.0
+   ],
+   "size": [
+    0.7,
+    6.0,
+    0.3
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "L",
+   "t": 130.0,
+   "along": 0.7,
+   "source": "site_furniture",
+   "breaks": ""
+  },
+  {
+   "name": "Tree_10",
+   "species": "callery_pear",
+   "at": [
+    49.0,
+    -16.85
+   ],
+   "yaw": 0.0,
+   "dims": [
+    3.0,
+    3.0,
+    5.5
+   ],
+   "size": [
+    1.2,
+    5.5,
+    1.2
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "L",
+   "t": 142.5,
+   "along": 1.2,
+   "source": "site_furniture",
+   "breaks": ""
+  },
+  {
+   "name": "Lamp_11",
+   "species": "streetlight",
+   "at": [
+    61.5,
+    -16.6
+   ],
+   "yaw": 0.0,
+   "dims": [
+    0.7,
+    0.3,
+    6.0
+   ],
+   "size": [
+    0.7,
+    6.0,
+    0.3
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "L",
+   "t": 155.0,
+   "along": 0.7,
+   "source": "site_furniture",
+   "breaks": ""
+  },
+  {
+   "name": "Tree_12",
+   "species": "callery_pear",
+   "at": [
+    74.0,
+    -16.85
+   ],
+   "yaw": 0.0,
+   "dims": [
+    3.0,
+    3.0,
+    5.5
+   ],
+   "size": [
+    1.2,
+    5.5,
+    1.2
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "L",
+   "t": 167.5,
+   "along": 1.2,
+   "source": "site_furniture",
+   "breaks": ""
+  },
+  {
+   "name": "Lamp_13",
+   "species": "streetlight",
+   "at": [
+    86.5,
+    -16.6
+   ],
+   "yaw": 0.0,
+   "dims": [
+    0.7,
+    0.3,
+    6.0
+   ],
+   "size": [
+    0.7,
+    6.0,
+    0.3
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "L",
+   "t": 180.0,
+   "along": 0.7,
+   "source": "site_furniture",
+   "breaks": ""
+  },
+  {
+   "name": "fire_hydrant_14",
+   "species": "fire_hydrant",
+   "at": [
+    33.312,
+    -16.6
+   ],
+   "yaw": 0.0,
+   "dims": [
+    0.35,
+    0.35,
+    0.75
+   ],
+   "size": [
+    0.35,
+    0.75,
+    0.35
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "L",
+   "t": 126.812,
+   "along": 0.35,
+   "source": "site_furniture",
+   "breaks": "crossing@118.5"
+  },
+  {
+   "name": "litter_bin_15",
+   "species": "litter_bin",
+   "at": [
+    17.712,
+    -16.6
+   ],
+   "yaw": 0.0,
+   "dims": [
+    0.6,
+    0.6,
+    1.0
+   ],
+   "size": [
+    0.6,
+    1.0,
+    0.6
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "L",
+   "t": 111.212,
+   "along": 0.6,
+   "source": "site_furniture",
+   "breaks": "crossing@118.5"
+  },
+  {
+   "name": "sign_post_16",
+   "species": "sign_post",
+   "at": [
+    31.812,
+    -16.6
+   ],
+   "yaw": 90.0,
+   "dims": [
+    0.3048,
+    0.06,
+    2.4384
+   ],
+   "size": [
+    0.1,
+    2.4384,
+    0.1
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "L",
+   "t": 125.312,
+   "along": 0.1,
+   "source": "site_furniture",
+   "breaks": "crossing@118.5",
+   "blade": "no_parking"
+  },
+  {
+   "name": "BusShelter_17",
+   "species": "bus_shelter",
+   "at": [
+    -34.044,
+    -17.0
+   ],
+   "yaw": 0.0,
+   "dims": [
+    3.0,
+    1.5,
+    2.5
+   ],
+   "size": [
+    3.0,
+    2.5,
+    1.5
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "L",
+   "t": 59.456,
+   "along": 3.0,
+   "source": "site_furniture",
+   "breaks": "stop@59.5"
+  },
+  {
+   "name": "Bench_18",
+   "species": "bench",
+   "at": [
+    -34.044,
+    -16.65
+   ],
+   "yaw": 0.0,
+   "dims": [
+    1.8,
+    0.5,
+    0.45
+   ],
+   "size": [
+    1.8,
+    0.45,
+    0.5
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "L",
+   "t": 59.456,
+   "along": 1.8,
+   "source": "site_furniture",
+   "breaks": "stop@59.5"
+  },
+  {
+   "name": "StopFlag_19",
+   "species": "sign_post",
+   "at": [
+    -36.544,
+    -16.6
+   ],
+   "yaw": 90.0,
+   "dims": [
+    0.3048,
+    0.06,
+    2.5908
+   ],
+   "size": [
+    0.1,
+    2.5908,
+    0.1
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "L",
+   "t": 56.956,
+   "along": 0.1,
+   "source": "site_furniture",
+   "breaks": "stop@59.5",
+   "blade": "bus_stop"
+  },
+  {
+   "name": "mailbox_0L0",
+   "species": "mailbox",
+   "at": [
+    -36.144,
+    -16.6
+   ],
+   "yaw": 0.0,
+   "dims": [
+    0.6,
+    0.7,
+    1.15
+   ],
+   "size": [
+    0.6,
+    1.15,
+    0.7
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "L",
+   "t": 57.356,
+   "along": 0.6,
+   "source": "site_furniture",
+   "breaks": "stop@59.5"
+  },
+  {
+   "name": "newspaper_box_0L1",
+   "species": "newspaper_box",
+   "at": [
+    -39.544,
+    -16.6
+   ],
+   "yaw": 0.0,
+   "dims": [
+    0.42,
+    0.45,
+    1.15
+   ],
+   "size": [
+    0.42,
+    1.15,
+    0.45
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "L",
+   "t": 53.956,
+   "along": 0.42,
+   "source": "site_furniture",
+   "breaks": "stop@59.5"
+  },
+  {
+   "name": "newspaper_box_0L2",
+   "species": "newspaper_box",
+   "at": [
+    -40.644,
+    -16.6
+   ],
+   "yaw": 0.0,
+   "dims": [
+    0.42,
+    0.45,
+    1.15
+   ],
+   "size": [
+    0.42,
+    1.15,
+    0.45
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "L",
+   "t": 52.856,
+   "along": 0.42,
+   "source": "site_furniture",
+   "breaks": "stop@59.5"
+  },
+  {
+   "name": "payphone_0L3",
+   "species": "payphone",
+   "at": [
+    -41.944,
+    -16.6
+   ],
+   "yaw": 180.0,
+   "dims": [
+    0.75,
+    0.5,
+    2.3
+   ],
+   "size": [
+    0.75,
+    2.3,
+    0.5
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "L",
+   "t": 51.556,
+   "along": 0.75,
+   "source": "site_furniture",
+   "breaks": "stop@59.5"
+  },
+  {
+   "name": "Lamp_20",
+   "species": "streetlight",
+   "at": [
+    -88.5,
+    -31.7
+   ],
+   "yaw": 0.0,
+   "dims": [
+    0.7,
+    0.3,
+    6.0
+   ],
+   "size": [
+    0.7,
+    6.0,
+    0.3
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "R",
+   "t": 5.0,
+   "along": 0.7,
+   "source": "site_furniture",
+   "breaks": ""
+  },
+  {
+   "name": "Tree_21",
+   "species": "callery_pear",
+   "at": [
+    -76.0,
+    -31.45
+   ],
+   "yaw": 0.0,
+   "dims": [
+    3.0,
+    3.0,
+    5.5
+   ],
+   "size": [
+    1.2,
+    5.5,
+    1.2
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "R",
+   "t": 17.5,
+   "along": 1.2,
+   "source": "site_furniture",
+   "breaks": ""
+  },
+  {
+   "name": "Lamp_22",
+   "species": "streetlight",
+   "at": [
+    -63.5,
+    -31.7
+   ],
+   "yaw": 0.0,
+   "dims": [
+    0.7,
+    0.3,
+    6.0
+   ],
+   "size": [
+    0.7,
+    6.0,
+    0.3
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "R",
+   "t": 30.0,
+   "along": 0.7,
+   "source": "site_furniture",
+   "breaks": ""
+  },
+  {
+   "name": "Tree_23",
+   "species": "callery_pear",
+   "at": [
+    -51.0,
+    -31.45
+   ],
+   "yaw": 0.0,
+   "dims": [
+    3.0,
+    3.0,
+    5.5
+   ],
+   "size": [
+    1.2,
+    5.5,
+    1.2
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "R",
+   "t": 42.5,
+   "along": 1.2,
+   "source": "site_furniture",
+   "breaks": ""
+  },
+  {
+   "name": "Lamp_24",
+   "species": "streetlight",
+   "at": [
+    -38.5,
+    -31.7
+   ],
+   "yaw": 0.0,
+   "dims": [
+    0.7,
+    0.3,
+    6.0
+   ],
+   "size": [
+    0.7,
+    6.0,
+    0.3
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "R",
+   "t": 55.0,
+   "along": 0.7,
+   "source": "site_furniture",
+   "breaks": ""
+  },
+  {
+   "name": "Tree_25",
+   "species": "callery_pear",
+   "at": [
+    -26.0,
+    -31.45
+   ],
+   "yaw": 0.0,
+   "dims": [
+    3.0,
+    3.0,
+    5.5
+   ],
+   "size": [
+    1.2,
+    5.5,
+    1.2
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "R",
+   "t": 67.5,
+   "along": 1.2,
+   "source": "site_furniture",
+   "breaks": ""
+  },
+  {
+   "name": "Lamp_26",
+   "species": "streetlight",
+   "at": [
+    -13.5,
+    -31.7
+   ],
+   "yaw": 0.0,
+   "dims": [
+    0.7,
+    0.3,
+    6.0
+   ],
+   "size": [
+    0.7,
+    6.0,
+    0.3
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "R",
+   "t": 80.0,
+   "along": 0.7,
+   "source": "site_furniture",
+   "breaks": ""
+  },
+  {
+   "name": "Tree_27",
+   "species": "callery_pear",
+   "at": [
+    -1.0,
+    -31.45
+   ],
+   "yaw": 0.0,
+   "dims": [
+    3.0,
+    3.0,
+    5.5
+   ],
+   "size": [
+    1.2,
+    5.5,
+    1.2
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "R",
+   "t": 92.5,
+   "along": 1.2,
+   "source": "site_furniture",
+   "breaks": ""
+  },
+  {
+   "name": "Lamp_28",
+   "species": "streetlight",
+   "at": [
+    11.5,
+    -31.7
+   ],
+   "yaw": 0.0,
+   "dims": [
+    0.7,
+    0.3,
+    6.0
+   ],
+   "size": [
+    0.7,
+    6.0,
+    0.3
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "R",
+   "t": 105.0,
+   "along": 0.7,
+   "source": "site_furniture",
+   "breaks": ""
+  },
+  {
+   "name": "Tree_29",
+   "species": "callery_pear",
+   "at": [
+    24.0,
+    -31.45
+   ],
+   "yaw": 0.0,
+   "dims": [
+    3.0,
+    3.0,
+    5.5
+   ],
+   "size": [
+    1.2,
+    5.5,
+    1.2
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "R",
+   "t": 117.5,
+   "along": 1.2,
+   "source": "site_furniture",
+   "breaks": ""
+  },
+  {
+   "name": "Lamp_30",
+   "species": "streetlight",
+   "at": [
+    36.5,
+    -31.7
+   ],
+   "yaw": 0.0,
+   "dims": [
+    0.7,
+    0.3,
+    6.0
+   ],
+   "size": [
+    0.7,
+    6.0,
+    0.3
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "R",
+   "t": 130.0,
+   "along": 0.7,
+   "source": "site_furniture",
+   "breaks": ""
+  },
+  {
+   "name": "Tree_31",
+   "species": "callery_pear",
+   "at": [
+    49.0,
+    -31.45
+   ],
+   "yaw": 0.0,
+   "dims": [
+    3.0,
+    3.0,
+    5.5
+   ],
+   "size": [
+    1.2,
+    5.5,
+    1.2
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "R",
+   "t": 142.5,
+   "along": 1.2,
+   "source": "site_furniture",
+   "breaks": ""
+  },
+  {
+   "name": "Lamp_32",
+   "species": "streetlight",
+   "at": [
+    61.5,
+    -31.7
+   ],
+   "yaw": 0.0,
+   "dims": [
+    0.7,
+    0.3,
+    6.0
+   ],
+   "size": [
+    0.7,
+    6.0,
+    0.3
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "R",
+   "t": 155.0,
+   "along": 0.7,
+   "source": "site_furniture",
+   "breaks": ""
+  },
+  {
+   "name": "Tree_33",
+   "species": "callery_pear",
+   "at": [
+    74.0,
+    -31.45
+   ],
+   "yaw": 0.0,
+   "dims": [
+    3.0,
+    3.0,
+    5.5
+   ],
+   "size": [
+    1.2,
+    5.5,
+    1.2
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "R",
+   "t": 167.5,
+   "along": 1.2,
+   "source": "site_furniture",
+   "breaks": ""
+  },
+  {
+   "name": "Lamp_34",
+   "species": "streetlight",
+   "at": [
+    86.5,
+    -31.7
+   ],
+   "yaw": 0.0,
+   "dims": [
+    0.7,
+    0.3,
+    6.0
+   ],
+   "size": [
+    0.7,
+    6.0,
+    0.3
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "R",
+   "t": 180.0,
+   "along": 0.7,
+   "source": "site_furniture",
+   "breaks": ""
+  },
+  {
+   "name": "Meter_0L0",
+   "species": "parking_meter",
+   "at": [
+    -90.5,
+    -18.8
+   ],
+   "yaw": 90.0,
+   "dims": [
+    0.22,
+    0.14,
+    1.35
+   ],
+   "size": [
+    0.14,
+    1.35,
+    0.22
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "L",
+   "t": 3.0,
+   "along": 0.14,
+   "source": "site_furniture",
+   "breaks": "bay L0"
+  },
+  {
+   "name": "Meter_0L1",
+   "species": "parking_meter",
+   "at": [
+    -84.5,
+    -18.8
+   ],
+   "yaw": 90.0,
+   "dims": [
+    0.22,
+    0.14,
+    1.35
+   ],
+   "size": [
+    0.14,
+    1.35,
+    0.22
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "L",
+   "t": 9.0,
+   "along": 0.14,
+   "source": "site_furniture",
+   "breaks": "bay L1"
+  },
+  {
+   "name": "Meter_0L2",
+   "species": "parking_meter",
+   "at": [
+    -78.5,
+    -18.8
+   ],
+   "yaw": 90.0,
+   "dims": [
+    0.22,
+    0.14,
+    1.35
+   ],
+   "size": [
+    0.14,
+    1.35,
+    0.22
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "L",
+   "t": 15.0,
+   "along": 0.14,
+   "source": "site_furniture",
+   "breaks": "bay L2"
+  },
+  {
+   "name": "Meter_0L3",
+   "species": "parking_meter",
+   "at": [
+    -72.5,
+    -18.8
+   ],
+   "yaw": 90.0,
+   "dims": [
+    0.22,
+    0.14,
+    1.35
+   ],
+   "size": [
+    0.14,
+    1.35,
+    0.22
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "L",
+   "t": 21.0,
+   "along": 0.14,
+   "source": "site_furniture",
+   "breaks": "bay L3"
+  },
+  {
+   "name": "Meter_0L4",
+   "species": "parking_meter",
+   "at": [
+    -66.5,
+    -18.8
+   ],
+   "yaw": 90.0,
+   "dims": [
+    0.22,
+    0.14,
+    1.35
+   ],
+   "size": [
+    0.14,
+    1.35,
+    0.22
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "L",
+   "t": 27.0,
+   "along": 0.14,
+   "source": "site_furniture",
+   "breaks": "bay L4"
+  },
+  {
+   "name": "Meter_0L5",
+   "species": "parking_meter",
+   "at": [
+    -60.5,
+    -18.8
+   ],
+   "yaw": 90.0,
+   "dims": [
+    0.22,
+    0.14,
+    1.35
+   ],
+   "size": [
+    0.14,
+    1.35,
+    0.22
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "L",
+   "t": 33.0,
+   "along": 0.14,
+   "source": "site_furniture",
+   "breaks": "bay L5"
+  },
+  {
+   "name": "Meter_0L6",
+   "species": "parking_meter",
+   "at": [
+    -54.5,
+    -18.8
+   ],
+   "yaw": 90.0,
+   "dims": [
+    0.22,
+    0.14,
+    1.35
+   ],
+   "size": [
+    0.14,
+    1.35,
+    0.22
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "L",
+   "t": 39.0,
+   "along": 0.14,
+   "source": "site_furniture",
+   "breaks": "bay L6"
+  },
+  {
+   "name": "Meter_0L7",
+   "species": "parking_meter",
+   "at": [
+    -48.5,
+    -18.8
+   ],
+   "yaw": 90.0,
+   "dims": [
+    0.22,
+    0.14,
+    1.35
+   ],
+   "size": [
+    0.14,
+    1.35,
+    0.22
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "L",
+   "t": 45.0,
+   "along": 0.14,
+   "source": "site_furniture",
+   "breaks": "bay L7"
+  },
+  {
+   "name": "Meter_0L8",
+   "species": "parking_meter",
+   "at": [
+    -42.5,
+    -18.8
+   ],
+   "yaw": 90.0,
+   "dims": [
+    0.22,
+    0.14,
+    1.35
+   ],
+   "size": [
+    0.14,
+    1.35,
+    0.22
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "L",
+   "t": 51.0,
+   "along": 0.14,
+   "source": "site_furniture",
+   "breaks": "bay L8"
+  },
+  {
+   "name": "Meter_0L9",
+   "species": "parking_meter",
+   "at": [
+    -36.5,
+    -18.8
+   ],
+   "yaw": 90.0,
+   "dims": [
+    0.22,
+    0.14,
+    1.35
+   ],
+   "size": [
+    0.14,
+    1.35,
+    0.22
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "L",
+   "t": 57.0,
+   "along": 0.14,
+   "source": "site_furniture",
+   "breaks": "bay L9"
+  },
+  {
+   "name": "Meter_0L10",
+   "species": "parking_meter",
+   "at": [
+    -30.5,
+    -18.8
+   ],
+   "yaw": 90.0,
+   "dims": [
+    0.22,
+    0.14,
+    1.35
+   ],
+   "size": [
+    0.14,
+    1.35,
+    0.22
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "L",
+   "t": 63.0,
+   "along": 0.14,
+   "source": "site_furniture",
+   "breaks": "bay L10"
+  },
+  {
+   "name": "Meter_0L11",
+   "species": "parking_meter",
+   "at": [
+    -24.5,
+    -18.8
+   ],
+   "yaw": 90.0,
+   "dims": [
+    0.22,
+    0.14,
+    1.35
+   ],
+   "size": [
+    0.14,
+    1.35,
+    0.22
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "L",
+   "t": 69.0,
+   "along": 0.14,
+   "source": "site_furniture",
+   "breaks": "bay L11"
+  },
+  {
+   "name": "Meter_0L12",
+   "species": "parking_meter",
+   "at": [
+    -18.5,
+    -18.8
+   ],
+   "yaw": 90.0,
+   "dims": [
+    0.22,
+    0.14,
+    1.35
+   ],
+   "size": [
+    0.14,
+    1.35,
+    0.22
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "L",
+   "t": 75.0,
+   "along": 0.14,
+   "source": "site_furniture",
+   "breaks": "bay L12"
+  },
+  {
+   "name": "Meter_0L13",
+   "species": "parking_meter",
+   "at": [
+    -12.5,
+    -18.8
+   ],
+   "yaw": 90.0,
+   "dims": [
+    0.22,
+    0.14,
+    1.35
+   ],
+   "size": [
+    0.14,
+    1.35,
+    0.22
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "L",
+   "t": 81.0,
+   "along": 0.14,
+   "source": "site_furniture",
+   "breaks": "bay L13"
+  },
+  {
+   "name": "Meter_0L14",
+   "species": "parking_meter",
+   "at": [
+    -6.5,
+    -18.8
+   ],
+   "yaw": 90.0,
+   "dims": [
+    0.22,
+    0.14,
+    1.35
+   ],
+   "size": [
+    0.14,
+    1.35,
+    0.22
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "L",
+   "t": 87.0,
+   "along": 0.14,
+   "source": "site_furniture",
+   "breaks": "bay L14"
+  },
+  {
+   "name": "Meter_0L15",
+   "species": "parking_meter",
+   "at": [
+    -0.5,
+    -18.8
+   ],
+   "yaw": 90.0,
+   "dims": [
+    0.22,
+    0.14,
+    1.35
+   ],
+   "size": [
+    0.14,
+    1.35,
+    0.22
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "L",
+   "t": 93.0,
+   "along": 0.14,
+   "source": "site_furniture",
+   "breaks": "bay L15"
+  },
+  {
+   "name": "Meter_0L16",
+   "species": "parking_meter",
+   "at": [
+    5.5,
+    -18.8
+   ],
+   "yaw": 90.0,
+   "dims": [
+    0.22,
+    0.14,
+    1.35
+   ],
+   "size": [
+    0.14,
+    1.35,
+    0.22
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "L",
+   "t": 99.0,
+   "along": 0.14,
+   "source": "site_furniture",
+   "breaks": "bay L16"
+  },
+  {
+   "name": "Meter_0L23",
+   "species": "parking_meter",
+   "at": [
+    47.5,
+    -18.8
+   ],
+   "yaw": 90.0,
+   "dims": [
+    0.22,
+    0.14,
+    1.35
+   ],
+   "size": [
+    0.14,
+    1.35,
+    0.22
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "L",
+   "t": 141.0,
+   "along": 0.14,
+   "source": "site_furniture",
+   "breaks": "bay L23"
+  },
+  {
+   "name": "Meter_0L24",
+   "species": "parking_meter",
+   "at": [
+    53.5,
+    -18.8
+   ],
+   "yaw": 90.0,
+   "dims": [
+    0.22,
+    0.14,
+    1.35
+   ],
+   "size": [
+    0.14,
+    1.35,
+    0.22
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "L",
+   "t": 147.0,
+   "along": 0.14,
+   "source": "site_furniture",
+   "breaks": "bay L24"
+  },
+  {
+   "name": "Meter_0L25",
+   "species": "parking_meter",
+   "at": [
+    59.5,
+    -18.8
+   ],
+   "yaw": 90.0,
+   "dims": [
+    0.22,
+    0.14,
+    1.35
+   ],
+   "size": [
+    0.14,
+    1.35,
+    0.22
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "L",
+   "t": 153.0,
+   "along": 0.14,
+   "source": "site_furniture",
+   "breaks": "bay L25"
+  },
+  {
+   "name": "Meter_0L26",
+   "species": "parking_meter",
+   "at": [
+    65.5,
+    -18.8
+   ],
+   "yaw": 90.0,
+   "dims": [
+    0.22,
+    0.14,
+    1.35
+   ],
+   "size": [
+    0.14,
+    1.35,
+    0.22
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "L",
+   "t": 159.0,
+   "along": 0.14,
+   "source": "site_furniture",
+   "breaks": "bay L26"
+  },
+  {
+   "name": "Meter_0L27",
+   "species": "parking_meter",
+   "at": [
+    71.5,
+    -18.8
+   ],
+   "yaw": 90.0,
+   "dims": [
+    0.22,
+    0.14,
+    1.35
+   ],
+   "size": [
+    0.14,
+    1.35,
+    0.22
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "L",
+   "t": 165.0,
+   "along": 0.14,
+   "source": "site_furniture",
+   "breaks": "bay L27"
+  },
+  {
+   "name": "Meter_0L28",
+   "species": "parking_meter",
+   "at": [
+    77.5,
+    -18.8
+   ],
+   "yaw": 90.0,
+   "dims": [
+    0.22,
+    0.14,
+    1.35
+   ],
+   "size": [
+    0.14,
+    1.35,
+    0.22
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "L",
+   "t": 171.0,
+   "along": 0.14,
+   "source": "site_furniture",
+   "breaks": "bay L28"
+  },
+  {
+   "name": "Meter_0L29",
+   "species": "parking_meter",
+   "at": [
+    83.5,
+    -18.8
+   ],
+   "yaw": 90.0,
+   "dims": [
+    0.22,
+    0.14,
+    1.35
+   ],
+   "size": [
+    0.14,
+    1.35,
+    0.22
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "L",
+   "t": 177.0,
+   "along": 0.14,
+   "source": "site_furniture",
+   "breaks": "bay L29"
+  },
+  {
+   "name": "Meter_0L30",
+   "species": "parking_meter",
+   "at": [
+    89.5,
+    -18.8
+   ],
+   "yaw": 90.0,
+   "dims": [
+    0.22,
+    0.14,
+    1.35
+   ],
+   "size": [
+    0.14,
+    1.35,
+    0.22
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "L",
+   "t": 183.0,
+   "along": 0.14,
+   "source": "site_furniture",
+   "breaks": "bay L30"
+  },
+  {
+   "name": "Meter_0R0",
+   "species": "parking_meter",
+   "at": [
+    -90.5,
+    -29.5
+   ],
+   "yaw": 90.0,
+   "dims": [
+    0.22,
+    0.14,
+    1.35
+   ],
+   "size": [
+    0.14,
+    1.35,
+    0.22
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "R",
+   "t": 3.0,
+   "along": 0.14,
+   "source": "site_furniture",
+   "breaks": "bay R0"
+  },
+  {
+   "name": "Meter_0R1",
+   "species": "parking_meter",
+   "at": [
+    -84.5,
+    -29.5
+   ],
+   "yaw": 90.0,
+   "dims": [
+    0.22,
+    0.14,
+    1.35
+   ],
+   "size": [
+    0.14,
+    1.35,
+    0.22
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "R",
+   "t": 9.0,
+   "along": 0.14,
+   "source": "site_furniture",
+   "breaks": "bay R1"
+  },
+  {
+   "name": "Meter_0R2",
+   "species": "parking_meter",
+   "at": [
+    -78.5,
+    -29.5
+   ],
+   "yaw": 90.0,
+   "dims": [
+    0.22,
+    0.14,
+    1.35
+   ],
+   "size": [
+    0.14,
+    1.35,
+    0.22
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "R",
+   "t": 15.0,
+   "along": 0.14,
+   "source": "site_furniture",
+   "breaks": "bay R2"
+  },
+  {
+   "name": "Meter_0R3",
+   "species": "parking_meter",
+   "at": [
+    -72.5,
+    -29.5
+   ],
+   "yaw": 90.0,
+   "dims": [
+    0.22,
+    0.14,
+    1.35
+   ],
+   "size": [
+    0.14,
+    1.35,
+    0.22
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "R",
+   "t": 21.0,
+   "along": 0.14,
+   "source": "site_furniture",
+   "breaks": "bay R3"
+  },
+  {
+   "name": "Meter_0R4",
+   "species": "parking_meter",
+   "at": [
+    -66.5,
+    -29.5
+   ],
+   "yaw": 90.0,
+   "dims": [
+    0.22,
+    0.14,
+    1.35
+   ],
+   "size": [
+    0.14,
+    1.35,
+    0.22
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "R",
+   "t": 27.0,
+   "along": 0.14,
+   "source": "site_furniture",
+   "breaks": "bay R4"
+  },
+  {
+   "name": "Meter_0R5",
+   "species": "parking_meter",
+   "at": [
+    -60.5,
+    -29.5
+   ],
+   "yaw": 90.0,
+   "dims": [
+    0.22,
+    0.14,
+    1.35
+   ],
+   "size": [
+    0.14,
+    1.35,
+    0.22
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "R",
+   "t": 33.0,
+   "along": 0.14,
+   "source": "site_furniture",
+   "breaks": "bay R5"
+  },
+  {
+   "name": "Meter_0R6",
+   "species": "parking_meter",
+   "at": [
+    -54.5,
+    -29.5
+   ],
+   "yaw": 90.0,
+   "dims": [
+    0.22,
+    0.14,
+    1.35
+   ],
+   "size": [
+    0.14,
+    1.35,
+    0.22
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "R",
+   "t": 39.0,
+   "along": 0.14,
+   "source": "site_furniture",
+   "breaks": "bay R6"
+  },
+  {
+   "name": "Meter_0R7",
+   "species": "parking_meter",
+   "at": [
+    -48.5,
+    -29.5
+   ],
+   "yaw": 90.0,
+   "dims": [
+    0.22,
+    0.14,
+    1.35
+   ],
+   "size": [
+    0.14,
+    1.35,
+    0.22
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "R",
+   "t": 45.0,
+   "along": 0.14,
+   "source": "site_furniture",
+   "breaks": "bay R7"
+  },
+  {
+   "name": "Meter_0R8",
+   "species": "parking_meter",
+   "at": [
+    -42.5,
+    -29.5
+   ],
+   "yaw": 90.0,
+   "dims": [
+    0.22,
+    0.14,
+    1.35
+   ],
+   "size": [
+    0.14,
+    1.35,
+    0.22
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "R",
+   "t": 51.0,
+   "along": 0.14,
+   "source": "site_furniture",
+   "breaks": "bay R8"
+  },
+  {
+   "name": "Meter_0R9",
+   "species": "parking_meter",
+   "at": [
+    -36.5,
+    -29.5
+   ],
+   "yaw": 90.0,
+   "dims": [
+    0.22,
+    0.14,
+    1.35
+   ],
+   "size": [
+    0.14,
+    1.35,
+    0.22
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "R",
+   "t": 57.0,
+   "along": 0.14,
+   "source": "site_furniture",
+   "breaks": "bay R9"
+  },
+  {
+   "name": "Meter_0R10",
+   "species": "parking_meter",
+   "at": [
+    -30.5,
+    -29.5
+   ],
+   "yaw": 90.0,
+   "dims": [
+    0.22,
+    0.14,
+    1.35
+   ],
+   "size": [
+    0.14,
+    1.35,
+    0.22
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "R",
+   "t": 63.0,
+   "along": 0.14,
+   "source": "site_furniture",
+   "breaks": "bay R10"
+  },
+  {
+   "name": "Meter_0R11",
+   "species": "parking_meter",
+   "at": [
+    -24.5,
+    -29.5
+   ],
+   "yaw": 90.0,
+   "dims": [
+    0.22,
+    0.14,
+    1.35
+   ],
+   "size": [
+    0.14,
+    1.35,
+    0.22
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "R",
+   "t": 69.0,
+   "along": 0.14,
+   "source": "site_furniture",
+   "breaks": "bay R11"
+  },
+  {
+   "name": "Meter_0R12",
+   "species": "parking_meter",
+   "at": [
+    -18.5,
+    -29.5
+   ],
+   "yaw": 90.0,
+   "dims": [
+    0.22,
+    0.14,
+    1.35
+   ],
+   "size": [
+    0.14,
+    1.35,
+    0.22
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "R",
+   "t": 75.0,
+   "along": 0.14,
+   "source": "site_furniture",
+   "breaks": "bay R12"
+  },
+  {
+   "name": "Meter_0R13",
+   "species": "parking_meter",
+   "at": [
+    -12.5,
+    -29.5
+   ],
+   "yaw": 90.0,
+   "dims": [
+    0.22,
+    0.14,
+    1.35
+   ],
+   "size": [
+    0.14,
+    1.35,
+    0.22
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "R",
+   "t": 81.0,
+   "along": 0.14,
+   "source": "site_furniture",
+   "breaks": "bay R13"
+  },
+  {
+   "name": "Meter_0R14",
+   "species": "parking_meter",
+   "at": [
+    -6.5,
+    -29.5
+   ],
+   "yaw": 90.0,
+   "dims": [
+    0.22,
+    0.14,
+    1.35
+   ],
+   "size": [
+    0.14,
+    1.35,
+    0.22
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "R",
+   "t": 87.0,
+   "along": 0.14,
+   "source": "site_furniture",
+   "breaks": "bay R14"
+  },
+  {
+   "name": "Meter_0R15",
+   "species": "parking_meter",
+   "at": [
+    -0.5,
+    -29.5
+   ],
+   "yaw": 90.0,
+   "dims": [
+    0.22,
+    0.14,
+    1.35
+   ],
+   "size": [
+    0.14,
+    1.35,
+    0.22
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "R",
+   "t": 93.0,
+   "along": 0.14,
+   "source": "site_furniture",
+   "breaks": "bay R15"
+  },
+  {
+   "name": "Meter_0R16",
+   "species": "parking_meter",
+   "at": [
+    5.5,
+    -29.5
+   ],
+   "yaw": 90.0,
+   "dims": [
+    0.22,
+    0.14,
+    1.35
+   ],
+   "size": [
+    0.14,
+    1.35,
+    0.22
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "R",
+   "t": 99.0,
+   "along": 0.14,
+   "source": "site_furniture",
+   "breaks": "bay R16"
+  },
+  {
+   "name": "Meter_0R23",
+   "species": "parking_meter",
+   "at": [
+    47.5,
+    -29.5
+   ],
+   "yaw": 90.0,
+   "dims": [
+    0.22,
+    0.14,
+    1.35
+   ],
+   "size": [
+    0.14,
+    1.35,
+    0.22
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "R",
+   "t": 141.0,
+   "along": 0.14,
+   "source": "site_furniture",
+   "breaks": "bay R23"
+  },
+  {
+   "name": "Meter_0R24",
+   "species": "parking_meter",
+   "at": [
+    53.5,
+    -29.5
+   ],
+   "yaw": 90.0,
+   "dims": [
+    0.22,
+    0.14,
+    1.35
+   ],
+   "size": [
+    0.14,
+    1.35,
+    0.22
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "R",
+   "t": 147.0,
+   "along": 0.14,
+   "source": "site_furniture",
+   "breaks": "bay R24"
+  },
+  {
+   "name": "Meter_0R25",
+   "species": "parking_meter",
+   "at": [
+    59.5,
+    -29.5
+   ],
+   "yaw": 90.0,
+   "dims": [
+    0.22,
+    0.14,
+    1.35
+   ],
+   "size": [
+    0.14,
+    1.35,
+    0.22
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "R",
+   "t": 153.0,
+   "along": 0.14,
+   "source": "site_furniture",
+   "breaks": "bay R25"
+  },
+  {
+   "name": "Meter_0R26",
+   "species": "parking_meter",
+   "at": [
+    65.5,
+    -29.5
+   ],
+   "yaw": 90.0,
+   "dims": [
+    0.22,
+    0.14,
+    1.35
+   ],
+   "size": [
+    0.14,
+    1.35,
+    0.22
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "R",
+   "t": 159.0,
+   "along": 0.14,
+   "source": "site_furniture",
+   "breaks": "bay R26"
+  },
+  {
+   "name": "Meter_0R27",
+   "species": "parking_meter",
+   "at": [
+    71.5,
+    -29.5
+   ],
+   "yaw": 90.0,
+   "dims": [
+    0.22,
+    0.14,
+    1.35
+   ],
+   "size": [
+    0.14,
+    1.35,
+    0.22
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "R",
+   "t": 165.0,
+   "along": 0.14,
+   "source": "site_furniture",
+   "breaks": "bay R27"
+  },
+  {
+   "name": "Meter_0R28",
+   "species": "parking_meter",
+   "at": [
+    77.5,
+    -29.5
+   ],
+   "yaw": 90.0,
+   "dims": [
+    0.22,
+    0.14,
+    1.35
+   ],
+   "size": [
+    0.14,
+    1.35,
+    0.22
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "R",
+   "t": 171.0,
+   "along": 0.14,
+   "source": "site_furniture",
+   "breaks": "bay R28"
+  },
+  {
+   "name": "Meter_0R29",
+   "species": "parking_meter",
+   "at": [
+    83.5,
+    -29.5
+   ],
+   "yaw": 90.0,
+   "dims": [
+    0.22,
+    0.14,
+    1.35
+   ],
+   "size": [
+    0.14,
+    1.35,
+    0.22
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "R",
+   "t": 177.0,
+   "along": 0.14,
+   "source": "site_furniture",
+   "breaks": "bay R29"
+  },
+  {
+   "name": "Meter_0R30",
+   "species": "parking_meter",
+   "at": [
+    89.5,
+    -29.5
+   ],
+   "yaw": 90.0,
+   "dims": [
+    0.22,
+    0.14,
+    1.35
+   ],
+   "size": [
+    0.14,
+    1.35,
+    0.22
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "R",
+   "t": 183.0,
+   "along": 0.14,
+   "source": "site_furniture",
+   "breaks": "bay R30"
+  },
+  {
+   "name": "Signal_1L",
+   "species": "traffic_signal",
+   "at": [
+    17.462,
+    -15.75
+   ],
+   "yaw": 270.0,
+   "dims": [
+    8.0,
+    0.62,
+    6.5
+   ],
+   "size": [
+    0.7,
+    6.5,
+    0.7
+   ],
+   "base": "sidewalk",
+   "road": 1,
+   "kerb": "L",
+   "t": 8.4,
+   "along": 0.7,
+   "source": "site_furniture",
+   "breaks": "junction@0.0"
+  },
+  {
+   "name": "Tree_35",
+   "species": "london_plane",
+   "at": [
+    17.712,
+    -6.65
+   ],
+   "yaw": 90.0,
+   "dims": [
+    5.0,
+    5.0,
+    6.5
+   ],
+   "size": [
+    1.2,
+    6.5,
+    1.2
+   ],
+   "base": "sidewalk",
+   "road": 1,
+   "kerb": "L",
+   "t": 17.5,
+   "along": 1.2,
+   "source": "site_furniture",
+   "breaks": ""
+  },
+  {
+   "name": "Lamp_36",
+   "species": "streetlight",
+   "at": [
+    17.462,
+    5.85
+   ],
+   "yaw": 90.0,
+   "dims": [
+    0.7,
+    0.3,
+    6.0
+   ],
+   "size": [
+    0.3,
+    6.0,
+    0.7
+   ],
+   "base": "sidewalk",
+   "road": 1,
+   "kerb": "L",
+   "t": 30.0,
+   "along": 0.7,
+   "source": "site_furniture",
+   "breaks": ""
+  },
+  {
+   "name": "Tree_37",
+   "species": "london_plane",
+   "at": [
+    17.712,
+    18.35
+   ],
+   "yaw": 90.0,
+   "dims": [
+    5.0,
+    5.0,
+    6.5
+   ],
+   "size": [
+    1.2,
+    6.5,
+    1.2
+   ],
+   "base": "sidewalk",
+   "road": 1,
+   "kerb": "L",
+   "t": 42.5,
+   "along": 1.2,
+   "source": "site_furniture",
+   "breaks": ""
+  },
+  {
+   "name": "BusShelter_38",
+   "species": "bus_shelter",
+   "at": [
+    17.862,
+    9.975
+   ],
+   "yaw": 90.0,
+   "dims": [
+    3.0,
+    1.5,
+    2.5
+   ],
+   "size": [
+    1.5,
+    2.5,
+    3.0
+   ],
+   "base": "sidewalk",
+   "road": 1,
+   "kerb": "L",
+   "t": 34.125,
+   "along": 3.0,
+   "source": "site_furniture",
+   "breaks": "stop@34.1"
+  },
+  {
+   "name": "Bench_39",
+   "species": "bench",
+   "at": [
+    17.512,
+    9.975
+   ],
+   "yaw": 90.0,
+   "dims": [
+    1.8,
+    0.5,
+    0.45
+   ],
+   "size": [
+    0.5,
+    0.45,
+    1.8
+   ],
+   "base": "sidewalk",
+   "road": 1,
+   "kerb": "L",
+   "t": 34.125,
+   "along": 1.8,
+   "source": "site_furniture",
+   "breaks": "stop@34.1"
+  },
+  {
+   "name": "StopFlag_40",
+   "species": "sign_post",
+   "at": [
+    17.462,
+    7.475
+   ],
+   "yaw": 180.0,
+   "dims": [
+    0.3048,
+    0.06,
+    2.5908
+   ],
+   "size": [
+    0.1,
+    2.5908,
+    0.1
+   ],
+   "base": "sidewalk",
+   "road": 1,
+   "kerb": "L",
+   "t": 31.625,
+   "along": 0.1,
+   "source": "site_furniture",
+   "breaks": "stop@34.1",
+   "blade": "bus_stop"
+  },
+  {
+   "name": "mailbox_1L0",
+   "species": "mailbox",
+   "at": [
+    17.462,
+    7.875
+   ],
+   "yaw": 90.0,
+   "dims": [
+    0.6,
+    0.7,
+    1.15
+   ],
+   "size": [
+    0.7,
+    1.15,
+    0.6
+   ],
+   "base": "sidewalk",
+   "road": 1,
+   "kerb": "L",
+   "t": 32.025,
+   "along": 0.6,
+   "source": "site_furniture",
+   "breaks": "stop@34.1"
+  },
+  {
+   "name": "newspaper_box_1L1",
+   "species": "newspaper_box",
+   "at": [
+    17.462,
+    4.475
+   ],
+   "yaw": 90.0,
+   "dims": [
+    0.42,
+    0.45,
+    1.15
+   ],
+   "size": [
+    0.45,
+    1.15,
+    0.42
+   ],
+   "base": "sidewalk",
+   "road": 1,
+   "kerb": "L",
+   "t": 28.625,
+   "along": 0.42,
+   "source": "site_furniture",
+   "breaks": "stop@34.1"
+  },
+  {
+   "name": "newspaper_box_1L2",
+   "species": "newspaper_box",
+   "at": [
+    17.462,
+    3.375
+   ],
+   "yaw": 90.0,
+   "dims": [
+    0.42,
+    0.45,
+    1.15
+   ],
+   "size": [
+    0.45,
+    1.15,
+    0.42
+   ],
+   "base": "sidewalk",
+   "road": 1,
+   "kerb": "L",
+   "t": 27.525,
+   "along": 0.42,
+   "source": "site_furniture",
+   "breaks": "stop@34.1"
+  },
+  {
+   "name": "payphone_1L3",
+   "species": "payphone",
+   "at": [
+    17.462,
+    2.075
+   ],
+   "yaw": 270.0,
+   "dims": [
+    0.75,
+    0.5,
+    2.3
+   ],
+   "size": [
+    0.5,
+    2.3,
+    0.75
+   ],
+   "base": "sidewalk",
+   "road": 1,
+   "kerb": "L",
+   "t": 26.225,
+   "along": 0.75,
+   "source": "site_furniture",
+   "breaks": "stop@34.1"
+  },
+  {
+   "name": "Tree_41",
+   "species": "london_plane",
+   "at": [
+    32.312,
+    -6.65
+   ],
+   "yaw": 90.0,
+   "dims": [
+    5.0,
+    5.0,
+    6.5
+   ],
+   "size": [
+    1.2,
+    6.5,
+    1.2
+   ],
+   "base": "sidewalk",
+   "road": 1,
+   "kerb": "R",
+   "t": 17.5,
+   "along": 1.2,
+   "source": "site_furniture",
+   "breaks": ""
+  },
+  {
+   "name": "Lamp_42",
+   "species": "streetlight",
+   "at": [
+    32.562,
+    5.85
+   ],
+   "yaw": 90.0,
+   "dims": [
+    0.7,
+    0.3,
+    6.0
+   ],
+   "size": [
+    0.3,
+    6.0,
+    0.7
+   ],
+   "base": "sidewalk",
+   "road": 1,
+   "kerb": "R",
+   "t": 30.0,
+   "along": 0.7,
+   "source": "site_furniture",
+   "breaks": ""
+  },
+  {
+   "name": "Meter_1L4",
+   "species": "parking_meter",
+   "at": [
+    19.662,
+    2.85
+   ],
+   "yaw": 180.0,
+   "dims": [
+    0.22,
+    0.14,
+    1.35
+   ],
+   "size": [
+    0.22,
+    1.35,
+    0.14
+   ],
+   "base": "sidewalk",
+   "road": 1,
+   "kerb": "L",
+   "t": 27.0,
+   "along": 0.14,
+   "source": "site_furniture",
+   "breaks": "bay L4"
+  },
+  {
+   "name": "Meter_1L5",
+   "species": "parking_meter",
+   "at": [
+    19.662,
+    8.85
+   ],
+   "yaw": 180.0,
+   "dims": [
+    0.22,
+    0.14,
+    1.35
+   ],
+   "size": [
+    0.22,
+    1.35,
+    0.14
+   ],
+   "base": "sidewalk",
+   "road": 1,
+   "kerb": "L",
+   "t": 33.0,
+   "along": 0.14,
+   "source": "site_furniture",
+   "breaks": "bay L5"
+  },
+  {
+   "name": "Meter_1L6",
+   "species": "parking_meter",
+   "at": [
+    19.662,
+    14.85
+   ],
+   "yaw": 180.0,
+   "dims": [
+    0.22,
+    0.14,
+    1.35
+   ],
+   "size": [
+    0.22,
+    1.35,
+    0.14
+   ],
+   "base": "sidewalk",
+   "road": 1,
+   "kerb": "L",
+   "t": 39.0,
+   "along": 0.14,
+   "source": "site_furniture",
+   "breaks": "bay L6"
+  },
+  {
+   "name": "Meter_1L7",
+   "species": "parking_meter",
+   "at": [
+    19.662,
+    20.85
+   ],
+   "yaw": 180.0,
+   "dims": [
+    0.22,
+    0.14,
+    1.35
+   ],
+   "size": [
+    0.22,
+    1.35,
+    0.14
+   ],
+   "base": "sidewalk",
+   "road": 1,
+   "kerb": "L",
+   "t": 45.0,
+   "along": 0.14,
+   "source": "site_furniture",
+   "breaks": "bay L7"
+  },
+  {
+   "name": "Meter_1L8",
+   "species": "parking_meter",
+   "at": [
+    19.662,
+    26.85
+   ],
+   "yaw": 180.0,
+   "dims": [
+    0.22,
+    0.14,
+    1.35
+   ],
+   "size": [
+    0.22,
+    1.35,
+    0.14
+   ],
+   "base": "sidewalk",
+   "road": 1,
+   "kerb": "L",
+   "t": 51.0,
+   "along": 0.14,
+   "source": "site_furniture",
+   "breaks": "bay L8"
+  },
+  {
+   "name": "Meter_1R3",
+   "species": "parking_meter",
+   "at": [
+    30.362,
+    -3.15
+   ],
+   "yaw": 180.0,
+   "dims": [
+    0.22,
+    0.14,
+    1.35
+   ],
+   "size": [
+    0.22,
+    1.35,
+    0.14
+   ],
+   "base": "sidewalk",
+   "road": 1,
+   "kerb": "R",
+   "t": 21.0,
+   "along": 0.14,
+   "source": "site_furniture",
+   "breaks": "bay R3"
+  },
+  {
+   "name": "Meter_1R4",
+   "species": "parking_meter",
+   "at": [
+    30.362,
+    2.85
+   ],
+   "yaw": 180.0,
+   "dims": [
+    0.22,
+    0.14,
+    1.35
+   ],
+   "size": [
+    0.22,
+    1.35,
+    0.14
+   ],
+   "base": "sidewalk",
+   "road": 1,
+   "kerb": "R",
+   "t": 27.0,
+   "along": 0.14,
+   "source": "site_furniture",
+   "breaks": "bay R4"
+  },
+  {
+   "name": "Meter_1R5",
+   "species": "parking_meter",
+   "at": [
+    30.362,
+    8.85
+   ],
+   "yaw": 180.0,
+   "dims": [
+    0.22,
+    0.14,
+    1.35
+   ],
+   "size": [
+    0.22,
+    1.35,
+    0.14
+   ],
+   "base": "sidewalk",
+   "road": 1,
+   "kerb": "R",
+   "t": 33.0,
+   "along": 0.14,
+   "source": "site_furniture",
+   "breaks": "bay R5"
+  },
+  {
+   "name": "Meter_1R6",
+   "species": "parking_meter",
+   "at": [
+    30.362,
+    14.85
+   ],
+   "yaw": 180.0,
+   "dims": [
+    0.22,
+    0.14,
+    1.35
+   ],
+   "size": [
+    0.22,
+    1.35,
+    0.14
+   ],
+   "base": "sidewalk",
+   "road": 1,
+   "kerb": "R",
+   "t": 39.0,
+   "along": 0.14,
+   "source": "site_furniture",
+   "breaks": "bay R6"
+  },
+  {
+   "name": "fire_hydrant_0L0",
+   "species": "fire_hydrant",
+   "at": [
+    -86.5,
+    -16.6
+   ],
+   "yaw": 0.0,
+   "dims": [
+    0.35,
+    0.35,
+    0.75
+   ],
+   "size": [
+    0.35,
+    0.75,
+    0.35
+   ],
+   "base": "sidewalk",
+   "road": 0,
+   "kerb": "L",
+   "t": 7.0,
+   "along": 0.35,
+   "source": "site_furniture",
+   "breaks": "spacing"
+  },
+  {
+   "name": "fire_hydrant_1L0",
+   "species": "fire_hydrant",
+   "at": [
+    17.462,
+    26.85
+   ],
+   "yaw": 90.0,
+   "dims": [
+    0.35,
+    0.35,
+    0.75
+   ],
+   "size": [
+    0.35,
+    0.75,
+    0.35
+   ],
+   "base": "sidewalk",
+   "road": 1,
+   "kerb": "L",
+   "t": 51.0,
+   "along": 0.35,
+   "source": "site_furniture",
+   "breaks": "spacing"
+  },
+  {
+   "name": "Dumpster_b0",
+   "species": "dumpster",
+   "at": [
+    -72.485,
+    16.8
+   ],
+   "yaw": 180.0,
+   "dims": [
+    1.83,
+    1.1,
+    1.3
+   ],
+   "size": [
+    1.83,
+    1.3,
+    1.1
+   ],
+   "base": "plate",
+   "variant": 1,
+   "building": "b0",
+   "wall": "N",
+   "source": "site_dumpsters",
+   "breaks": "service side of b0"
+  },
+  {
+   "name": "Dumpster_b1",
+   "species": "dumpster",
+   "at": [
+    11.485,
+    14.83
+   ],
+   "yaw": 180.0,
+   "dims": [
+    1.83,
+    1.1,
+    1.3
+   ],
+   "size": [
+    1.83,
+    1.3,
+    1.1
+   ],
+   "base": "plate",
+   "variant": 3,
+   "building": "b1",
+   "wall": "N",
+   "source": "site_dumpsters",
+   "breaks": "service side of b1"
+  },
+  {
+   "name": "Dumpster_b2",
+   "species": "dumpster",
+   "at": [
+    81.485,
+    12.8
+   ],
+   "yaw": 180.0,
+   "dims": [
+    1.83,
+    1.1,
+    1.3
+   ],
+   "size": [
+    1.83,
+    1.3,
+    1.1
+   ],
+   "base": "plate",
+   "variant": 1,
+   "building": "b2",
+   "wall": "N",
+   "source": "site_dumpsters",
+   "breaks": "service side of b2"
+  },
+  {
+   "at": [
+    -90.5,
+    -20.25
+   ],
+   "size": [
+    4.7,
+    1.73,
+    1.8
+   ],
+   "source": "site_parking",
+   "species": "simple_car",
+   "yaw": 270.0,
+   "dims": [
+    1.8,
+    4.7,
+    1.73
+   ],
+   "style": 2,
+   "car": "suv",
+   "breaks": "bay L0 on road 0"
+  },
+  {
+   "at": [
+    -84.5,
+    -20.25
+   ],
+   "size": [
+    3.8,
+    1.4,
+    1.6
+   ],
+   "source": "site_parking",
+   "species": "simple_car",
+   "yaw": 270.0,
+   "dims": [
+    1.6,
+    3.8,
+    1.4
+   ],
+   "style": 1,
+   "car": "hatchback",
+   "breaks": "bay L1 on road 0"
+  },
+  {
+   "at": [
+    -78.5,
+    -20.25
+   ],
+   "size": [
+    4.8,
+    1.42,
+    1.75
+   ],
+   "source": "site_parking",
+   "species": "simple_car",
+   "yaw": 270.0,
+   "dims": [
+    1.75,
+    4.8,
+    1.42
+   ],
+   "style": 1,
+   "car": "sedan",
+   "breaks": "bay L2 on road 0"
+  },
+  {
+   "at": [
+    -60.5,
+    -20.25
+   ],
+   "size": [
+    4.7,
+    1.73,
+    1.8
+   ],
+   "source": "site_parking",
+   "species": "simple_car",
+   "yaw": 270.0,
+   "dims": [
+    1.8,
+    4.7,
+    1.73
+   ],
+   "style": 1,
+   "car": "suv",
+   "breaks": "bay L5 on road 0"
+  },
+  {
+   "at": [
+    -48.5,
+    -20.25
+   ],
+   "size": [
+    4.3,
+    1.45,
+    1.75
+   ],
+   "source": "site_parking",
+   "species": "simple_car",
+   "yaw": 270.0,
+   "dims": [
+    1.75,
+    4.3,
+    1.45
+   ],
+   "style": 1,
+   "car": "compact",
+   "breaks": "bay L7 on road 0"
+  },
+  {
+   "at": [
+    -36.5,
+    -20.25
+   ],
+   "size": [
+    4.8,
+    1.42,
+    1.75
+   ],
+   "source": "site_parking",
+   "species": "simple_car",
+   "yaw": 270.0,
+   "dims": [
+    1.75,
+    4.8,
+    1.42
+   ],
+   "style": 2,
+   "car": "sedan",
+   "breaks": "bay L9 on road 0"
+  },
+  {
+   "at": [
+    -30.5,
+    -20.25
+   ],
+   "size": [
+    4.7,
+    1.73,
+    1.8
+   ],
+   "source": "site_parking",
+   "species": "simple_car",
+   "yaw": 270.0,
+   "dims": [
+    1.8,
+    4.7,
+    1.73
+   ],
+   "style": 2,
+   "car": "suv",
+   "breaks": "bay L10 on road 0"
+  },
+  {
+   "at": [
+    -24.5,
+    -20.25
+   ],
+   "size": [
+    4.7,
+    1.73,
+    1.8
+   ],
+   "source": "site_parking",
+   "species": "simple_car",
+   "yaw": 270.0,
+   "dims": [
+    1.8,
+    4.7,
+    1.73
+   ],
+   "style": 2,
+   "car": "suv",
+   "breaks": "bay L11 on road 0"
+  },
+  {
+   "at": [
+    -18.5,
+    -20.25
+   ],
+   "size": [
+    3.8,
+    1.4,
+    1.6
+   ],
+   "source": "site_parking",
+   "species": "simple_car",
+   "yaw": 270.0,
+   "dims": [
+    1.6,
+    3.8,
+    1.4
+   ],
+   "style": 1,
+   "car": "hatchback",
+   "breaks": "bay L12 on road 0"
+  },
+  {
+   "at": [
+    -0.5,
+    -20.25
+   ],
+   "size": [
+    3.8,
+    1.4,
+    1.6
+   ],
+   "source": "site_parking",
+   "species": "simple_car",
+   "yaw": 270.0,
+   "dims": [
+    1.6,
+    3.8,
+    1.4
+   ],
+   "style": 2,
+   "car": "hatchback",
+   "breaks": "bay L15 on road 0"
+  },
+  {
+   "at": [
+    5.5,
+    -20.25
+   ],
+   "size": [
+    4.8,
+    1.42,
+    1.75
+   ],
+   "source": "site_parking",
+   "species": "simple_car",
+   "yaw": 270.0,
+   "dims": [
+    1.75,
+    4.8,
+    1.42
+   ],
+   "style": 1,
+   "car": "sedan",
+   "breaks": "bay L16 on road 0"
+  },
+  {
+   "at": [
+    53.5,
+    -20.25
+   ],
+   "size": [
+    4.8,
+    1.42,
+    1.75
+   ],
+   "source": "site_parking",
+   "species": "simple_car",
+   "yaw": 270.0,
+   "dims": [
+    1.75,
+    4.8,
+    1.42
+   ],
+   "style": 1,
+   "car": "sedan",
+   "breaks": "bay L24 on road 0"
+  },
+  {
+   "at": [
+    65.5,
+    -20.25
+   ],
+   "size": [
+    4.8,
+    1.42,
+    1.75
+   ],
+   "source": "site_parking",
+   "species": "simple_car",
+   "yaw": 270.0,
+   "dims": [
+    1.75,
+    4.8,
+    1.42
+   ],
+   "style": 1,
+   "car": "sedan",
+   "breaks": "bay L26 on road 0"
+  },
+  {
+   "at": [
+    83.5,
+    -20.25
+   ],
+   "size": [
+    4.8,
+    1.42,
+    1.75
+   ],
+   "source": "site_parking",
+   "species": "simple_car",
+   "yaw": 270.0,
+   "dims": [
+    1.75,
+    4.8,
+    1.42
+   ],
+   "style": 2,
+   "car": "sedan",
+   "breaks": "bay L29 on road 0"
+  },
+  {
+   "at": [
+    89.5,
+    -20.25
+   ],
+   "size": [
+    4.7,
+    1.73,
+    1.8
+   ],
+   "source": "site_parking",
+   "species": "simple_car",
+   "yaw": 270.0,
+   "dims": [
+    1.8,
+    4.7,
+    1.73
+   ],
+   "style": 2,
+   "car": "suv",
+   "breaks": "bay L30 on road 0"
+  },
+  {
+   "at": [
+    -84.5,
+    -28.05
+   ],
+   "size": [
+    4.8,
+    1.42,
+    1.75
+   ],
+   "source": "site_parking",
+   "species": "simple_car",
+   "yaw": 90.0,
+   "dims": [
+    1.75,
+    4.8,
+    1.42
+   ],
+   "style": 1,
+   "car": "sedan",
+   "breaks": "bay R1 on road 0"
+  },
+  {
+   "at": [
+    -78.5,
+    -28.05
+   ],
+   "size": [
+    3.8,
+    1.4,
+    1.6
+   ],
+   "source": "site_parking",
+   "species": "simple_car",
+   "yaw": 90.0,
+   "dims": [
+    1.6,
+    3.8,
+    1.4
+   ],
+   "style": 1,
+   "car": "hatchback",
+   "breaks": "bay R2 on road 0"
+  },
+  {
+   "at": [
+    -66.5,
+    -28.05
+   ],
+   "size": [
+    4.8,
+    1.42,
+    1.75
+   ],
+   "source": "site_parking",
+   "species": "simple_car",
+   "yaw": 90.0,
+   "dims": [
+    1.75,
+    4.8,
+    1.42
+   ],
+   "style": 2,
+   "car": "sedan",
+   "breaks": "bay R4 on road 0"
+  },
+  {
+   "at": [
+    -54.5,
+    -28.05
+   ],
+   "size": [
+    4.8,
+    1.42,
+    1.75
+   ],
+   "source": "site_parking",
+   "species": "simple_car",
+   "yaw": 90.0,
+   "dims": [
+    1.75,
+    4.8,
+    1.42
+   ],
+   "style": 2,
+   "car": "sedan",
+   "breaks": "bay R6 on road 0"
+  },
+  {
+   "at": [
+    -48.5,
+    -28.05
+   ],
+   "size": [
+    4.3,
+    1.45,
+    1.75
+   ],
+   "source": "site_parking",
+   "species": "simple_car",
+   "yaw": 90.0,
+   "dims": [
+    1.75,
+    4.3,
+    1.45
+   ],
+   "style": 1,
+   "car": "compact",
+   "breaks": "bay R7 on road 0"
+  },
+  {
+   "at": [
+    -42.5,
+    -28.05
+   ],
+   "size": [
+    4.3,
+    1.45,
+    1.75
+   ],
+   "source": "site_parking",
+   "species": "simple_car",
+   "yaw": 90.0,
+   "dims": [
+    1.75,
+    4.3,
+    1.45
+   ],
+   "style": 2,
+   "car": "compact",
+   "breaks": "bay R8 on road 0"
+  },
+  {
+   "at": [
+    -36.5,
+    -28.05
+   ],
+   "size": [
+    4.3,
+    1.45,
+    1.75
+   ],
+   "source": "site_parking",
+   "species": "simple_car",
+   "yaw": 90.0,
+   "dims": [
+    1.75,
+    4.3,
+    1.45
+   ],
+   "style": 2,
+   "car": "compact",
+   "breaks": "bay R9 on road 0"
+  },
+  {
+   "at": [
+    -24.5,
+    -28.05
+   ],
+   "size": [
+    4.3,
+    1.45,
+    1.75
+   ],
+   "source": "site_parking",
+   "species": "simple_car",
+   "yaw": 90.0,
+   "dims": [
+    1.75,
+    4.3,
+    1.45
+   ],
+   "style": 2,
+   "car": "compact",
+   "breaks": "bay R11 on road 0"
+  },
+  {
+   "at": [
+    -12.5,
+    -28.05
+   ],
+   "size": [
+    4.3,
+    1.45,
+    1.75
+   ],
+   "source": "site_parking",
+   "species": "simple_car",
+   "yaw": 90.0,
+   "dims": [
+    1.75,
+    4.3,
+    1.45
+   ],
+   "style": 1,
+   "car": "compact",
+   "breaks": "bay R13 on road 0"
+  },
+  {
+   "at": [
+    -6.5,
+    -28.05
+   ],
+   "size": [
+    4.3,
+    1.45,
+    1.75
+   ],
+   "source": "site_parking",
+   "species": "simple_car",
+   "yaw": 90.0,
+   "dims": [
+    1.75,
+    4.3,
+    1.45
+   ],
+   "style": 2,
+   "car": "compact",
+   "breaks": "bay R14 on road 0"
+  },
+  {
+   "at": [
+    -0.5,
+    -28.05
+   ],
+   "size": [
+    3.8,
+    1.4,
+    1.6
+   ],
+   "source": "site_parking",
+   "species": "simple_car",
+   "yaw": 90.0,
+   "dims": [
+    1.6,
+    3.8,
+    1.4
+   ],
+   "style": 1,
+   "car": "hatchback",
+   "breaks": "bay R15 on road 0"
+  },
+  {
+   "at": [
+    53.5,
+    -28.05
+   ],
+   "size": [
+    4.8,
+    1.42,
+    1.75
+   ],
+   "source": "site_parking",
+   "species": "simple_car",
+   "yaw": 90.0,
+   "dims": [
+    1.75,
+    4.8,
+    1.42
+   ],
+   "style": 1,
+   "car": "sedan",
+   "breaks": "bay R24 on road 0"
+  },
+  {
+   "at": [
+    65.5,
+    -28.05
+   ],
+   "size": [
+    4.8,
+    1.42,
+    1.75
+   ],
+   "source": "site_parking",
+   "species": "simple_car",
+   "yaw": 90.0,
+   "dims": [
+    1.75,
+    4.8,
+    1.42
+   ],
+   "style": 2,
+   "car": "sedan",
+   "breaks": "bay R26 on road 0"
+  },
+  {
+   "at": [
+    77.5,
+    -28.05
+   ],
+   "size": [
+    4.7,
+    1.73,
+    1.8
+   ],
+   "source": "site_parking",
+   "species": "simple_car",
+   "yaw": 90.0,
+   "dims": [
+    1.8,
+    4.7,
+    1.73
+   ],
+   "style": 2,
+   "car": "suv",
+   "breaks": "bay R28 on road 0"
+  },
+  {
+   "at": [
+    83.5,
+    -28.05
+   ],
+   "size": [
+    3.8,
+    1.4,
+    1.6
+   ],
+   "source": "site_parking",
+   "species": "simple_car",
+   "yaw": 90.0,
+   "dims": [
+    1.6,
+    3.8,
+    1.4
+   ],
+   "style": 2,
+   "car": "hatchback",
+   "breaks": "bay R29 on road 0"
+  },
+  {
+   "at": [
+    21.112,
+    14.85
+   ],
+   "size": [
+    1.8,
+    1.73,
+    4.7
+   ],
+   "source": "site_parking",
+   "species": "simple_car",
+   "yaw": 0.0,
+   "dims": [
+    1.8,
+    4.7,
+    1.73
+   ],
+   "style": 2,
+   "car": "suv",
+   "breaks": "bay L6 on road 1"
+  },
+  {
+   "at": [
+    21.112,
+    26.85
+   ],
+   "size": [
+    1.75,
+    1.45,
+    4.3
+   ],
+   "source": "site_parking",
+   "species": "simple_car",
+   "yaw": 0.0,
+   "dims": [
+    1.75,
+    4.3,
+    1.45
+   ],
+   "style": 1,
+   "car": "compact",
+   "breaks": "bay L8 on road 1"
+  },
+  {
+   "at": [
+    28.912,
+    -3.15
+   ],
+   "size": [
+    1.75,
+    1.42,
+    4.8
+   ],
+   "source": "site_parking",
+   "species": "simple_car",
+   "yaw": 180.0,
+   "dims": [
+    1.75,
+    4.8,
+    1.42
+   ],
+   "style": 2,
+   "car": "sedan",
+   "breaks": "bay R3 on road 1"
+  },
+  {
+   "at": [
+    28.912,
+    2.85
+   ],
+   "size": [
+    1.8,
+    1.73,
+    4.7
+   ],
+   "source": "site_parking",
+   "species": "simple_car",
+   "yaw": 180.0,
+   "dims": [
+    1.8,
+    4.7,
+    1.73
+   ],
+   "style": 1,
+   "car": "suv",
+   "breaks": "bay R4 on road 1"
+  },
+  {
+   "name": "Fence_0_6",
+   "species": "chain_link_fence",
+   "at": [
+    -43.5,
+    -34.18
+   ],
+   "yaw": 0.0,
+   "dims": [
+    3.0,
+    0.0603,
+    1.83
+   ],
+   "size": [
+    3.0,
+    1.83,
+    0.0603
+   ],
+   "base": "plate",
+   "source": "site_fences",
+   "breaks": "between e6 and e7"
+  },
+  {
+   "name": "Fence_0_11",
+   "species": "chain_link_fence",
+   "at": [
+    -9.5,
+    -34.18
+   ],
+   "yaw": 0.0,
+   "dims": [
+    3.0,
+    0.0603,
+    1.83
+   ],
+   "size": [
+    3.0,
+    1.83,
+    0.0603
+   ],
+   "base": "plate",
+   "source": "site_fences",
+   "breaks": "between e11 and e12"
+  },
+  {
+   "name": "Fence_0_19",
+   "species": "chain_link_fence",
+   "at": [
+    43.4,
+    -34.18
+   ],
+   "yaw": 0.0,
+   "dims": [
+    3.0,
+    0.0603,
+    1.83
+   ],
+   "size": [
+    3.0,
+    1.83,
+    0.0603
+   ],
+   "base": "plate",
+   "source": "site_fences",
+   "breaks": "between e19 and e20"
+  },
+  {
+   "name": "Fence_0_25",
+   "species": "chain_link_fence",
+   "at": [
+    -96.25,
+    -34.18
+   ],
+   "yaw": 0.0,
+   "dims": [
+    13.5,
+    0.0603,
+    1.83
+   ],
+   "size": [
+    13.5,
+    1.83,
+    0.0603
+   ],
+   "base": "plate",
+   "source": "site_fences",
+   "breaks": "row 0's end beyond e0"
+  },
+  {
+   "name": "Fence_0_26",
+   "species": "chain_link_fence",
+   "at": [
+    92.9,
+    -34.18
+   ],
+   "yaw": 0.0,
+   "dims": [
+    20.2,
+    0.0603,
+    1.83
+   ],
+   "size": [
+    20.2,
+    1.83,
+    0.0603
+   ],
+   "base": "plate",
+   "source": "site_fences",
+   "breaks": "row 0's end beyond e25"
+  },
+  {
+   "at": [
+    -26.919,
+    13.61
+   ],
+   "size": [
+    2.4,
+    2.8,
+    6.0
+   ],
+   "source": "site_cover",
+   "breaks": "route@0 -> Enemy_5",
+   "span": 42.4,
+   "species": "box_truck",
+   "yaw": 0.0,
+   "dims": [
+    2.4,
+    6.0,
+    2.8
+   ]
+  }
+ ],
+ "site_markers": [
+  {
+   "type": "crew_spawn",
+   "at": [
+    18.812,
+    -1.8
+   ],
+   "source": "getaway_van"
+  },
+  {
+   "type": "extraction",
+   "at": [
+    18.812,
+    -1.8
+   ],
+   "source": "getaway_van",
+   "getaway": "step_van"
+  }
+ ],
+ "fields": [
+  {
+   "name": "field_0",
+   "road": 1,
+   "side": "R",
+   "t": [
+    37.25,
+    55.55
+   ],
+   "bays": 4,
+   "depth": 10.8,
+   "rect": [
+    33.012,
+    13.1,
+    43.812,
+    31.4
+   ],
+   "at": [
+    38.412,
+    22.25
+   ],
+   "size": [
+    18.3,
+    10.8
+   ],
+   "yaw_deg": 90.0,
+   "driveway": {
+    "a": [
+     30.012,
+     22.25
+    ],
+    "b": [
+     33.012,
+     22.25
+    ],
+    "width": 7.3
+   },
+   "source": "site_fields"
+  }
+ ],
+ "driveways": [
+  {
+   "a": [
+    30.012,
+    22.25
+   ],
+   "b": [
+    33.012,
+    22.25
+   ],
+   "width": 7.3
+  }
+ ],
+ "yards": [
+  {
+   "at": [
+    -72.317,
+    19.0
+   ],
+   "size_x": 3.365,
+   "size_y": 6.0,
+   "building": "b0",
+   "wall": "N",
+   "dumpster": "Dumpster_b0",
+   "out": 6.0,
+   "apron": 3.0,
+   "source": "site_yards"
+  },
+  {
+   "at": [
+    11.317,
+    17.03
+   ],
+   "size_x": 3.365,
+   "size_y": 6.0,
+   "building": "b1",
+   "wall": "N",
+   "dumpster": "Dumpster_b1",
+   "out": 6.0,
+   "apron": 3.0,
+   "source": "site_yards"
+  },
+  {
+   "at": [
+    81.317,
+    15.0
+   ],
+   "size_x": 3.365,
+   "size_y": 6.0,
+   "building": "b2",
+   "wall": "N",
+   "dumpster": "Dumpster_b2",
+   "out": 6.0,
+   "apron": 3.0,
+   "source": "site_yards"
+  }
+ ],
+ "hung": [
+  {
+   "name": "alley_poster_b0_E_0",
+   "species": "poster_wall",
+   "form": "alley",
+   "variant": 1,
+   "at": [
+    -33.841,
+    -2.7625
+   ],
+   "yaw": 90.0,
+   "dims": [
+    3.0,
+    0.01,
+    0.814
+   ],
+   "z": 1.45,
+   "base": null,
+   "host": "wall:b0:E",
+   "source": "site_posters",
+   "wall": "alley",
+   "faces": "b1",
+   "gap": 11.0
+  },
+  {
+   "name": "alley_poster_b0_E_1",
+   "species": "poster_wall",
+   "form": "alley",
+   "variant": 3,
+   "at": [
+    -33.841,
+    11.7775
+   ],
+   "yaw": 90.0,
+   "dims": [
+    3.0,
+    0.01,
+    0.814
+   ],
+   "z": 1.69,
+   "base": null,
+   "host": "wall:b0:E",
+   "source": "site_posters",
+   "wall": "alley",
+   "faces": "b1",
+   "gap": 11.0
+  },
+  {
+   "name": "alley_poster_b1_W_0",
+   "species": "poster_wall",
+   "form": "alley",
+   "variant": 3,
+   "at": [
+    -23.159,
+    -6.945
+   ],
+   "yaw": 270.0,
+   "dims": [
+    3.0,
+    0.01,
+    0.814
+   ],
+   "z": 1.69,
+   "base": null,
+   "host": "wall:b1:W",
+   "source": "site_posters",
+   "wall": "alley",
+   "faces": "b0",
+   "gap": 11.0
+  },
+  {
+   "name": "alley_poster_b1_W_1",
+   "species": "poster_wall",
+   "form": "alley",
+   "variant": 1,
+   "at": [
+    -23.159,
+    7.005
+   ],
+   "yaw": 270.0,
+   "dims": [
+    3.0,
+    0.01,
+    0.814
+   ],
+   "z": 1.45,
+   "base": null,
+   "host": "wall:b1:W",
+   "source": "site_posters",
+   "wall": "alley",
+   "faces": "b0",
+   "gap": 11.0
+  },
+  {
+   "name": "alley_poster_b2_N_0",
+   "species": "poster_wall",
+   "form": "alley",
+   "variant": 0,
+   "at": [
+    61.0875,
+    12.159
+   ],
+   "yaw": 180.0,
+   "dims": [
+    3.0,
+    0.01,
+    0.814
+   ],
+   "z": 1.3,
+   "base": null,
+   "host": "wall:b2:N",
+   "source": "site_posters",
+   "wall": "rear"
+  },
+  {
+   "name": "alley_poster_b2_W_0",
+   "species": "poster_wall",
+   "form": "alley",
+   "variant": 3,
+   "at": [
+    36.841,
+    -7.55
+   ],
+   "yaw": 270.0,
+   "dims": [
+    3.0,
+    0.01,
+    0.814
+   ],
+   "z": 1.69,
+   "base": null,
+   "host": "wall:b2:W",
+   "source": "site_posters",
+   "wall": "side"
+  },
+  {
+   "name": "pole_flyers_7",
+   "species": "pole_flyers",
+   "form": "pair",
+   "variant": 0,
+   "at": [
+    -88.5,
+    -16.6
+   ],
+   "yaw": 270.0,
+   "dims": [
+    0.152,
+    0.152,
+    0.78
+   ],
+   "z": 1.5671,
+   "base": "sidewalk",
+   "host": "pole:cover_7",
+   "source": "site_posters",
+   "face": "along",
+   "lit": 0.866
+  },
+  {
+   "name": "pole_flyers_11",
+   "species": "pole_flyers",
+   "form": "pair",
+   "variant": 0,
+   "at": [
+    -38.5,
+    -16.6
+   ],
+   "yaw": 270.0,
+   "dims": [
+    0.152,
+    0.152,
+    0.78
+   ],
+   "z": 1.6546,
+   "base": "sidewalk",
+   "host": "pole:cover_11",
+   "source": "site_posters",
+   "face": "along",
+   "lit": 0.866
+  },
+  {
+   "name": "pole_flyers_15",
+   "species": "pole_flyers",
+   "form": "stack",
+   "variant": 1,
+   "at": [
+    11.5,
+    -16.6
+   ],
+   "yaw": 270.0,
+   "dims": [
+    0.152,
+    0.152,
+    1.12
+   ],
+   "z": 1.4127,
+   "base": "sidewalk",
+   "host": "pole:cover_15",
+   "source": "site_posters",
+   "face": "along",
+   "lit": 0.866
+  },
+  {
+   "name": "pole_flyers_45",
+   "species": "pole_flyers",
+   "form": "stack",
+   "variant": 0,
+   "at": [
+    86.5,
+    -31.7
+   ],
+   "yaw": 0.0,
+   "dims": [
+    0.152,
+    0.152,
+    1.12
+   ],
+   "z": 1.3498,
+   "base": "sidewalk",
+   "host": "pole:cover_45",
+   "source": "site_posters",
+   "face": "sidewalk",
+   "lit": 0.5
+  }
+ ]
+}

@@ -230,6 +230,32 @@ def solid_rects(site_spec, margin: float = WALL_MARGIN) -> list:
     return footprints(site_spec, margin) + blocker_rects(site_spec, margin)
 
 
+def cover_rects(site_spec, margin: float = WALL_MARGIN) -> list:
+    """Every cover piece's plan rect, grown by ``margin``: the getaway van,
+    the parked cars, the kerb-line furniture, the pieces `site_cover`
+    stands on the routes.
+
+    ``size`` is [plan x, height, plan y] -- the Godot frame `lot.py`
+    stands each piece's box in, at half the MIDDLE number -- so the
+    middle number is the height and the third is the depth. A piece
+    with no ``size`` is `lot.COVER`'s metre cube.
+
+    The crew's spawns ask this beside `solid_rects` (0.98.1).
+    `place_enemies` does not: it runs before most of the cover exists --
+    `assemble` plans the furniture, the parked cars, the fences and
+    `site_cover`'s pieces after it -- so there it would see the van and
+    little else."""
+    rects = []
+    for cv in site_spec.get("cover") or []:
+        at = cv.get("at") if isinstance(cv, dict) else None
+        if not at or len(at) < 2:
+            continue
+        sx, _h, sy = tuple(cv.get("size") or (1.0, 1.0, 1.0))[:3]
+        rects.append((at[0] - sx / 2.0 - margin, at[1] - sy / 2.0 - margin,
+                      at[0] + sx / 2.0 + margin, at[1] + sy / 2.0 + margin))
+    return rects
+
+
 def shut_band_rects(site_spec, margin: float = WALL_MARGIN) -> list:
     """The ground behind every Empty row's front line, grown by ``margin``:
     what the row's fences shut off from the street, by the function
@@ -715,8 +741,9 @@ def crew_spawns(site_spec, spawn, count: int, *,
     end. This only adds places for the people who arrive with them.
 
     The rest are found on the same nearest-first rings `clear_crew_spawn`
-    walks, and each has to be `outdoors()` of every building and ``spacing``
-    clear of every crew position already placed. Nearest-first for the reason
+    walks, and each has to be `outdoors()` of every building, blocker and
+    piece of cover (`cover_rects`, 0.98.1) and ``spacing`` clear of every
+    crew position already placed. Nearest-first for the reason
     `_offsets` gives: the crew should end up on the street it starts on, not
     strung out across whichever side of the block the search scanned first.
 
@@ -736,7 +763,17 @@ def crew_spawns(site_spec, spawn, count: int, *,
         return placed
 
     ground = ground_rect(site_spec)
-    rects = solid_rects(site_spec)
+    # NOT IN THE VAN, NOR IN ANY OTHER COVER (0.98.1). This asked only
+    # `solid_rects`, the buildings and the blockers, and no cover had
+    # stood near a spawn until 0.98.0 parked the getaway van at one.
+    # Cold run 9198, bank_block_001 seed_9256: the rings start along +X,
+    # the van's slot stood 1.25 m off the spawn on that side, and
+    # LT_PlayerSpawn_1 went to (20.812, -1.8), inside it -- Laser Tag
+    # refused the map with SPAWN_IN_COLLISION and played no run of it.
+    # The margin is `WALL_MARGIN`, for the reason a wall gets it: the
+    # bake erodes the navmesh round every solid, and a body inside that
+    # band has nothing to path from.
+    rects = solid_rects(site_spec) + cover_rects(site_spec)
     z = base[2] if len(base) > 2 else GROUND_Z
     for _ in range(count - 1):
         chosen = None
@@ -866,6 +903,22 @@ def place_enemies(site_spec, positions, *, enemy_count: int = 6,
     # and every one near the end of the return inside the standoff from
     # the spawn it ends at. The enemies spread along the one leg; the crew
     # passes them going in and coming out.
+    #
+    # "GOING IN AND COMING OUT" WAS WRONG (cold run 9198; kept, 0.98.1).
+    # `LT_EnemyBrain` walks every enemy that cannot see the crew toward it
+    # from the first frame, so a spread along the route is a set of
+    # arrival bearings and times, not a sequence: on seed_9054 and
+    # seed_9155, in 9197 and 9198 alike, every enemy's median time of
+    # death was 3.5 to 10.7 s, whichever leg it stood on. Strung along one
+    # leg, six arrive one at a time from one side, and the crew's losses
+    # over 25 runs fell from 48 to 1 (seed_9054) and from 19 to 0
+    # (seed_9155, which Laser Tag called a trivial encounter). 9197's
+    # two-leg routes, ending at another building, had put two enemies
+    # behind the crew (seed_9054) and two pairs at one distance each
+    # (seed_9155) -- by where that building happened to stand, not by
+    # design. Left as it is: enemy placement is provisional until a
+    # gameplay layer owns it, and what a there-and-back heist's fight
+    # should be is the walker's call (roadmap 206).
     if math.dist(route[0], route[2]) < THERE_AND_BACK:
         route = route[:2]
     lengths = [max(1e-6, math.dist(a, b)) for a, b in zip(route, route[1:])]
