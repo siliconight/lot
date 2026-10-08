@@ -8,23 +8,28 @@ a stop it fits with its doors open, keeps every later planner out of both,
 and writes each as a `responder_spawn` site marker -- which the audit judges
 and the nav QA walks.
 
-Two sites:
+Three sites:
 - the kerb probe, assembled end to end -- one road with both ends open, and
   the getaway van on its north kerb;
 - cold run 9198's seed_9256 as Lot drew it, with its cover cut back to the
-  van, which is what stood when the arrivals were planned.
+  van, which is what stood when the arrivals were planned;
+- cold run 9204's club_block_014 seed_9181, the same way: the input site and
+  the cover as drawn (0.100.0). Its getaway van stood 0.45 m into road 0's
+  eastern lane and closed it; the lane steers round it now.
 
 THE INSTRUMENTS ARE THE TESTS' OWN. A stop is read from its marker, the
 lane's half from the road's own frame, and a piece's slot from its record's
 `size` ([plan x, height, plan y]). The two controls at the end show the
-reservation doing something: a car 9198 parked in a stop, parked again
-without it and kept out with it; and a cover piece refused a kept-out spot
-without the spot hiding anything.
+reservation doing something: a car 9204 parked in what is now a stop,
+parked again without it and kept out with it; and a cover piece refused a
+kept-out spot without the spot hiding anything.
 """
 import json
 import math
 import os
 import sys
+
+import pytest
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(HERE))
@@ -42,6 +47,13 @@ FIXTURE = os.path.join(HERE, "fixtures", "bank_block_001_seed_9256.site.json")
 #: as cold run 9198's scene wrote them (site frame).
 SPAWN = (18.812, -1.8, 0.0)
 OBJECTIVE = (-46.0, 9.25, -3.9)
+#: Cold run 9204's seed_9181: the input site with the cover as drawn, and the
+#: crew's points from the job's `site_walk.tscn` (Godot turned to site).
+FIXTURE_9204 = os.path.join(HERE, "fixtures", "club_block_014_seed_9181.site.json")
+SPAWN_9204 = (73.85, -17.95, 0.0)
+OBJECTIVE_9204 = (-50.0, 5.0, 0.0)
+#: Zoo, where the factory keeps it beside this repo.
+ZOO = os.path.join(os.path.dirname(os.path.dirname(HERE)), "zoo")
 
 
 def _slot(cv):
@@ -66,10 +78,25 @@ def _arrivals(markers):
             if m.get("type") == "responder_spawn" and m.get("source") == "responder_arrival"]
 
 
+def _boxes(a):
+    """An arrival's reserved ground: (part, rect) for its stop and every box
+    of its lane."""
+    return [("stop", a["stop_box"])] + [("lane", box) for box in a["lane_boxes"]]
+
+
 def _in_the_way(drawn):
     return [(cv.get("species") or cv.get("source"), part)
-            for m in _arrivals(drawn["site_markers"]) for part in ("stop_box", "lane_box")
-            for cv in drawn["cover"] if cv.get("size") and _overlaps(_slot(cv), m["arrival"][part])]
+            for m in _arrivals(drawn["site_markers"]) for part, box in _boxes(m["arrival"])
+            for cv in drawn["cover"] if cv.get("size") and _overlaps(_slot(cv), box)]
+
+
+def _plan_9204():
+    full = json.load(open(FIXTURE_9204, encoding="utf-8"))
+    spec = dict(full, cover=[cv for cv in full["cover"] if cv.get("source") == "getaway_van"])
+    findings = []
+    arrivals = site_responders.plan(spec, {"spawn": SPAWN_9204, "extraction": SPAWN_9204,
+                                           "objective": OBJECTIVE_9204}, findings)
+    return full, spec, arrivals, findings
 
 
 def test_the_probe_gets_an_arrival_at_each_open_end(tmp_path):
@@ -131,12 +158,12 @@ def test_the_bank_site_arrivals_keep_clear_of_each_other():
     assert len(arrivals) == 3
     van = _slot(spec["cover"][0])
     for i, a in enumerate(arrivals):
-        assert not _overlaps(a["stop_box"], van) and not _overlaps(a["lane_box"], van)
+        assert not any(_overlaps(box, van) for _part, box in _boxes(a))
         assert math.dist(a["stop"], SPAWN[:2]) >= site_audit.CAMP_RADIUS
         for b in arrivals[i + 1:]:
             assert not _overlaps(a["stop_box"], b["stop_box"])
-            assert not _overlaps(a["stop_box"], b["lane_box"])
-            assert not _overlaps(b["stop_box"], a["lane_box"])
+            assert not any(_overlaps(a["stop_box"], box) for box in b["lane_boxes"])
+            assert not any(_overlaps(b["stop_box"], box) for box in a["lane_boxes"])
 
 
 def test_one_test_for_a_road_end():
@@ -154,27 +181,124 @@ def test_without_the_reservation_a_car_parks_in_a_stop():
     road, which keeps its bays empty anyway -- so the probe alone cannot
     show the reservation doing anything.
 
-    Cold run 9198 planned seed_9256 with no reservation and parked a car in
-    bay L6 on road 1, at (21.112, 14.85): in what is now arrival 0's stop.
-    `plan_parking` parks there again given no reservation, and given the
-    reservation keeps every car out of every stop and lane -- and the
-    read-back names 9198's car."""
-    full = json.load(open(FIXTURE, encoding="utf-8"))
-    spec = dict(full, cover=[cv for cv in full["cover"] if cv.get("source") == "getaway_van"])
-    arrivals = site_responders.plan(spec, {"spawn": SPAWN, "extraction": SPAWN,
-                                           "objective": OBJECTIVE})
+    Cold run 9204 planned seed_9181 before the lane could steer: road 0's
+    east end had no arrival, and `plan_parking` parked a car at (66.5,
+    -20.25) -- in what is now arrival 1's stop, where the steered lane comes
+    back into its half. `plan_parking` parks there again given no
+    reservation, and given the reservation keeps every car out of every
+    stop and lane -- and the read-back names 9204's car.
+
+    *Through 0.99.1* this was cold run 9198's car at (21.112, 14.85) on
+    seed_9256, in arrival 0's stop. The cruiser's 5.545 m length and its
+    station grid moved that stop 0.36 m, and the car's slot now misses it by
+    about 4 cm: an instance lost, not a reservation that stopped working."""
+    full, spec, arrivals, _findings = _plan_9204()
     shipped = site_responders.blocked(arrivals, full["cover"])
-    assert len(shipped) == 1 and "(21.1, 14.8)" in shipped[0]["message"], shipped
+    assert len(shipped) == 1 and "(66.5, -20.2)" in shipped[0]["message"], shipped
+    assert "arrival 1's stop" in shipped[0]["message"]
     roads, van = site_streets.roads(spec), [_slot(spec["cover"][0])]
 
     def parked_in(keep):
-        cars = site_parking.plan_parking(roads, van + list(keep), [SPAWN[:2], OBJECTIVE[:2]])
+        cars = site_parking.plan_parking(roads, van + list(keep), [SPAWN_9204[:2], OBJECTIVE_9204[:2]])
         return [tuple(cv["at"]) for cv in cars
-                if any(_overlaps(_slot(cv), a[part])
-                       for a in arrivals for part in ("stop_box", "lane_box"))]
+                if any(_overlaps(_slot(cv), box) for a in arrivals for _part, box in _boxes(a))]
 
-    assert parked_in([]) == [(21.112, 14.85)]
+    assert parked_in([]) == [(66.5, -20.25)]
     assert parked_in(site_responders.keep_out(arrivals)) == []
+
+
+# --------------------------------------------------------------------------- #
+# 0.100.0: the cruiser's size, and a lane that steers
+# --------------------------------------------------------------------------- #
+
+def test_the_lane_steers_round_the_van_on_9204():
+    """Cold run 9204's seed_9181, as its assemble planned it: three arrivals
+    where 0.99.1 found two and `LOT_RESPONDER_ENTRY_NO_STOP` for road 0's
+    east end. That end's lane moves toward the centre line by exactly what
+    the van's slot needs, tapered, clears the van, and is back in its own
+    half by the stop."""
+    _full, spec, arrivals, findings = _plan_9204()
+    assert [f["code"] for f in findings] == []
+    assert len(arrivals) == 3
+    (road0,) = [r for r in site_streets.roads(spec) if r.index == 0]
+    east = [a for a in arrivals if a["road"] == 0 and a["travel"] == -1]
+    assert len(east) == 1, arrivals
+    a = east[0]
+    van = _slot(spec["cover"][0])
+    w = site_responders.VEHICLE[1] + 2.0 * site_responders.LANE_MARGIN
+    off = site_responders.lane_offset(road0, -1)
+
+    def across(rect):
+        vals = [(x - road0.a[0]) * road0.perp[0] + (y - road0.a[1]) * road0.perp[1]
+                for x in (rect[0], rect[2]) for y in (rect[1], rect[3])]
+        return min(vals), max(vals)
+
+    # the van's edge nearest the centre line, and the shift that clears it
+    v0, v1 = across(van)
+    near = v0 if off > 0 else v1
+    need = abs(off) + w / 2.0 - abs(near)
+    assert a["lane_shift"] == pytest.approx(need, abs=1e-3)
+    assert 0.6 < need < 0.7                        # 0.648 m: 0.45 + the mirror and margin growth
+    boxes = a["lane_boxes"]
+    assert not any(_overlaps(box, van) for box in boxes)
+    # tapered: neighbouring boxes' centres step by no more than the rate allows
+    centres = [sum(across(b)) / 2.0 for b in boxes]
+    shifts = [abs(off) - abs(c) for c in centres]
+    for s0, s1 in zip(shifts, shifts[1:]):
+        assert abs(s1 - s0) <= site_responders.SHIFT_RATE * site_responders.STATION_STEP + 1e-6
+    # back in its own half by the stop; every box on the carriageway
+    assert shifts[-1] == pytest.approx(0.0, abs=1e-9)
+    limit = site_responders.shift_limit(road0, off, w)
+    assert max(shifts) <= limit
+
+
+def test_a_shift_ramps_up_before_and_down_after():
+    """`steer`: a 0.6 m need at slices 4-5 of twelve, 1 m slices, at the
+    MUTCD rate for 25 mph (0.192 across per metre along)."""
+    rate = site_responders.SHIFT_RATE
+    assert rate == pytest.approx(120.0 / 25.0 ** 2)
+    need = [0.0] * 4 + [0.6, 0.6] + [0.0] * 6
+    s = site_responders.steer(need, rate, [1.0] * 12)
+    assert s[4] == s[5] == 0.6
+    assert s[3] == pytest.approx(0.6 - rate) and s[6] == pytest.approx(0.6 - rate)
+    assert s[0] == 0.0 and s[-1] == 0.0
+    # the same need two slices from the stop cannot get back in time
+    assert site_responders.steer([0.0] * 8 + [0.6, 0.6, 0.0, 0.0], rate, [1.0] * 12) is None
+
+
+def test_a_lane_nothing_can_pass_is_refused():
+    """Ground standing across the whole carriageway leaves no shift that
+    clears it: the slice needs None, and the entry gets no stop."""
+    _full, spec, _arrivals, _findings = _plan_9204()
+    (road0,) = [r for r in site_streets.roads(spec) if r.index == 0]
+    van = _slot(spec["cover"][0])
+    stations = [(x - road0.a[0]) * road0.along[0] + (y - road0.a[1]) * road0.along[1]
+                for x in (van[0], van[2]) for y in (van[1], van[3])]
+    t = (min(stations) + max(stations)) / 2.0          # the van's station, from the road's frame
+    corners = [road0.point(t + dt, side * road0.width) for dt in (-0.5, 0.5) for side in (-1.0, 1.0)]
+    wall = (min(c[0] for c in corners), min(c[1] for c in corners),
+            max(c[0] for c in corners), max(c[1] for c in corners))
+    off = site_responders.lane_offset(road0, -1)
+    w = site_responders.VEHICLE[1] + 2.0 * site_responders.LANE_MARGIN
+    limit = site_responders.shift_limit(road0, off, w)
+    assert site_responders._needs(road0, -1, off, w, [(t + 0.5, t - 0.5)], [wall], limit) == [None]
+    # and the van alone, at the same slice, needs the shift that clears it
+    assert site_responders._needs(road0, -1, off, w, [(t + 0.5, t - 0.5)], [van], limit)[0] > 0.6
+
+
+def test_the_vehicle_is_zoos_cruiser():
+    """Lot does not import Zoo, so `VEHICLE` and `MIRROR_OUT` are pinned:
+    read Zoo's `cruiser` genome and its `car_forms.CRUISER` row when Zoo
+    stands beside this repo, and fail when they disagree."""
+    genome = os.path.join(ZOO, "zoo_keeper", "genome", "species", "cruiser.json")
+    if not os.path.exists(genome):
+        pytest.skip("Zoo is not beside this repo")
+    dims = json.load(open(genome, encoding="utf-8"))["dimensions"]
+    want = tuple(dims[k]["default"] for k in ("width", "depth", "height"))
+    assert site_responders.VEHICLE == ("cruiser",) + want
+    forms = open(os.path.join(ZOO, "zoo_keeper", "core", "car_forms.py"), encoding="utf-8").read()
+    row = forms[forms.index("CRUISER = {"):forms.index("FORMS[\"cruiser\"] = CRUISER")]
+    assert '"mirror_out": %r' % site_responders.MIRROR_OUT in row
 
 
 def test_cover_keeps_out_of_a_lane_and_the_lane_hides_nobody():
