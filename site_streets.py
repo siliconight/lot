@@ -289,16 +289,22 @@ def painted_walks(road) -> list:
                   for tc, wc in crossing_walks(road, c))
 
 
+def end_lies_on(end, other) -> bool:
+    """``end``, a plan point, lies on ``other``'s centre line: within a metre
+    across and within its extent. One test for every reader (0.99.0) -- a
+    road that ENDS on another (`_ends_on`), a slab trimmed at a mouth
+    (`_slab`), and an end a vehicle can arrive by (`site_responders`):
+    three spellings of one test are three places for it to drift."""
+    dx, dy = end[0] - other.a[0], end[1] - other.a[1]
+    across = dx * other.perp[0] + dy * other.perp[1]
+    along = dx * other.along[0] + dy * other.along[1]
+    return abs(across) <= 1.0 and -1.0 <= along <= other.length + 1.0
+
+
 def _ends_on(road, other) -> bool:
     """An end of ``road`` lies on ``other``'s centre line, within a metre
     across and within its extent: ``road`` is a leg that ENDS at ``other``."""
-    for end in (road.a, road.b):
-        dx, dy = end[0] - other.a[0], end[1] - other.a[1]
-        across = dx * other.perp[0] + dy * other.perp[1]
-        along = dx * other.along[0] + dy * other.along[1]
-        if abs(across) <= 1.0 and -1.0 <= along <= other.length + 1.0:
-            return True
-    return False
+    return any(end_lies_on(end, other) for end in (road.a, road.b))
 
 
 def is_arterial(road) -> bool:
@@ -398,10 +404,7 @@ def _slab(road, others) -> tuple:
         if other is road:
             continue
         for end, which in ((road.a, 0), (road.b, 1)):
-            dx, dy = end[0] - other.a[0], end[1] - other.a[1]
-            along = dx * other.along[0] + dy * other.along[1]
-            across = dx * other.perp[0] + dy * other.perp[1]
-            if abs(across) > 1.0 or along < -1.0 or along > other.length + 1.0:
+            if not end_lies_on(end, other):
                 continue
             trim = other.width / 2.0 + other.sidewalk
             if which == 0:

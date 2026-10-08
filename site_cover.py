@@ -725,7 +725,7 @@ def plan_cover(points: dict, rects, ground, *, opening_range: float,
                route=None,
                route_spacing: float = ROUTE_SAMPLE_SPACING,
                route_metres_per_piece: float = ROUTE_METRES_PER_PIECE,
-               species=None, standing=None) -> CoverPlan:
+               species=None, standing=None, keep_out=None) -> CoverPlan:
     """Cover for every open sightline this site opens fire along.
 
     ``points`` is the mission markers by name -- crew spawn, enemies,
@@ -782,6 +782,12 @@ def plan_cover(points: dict, rects, ground, *, opening_range: float,
     for rect in standing or ():
         measured.append(tuple(rect))
         placeable.append(_grow(tuple(rect), COVER_EDGE_GAP))
+    # THE RESPONDERS' LANES AND STOPS (0.99.0, roadmap 212): no piece
+    # stands in them, and they hide nobody -- an empty lane is not an
+    # occluder -- so they join where a piece may not stand and stay out
+    # of what is measured.
+    for rect in keep_out or ():
+        placeable.append(tuple(rect))
     # A line nothing could stand on stays refused. Re-measuring after each
     # placement would otherwise hand it straight back, and the loop would spend
     # its whole budget failing to break the same lane.

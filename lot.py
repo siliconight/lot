@@ -3301,6 +3301,30 @@ def assemble(site_spec_path, out_dir=None, walkable=False, navqa=False,
     # been getting declared footprints instead.
     spawn_plan = site_spawns.place_enemies(site_spec, walk_pos, solids=solids)
 
+    # WHERE RESPONDERS ARRIVE (0.99.0, roadmap 212), before anything is
+    # parked or stood in the street, so every later planner keeps out of
+    # the lanes and the stops. The walker: "have responders show up after
+    # the job, on the way back (and this would be on the gameplay layer,
+    # but we can make thee assets and ensure there is clearance and routes
+    # for their arrival)". Spawning them is the gameplay layer's. Each
+    # arrival is written as a `responder_spawn` site marker, which the
+    # audit judges and the nav QA spawns a bot at and walks to the crew.
+    import site_responders
+    responder_findings = []
+    arrivals = site_responders.plan(site_spec, walk_pos, findings=responder_findings)
+    responder_keep_out = site_responders.keep_out(arrivals)
+    if arrivals:
+        _arrival_markers = [site_responders.marker(a) for a in arrivals]
+        _declared = site_spec.setdefault("site_markers", [])
+        _declared.extend(_arrival_markers)
+        if merged.get("site_markers") is not _declared:
+            merged.setdefault("site_markers", []).extend(_arrival_markers)
+        print(f"[lot] LOT_RESPONDERS_PLACED: {len(arrivals)} arrival(s), "
+              + "; ".join(f"road {a['road']} from ({a['entry'][0]:.1f}, "
+                          f"{a['entry'][1]:.1f}) to a stop at ({a['stop'][0]:.1f}, "
+                          f"{a['stop'][1]:.1f}), {a['to_way_back']:.1f} m off the way back"
+                          for a in arrivals))
+
     # Something to hide behind, before the scene is written.
     #
     # Moving an enemy is what Lot used to do about an unfair opening, and it
@@ -3440,7 +3464,10 @@ def assemble(site_spec_path, out_dir=None, walkable=False, navqa=False,
         sx, _sy, sz = cv.get("size", COVER)
         standing.append((cv["at"][0] - sx / 2.0, cv["at"][1] - sz / 2.0,
                          cv["at"][0] + sx / 2.0, cv["at"][1] + sz / 2.0))
-    parked = site_parking.plan_parking(site_streets.roads(site_spec), standing,
+    # the responders' stops and lanes are not standing, so they reach the
+    # parking alone: a bay beside a stop holds no car to block a door
+    parked = site_parking.plan_parking(site_streets.roads(site_spec),
+                                       standing + list(responder_keep_out),
                                        list(cover_points.values()))
     site_spec["cover"].extend(parked)
     merged["parking_plan"] = {"placed": parked}
@@ -3501,8 +3528,15 @@ def assemble(site_spec_path, out_dir=None, walkable=False, navqa=False,
         # of a 3 m cube. Each is a slot the site's manifest carries.
         species=site_cover.COVER_SPECIES,
         # the kerb line and the parked cars, already standing
-        standing=standing)
+        standing=standing,
+        # the responders' lanes and stops (0.99.0): nothing stands in them,
+        # and they hide nobody
+        keep_out=responder_keep_out)
     site_spec["cover"].extend(c.as_site_cover() for c in cover_plan.cover)
+    # THE RESERVATION, READ BACK (0.99.0): every piece every planner stood,
+    # against every arrival's stop and lane. Empty when it held.
+    responder_findings += site_responders.blocked(arrivals, site_spec["cover"])
+    merged["responder_plan"] = {"arrivals": arrivals, "findings": responder_findings}
     merged["cover_plan"] = {
         "placed": [c.as_dict() for c in cover_plan.cover],
         "still_open": [f"{a} -> {b} ({d:.1f} m)"
@@ -3517,7 +3551,7 @@ def assemble(site_spec_path, out_dir=None, walkable=False, navqa=False,
     cover_findings = site_cover.findings(
         cover_plan, opening_range=site_spawns.OPENING_RANGE)
     for f_ in (seat_findings + clear_findings + spawn_plan.findings
-               + cover_findings):
+               + cover_findings + responder_findings):
         tactical_report.setdefault("findings", []).append(f_)
         print(f"[lot] {f_['code']}: {f_['message']}")
 
