@@ -80,6 +80,24 @@ def _anchor(site, kind):
     return _building_pt(site, site.get(kind))
 
 
+def _getaway(site):
+    """The species of the getaway van the site's extraction marker names,
+    or None (0.98.0)."""
+    for m in site.get("site_markers", []):
+        if m.get("type") == "extraction" and m.get("getaway"):
+            return m["getaway"]
+    return None
+
+
+def _anchors(spawn, extr):
+    """The crew's two anchors, labelled, absent ones dropped -- and one
+    point when they are one, so a finding about it is said once, not twice
+    (0.98.0: the getaway van puts both at its door)."""
+    if spawn and extr and math.hypot(spawn[0] - extr[0], spawn[1] - extr[1]) < 0.5:
+        return [("crew spawn and extraction", spawn)]
+    return [(k, p) for k, p in (("crew spawn", spawn), ("extraction", extr)) if p]
+
+
 def _cover_rects(site):
     out = []
     for c in site.get("cover", []):
@@ -161,8 +179,17 @@ def audit(site):
     if obj and extr and mode == "heist":
         legs.append(("objective->extraction", obj, extr))
 
-    # --- exfil shape (PayDay): the escape must not rewind the entry
-    if spawn and obj and extr and mode == "heist":
+    # --- exfil shape (PayDay): the escape must not rewind the entry --
+    # unless the exit IS the way in by design: the crew's getaway van,
+    # parked at their spawn (0.98.0, roadmap 206; the walker, 2026-10-07:
+    # "you spawn, do the job, then return to the car"). Said, as INFO,
+    # rather than graded MED on every level built that way.
+    getaway = _getaway(site)
+    if spawn and obj and extr and mode == "heist" and getaway:
+        F(("INFO", "S_GETAWAY_AT_SPAWN",
+           f"the extraction is the crew's {getaway} at its spawn: the second "
+           f"half of the heist is the walk back to the van, by design"))
+    elif spawn and obj and extr and mode == "heist":
         near = math.hypot(spawn[0] - extr[0], spawn[1] - extr[1])
         ang = _arc_between(_bearing(obj, spawn), _bearing(obj, extr))
         if near < BACKTRACK_NEAR and ang < BACKTRACK_ANGLE:
@@ -189,9 +216,7 @@ def audit(site):
                    f"{spread:.0f} deg arc around the objective: every "
                    f"assault wave is the same wave. Spread spawns so "
                    f"pressure changes direction between waves."))
-        for kind, pt in (("crew spawn", spawn), ("extraction", extr)):
-            if not pt:
-                continue
+        for kind, pt in _anchors(spawn, extr):
             for r in resp:
                 d = math.hypot(r[0] - pt[0], r[1] - pt[1])
                 if d < CAMP_RADIUS:
@@ -206,9 +231,7 @@ def audit(site):
            "pressure layer at site level."))
 
     # --- safe anchors (L4D2): endpoints want a backstop
-    for kind, pt in (("crew spawn", spawn), ("extraction", extr)):
-        if not pt:
-            continue
+    for kind, pt in _anchors(spawn, extr):
         d = min((_dist_pt_rect(pt[0], pt[1], r) for r in backstops),
                 default=1e9)
         if d > ANCHOR_RADIUS:

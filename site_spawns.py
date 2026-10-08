@@ -119,6 +119,10 @@ PUSH_STEP = 0.5
 #: Enemies closer together than this are one encounter wearing six hats.
 MIN_SEPARATION = 4.0
 
+#: A route whose extraction stands this close to its spawn goes there and
+#: back (the getaway van, 0.98.0): the enemies spread along its one leg.
+THERE_AND_BACK = 3.0
+
 #: How far along the route a sample may be slid when no perpendicular offset
 #: satisfies the constraints. Perpendicular search alone cannot fix an opening
 #: engagement: pushing sideways off a straight street keeps the enemy in the
@@ -855,6 +859,15 @@ def place_enemies(site_spec, positions, *, enemy_count: int = 6,
 
     route = [tuple(positions[k][:2])
              for k in ("spawn", "objective", "extraction")]
+    # A THERE-AND-BACK ROUTE IS ONE LEG WALKED TWICE (0.98.0, roadmap 206).
+    # With the getaway van the extraction is the crew's spawn, and the
+    # return leg is the outbound one backwards: samples spread over both
+    # put half the enemies on ground the outbound half already holds,
+    # and every one near the end of the return inside the standoff from
+    # the spawn it ends at. The enemies spread along the one leg; the crew
+    # passes them going in and coming out.
+    if math.dist(route[0], route[2]) < THERE_AND_BACK:
+        route = route[:2]
     lengths = [max(1e-6, math.dist(a, b)) for a, b in zip(route, route[1:])]
     total = sum(lengths)
     # NOT INSIDE AN EMPTY, NOT BEHIND ITS ROW (0.97.3). Every candidate Laser

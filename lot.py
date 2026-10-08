@@ -1613,6 +1613,9 @@ def write_site_slots(site_spec, out_path):
 #: prop slot (the Zoo genome's default). Named here so the slot Lot writes
 #: says what Zoo will read, rather than leaving the field empty.
 COVER_MATERIALS = {"box_truck": "metal_painted", "cargo_container": "metal_painted",
+                   # the crew's getaway van is flat black paint gone chalky,
+                   # Zoo's one option for it (0.98.0)
+                   "step_van": "paint_matte",
                    "simple_car": "metal_painted",
                    # the kerb line (site_furniture)
                    "streetlight": "metal", "fire_hydrant": "metal_painted",
@@ -3248,6 +3251,29 @@ def assemble(site_spec_path, out_dir=None, walkable=False, navqa=False,
         "unread": list(solids.unread),
         "detail": solids.detail,
     }
+
+    # THE GETAWAY VAN (0.98.0, roadmap 206), before anything reads where
+    # the crew stands: its door's spawn is the site's `crew_spawn` and its
+    # `extraction`, both site-level, so `_walk_positions` takes them over
+    # the buildings' own, and the van joins the cover every later planner
+    # stands round -- the parked cars, the furniture, the fences, the
+    # cover. The walker: "you spawn, do the job, then return to the car".
+    import site_getaway
+    getaway_findings = []
+    getaway = site_getaway.plan(site_spec, merged, getaway_findings)
+    if getaway is not None:
+        site_spec.setdefault("cover", []).append(getaway["van"])
+        declared = site_spec.setdefault("site_markers", [])
+        declared.extend(getaway["markers"])
+        if merged.get("site_markers") is not declared:
+            merged.setdefault("site_markers", []).extend(getaway["markers"])
+        print(f"[lot] LOT_GETAWAY_PLACED: the {getaway['van']['species']} at "
+              f"{tuple(getaway['van']['at'])} ({getaway['van']['breaks']}), the crew's "
+              f"spawn and extraction at {tuple(getaway['markers'][0]['at'])}, "
+              f"{getaway['reach']:.1f} m from the spawn building's door")
+    for f_ in getaway_findings:
+        print(f"[lot] {f_}")
+    merged["getaway_plan"] = {"placed": getaway, "findings": getaway_findings}
 
     import site_spawns
     raw_pos = _walk_positions(site_spec, merged)
