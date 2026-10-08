@@ -99,10 +99,16 @@ def _anchors(spawn, extr):
 
 
 def _cover_rects(site):
+    """Every cover piece's plan rect. ``size`` is [plan x, height, plan
+    y], the frame `lot.py` stands each piece's box in: the MIDDLE number
+    is the height (0.98.2, roadmap 211). This read it as the depth from
+    v0.17.1 on, so every rect had its height for a depth -- 3.05 m for the
+    getaway van's 6.8 m, 6.0 m for a streetlight's 0.7 m. Audited both
+    ways over the 115 site specs on disk, it had moved no verdict."""
     out = []
     for c in site.get("cover", []):
         (x, y), s = c["at"][:2], c.get("size", [1, 1, 1])
-        out.append((x - s[0] / 2, y - s[1] / 2, x + s[0] / 2, y + s[1] / 2))
+        out.append((x - s[0] / 2, y - s[2] / 2, x + s[0] / 2, y + s[2] / 2))
     return out
 
 

@@ -919,6 +919,17 @@ def place_enemies(site_spec, positions, *, enemy_count: int = 6,
     # design. Left as it is: enemy placement is provisional until a
     # gameplay layer owns it, and what a there-and-back heist's fight
     # should be is the walker's call (roadmap 206).
+    #
+    # "ONE AT A TIME FROM ONE SIDE" HELD ON TWO SITES OF THREE (0.98.2).
+    # Cold run 9199 played seed_9256 with the van for the first time: the
+    # line from its van to its vault runs through the spawn building, so
+    # the samples that fell in it were pushed out to either side -- two
+    # enemies 17.7 and 23.4 m from the crew, 94 degrees apart -- and the
+    # crew lost 41 in 25 runs (49 in 9197). What the crew's losses track
+    # is enemies arriving together from more than one direction, which
+    # the one-leg spread makes on some sites and not on others. The
+    # walker has since decided the walk back: responders arrive after
+    # the job, spawned by the gameplay layer (roadmap 212).
     if math.dist(route[0], route[2]) < THERE_AND_BACK:
         route = route[:2]
     lengths = [max(1e-6, math.dist(a, b)) for a, b in zip(route, route[1:])]
