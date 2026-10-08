@@ -1,0 +1,558 @@
+{
+  "light_manifest_version": "1.3.0",
+  "building_id": "strip_club_a01",
+  "theme": "greybox",
+  "space": "Blender Z-up, meters; rot_y = degrees about up; pos is the fixture location -- for a ceiling row, hung below the slab's underside, not below the floor above",
+  "rig_library": "lux",
+  "anchors": [
+    {
+      "id": "main_floor_wash_1",
+      "type": "club_wash",
+      "source": "derived",
+      "pos": [
+        -13.6,
+        -1.5,
+        3.2
+      ],
+      "rot_y": 0.0,
+      "room": "main_floor",
+      "color": "amber",
+      "radius": 4.667,
+      "row": {
+        "count": 1,
+        "spacing": 0.0
+      },
+      "drop": 3.2,
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "main_floor_wash_2",
+      "type": "club_wash",
+      "source": "derived",
+      "pos": [
+        -6.8,
+        -8.5,
+        3.2
+      ],
+      "rot_y": 0.0,
+      "room": "main_floor",
+      "color": "hot_pink",
+      "radius": 4.667,
+      "row": {
+        "count": 1,
+        "spacing": 0.0
+      },
+      "drop": 3.2,
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "main_floor_wash_3",
+      "type": "club_wash",
+      "source": "derived",
+      "pos": [
+        0.0,
+        -1.5,
+        3.2
+      ],
+      "rot_y": 0.0,
+      "room": "main_floor",
+      "color": "violet",
+      "radius": 4.667,
+      "row": {
+        "count": 1,
+        "spacing": 0.0
+      },
+      "drop": 3.2,
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "main_floor_wash_4",
+      "type": "club_wash",
+      "source": "derived",
+      "pos": [
+        6.8,
+        -8.5,
+        3.2
+      ],
+      "rot_y": 0.0,
+      "room": "main_floor",
+      "color": "cyan",
+      "radius": 4.667,
+      "row": {
+        "count": 1,
+        "spacing": 0.0
+      },
+      "drop": 3.2,
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "main_floor_wash_5",
+      "type": "club_wash",
+      "source": "derived",
+      "pos": [
+        13.6,
+        -1.5,
+        3.2
+      ],
+      "rot_y": 0.0,
+      "room": "main_floor",
+      "color": "magenta",
+      "radius": 4.667,
+      "row": {
+        "count": 1,
+        "spacing": 0.0
+      },
+      "drop": 3.2,
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "main_floor_stage",
+      "type": "stage_light",
+      "source": "derived",
+      "pos": [
+        4.0,
+        -5.0,
+        3.2
+      ],
+      "rot_y": 90.0,
+      "room": "main_floor",
+      "color": "amber",
+      "target": [
+        0.0,
+        -5.0,
+        1.68
+      ],
+      "radius": 1.5,
+      "row": {
+        "count": 2,
+        "spacing": 1.2
+      },
+      "cycle_s": 4.0,
+      "drop": 3.2,
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "main_floor_stage_lip",
+      "type": "neon",
+      "source": "derived",
+      "pos": [
+        0.0,
+        -4.5,
+        1.53
+      ],
+      "rot_y": 90.0,
+      "room": "main_floor",
+      "color": "amber",
+      "size": [
+        5.0,
+        3.2
+      ],
+      "row": {
+        "count": 1,
+        "spacing": 0.0
+      },
+      "drop": 1.53,
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "main_floor_neon_1",
+      "type": "neon",
+      "source": "derived",
+      "pos": [
+        16.59,
+        -10.06,
+        2.2
+      ],
+      "rot_y": 180.0,
+      "room": "main_floor",
+      "size": [
+        1.6,
+        0.7
+      ],
+      "row": {
+        "count": 1,
+        "spacing": 0.0
+      },
+      "drop": 2.2,
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "wall_tv_r1d196568_6_screen",
+      "type": "neon",
+      "source": "derived",
+      "pos": [
+        -15.99,
+        0.27,
+        2.136
+      ],
+      "rot_y": 0.0,
+      "room": "main_floor",
+      "color": "cyan",
+      "size": [
+        0.445,
+        0.334
+      ],
+      "row": {
+        "count": 1,
+        "spacing": 0.0
+      },
+      "drop": 2.136,
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "wall_tv_r1d196568_7_screen",
+      "type": "neon",
+      "source": "derived",
+      "pos": [
+        15.41,
+        -11.035,
+        2.136
+      ],
+      "rot_y": 90.0,
+      "room": "main_floor",
+      "color": "cyan",
+      "size": [
+        0.395,
+        0.297
+      ],
+      "row": {
+        "count": 1,
+        "spacing": 0.0
+      },
+      "drop": 2.136,
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "back_bar_r1d196568_2_niche",
+      "type": "back_bar",
+      "source": "derived",
+      "pos": [
+        -0.27,
+        -11.2,
+        1.71
+      ],
+      "rot_y": 90.0,
+      "room": "main_floor",
+      "size": [
+        4.0,
+        1.24
+      ],
+      "row": {
+        "count": 1,
+        "spacing": 0.0
+      },
+      "drop": 1.71,
+      "reacts_to_alarm": true,
+      "aisle": 1.25
+    },
+    {
+      "id": "main_floor_ambient",
+      "type": "room_ambient",
+      "source": "derived",
+      "pos": [
+        0.0,
+        -5.0,
+        1.65
+      ],
+      "rot_y": 0.0,
+      "room": "main_floor",
+      "size": [
+        34.0,
+        14.0,
+        3.3
+      ],
+      "color": "amber",
+      "reacts_to_alarm": false
+    },
+    {
+      "id": "vip_wing_wash_1",
+      "type": "club_wash",
+      "source": "derived",
+      "pos": [
+        -14.0,
+        9.5,
+        3.2
+      ],
+      "rot_y": 0.0,
+      "room": "vip_wing",
+      "color": "hot_pink",
+      "radius": 3.333,
+      "row": {
+        "count": 1,
+        "spacing": 0.0
+      },
+      "drop": 3.2,
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "vip_wing_wash_2",
+      "type": "club_wash",
+      "source": "derived",
+      "pos": [
+        -8.0,
+        4.5,
+        3.2
+      ],
+      "rot_y": 0.0,
+      "room": "vip_wing",
+      "color": "violet",
+      "radius": 3.333,
+      "row": {
+        "count": 1,
+        "spacing": 0.0
+      },
+      "drop": 3.2,
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "vip_wing_wash_3",
+      "type": "club_wash",
+      "source": "derived",
+      "pos": [
+        -2.0,
+        9.5,
+        3.2
+      ],
+      "rot_y": 0.0,
+      "room": "vip_wing",
+      "color": "cyan",
+      "radius": 3.333,
+      "row": {
+        "count": 1,
+        "spacing": 0.0
+      },
+      "drop": 3.2,
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "vip_wing_wash_4",
+      "type": "club_wash",
+      "source": "derived",
+      "pos": [
+        4.0,
+        4.5,
+        3.2
+      ],
+      "rot_y": 0.0,
+      "room": "vip_wing",
+      "color": "magenta",
+      "radius": 3.333,
+      "row": {
+        "count": 1,
+        "spacing": 0.0
+      },
+      "drop": 3.2,
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "vip_wing_stage",
+      "type": "stage_light",
+      "source": "derived",
+      "pos": [
+        0.0,
+        7.0,
+        3.2
+      ],
+      "rot_y": 90.0,
+      "room": "vip_wing",
+      "color": "hot_pink",
+      "target": [
+        -5.0,
+        7.0,
+        1.68
+      ],
+      "radius": 1.5,
+      "row": {
+        "count": 2,
+        "spacing": 1.2
+      },
+      "cycle_s": 4.0,
+      "drop": 3.2,
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "vip_wing_stage_lip",
+      "type": "neon",
+      "source": "derived",
+      "pos": [
+        -5.0,
+        7.5,
+        1.53
+      ],
+      "rot_y": 90.0,
+      "room": "vip_wing",
+      "color": "amber",
+      "size": [
+        7.0,
+        4.0
+      ],
+      "row": {
+        "count": 1,
+        "spacing": 0.0
+      },
+      "drop": 1.53,
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "vip_wing_neon_1",
+      "type": "neon",
+      "source": "derived",
+      "pos": [
+        -4.06,
+        11.59,
+        2.2
+      ],
+      "rot_y": 270.0,
+      "room": "vip_wing",
+      "size": [
+        1.4,
+        0.6
+      ],
+      "row": {
+        "count": 1,
+        "spacing": 0.0
+      },
+      "drop": 2.2,
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "wall_tv_r3914c1cb_2_screen",
+      "type": "neon",
+      "source": "derived",
+      "pos": [
+        4.05,
+        11.035,
+        2.136
+      ],
+      "rot_y": 270.0,
+      "room": "vip_wing",
+      "color": "blue",
+      "size": [
+        0.395,
+        0.297
+      ],
+      "row": {
+        "count": 1,
+        "spacing": 0.0
+      },
+      "drop": 2.136,
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "vip_wing_ambient",
+      "type": "room_ambient",
+      "source": "derived",
+      "pos": [
+        -5.0,
+        7.0,
+        1.65
+      ],
+      "rot_y": 0.0,
+      "room": "vip_wing",
+      "size": [
+        24.0,
+        10.0,
+        3.3
+      ],
+      "color": "hot_pink",
+      "reacts_to_alarm": false
+    },
+    {
+      "id": "cash_office_bulbs",
+      "type": "pendant",
+      "source": "derived",
+      "pos": [
+        12.0,
+        7.0,
+        2.6
+      ],
+      "rot_y": 0.0,
+      "room": "cash_office",
+      "row": {
+        "count": 2,
+        "spacing": 5.0
+      },
+      "drop": 2.6,
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "cash_office_ambient",
+      "type": "room_ambient",
+      "source": "derived",
+      "pos": [
+        12.0,
+        7.0,
+        1.65
+      ],
+      "rot_y": 0.0,
+      "room": "cash_office",
+      "size": [
+        10.0,
+        10.0,
+        3.3
+      ],
+      "color": null,
+      "reacts_to_alarm": false
+    },
+    {
+      "id": "ext_0_S_window_1",
+      "type": "window",
+      "source": "derived",
+      "pos": [
+        12.0,
+        -12.0,
+        2.5
+      ],
+      "rot_y": 90.0,
+      "size": [
+        1.2,
+        1.4
+      ],
+      "reacts_to_alarm": false
+    },
+    {
+      "id": "ext_0_S_sign",
+      "type": "sign",
+      "source": "derived",
+      "pos": [
+        -5.0,
+        -12.35,
+        2.55
+      ],
+      "rot_y": 270.0,
+      "wall": "ext_0_S",
+      "size": [
+        2.4,
+        0.6
+      ],
+      "reacts_to_alarm": true,
+      "business": "strip_club_a01"
+    },
+    {
+      "id": "ext_0_N_pack_1",
+      "type": "wall_pack",
+      "source": "derived",
+      "pos": [
+        -10.0,
+        12.3,
+        2.45
+      ],
+      "rot_y": 90.0,
+      "wall": "ext_0_N",
+      "reacts_to_alarm": true
+    },
+    {
+      "id": "ext_0_E_pack_1",
+      "type": "wall_pack",
+      "source": "derived",
+      "pos": [
+        17.3,
+        6.0,
+        2.45
+      ],
+      "rot_y": 0.0,
+      "wall": "ext_0_E",
+      "reacts_to_alarm": true
+    }
+  ]
+}

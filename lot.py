@@ -571,6 +571,38 @@ def forecourts(site_spec, base_dir):
     return out
 
 
+#: Every POINT a light anchor carries, each moved into site space with its
+#: building (0.99.1, roadmap 207). `target` is the stage light's aim, Deli
+#: Counter's club rig. Copied verbatim it stayed in the building's frame,
+#: so a club standing off the site's origin aimed its two stages 73-74 m
+#: away, past the 12 m Lux clamps a stage light's range to, and Lux refused
+#: both (`LUX_CLUB_REFUSED`: cold runs 9060, 9167, 9197). Listed rather
+#: than discovered, as `_LADDER_POINTS_3` is.
+_LIGHT_POINTS = ("pos", "target")
+#: Numeric triples a light anchor carries that are NOT points: `size` is an
+#: extent in the light's own frame, which Lux turns with `rot_y`; a colour
+#: is never a point, whatever its shape.
+_LIGHT_NOT_POINTS = ("size", "color")
+
+
+def _refuse_unknown_light_points(anchor, bid, ref):
+    """Refuse a light anchor carrying a numeric triple this module has not
+    classed as a point or a non-point: a field added upstream must not ride
+    into site space in the building's frame unnoticed -- the rule
+    `_ladder_to_site` keeps, and the defect `target` was (0.99.1)."""
+    for k, v in anchor.items():
+        if k in _LIGHT_POINTS or k in _LIGHT_NOT_POINTS:
+            continue
+        if (isinstance(v, (list, tuple)) and len(v) == 3
+                and all(isinstance(c, (int, float)) and not isinstance(c, bool)
+                        for c in v)):
+            raise ValueError(
+                f"{ref}: light anchor {anchor.get('id', '?')!r} of {bid} carries a "
+                f"numeric triple {k!r} that merge_lights has not classed as a point "
+                f"(_LIGHT_POINTS, placed) or not (_LIGHT_NOT_POINTS, kept); refusing "
+                f"rather than shipping it in the building's frame")
+
+
 def merge_lights(site_spec, base_dir):
     """Merge every building's <name>.lights.json into one site-level lighting
     manifest: each anchor offset to world space and id-namespaced by building
@@ -612,9 +644,15 @@ def merge_lights(site_spec, base_dir):
             wa = dict(a)
             wa["id"] = f"{bid}/{a.get('id', 'light')}"
             wa["building"] = bid
-            x, y, z = a.get("pos", [0.0, 0.0, 0.0])
-            wx, wy, wz = _place_point(x, y, z, placement)
-            wa["pos"] = [round(wx, 4), round(wy, 4), round(wz, 4)]
+            # EVERY POINT, NOT ONLY `pos` (0.99.1, roadmap 207): a stage
+            # light's `target` rode in the copy in the building's frame.
+            _refuse_unknown_light_points(a, bid, ref)
+            for key in _LIGHT_POINTS:
+                if key != "pos" and key not in a:
+                    continue
+                x, y, z = a.get(key, [0.0, 0.0, 0.0])
+                wx, wy, wz = _place_point(x, y, z, placement)
+                wa[key] = [round(wx, 4), round(wy, 4), round(wz, 4)]
             if "rot_y" in a:
                 wa["rot_y"] = (a["rot_y"] + placement["rot"]) % 360
             if isinstance(a.get("room"), str):
