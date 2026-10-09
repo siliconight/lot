@@ -274,6 +274,40 @@ def test_the_stop_corner_stands_at_the_bus_stop():
             assert p["breaks"].startswith("stop@")
 
 
+def _rects_meet(a, b):
+    ra, rb = site_furniture._piece_rect(a), site_furniture._piece_rect(b)
+    return ra[0] < rb[2] and rb[0] < ra[2] and ra[1] < rb[3] and rb[1] < ra[3]
+
+
+def test_no_stop_corner_piece_stands_on_the_stop():
+    """FAILS ON 0.102.0. The stop's shelter, bench and flag never reached the
+    band's `placed`, so the mailbox, the news racks and the payphone were
+    spaced against everything but the stop. Cold run 9213 stood a rack 0.11 m
+    from the flag post and another over the shelter's end, both nudged there
+    off a station something else had taken. One marker swept along the stop's
+    band, 81 positions 0.25 m apart, finds both on the probe: 22 overlaps on
+    0.102.0."""
+    spec = _probe()
+    roads = site_streets.roads(spec)
+    shelter = next(p for p in site_furniture.plan_furniture(roads, spec["buildings"])
+                   if p["species"] == "bus_shelter")
+    x0, y = shelter["at"]
+    seen = 0
+    for i in range(-60, 21):
+        pieces = site_furniture.plan_furniture(roads, spec["buildings"],
+                                               markers=[(x0 + i * 0.25, y)])
+        stop = [p for p in pieces if p["species"] == "bus_shelter"
+                or (p["species"] == "sign_post" and p["breaks"].startswith("stop@"))]
+        corner = [p for p in pieces
+                  if p["species"] in ("mailbox", "newspaper_box", "payphone")]
+        seen += len(corner)
+        for c in corner:
+            for s in stop:
+                assert not _rects_meet(c, s), (i, c["name"], s["species"], c["at"], s["at"])
+    # the sweep tested something: the corner still stands somewhere
+    assert seen > 0
+
+
 def test_two_roads_that_meet_do_not_draw_the_same_tree():
     """Cold run 9035 planted red maples on both roads: one hash in five."""
     spec = {"name": "x", "ground": {"size_x": 200, "size_y": 200},

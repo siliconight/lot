@@ -798,6 +798,14 @@ def plan_furniture(roads_list, buildings=(), markers=(), findings=None) -> list:
                 stop = _bus_stop(road, kerb, placed, n, markers)
                 n += len(stop)
                 out.extend(stop)
+                # THE STOP STANDS ON THE BAND (0.102.1): its shelter, bench and
+                # flag join `placed` before anything is spaced against them.
+                # They did not, so `_stop_corner`'s `_free` could not see
+                # them, nor could the hydrant passes that read this band's
+                # `placed` -- cold run 9213 stood a news rack 0.11 m from the
+                # flag post and another over the shelter's end, both nudged
+                # there off stations a marker or a tree had taken.
+                placed.extend(stop)
                 out.extend(_stop_corner(road, kerb, stop, placed, markers))
         # a meter at every bay
         out.extend(plan_meters(road, markers))
