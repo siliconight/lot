@@ -39,6 +39,7 @@ import site_audit       # noqa: E402
 import site_parking     # noqa: E402
 import site_responders  # noqa: E402
 import site_streets     # noqa: E402
+from tests.glb_fixture import write_glb  # noqa: E402
 
 SPECS = os.path.join(os.path.dirname(HERE), "specs")
 PROBE = os.path.join(SPECS, "coldrun_kerb_probe.json")
@@ -330,6 +331,85 @@ def test_the_vehicle_is_zoos_cruiser():
     forms = open(os.path.join(ZOO, "zoo_keeper", "core", "car_forms.py"), encoding="utf-8").read()
     row = forms[forms.index("CRUISER = {"):forms.index("FORMS[\"cruiser\"] = CRUISER")]
     assert '"mirror_out": %r' % site_responders.MIRROR_OUT in row
+
+
+# --------------------------------------------------------------------------- #
+# 0.101.0: the car they arrive in -- built, shipped, stood nowhere
+# --------------------------------------------------------------------------- #
+
+def _cruiser_stem():
+    _name, w, d, h = site_responders.VEHICLE
+    return lot.cover_module_stem("cruiser", "delco_1997", 1, [w, d, h])
+
+
+def test_each_arrival_gets_a_kit_slot_for_its_car(tmp_path):
+    """`write_site_slots` gives every arrival's car a slot, so Zoo's site kit
+    builds it: the cruiser at `VEHICLE`'s size, at the stop, facing the way
+    it drove in, with collision for when the game spawns it."""
+    drawn, _gameplay = _assembled(tmp_path)
+    arrivals = [m["arrival"] for m in _arrivals(drawn["site_markers"])]
+    doc = json.loads(next(tmp_path.glob("*.slots.json")).read_text(encoding="utf-8"))
+    cars = [s for s in doc["slots"] if s["slot_id"].startswith("responder_")]
+    assert len(cars) == len(arrivals) == 2
+    assert doc["coverage"]["prop/site_responders"] == 2
+    _name, w, d, h = site_responders.VEHICLE
+    for slot, a in zip(cars, arrivals):
+        assert slot["species"] == "cruiser" and slot["fit"]["dims"] == [w, d, h]
+        assert slot["fit"]["collision"] == "convex"
+        assert slot["transform"]["translation"] == [round(a["stop"][0], 4), round(a["stop"][1], 4),
+                                                    round(h / 2.0, 4)]
+        assert slot["transform"]["rot_y"] == a["yaw"]
+
+
+def test_the_car_is_copied_with_what_it_names_and_named_for_the_package(tmp_path):
+    """The module and the texture beside it go where a cover module's go,
+    and `responders.json` names the file, with the stop and the slot."""
+    stem = _cruiser_stem()
+    write_glb(tmp_path / (stem + ".glb"), "cruiser", images=["_tex/livery_c1930467.png"])
+    spec = {"responders": [site_responders.vehicle_record({"stop": [62.637, -22.75], "yaw": 270.0})],
+            "cover_modules": {"dir": str(tmp_path), "theme": "delco_1997", "style": 1},
+            "buildings": []}
+    out = tmp_path / "out"
+    out.mkdir()
+    refs, _ext, findings = lot.cover_module_refs(spec, "", str(out), key="responders")
+    assert findings == [] and refs == {0: "cover_" + stem}
+    doc = lot.write_responder_vehicles(spec, refs, str(out))
+    _name, w, d, h = site_responders.VEHICLE
+    assert doc["vehicles"] == [{"arrival": 0, "species": "cruiser", "scene": f"cover/{stem}.glb",
+                                "stop": [62.637, -22.75], "yaw": 270.0, "dims": [w, d, h]}]
+    assert doc["missing"] == []
+    assert (out / "cover" / (stem + ".glb")).is_file()
+    assert (out / "cover" / "_tex" / "livery_c1930467.png").is_file()
+    assert json.loads((out / lot.RESPONDERS_NAME).read_text(encoding="utf-8")) == doc
+
+
+def test_the_assembled_scene_stands_no_car(tmp_path):
+    """The probe assembled against a kit holding the cruiser: the car is
+    copied beside the scene and named for both arrivals, and the scene
+    declares and instances nothing of it -- a resource a scene names, it
+    loads, and responders are the gameplay layer's to spawn."""
+    stem = _cruiser_stem()
+    kit = tmp_path / "kit"
+    write_glb(kit / (stem + ".glb"), "cruiser", images=["_tex/livery_c1930467.png"])
+    spec = json.load(open(PROBE, encoding="utf-8"))
+    spec["cover_modules"] = {"dir": str(kit), "theme": "delco_1997", "style": 1}
+    probe = tmp_path / "coldrun_kerb_probe.json"
+    probe.write_text(json.dumps(spec), encoding="utf-8")
+    out = tmp_path / "out"
+    lot.assemble(str(probe), str(out))
+    scene = next(out.glob("*.tscn")).read_text(encoding="utf-8")
+    assert stem not in scene
+    doc = json.loads((out / lot.RESPONDERS_NAME).read_text(encoding="utf-8"))
+    assert [v["scene"] for v in doc["vehicles"]] == [f"cover/{stem}.glb"] * 2 and doc["missing"] == []
+    assert (out / "cover" / (stem + ".glb")).is_file()
+
+
+def test_with_no_kit_every_car_is_missing_not_dropped(tmp_path):
+    """The candidate's greybox assembly has no kit yet: `responders.json`
+    lists each car as missing, so a package that ships none says so."""
+    _assembled(tmp_path)
+    doc = json.loads((tmp_path / lot.RESPONDERS_NAME).read_text(encoding="utf-8"))
+    assert doc["vehicles"] == [] and doc["missing"] == [0, 1]
 
 
 def test_cover_keeps_out_of_a_lane_and_the_lane_hides_nobody():

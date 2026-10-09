@@ -407,6 +407,16 @@ def _spread(found, objective) -> list:
     return kept
 
 
+def vehicle_record(arrival) -> dict:
+    """The car an arrival brings (0.101.0), as a record the site kit builds
+    from: the species, its slot ([plan x, plan y, height] before the turn, as
+    every cover record's `dims`), and where it stands at its stop, facing
+    the way it drove in. Built, never stood: the gameplay layer spawns it."""
+    name, w, d, h = VEHICLE
+    return {"species": name, "dims": [w, d, h], "at": list(arrival["stop"]),
+            "yaw": arrival["yaw"], "source": "responder_arrival"}
+
+
 def marker(arrival) -> dict:
     """The site marker an arrival is written as: a `responder_spawn` at its
     stop, which the audit judges and the nav QA spawns a bot at, carrying

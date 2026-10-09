@@ -1629,9 +1629,34 @@ def write_site_slots(site_spec, out_path):
         if hv.get("variant"):
             slot["variant"] = int(hv["variant"])
         slots.append(slot)
+    n_hung = len(slots) - n_cover
+    # THE RESPONDERS' CAR (0.101.0): a slot an arrival, so the site kit
+    # builds it. Nothing stands it -- the gameplay layer spawns responders --
+    # so the slot's transform says where the car would stop, and only
+    # `write_responder_vehicles` reads what Zoo built.
+    for i, rv in enumerate(site_spec.get("responders", []) or []):
+        sp, dims = rv.get("species"), rv.get("dims")
+        if not sp or not dims or len(dims) < 3:
+            continue
+        cx, cy = rv["at"][:2]
+        slots.append({
+            "slot_id": f"responder_{i}", "role": "prop", "size_mod": "full",
+            "style": int(rv.get("style") or 1),
+            "material": COVER_MATERIALS.get(sp, "metal_painted"),
+            "current_ref": "prop_greybox_01", "kit_axis": "theme",
+            "species": sp,
+            "transform": {"translation": [round(cx, 4), round(cy, 4),
+                                          round(float(dims[2]) / 2.0, 4)],
+                          "rot_y": float(rv.get("yaw") or 0.0),
+                          "scale": [1.0, 1.0, 1.0]},
+            "fit": {"dims": [float(dims[0]), float(dims[1]), float(dims[2])],
+                    "pivot": "center", "openings": [], "collision": "convex"},
+        })
     coverage = {"prop/site_cover": n_cover}
-    if len(slots) > n_cover:
-        coverage["prop/site_hung"] = len(slots) - n_cover
+    if n_hung:
+        coverage["prop/site_hung"] = n_hung
+    if len(slots) > n_cover + n_hung:
+        coverage["prop/site_responders"] = len(slots) - n_cover - n_hung
     doc = {
         "slot_manifest_version": "1.2.0",
         "building_id": "site",
@@ -1655,6 +1680,8 @@ COVER_MATERIALS = {"box_truck": "metal_painted", "cargo_container": "metal_paint
                    # Zoo's one option for it (0.98.0)
                    "step_van": "paint_matte",
                    "simple_car": "metal_painted",
+                   # the responders' car (0.101.0), Zoo 1.86.0's one option
+                   "cruiser": "metal_painted",
                    # the kerb line (site_furniture)
                    "streetlight": "metal", "fire_hydrant": "metal_painted",
                    "litter_bin": "metal_painted", "sign_post": "metal_bare",
@@ -1804,6 +1831,42 @@ def cover_module_refs(site_spec, prefix, out_dir=None, key="cover"):
                        f'id="{seen[stem]}"]')
         refs[i] = seen[stem]
     return refs, ext, findings
+
+
+#: What `write_responder_vehicles` writes beside a themed site scene.
+RESPONDERS_NAME = "responders.json"
+
+
+def write_responder_vehicles(site_spec, refs, scene_dir):
+    """`responders.json` beside the scene (0.101.0, roadmap 212): for each
+    arrival's car, the module Zoo built and `cover_module_refs` copied --
+    its path relative to the scene -- with the stop and the slot it was
+    built for. The gameplay layer spawns responders; the package names the
+    car it spawns (Level Factory's `responder_arrivals.json`). A car with no
+    module is listed under `missing`, not dropped. Returns the document, or
+    None, writing nothing, on a site with no arrivals."""
+    cars = site_spec.get("responders") or []
+    if not cars:
+        return None
+    vehicles, missing = [], []
+    for i, rv in enumerate(cars):
+        ref = refs.get(i)
+        if ref is None:
+            missing.append(i)
+            continue
+        assert ref.startswith("cover_"), ref        # `cover_module_refs`' own ids
+        vehicles.append({"arrival": i, "species": rv["species"],
+                         "scene": f"{COVER_DIR}/{ref[len('cover_'):]}.glb",
+                         "stop": list(rv["at"]), "yaw": rv.get("yaw"),
+                         "dims": list(rv["dims"])})
+    doc = {"schema": "lot.responder_vehicles.v1",
+           "what": ("The car each responder arrival brings: built by Zoo's site kit, "
+                    "copied beside this scene, stood nowhere. Spawning it is the "
+                    "gameplay layer's."),
+           "vehicles": vehicles, "missing": missing}
+    with open(os.path.join(scene_dir, RESPONDERS_NAME), "w", encoding="utf-8") as fh:
+        json.dump(doc, fh, indent=2)
+    return doc
 
 
 def _blocker_source(bk):
@@ -2432,6 +2495,15 @@ def write_godot_scene(site_spec, merged, out_path, glb_dir=".", preview=False,
         print(f"[lot] {code}: {msg}")
     # a module both lists use is declared once
     res_lines += [ln for ln in hung_ext if ln not in res_lines]
+    # THE RESPONDERS' CAR (0.101.0): resolved and copied beside the scene the
+    # way a cover piece is -- the module and the textures beside it -- but
+    # declared nowhere in it: a resource the scene names, it would load.
+    # `responders.json` names the file for the package.
+    resp_refs, _resp_ext, resp_findings = cover_module_refs(
+        site_spec, prefix, os.path.dirname(os.path.abspath(out_path)), key="responders")
+    for code, msg in resp_findings:
+        print(f"[lot] {code}: {msg}")
+    write_responder_vehicles(site_spec, resp_refs, os.path.dirname(os.path.abspath(out_path)))
 
     outdoor_body, outdoor_sub = _outdoor_nodes(
         site_spec, preview=preview, self_flooring=self_flooring, skins=skins,
@@ -3351,6 +3423,13 @@ def assemble(site_spec_path, out_dir=None, walkable=False, navqa=False,
     responder_findings = []
     arrivals = site_responders.plan(site_spec, walk_pos, findings=responder_findings)
     responder_keep_out = site_responders.keep_out(arrivals)
+    # THE CAR THEY ARRIVE IN (0.101.0): one record a stop, in a list of its
+    # own -- not cover, so no planner stands round it and the scene stands
+    # nothing for it. `write_site_slots` gives each a slot, so Zoo's site
+    # kit builds the car; the themed assembly copies the module beside its
+    # scene and names it in `responders.json` (`write_responder_vehicles`),
+    # which the package reads.
+    site_spec["responders"] = [site_responders.vehicle_record(a) for a in arrivals]
     if arrivals:
         _arrival_markers = [site_responders.marker(a) for a in arrivals]
         _declared = site_spec.setdefault("site_markers", [])
