@@ -608,8 +608,13 @@ def plan_meters(road, markers=()) -> list:
         w, d, h = SPECIES["parking_meter"]
         t = (bay["t0"] + bay["t1"]) / 2.0
         offset = kerb.offset - kerb.sign * (road.sidewalk / 2.0 - METER_INSET)
+        # FACING ACROSS THE KERB (0.102.2). Zoo's meter has a display window
+        # on each wide face, its +-Y; at the road's angle those look across
+        # the kerb, one to the sidewalk and one to the bay, on either side.
+        # 0.102.1 and before added 90 and pointed them along the street --
+        # the walker: "should face toward the sidewalk, rotating 90 Degrees".
         piece = _piece(f"Meter_{road.index}{bay['side']}{bay['index']}",
-                       "parking_meter", road, kerb, t, offset, 90.0,
+                       "parking_meter", road, kerb, t, offset, 0.0,
                        breaks=f"bay {bay['side']}{bay['index']}")
         if _clear_of_markers(piece, markers):
             out.append(piece)

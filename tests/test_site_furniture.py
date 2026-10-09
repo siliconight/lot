@@ -256,6 +256,21 @@ def test_a_meter_stands_at_every_parking_bay_near_the_kerb():
         assert 5.0 <= abs(m["at"][1]) <= 6.0, m
 
 
+def test_a_meter_faces_across_the_kerb():
+    """FAILS ON 0.102.1. Zoo's meter shows a window on each wide face; the
+    walker wants one of them to the sidewalk, so both look across the kerb:
+    the face's plan direction is square to the road on either side. 0.102.1
+    stood them at the road's angle + 90, faces along the street."""
+    (road,) = site_streets.roads(_probe())
+    meters = site_furniture.plan_meters(road)
+    assert {m["kerb"] for m in meters} == {"L", "R"}
+    for m in meters:
+        fx, fy = site_furniture.plate_facing(m["yaw"])
+        along = fx * road.along[0] + fy * road.along[1]
+        across = fx * road.perp[0] + fy * road.perp[1]
+        assert abs(along) < 1e-6 and abs(abs(across) - 1.0) < 1e-6, m
+
+
 def test_the_stop_corner_stands_at_the_bus_stop():
     spec = _probe()
     roads = site_streets.roads(spec)
