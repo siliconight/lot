@@ -29,7 +29,9 @@ site that plays well should sweep clean (gs_heist is the calibration site).
 
 USAGE
     python site_audit.py specs/gs_heist.json [--json]
-Also runs automatically at the end of every lot.py assembly.
+Also runs automatically at the end of every lot.py assembly, which prints
+the report and keeps it in the site's gameplay manifest as `site_audit`
+(`record`, 0.102.0).
 """
 
 import argparse
@@ -328,6 +330,17 @@ def format_report(res):
         lines.append("  clean -- structural estimate, not a measure of fun;"
                      " walk it")
     return "\n".join(lines)
+
+
+def record(res):
+    """The audit as the site's gameplay manifest keeps it (0.102.0, roadmap
+    215): the mode, the counts, and one dict a finding with named fields --
+    not the tuple's positions -- so a reader that cannot find one can say
+    so. Until 0.102.0 `assemble` printed the report and kept nothing, so no
+    validation report counted a finding."""
+    return {"mode": res["mode"], "counts": dict(res["counts"]),
+            "findings": [{"severity": sev, "code": code, "message": msg}
+                         for sev, code, msg in res["findings"]]}
 
 
 def main(argv=None):

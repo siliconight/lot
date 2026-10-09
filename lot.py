@@ -3694,7 +3694,12 @@ def assemble(site_spec_path, out_dir=None, walkable=False, navqa=False,
     # site-level design grammar (report-only, like DC's combat_audit):
     # exfil shape, responder pressure, safe anchors, leg rhythm, crossings
     import site_audit
-    print(site_audit.format_report(site_audit.audit(site_spec)))
+    audit_result = site_audit.audit(site_spec)
+    print(site_audit.format_report(audit_result))
+    # KEPT, NOT ONLY PRINTED (0.102.0, roadmap 215): the report went to the
+    # job log and nowhere else, so no validation report ever counted a
+    # finding it raised. Level Factory reads this block into its report.
+    merged["site_audit"] = site_audit.record(audit_result)
     merged["encounters"] = site_pacing.encounter_intel(site_spec, adj)
 
     gp_out = os.path.join(out_dir, f"{site_spec['name']}.site.gameplay.json")
