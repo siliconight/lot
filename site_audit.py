@@ -311,6 +311,16 @@ def audit(site):
     except Exception:
         pass
 
+    # --- the guide's adjacency (0.111.0, roadmap 230): what the pairs of lot
+    # buildings are to each other, by category and by the pair rules; MED where
+    # the guide wants an explanation, INFO where it says why a pair is good
+    try:
+        import site_adjacency
+        for sev, code, msg in site_adjacency.findings(site):
+            F((sev, code, msg))
+    except Exception as exc:                             # noqa: BLE001
+        F(("INFO", "S_ADJACENCY", f"not judged: {exc}"))
+
     counts = {"HIGH": 0, "MED": 0, "INFO": 0}
     for sev, code, msg in findings:
         counts[sev] += 1
