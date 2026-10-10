@@ -321,6 +321,16 @@ def audit(site):
     except Exception as exc:                             # noqa: BLE001
         F(("INFO", "S_ADJACENCY", f"not judged: {exc}"))
 
+    # --- the guide's gameplay targets (0.112.0, roadmap 230): the level's
+    # numbers against the guide's starting ranges, every line INFO, so a
+    # reviewer reads them in the same report as the pair rules
+    try:
+        import site_targets
+        for sev, code, msg in site_targets.findings(site):
+            F((sev, code, msg))
+    except Exception as exc:                             # noqa: BLE001
+        F(("INFO", "S_TARGETS", f"not measured: {exc}"))
+
     counts = {"HIGH": 0, "MED": 0, "INFO": 0}
     for sev, code, msg in findings:
         counts[sev] += 1
