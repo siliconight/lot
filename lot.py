@@ -1104,7 +1104,10 @@ CODE_SIGN_PACK_MISSING = "LOT_SIGN_PACK_MISSING"
 SIGN_SPAN = 0.72          # of the facade's width
 SIGN_MIN_W = 2.4
 SIGN_MAX_W = 9.0
-SIGN_ASPECT = 6.0         # width : height, matching the pack
+#: Width over height. TRUE SINCE PIXELCOAT 0.62.0, which draws a business's
+#: pack at 6:1. Its comment said "matching the pack" while Pixelcoat drew a
+#: 4:1 cabinet, so every band's letters stood 1.5x too wide (roadmap 223).
+SIGN_ASPECT = 6.0
 SIGN_D = 0.22
 SIGN_Z = 3.6              # the band's centre, above grade
 SIGN_PROUD = 0.06         # how far its back sits off the facade
@@ -1289,6 +1292,9 @@ def building_signs(site_spec):
             "albedo": _abs(maps["albedo"]),
             "emissive": _abs(maps["emissive"]) if maps.get("emissive") else None,
             "nearest": hints.get("interpolation") == "nearest",
+            # the manifest itself, copied beside the maps (0.105.0): the
+            # export reads how each map asks to be imported from it
+            "manifest": _abs(packs[0]),
         }
     return signs, findings
 
@@ -1313,6 +1319,17 @@ def _sign_ext_lines(signs, out_dir, prefix):
             lines.append(f'[ext_resource type="Texture2D" '
                          f'path="{prefix}{SIGNS_DIR}/{name}" '
                          f'id="{sk["id"]}_{m}"]')
+        # THE PACK'S MANIFEST TRAVELS WITH ITS MAPS (0.105.0, roadmap 223).
+        # A smooth sign (Pixelcoat 0.62.0) asks to be filtered and mipped, a
+        # pixel one does not, and the maps alone cannot say which: Level
+        # Factory's export reads `import_hints` here and pins each map's
+        # import to match. No scene names it, so it is a sibling, not a
+        # resource.
+        if sk.get("manifest"):
+            os.makedirs(dest, exist_ok=True)
+            target = os.path.join(dest, os.path.basename(sk["manifest"]))
+            if not (os.path.exists(target) and _same_bytes(sk["manifest"], target)):
+                shutil.copyfile(sk["manifest"], target)
     return lines
 
 
