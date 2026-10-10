@@ -161,6 +161,16 @@ BENCH_TOWARD_BACK = 0.35  # the bench's centre, from the shelter's, toward its b
 SIGN_BEFORE_SHELTER = 1.0
 PIECE_GAP = 0.3           # daylight between two pieces along the band
 NUDGES = (0.0, 2.0, -2.0, 4.0, -4.0)   # a lamp or a tree steps along its band
+#: A SHOP BAND IS NOT BEHIND A POLE (0.106.0). Cold run 9222's frame of
+#: deli_a01 showed Lamp_2 standing 2.46 m in front of the SCRAPPLE & SONS DELI
+#: band, hiding its E: the band spans stations 26 to 35 of road 0's left kerb
+#: and the lamp's spacing put it at 30. The planner never knew the band was
+#: there. A lamp (6 m) and a tree's crown reach the band (its centre at 3.6 m,
+#: 0.75 m either side at the widest); a hydrant, a post or a shelter does not.
+#: So those two keep out of each band's span on the kerb it faces, widened by
+#: SIGN_CLEAR at each end, and step to the nearer end of it when the spacing
+#: lands inside -- the 2 and 4 m nudges cannot leave a 9 m band.
+SIGN_CLEAR = 0.5
 
 #: THE CORNER IS ONE PLACE, NOT TWO KERBS. Until 0.72.2 a corner piece was
 #: planned per KERB CUT and `_free` looked only at the band it stood on, so
@@ -300,21 +310,71 @@ def _free(t, half_along, placed, gap=PIECE_GAP):
     return True
 
 
-def _nudged(make, t, half_along, kerb, placed, markers):
+def _nudged(make, t, half_along, kerb, placed, markers, avoid=()):
     """The piece ``make(t)`` at its station, or stepped along the band by
     `NUDGES` when a MARKER is in the way. A station over a dropped kerb is
     skipped, not nudged -- the spacing rule stays the spacing rule, and a
-    marker is the one thing worth a step."""
+    marker is the one thing worth a step.
+
+    ``avoid`` (0.106.0) is the shop bands' spans on this kerb, ``(t0, t1)``
+    stations: no station inside one is taken, and the ends of a span the
+    station falls in are tried after the nudges, nearer end first."""
     if not _clear_of_cuts(t, half_along, kerb):
         return None
-    for dt in NUDGES:
+    steps = list(NUDGES)
+    for t0, t1 in avoid:
+        if t0 - half_along < t < t1 + half_along:
+            ends = ((t0 - half_along - PIECE_GAP) - t, (t1 + half_along + PIECE_GAP) - t)
+            steps += sorted(ends, key=abs)
+    for dt in steps:
         s = t + dt
-        if not (_clear_of_cuts(s, half_along, kerb) and _free(s, half_along, placed)):
+        if not (_clear_of_cuts(s, half_along, kerb) and _free(s, half_along, placed)
+                and _clear_of_spans(s, half_along, avoid)):
             continue
         piece = make(s)
         if _clear_of_markers(piece, markers):
             return piece
     return None
+
+
+def _clear_of_spans(t, half_along, spans) -> bool:
+    """No part of a piece at station ``t`` inside any ``(t0, t1)`` span."""
+    return all(t + half_along <= t0 or t - half_along >= t1 for t0, t1 in spans)
+
+
+def _sign_spans(road, kerb, sign_bands, roads_list):
+    """``[(t0, t1)]``: the stations of the shop bands that face ``kerb`` of
+    ``road``, widened by SIGN_CLEAR. A band faces the road nearest its centre
+    -- the road `lot.sign_placement` turned it to -- and the kerb on its side
+    of that road's centre line. ``sign_bands`` are `lot.sign_bands` records:
+    ``{"at": (x, y), "half": w / 2, "axis": "x" | "y"}`` in plan metres."""
+    spans = []
+    for b in sign_bands:
+        x, y = b["at"]
+        if _nearest_road(roads_list, x, y) is not road:
+            continue
+        off = (x - road.a[0]) * road.perp[0] + (y - road.a[1]) * road.perp[1]
+        if off * kerb.sign <= 0:
+            continue
+        h = b["half"]
+        ends = ((x - h, y), (x + h, y)) if b["axis"] == "x" else ((x, y - h), (x, y + h))
+        ts = sorted((ex - road.a[0]) * road.along[0] + (ey - road.a[1]) * road.along[1]
+                    for ex, ey in ends)
+        spans.append((ts[0] - SIGN_CLEAR, ts[1] + SIGN_CLEAR))
+    return spans
+
+
+def _nearest_road(roads_list, x, y):
+    """The road whose centre line passes nearest (x, y), as `lot.sign_placement` finds it."""
+    best = None
+    for road in roads_list:
+        t = max(0.0, min(road.length, (x - road.a[0]) * road.along[0]
+                         + (y - road.a[1]) * road.along[1]))
+        p = road.point(t)
+        d = math.hypot(p[0] - x, p[1] - y)
+        if best is None or d < best[0]:
+            best = (d, road)
+    return best[1] if best else None
 
 
 def _clear_of_markers(piece, markers) -> bool:
@@ -625,7 +685,8 @@ def plan_meters(road, markers=()) -> list:
     return out
 
 
-def plan_furniture(roads_list, buildings=(), markers=(), findings=None) -> list:
+def plan_furniture(roads_list, buildings=(), markers=(), findings=None,
+                   sign_bands=()) -> list:
     """Pieces along every sidewalk band, as site-cover-shaped records with a
     ``base`` of ``sidewalk`` (the module stands on the band's top, not the
     plate; the caller resolves the height). ``buildings`` are the spec's,
@@ -633,10 +694,12 @@ def plan_furniture(roads_list, buildings=(), markers=(), findings=None) -> list:
     every piece keeps clear of (a lamp or a tree steps along its band, a
     corner piece or a bus stop is skipped); ``findings`` (a list of
     strings) hears about a junction approach whose control could not be
-    stood by the rules. Returns the list; the caller extends the spec and
-    the slots."""
+    stood by the rules. ``sign_bands`` (0.106.0) are the shop bands a lamp or
+    a tree keeps out of (`_sign_spans`). Returns the list; the caller
+    extends the spec and the slots."""
     out = []
     n = 0
+    kept_clear = []          # (piece name, from station, to station) or (name, from, None)
     markers = [tuple(m) for m in markers]
     # A CORNER IS ONE PLACE. `corner_posts` is the corners a post already
     # stands on and `corner_taken` the (species, corner) pairs already
@@ -701,12 +764,16 @@ def plan_furniture(roads_list, buildings=(), markers=(), findings=None) -> list:
             placed = [p for p in control if p["kerb"] == kerb.side]
             outer = kerb.offset + kerb.sign * (road.sidewalk / 2.0 - BAND_INSET)
             tree_off = kerb.offset + kerb.sign * (road.sidewalk / 2.0 - TREE_INSET)
-            # lamps at a spacing, skipping the cuts, and a tree between each pair
+            # lamps at a spacing, skipping the cuts, and a tree between each pair,
+            # each kept out of the shop bands facing this kerb (0.106.0)
+            spans = _sign_spans(road, kerb, sign_bands, roads_list)
             t = LAMP_START
             while t < road.length - LAMP_START:
                 w, d, h = SPECIES["streetlight"]
                 lamp = _nudged(lambda s: _piece(f"Lamp_{n}", "streetlight", road, kerb, s, outer),
-                               t, d / 2.0, kerb, placed, markers)
+                               t, d / 2.0, kerb, placed, markers, avoid=spans)
+                if spans and not _clear_of_spans(t, d / 2.0, spans) and _clear_of_cuts(t, d / 2.0, kerb):
+                    kept_clear.append((f"Lamp_{n}", t, lamp["t"] if lamp else None))
                 if lamp:
                     placed.append(lamp)
                     n += 1
@@ -714,7 +781,9 @@ def plan_furniture(roads_list, buildings=(), markers=(), findings=None) -> list:
                 gw, gd = FOOTPRINT[species_tree]
                 if tt < road.length - LAMP_START:
                     tree = _nudged(lambda s: _piece(f"Tree_{n}", species_tree, road, kerb, s, tree_off),
-                                   tt, gw / 2.0, kerb, placed, markers)
+                                   tt, gw / 2.0, kerb, placed, markers, avoid=spans)
+                    if spans and not _clear_of_spans(tt, gw / 2.0, spans) and _clear_of_cuts(tt, gw / 2.0, kerb):
+                        kept_clear.append((f"Tree_{n}", tt, tree["t"] if tree else None))
                     if tree:
                         placed.append(tree)
                         n += 1
@@ -860,6 +929,11 @@ def plan_furniture(roads_list, buildings=(), markers=(), findings=None) -> list:
              f"refused ({'; '.join(sorted(set(mine)))}), and no station along "
              f"its kerbs is both clear of the cuts, the pieces and the markers "
              f"and {HYDRANT_MIN_SPACING:.1f} m from the rest. " + covered)
+    for name, was, now in kept_clear:
+        _say(findings,
+             f"LOT_BAND_KEPT_CLEAR: {name} would have stood at station {was:.2f}, in "
+             f"front of a shop band; " + (f"it stands at {now:.2f}" if now is not None
+                                          else "nowhere clear of it, so it does not stand"))
     return out
 
 

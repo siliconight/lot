@@ -1370,6 +1370,30 @@ def sign_placement(bdef, roads_list):
             at[1] + ny * (SIGN_D / 2.0 + SIGN_PROUD), yaw, facade)
 
 
+def sign_bands(site_spec, roads_list, signs=None):
+    """The shop bands this site hangs, for `site_furniture.plan_furniture`
+    to keep its lamps and trees out of (0.106.0): ``[{"building", "at",
+    "half", "axis"}]`` in plan metres -- the band's centre, half its width,
+    and the plan axis it runs along. The same placement and size the scene
+    writer gives each band (`sign_placement`, `sign_size`), so the span a
+    pole keeps out of is the span that is drawn. A facade with its normal on
+    y (yaw 90 or 270) runs along x."""
+    if signs is None:
+        signs, _findings = building_signs(site_spec)
+    out = []
+    for b in site_spec.get("buildings", []) or []:
+        if b["id"] not in signs:
+            continue
+        spot = sign_placement(b, roads_list)
+        if spot is None:
+            continue
+        x, y, yaw, facade = spot
+        w, _h = sign_size(facade)
+        out.append({"building": b["id"], "at": (x, y), "half": w / 2.0,
+                    "axis": "x" if int(round(yaw)) % 180 == 90 else "y"})
+    return out
+
+
 def sign_facing(yaw_plan: float) -> float:
     """The Godot rotation about Y, in degrees, that turns a sign cabinet's
     face along a facade whose outward normal lies at `yaw_plan` degrees
@@ -3527,10 +3551,13 @@ def assemble(site_spec_path, out_dir=None, walkable=False, navqa=False,
     import site_parking
     import site_streets
     furniture_findings = []
-    furniture = site_furniture.plan_furniture(site_streets.roads(site_spec),
+    _furniture_roads = site_streets.roads(site_spec)
+    furniture = site_furniture.plan_furniture(_furniture_roads,
                                               site_spec.get("buildings") or [],
                                               list(cover_points.values()),
-                                              furniture_findings)
+                                              furniture_findings,
+                                              sign_bands=sign_bands(site_spec,
+                                                                    _furniture_roads))
     site_spec.setdefault("cover", []).extend(furniture)
     # THE GAS STATION'S PRICE PYLON (site_furniture.plan_pylons): at each
     # forecourt's road frontage, behind the band, facing along the road,
