@@ -39,6 +39,7 @@ producer emits, this decides.
 from __future__ import annotations
 
 import math
+import zlib
 from dataclasses import dataclass, field
 
 #: Where each side's eye and its target sit, from the Laser Tag scripts.
@@ -175,6 +176,12 @@ COVER_SPECIES = (
     ("cargo_container", 2.44, 6.06, 2.59),
     ("simple_car", 1.75, 4.3, 1.45),
 )
+#: HOW MANY LOOKS A COVER SPECIES COMES IN (0.103.0): Zoo's genome `module_variants`, which a
+#: slot's `variant` picks among. A box truck is one of Zoo 1.92.0's four invented fleets
+#: (`box_truck_forms.FLEETS`); a species not named here has one look and no variant. A Zoo that
+#: cannot draw a variant still builds the plain module, which `cover_module_refs` falls back
+#: to (0.90.0), so this table and Zoo's genome need not land in the same instant.
+COVER_VARIANTS = {"box_truck": 4}
 
 
 def footprint(width: float, depth: float, yaw: float):
@@ -220,6 +227,8 @@ class Cover:
     size_y: float = 0.0
     width: float = 0.0
     depth: float = 0.0
+    #: which of the species' looks it wears (0.103.0); 0 is the plain one
+    variant: int = 0
 
     def __post_init__(self):
         if not self.size_x:
@@ -239,6 +248,8 @@ class Cover:
         if self.species:
             out.update({"species": self.species, "yaw": self.yaw,
                         "width": self.width, "depth": self.depth})
+            if self.variant:
+                out["variant"] = int(self.variant)
         return out
 
     def as_site_cover(self) -> dict:
@@ -267,6 +278,10 @@ class Cover:
             # themed site can stand the module where the box stood.
             out.update({"species": self.species, "yaw": self.yaw,
                         "dims": [self.width, self.depth, self.height]})
+            # its look, non-zero only, as a dumpster's hauler is: a record written before
+            # 0.103.0 and a variant-0 piece read the same
+            if self.variant:
+                out["variant"] = int(self.variant)
         return out
 
 
@@ -631,13 +646,25 @@ def _place_species(line, *, species, ground, rects, markers, placed, bias,
     return None
 
 
+def cover_variant(species, spot):
+    """The look a piece of ``species`` standing at ``spot`` wears: one of
+    `COVER_VARIANTS[species]`, from the species and where it stands, so a lot's
+    trucks differ and a re-run of one site stands the same truck in the same
+    place. 0 for a species with one look."""
+    n = COVER_VARIANTS.get(species, 1)
+    if n <= 1:
+        return 0
+    key = f"{species},{round(float(spot[0]), 2)},{round(float(spot[1]), 2)}"
+    return zlib.crc32(key.encode("utf-8")) % n
+
+
 def _species_piece(name, spot, sp, yaw, line):
     sname, w, d, h = sp
     sx, sy = footprint(w, d, yaw)
     return Cover(name=name, x=spot[0], y=spot[1], size=max(sx, sy), height=h,
                  breaks=f"{line[0]} -> {line[1]}", span=line[4],
                  species=sname, yaw=yaw, size_x=sx, size_y=sy,
-                 width=w, depth=d)
+                 width=w, depth=d, variant=cover_variant(sname, spot))
 
 
 #: The marker `site_spawns` writes the crew's spawn as, and the end cover is
