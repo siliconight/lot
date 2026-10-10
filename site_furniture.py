@@ -80,6 +80,10 @@ SPECIES = {
     # (`site_dumpsters.plan_dumpsters`). The genome's default, a 3-yard
     # front-load container.
     "dumpster": (1.83, 1.1, 1.3),
+    # THE BAGS BESIDE IT (Zoo 1.93.0), a heap of filled garbage bags
+    # (`site_dumpsters.plan_bags`). The genome's default: a row of three
+    # and one on top.
+    "trash_bags": (1.4, 0.8, 0.75),
 }
 
 #: The trees a road may be planted with, in the order a hash picks from.

@@ -1699,6 +1699,9 @@ COVER_MATERIALS = {"box_truck": "metal_painted", "cargo_container": "metal_paint
                    "price_pylon": "metal_painted",
                    # the dumpster at a building's service side (site_dumpsters)
                    "dumpster": "metal_painted",
+                   # the bags beside it (site_dumpsters.plan_bags, 0.104.0):
+                   # Zoo 1.93.0's one option, each bag's colour in its Wear
+                   "trash_bags": "plastic",
                    # the handbills (site_posters): paper, the genome's own kind
                    "poster_wall": "paper", "pole_flyers": "paper",
                    # the fence at the playable edge (site_fences, 0.97.0):
@@ -3568,6 +3571,24 @@ def assemble(site_spec_path, out_dir=None, walkable=False, navqa=False,
               f"({_y['at'][0]}, {_y['at'][1]}) under {_y['dumpster']}, apron {_y['apron']} m")
     for f_ in _yard_findings:
         print(f"[lot] {f_}")
+    # THE BAGS BESIDE EACH DUMPSTER (site_dumpsters.plan_bags, 0.104.0):
+    # a heap of filled garbage bags against the same wall, on its pad
+    # where the pad has room, clear of every way in, of the paths and
+    # walks, of what stands and of the markers. After the pads, so the
+    # heap stands on one rather than shrinking it; before the parking and
+    # the cover planner, so both see it standing. What stood when the
+    # pads were laid is what stands now: `_standing_y`.
+    bags = site_dumpsters.plan_bags(
+        site_spec, merged, site_streets.roads(site_spec), dumpsters, yards,
+        list(cover_points.values()), standing=_standing_y,
+        keep_out=site_furniture.path_corridors(site_spec) + _field_rects,
+        ground=extent.rect, findings=furniture_findings)
+    site_spec["cover"].extend(bags)
+    furniture = furniture + bags
+    for _p in bags:
+        print(f"[lot] LOT_BAGS_PLACED: {_p['name']} at ({_p['at'][0]}, {_p['at'][1]}) "
+              f"yaw {_p['yaw']} beside {_p['dumpster']}, heap {_p['variant']}, "
+              + ("on its pad" if _p["on_pad"] else "off its pad"))
     for _p in pylons:
         print(f"[lot] LOT_PYLON_PLACED: {_p['name']} at ({_p['at'][0]}, {_p['at'][1]}) "
               f"yaw {_p['yaw']} on road {_p['road']} kerb {_p['kerb']}")

@@ -27,6 +27,12 @@ does not look: round the back, or down a side. So:
 A building with no wall that takes one is said (`LOT_DUMPSTER_NO_ROOM`) and
 gets none: a dumpster in a doorway is worse than no dumpster.
 
+THE BAGS BESIDE IT (0.104.0). `plan_bags` stands a heap of filled garbage
+bags -- Zoo 1.93.0's `trash_bags` -- against the same wall, beside the
+container, on its pad where the pad has room. It runs after `site_yards`,
+so the heap stands on the pad rather than shrinking it. A dumpster with no
+clear side is said (`LOT_BAGS_NO_ROOM`) and gets no bags.
+
 Site space: plan (x, y), metres; Godot is (x, -y). A piece's ``yaw`` is the
 slot's `rot_y`, degrees counter-clockwise in plan, and a Zoo prop's front
 (-Y in its own frame) points to plan -y at yaw 0, so the yaw that turns the
@@ -67,6 +73,27 @@ FRONT_REACH = 30.0
 #: Clearances from what else is on the site.
 GAP = 0.3
 EDGE = 0.5
+
+#: THE BAGS BESIDE IT (0.104.0, roadmap 219 note 11). The walker, 2026-10-09:
+#: "need filled black garbage bags stacked near the garbage bins". Zoo 1.93.0
+#: draws a heap of them; `plan_bags` stands one beside each dumpster.
+BAGS = "trash_bags"
+#: The genome's default heap: a row of three filled bags and one on top.
+BAG_DIMS = (1.4, 0.8, 0.75)
+#: The heaps Zoo draws (`trash_bag_forms.VARIANTS`); the building's id picks.
+BAG_VARIANTS = 4
+#: From the container's side to the heap, along the wall: piled against it,
+#: and the two boxes still apart.
+BAG_GAP = 0.1
+#: From the wall to the heap's back: bags lean on brick. Less than the
+#: container's `WALL_GAP`, which is there for a lid that swings back.
+BAG_WALL_GAP = 0.15
+#: THE HEAP IS TURNED so its width runs out from the wall: a row of bags
+#: lining the container's side. A full pad (`site_yards`) runs `PAD_ALONG`
+#: 3.7 m centred on its container, 0.935 m past each side. A heap 0.8 m deep
+#: and 0.1 m off fits on it with 3.5 cm to spare, and its 1.55 m out from
+#: the wall stays inside the pad's 1.65 m at the least. Face on, 1.4 m wide,
+#: it would not fit on the pad at all.
 
 _WALLS = (("S", (0.0, -1.0)), ("N", (0.0, 1.0)), ("E", (1.0, 0.0)), ("W", (-1.0, 0.0)))
 
@@ -256,6 +283,123 @@ def plan_dumpsters(site_spec, merged, roads_list, markers=(), standing=(), keep_
         taken.append((piece["at"][0] - px / 2.0, piece["at"][1] - py / 2.0,
                       piece["at"][0] + px / 2.0, piece["at"][1] + py / 2.0))
     return placed
+
+
+def plan_bags(site_spec, merged, roads_list, dumpsters, yards=(), markers=(), standing=(),
+              keep_out=(), ground=None, findings=None):
+    """A heap of filled garbage bags beside each dumpster, as cover pieces.
+
+    ``dumpsters`` are `plan_dumpsters`' pieces and ``yards`` `site_yards.plan_yards`' pads;
+    ``standing`` and ``keep_out`` are plan rects (what already stands, its own dumpster among
+    them; paths and walks), ``ground`` the plate's rect, ``markers`` the mission's points.
+
+    A heap stands against its dumpster's wall, `BAG_GAP` off one of its sides, turned so its
+    row of bags runs out from the wall. Of the two sides, one its pad covers comes first and
+    the building's id picks between equals. A side is refused when the heap would pass the
+    wall's end or come within `DOOR_CLEAR` of a way in or `WINDOW_CLEAR` of another opening,
+    or would stand on a path, a walk or a road's band, near a neighbour, near what stands
+    other than its own dumpster, near an entry's approach point, a marker or the plate's edge.
+    A dumpster with neither side clear is said (`LOT_BAGS_NO_ROOM`) and gets no bags: a heap
+    in a doorway is worse than none."""
+    import site_enterability as SE
+    import site_extent
+    import site_furniture
+    w, d, h = BAG_DIMS
+    openings = _openings(site_spec, merged)
+    approaches = [ap for rows in SE._approach_points(site_spec, merged).values() for (_e, ap, _w) in rows]
+    rects = {}
+    for b in site_spec.get("buildings", []) or []:
+        r = site_extent.rotated_footprint(b)
+        if r is not None:
+            rects[b["id"]] = r
+    pads = {y.get("dumpster"): (y["at"][0] - y["size_x"] / 2.0, y["at"][1] - y["size_y"] / 2.0,
+                                y["at"][0] + y["size_x"] / 2.0, y["at"][1] + y["size_y"] / 2.0)
+            for y in yards or ()}
+    placed, taken = [], []
+    for p in dumpsters:
+        bid, side = p.get("building"), p.get("wall")
+        rect = rects.get(bid)
+        if rect is None or side not in dict(_WALLS):
+            _say(findings, f"LOT_BAGS_NO_ROOM: {p.get('name')} names no wall this can read; no bags")
+            continue
+        n = dict(_WALLS)[side]
+        (sx0, sy0), (ux, uy), length = _wall_line(rect, side)
+        cw = float(p["dims"][0])                          # the container's width, along the wall
+        s0 = (p["at"][0] - sx0) * ux + (p["at"][1] - sy0) * uy
+        cx_, _ch, cy_ = p["size"]
+        own = (p["at"][0] - cx_ / 2.0, p["at"][1] - cy_ / 2.0,
+               p["at"][0] + cx_ / 2.0, p["at"][1] + cy_ / 2.0)
+        pad = pads.get(p.get("name"))
+        on_wall = [(((ox - sx0) * ux + (oy - sy0) * uy), hw, entry)
+                   for (ox, oy), (onx, ony), hw, entry in openings.get(bid, [])
+                   if onx * n[0] + ony * n[1] > 0.9]
+        # the heap's plan footprint: its depth along the wall, its width out from it
+        px, py = (d, w) if side in ("S", "N") else (w, d)
+        out = BAG_WALL_GAP + w / 2.0
+        sides = []
+        for sign in (-1.0, 1.0):
+            s = s0 + sign * (cw / 2.0 + BAG_GAP + d / 2.0)
+            cx = sx0 + ux * s + n[0] * out
+            cy = sy0 + uy * s + n[1] * out
+            r = (cx - px / 2.0, cy - py / 2.0, cx + px / 2.0, cy + py / 2.0)
+            on_pad = pad is not None and _within(r, pad)
+            sides.append((not on_pad, _h("bag side", bid, sign) % 2, sign, s, cx, cy, r, on_pad))
+        sides.sort()
+        piece = None
+        for _off, _k, sign, s, cx, cy, r, on_pad in sides:
+            if s - d / 2.0 < 0.0 or s + d / 2.0 > length:
+                continue                                  # past the wall's end
+            if any(abs(s - u) - d / 2.0 - hw < (DOOR_CLEAR if entry else WINDOW_CLEAR)
+                   for u, hw, entry in on_wall):
+                continue
+            if ground is not None and not (ground[0] + EDGE <= r[0] and r[2] <= ground[2] - EDGE
+                                           and ground[1] + EDGE <= r[1] and r[3] <= ground[3] - EDGE):
+                continue
+            if any(_overlap(r, _grow(o, GAP)) for oid, o in rects.items() if oid != bid):
+                continue
+            if any(_overlap(r, k) for k in keep_out):
+                continue
+            if _overlap(r, own):
+                continue
+            if any(_overlap(r, _grow(t, GAP)) for t in standing if not _same(t, own)):
+                continue
+            if any(_overlap(r, _grow(t, GAP)) for t in taken):
+                continue
+            if any(_in_band(r, road) for road in roads_list):
+                continue
+            grown = _grow(r, APPROACH_CLEAR)
+            if any(grown[0] <= ax <= grown[2] and grown[1] <= ay <= grown[3] for ax, ay in approaches):
+                continue
+            # its front faces along the wall, away from its dumpster: the side a body comes from
+            fx, fy = ux * sign, uy * sign
+            cand = {"name": f"TrashBags_{bid}", "species": BAGS,
+                    "at": [round(cx, 3), round(cy, 3)],
+                    "yaw": round(math.degrees(math.atan2(fx, -fy)) % 360.0, 3),
+                    "dims": [w, d, h], "size": [px, h, py], "base": "plate",
+                    "variant": _h("bags", bid) % BAG_VARIANTS,
+                    "building": bid, "wall": side, "dumpster": p.get("name"), "on_pad": on_pad,
+                    "source": "site_dumpsters", "breaks": f"bags beside {p.get('name')}"}
+            if not site_furniture._clear_of_markers(cand, markers):
+                continue
+            piece = cand
+            break
+        if piece is None:
+            _say(findings, f"LOT_BAGS_NO_ROOM: neither side of {p.get('name')} is clear for its "
+                           "bags; none")
+            continue
+        placed.append(piece)
+        x, y = piece["at"]
+        taken.append((x - px / 2.0, y - py / 2.0, x + px / 2.0, y + py / 2.0))
+    return placed
+
+
+def _within(r, outer, tol=1e-6):
+    return (outer[0] - tol <= r[0] and r[2] <= outer[2] + tol
+            and outer[1] - tol <= r[1] and r[3] <= outer[3] + tol)
+
+
+def _same(a, b, tol=1e-3):
+    return all(abs(x - y) <= tol for x, y in zip(a, b))
 
 
 def _say(findings, text):
