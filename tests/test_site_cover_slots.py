@@ -18,6 +18,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import lot            # noqa: E402
 import site_cover     # noqa: E402
+import site_fences    # noqa: E402
 from tests.glb_fixture import write_glb  # noqa: E402
 
 SPECS = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
@@ -180,8 +181,16 @@ def test_assemble_writes_the_manifest_beside_the_scene(tmp_path):
         slots = next(tmp_path.glob("*.slots.json"))
     doc = json.loads(slots.read_text(encoding="utf-8"))
     assert doc["building_id"] == "site"
+    # the manifest carries every species piece: the cover, and since 0.107.0
+    # the fence at the plate's edge (`site_fences.plan_perimeter`), six runs
+    # on this plate, which no row fence joins (the compound has no Empties)
+    cover = {n for n, *_ in site_cover.COVER_SPECIES}
+    fences = [s for s in doc["slots"] if s["species"] == site_fences.SPECIES]
+    assert len(fences) == 6 and all(s["breaks"].startswith("the plate's") for s in fences)
     for s in doc["slots"]:
-        assert s["species"] in {n for n, *_ in site_cover.COVER_SPECIES}
+        if s["species"] == site_fences.SPECIES:
+            continue
+        assert s["species"] in cover
         assert s["fit"]["dims"][2] > site_cover.MIN_COVER_HEIGHT
 
 

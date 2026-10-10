@@ -264,3 +264,72 @@ def plan_fences(site_spec, roads_list, ground, body, keep_out=(), markers=(),
                 continue
             placed.append(piece)
     return placed
+
+
+# --- the fence at the plate's edge (0.107.0, roadmap 228 step B) ---------------------------------
+#
+# The walker picked E from the edge menu (`docs/findings/edge_menu/` at the
+# factory root): the plate's edge is a chain-link fence with the backdrop
+# behind it, not the pale wall. The wall stays for its collision and draws
+# nothing (`lot._wall_seen`); the fence stands where the mockup stood it.
+
+#: How far inside the wall's centre line a run stands: clear of the wall's
+#: 0.3 m box, on the plate.
+PERIM_INSET = 0.25
+#: Zoo's widest `chain_link_fence` (`genome/species/chain_link_fence.json`,
+#: width max 120 m): a longer side is split into equal runs that meet end to
+#: end. Two draws a run whatever its length, so the fewest runs is the rule.
+MAX_RUN = 120.0
+_EDGE_NAMES = {"S": "south", "N": "north", "W": "west", "E": "east"}
+
+
+def _perim_piece(name, axis, s0, s1, line, breaks):
+    """A run along `line` from `s0` to `s1` on `axis` (0: along x, 1: along y),
+    in the row fences' slot shape."""
+    length = round(math.floor((s1 - s0) / QUANTUM + 1e-6) * QUANTUM, 2)
+    centre = (s0 + s1) / 2.0
+    x, y = (centre, line) if axis == 0 else (line, centre)
+    sx, sy = (length, DEPTH) if axis == 0 else (DEPTH, length)
+    return {"name": name, "species": SPECIES, "at": [round(x, 3), round(y, 3)],
+            "yaw": 0.0 if axis == 0 else 90.0,
+            "dims": [length, DEPTH, HEIGHT], "size": [sx, HEIGHT, sy],
+            "base": "plate", "source": "site_fences.perimeter", "breaks": breaks}
+
+
+def plan_perimeter(ground, markers=(), findings=None) -> list:
+    """The chain-link runs along the plate's edge: one a side, `PERIM_INSET`
+    inside the wall, the long sides (south, north) taking the plate's length
+    less the inset at each end and the short sides (west, east) standing
+    between them less the fence's own depth, so they butt without
+    overlapping. A side longer than `MAX_RUN` is split into equal runs. A run
+    that would stand on a mission marker is left out and said, as every
+    fence is. ``ground`` is the plate's rect (x0, y0, x1, y1); None, an open
+    site, fences nothing. The roads that leave the plate end at the fence as
+    they ended at the wall.
+    """
+    if not ground:
+        return []
+    import site_furniture
+    x0, y0, x1, y1 = (float(v) for v in ground)
+    sides = [
+        ("S", 0, x0 + PERIM_INSET, x1 - PERIM_INSET, y0 + PERIM_INSET),
+        ("N", 0, x0 + PERIM_INSET, x1 - PERIM_INSET, y1 - PERIM_INSET),
+        ("W", 1, y0 + PERIM_INSET + DEPTH, y1 - PERIM_INSET - DEPTH, x0 + PERIM_INSET),
+        ("E", 1, y0 + PERIM_INSET + DEPTH, y1 - PERIM_INSET - DEPTH, x1 - PERIM_INSET),
+    ]
+    out = []
+    for side, axis, s0, s1, line in sides:
+        length = s1 - s0
+        if length < 2.0 * DEPTH:
+            continue                          # a run cannot stand two terminal posts
+        n = max(1, int(math.ceil(length / MAX_RUN - 1e-9)))
+        for k in range(n):
+            a = s0 + length * k / n
+            b = s0 + length * (k + 1) / n
+            piece = _perim_piece(f"Perim_{side}_{k}", axis, a, b, line,
+                                 f"the plate's {_EDGE_NAMES[side]} edge")
+            if not site_furniture._clear_of_markers(piece, markers):
+                _say(findings, f"LOT_FENCE_SKIPPED: {piece['name']} stands on a mission marker")
+                continue
+            out.append(piece)
+    return out

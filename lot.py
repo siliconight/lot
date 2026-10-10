@@ -914,15 +914,26 @@ def _mesh_child_lines(name, size, color, skin=None):
     return body, sub
 
 
-def _box_node(name, size, at_xyz, color=None, skin=None):
+def _wall_seen(site_spec) -> bool:
+    """Whether the perimeter wall draws its tiles (0.107.0, roadmap 228): not
+    once `site_fences.plan_perimeter` stood runs along it (`perimeter.
+    fenced_runs`), when it keeps its collision and shows nothing behind the
+    fence. A plate with no run standing keeps its wall as it was."""
+    per = site_spec.get("perimeter") or {}
+    return not per.get("fenced_runs")
+
+
+def _box_node(name, size, at_xyz, color=None, skin=None, visual=True):
     """(body_lines, subres_lines) for an axis-aligned StaticBody3D box with a
     BoxMesh + BoxShape3D, at Godot-frame (x, y_height, z). color: optional
     (r,g,b[,a]) -> a StandardMaterial3D override; skin: a `ground_skins`
     record, which wins over the colour. The VISUAL is tiled to
-    MESH_TILE (see `_mesh_tiles`); the shape is one box, as it always was."""
+    MESH_TILE (see `_mesh_tiles`); the shape is one box, as it always was.
+    `visual` False (0.107.0) writes the body and its shape alone: the
+    perimeter wall behind the fence keeps its collision and draws nothing."""
     sx, sy, sz = size
     x, yh, z = at_xyz
-    mesh_body, mesh_sub = _mesh_child_lines(name, size, color, skin)
+    mesh_body, mesh_sub = _mesh_child_lines(name, size, color, skin) if visual else ([], [])
     body = [
         f'[node name="{name}" type="StaticBody3D" parent="."]',
         f'transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, {x:g}, {yh:g}, {z:g})',
@@ -938,7 +949,7 @@ def _box_node(name, size, at_xyz, color=None, skin=None):
         f'[sub_resource type="BoxShape3D" id="BoxShape_{name}"]',
         f'size = Vector3({sx:g}, {sy:g}, {sz:g})', '',
     ]
-    sub += _mat_sub(name, color, skin)
+    sub += _mat_sub(name, color, skin) if visual else []
     return body, sub
 
 
@@ -2252,13 +2263,19 @@ def _outdoor_nodes(site_spec, preview=False, self_flooring=None, skins=None,
         x0, y0, x1, y1 = ground.rect
         gx, gy = x1 - x0, y1 - y0
         cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
+        # THE WALL BEHIND THE FENCE (0.107.0, roadmap 228): with the plate's
+        # edge fenced (`site_fences.plan_perimeter`), the wall keeps its
+        # collision and shows nothing -- the fence, the glow and the backdrop
+        # are what a player sees at the edge, not "the brightest thing in the
+        # frame". 78 lightmapped tiles stop being drawn on cold run 9219's plate.
+        seen = _wall_seen(site_spec)
         for name, size, at_xyz in [
             ("perim_N", (gx, h, WALL_THICK), (cx, h / 2, -y1)),
             ("perim_S", (gx, h, WALL_THICK), (cx, h / 2, -y0)),
             ("perim_E", (WALL_THICK, h, gy), (x1, h / 2, -cy)),
             ("perim_W", (WALL_THICK, h, gy), (x0, h / 2, -cy)),
         ]:
-            bl, sr = _box_node(name, size, at_xyz, PERIM_COLOR)
+            bl, sr = _box_node(name, size, at_xyz, PERIM_COLOR, visual=seen)
             body += bl
             sub += sr
 
@@ -3682,6 +3699,29 @@ def assemble(site_spec_path, out_dir=None, walkable=False, navqa=False,
         print(f"[lot] LOT_FENCE_PLACED: {cv['name']} {cv['dims'][0]} m at "
               f"({cv['at'][0]}, {cv['at'][1]}) yaw {cv['yaw']}, {cv['breaks']}")
     for f_ in fence_findings:
+        print(f"[lot] {f_}")
+    # THE FENCE AT THE PLATE'S EDGE (site_fences.plan_perimeter, 0.107.0,
+    # roadmap 228 step B): one chain-link run a side inside the wall, which
+    # then keeps its collision and shows nothing (`_wall_seen`). Read:
+    # `perimeter.fence` false keeps the wall; nothing writes it yet.
+    per = site_spec.get("perimeter")
+    perim, perim_findings = [], []
+    if per and per.get("fence", True) and extent.rect:
+        perim = site_fences.plan_perimeter(extent.rect, markers=list(cover_points.values()),
+                                           findings=perim_findings)
+        site_spec["cover"].extend(perim)
+        per["fenced_runs"] = len(perim)
+        for cv in perim:
+            sx, _sy, sz = cv["size"]
+            standing.append((cv["at"][0] - sx / 2.0, cv["at"][1] - sz / 2.0,
+                             cv["at"][0] + sx / 2.0, cv["at"][1] + sz / 2.0))
+        if perim:
+            print(f"[lot] LOT_PERIMETER_FENCED: {len(perim)} run(s), "
+                  f"{sum(p['dims'][0] for p in perim):.1f} m of chain-link "
+                  f"{site_fences.PERIM_INSET} m inside the wall, which keeps its collision "
+                  f"and shows nothing")
+    merged["fence_plan"]["perimeter"] = {"placed": perim, "findings": perim_findings}
+    for f_ in perim_findings:
         print(f"[lot] {f_}")
     if furniture:
         from collections import Counter as _Counter
