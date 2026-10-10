@@ -3772,9 +3772,12 @@ def assemble(site_spec_path, out_dir=None, walkable=False, navqa=False,
                                "findings": backdrop_findings}
     if site_spec["backdrop"]:
         _bs = merged["backdrop_plan"]["summary"]
+        # pieces by species (0.109.1): `houses` is the borough's rowhome count and
+        # read 0 of the yards; the bands differ by recipe, so no count of them here
         print(f"[lot] LOT_BACKDROP_PLACED: recipe {merged['backdrop_plan']['recipe']}, "
-              f"{_bs['houses']} rowhome(s) in {len(site_backdrop.BANDS)} bands a side "
-              f"({', '.join(f'{k} {v}' for k, v in _bs['by_side'].items())}), "
+              f"{len(site_spec['backdrop'])} piece(s) ("
+              f"{', '.join(f'{k} {v}' for k, v in sorted(_bs['by_species'].items()))}) "
+              f"by side ({', '.join(f'{k} {v}' for k, v in _bs['by_side'].items())}), "
               f"{_bs['modules']} module(s), {_bs['towers']} water tower(s)")
     for f_ in backdrop_findings:
         print(f"[lot] {f_}")
