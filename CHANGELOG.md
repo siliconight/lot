@@ -10,8 +10,12 @@ the other three are made of, and this lays them:
 - **`parkland`:** a belt of trees 2.5 to 38 m out, a tree every 1.2 to
   3.2 m from three sizes, and a sparser far belt 60 to 90 m out; no tower.
 - **`roadside`:** a thin belt of trees and a few far warehouses; no tower.
-- `borough` and `none` lay as 0.108.0 laid them; `LOT_BACKDROP_RECIPE_PENDING`
-  no longer fires, since every recipe has its kit.
+- **`borough` takes one depth in every band** (4 to 16, 38 to 50 and 80 to
+  92 m out). A module is a species at its dims, depth included, so 0.108.0's
+  three depths were three times the six modules a level was said to draw
+  from: cold run 9225 shipped 19 modules and 69 draws. `none` lays nothing,
+  as before; `LOT_BACKDROP_RECIPE_PENDING` no longer fires, since every
+  recipe has its kit.
 
 **A piece's `z`.** A backdrop piece may say how high its foot stands above
 the plate; `write_site_slots` lifts the slot by it and Level Factory's
