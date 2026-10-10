@@ -187,8 +187,13 @@ def test_assemble_writes_the_manifest_beside_the_scene(tmp_path):
     cover = {n for n, *_ in site_cover.COVER_SPECIES}
     fences = [s for s in doc["slots"] if s["species"] == site_fences.SPECIES]
     assert len(fences) == 6 and all(s["breaks"].startswith("the plate's") for s in fences)
+    # and since 0.108.0 the backdrop beyond the edge (`site_backdrop`), in its
+    # own slots with no collision, counted apart from the cover
+    backdrop = [s for s in doc["slots"] if s.get("source") == "site_backdrop"]
+    assert backdrop and len(backdrop) == doc["coverage"]["prop/site_backdrop"]
+    assert all(s["fit"]["collision"] == "none" for s in backdrop)
     for s in doc["slots"]:
-        if s["species"] == site_fences.SPECIES:
+        if s["species"] == site_fences.SPECIES or s.get("source") == "site_backdrop":
             continue
         assert s["species"] in cover
         assert s["fit"]["dims"][2] > site_cover.MIN_COVER_HEIGHT

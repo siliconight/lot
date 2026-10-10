@@ -1704,11 +1704,39 @@ def write_site_slots(site_spec, out_path):
             "fit": {"dims": [float(dims[0]), float(dims[1]), float(dims[2])],
                     "pivot": "center", "openings": [], "collision": "convex"},
         })
+    n_resp = len(slots) - n_cover - n_hung
+    # THE BACKDROP BEYOND THE PLATE'S EDGE (0.108.0, `site_backdrop`): rows
+    # of rowhomes and a water tower in their own list, never cover. A slot
+    # each, with no collision, so the kit build makes the modules; the
+    # drawn scene writes no node for them -- Level Factory composes them
+    # as MultiMeshes (roadmap 228, step E).
+    for i, bp in enumerate(site_spec.get("backdrop", []) or []):
+        sp, dims = bp.get("species"), bp.get("dims")
+        if not sp or not dims or len(dims) < 3:
+            continue
+        cx, cy = bp["at"][:2]
+        slots.append({
+            "slot_id": f"backdrop_{i}", "role": "prop", "size_mod": "full",
+            "style": int(bp.get("style") or 1),
+            "material": COVER_MATERIALS.get(sp, "metal_painted"),
+            "current_ref": "prop_greybox_01", "kit_axis": "theme",
+            "species": sp,
+            "transform": {"translation": [round(cx, 4), round(cy, 4),
+                                          round(float(dims[2]) / 2.0, 4)],
+                          "rot_y": float(bp.get("yaw") or 0.0),
+                          "scale": [1.0, 1.0, 1.0]},
+            "fit": {"dims": [float(dims[0]), float(dims[1]), float(dims[2])],
+                    "pivot": "center", "openings": [], "collision": "none"},
+            "source": "site_backdrop",
+        })
+    n_backdrop = len(slots) - n_cover - n_hung - n_resp
     coverage = {"prop/site_cover": n_cover}
     if n_hung:
         coverage["prop/site_hung"] = n_hung
-    if len(slots) > n_cover + n_hung:
-        coverage["prop/site_responders"] = len(slots) - n_cover - n_hung
+    if n_resp:
+        coverage["prop/site_responders"] = n_resp
+    if n_backdrop:
+        coverage["prop/site_backdrop"] = n_backdrop
     doc = {
         "slot_manifest_version": "1.2.0",
         "building_id": "site",
@@ -1758,7 +1786,10 @@ COVER_MATERIALS = {"box_truck": "metal_painted", "cargo_container": "metal_paint
                    "poster_wall": "paper", "pole_flyers": "paper",
                    # the fence at the playable edge (site_fences, 0.97.0):
                    # galvanised steel; the fabric is its own kind in Zoo
-                   "chain_link_fence": "metal_bare"}
+                   "chain_link_fence": "metal_bare",
+                   # the backdrop beyond the plate's edge (site_backdrop,
+                   # 0.108.0): a painted rowhome and a painted-steel tower
+                   "backdrop_rowhome": "brick", "water_tower": "metal_painted"}
 
 
 COVER_DIR = "cover"
@@ -3722,6 +3753,25 @@ def assemble(site_spec_path, out_dir=None, walkable=False, navqa=False,
                   f"and shows nothing")
     merged["fence_plan"]["perimeter"] = {"placed": perim, "findings": perim_findings}
     for f_ in perim_findings:
+        print(f"[lot] {f_}")
+    # THE BACKDROP BEYOND THE PLATE'S EDGE (site_backdrop, 0.108.0, roadmap
+    # 228 step D): rows of rowhomes and a water tower by the spec's recipe,
+    # in their own list, never cover; Level Factory composes them (step E).
+    import site_backdrop
+    backdrop_findings = []
+    site_spec["backdrop"] = site_backdrop.plan(
+        site_spec, extent.rect, seed=site_spec.get("candidate_seed") or 0,
+        findings=backdrop_findings)
+    merged["backdrop_plan"] = {"recipe": site_backdrop.surroundings(site_spec),
+                               "summary": site_backdrop.summary(site_spec["backdrop"]),
+                               "findings": backdrop_findings}
+    if site_spec["backdrop"]:
+        _bs = merged["backdrop_plan"]["summary"]
+        print(f"[lot] LOT_BACKDROP_PLACED: recipe {merged['backdrop_plan']['recipe']}, "
+              f"{_bs['houses']} rowhome(s) in {len(site_backdrop.BANDS)} bands a side "
+              f"({', '.join(f'{k} {v}' for k, v in _bs['by_side'].items())}), "
+              f"{_bs['modules']} module(s), {_bs['towers']} water tower(s)")
+    for f_ in backdrop_findings:
         print(f"[lot] {f_}")
     if furniture:
         from collections import Counter as _Counter
