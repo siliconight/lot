@@ -56,7 +56,8 @@ def test_the_parkland_is_a_belt_of_trees_and_no_tower():
     got, _ = _plan("parkland")
     s = SB.summary(got)
     assert s["towers"] == 0 and set(s["by_species"]) == {SB.TREE_SPECIES}
-    assert 300 <= s["by_species"][SB.TREE_SPECIES] <= 1200
+    # clusters with daylight between them since 0.110.0: a belt of a few hundred, not a rank
+    assert 150 <= s["by_species"][SB.TREE_SPECIES] <= 1200
     assert all(s["by_side"][k] > 20 for k in "NSEW")
     assert s["modules"] <= len(SB.TREES)
     for p in got:

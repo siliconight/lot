@@ -69,14 +69,28 @@ CONTAINER_STACK_SHARE = 0.6
 WAREHOUSE_BANDS = ((22.0, 40.0), (66.0, 92.0))
 WAREHOUSES = ((24.0, 16.0, 7.0), (32.0, 16.0, 8.0), (40.0, 20.0, 9.0))
 WAREHOUSE_GAP = (6.0, 14.0)
-#: the parkland: a belt of trees, three sizes, and a sparser far belt
-TREES = ((5.0, 5.0, 7.0), (7.0, 7.0, 10.0), (9.0, 9.0, 13.0))
-TREE_BELT = (2.5, 38.0)
-TREE_STEP = (1.2, 3.2)
+#: the parkland: a belt of trees in CLUSTERS, and a sparser far belt (0.110.0,
+#: roadmap 228 step F). The walker, on cold run 9227: "those trees in the
+#: distance are a little lazy imo (giant lolipops vs. trees)". Zoo 1.97.0's
+#: tree takes its form from the slot's proportions -- a squat slot is a broad
+#: oak, a tall one a vase-shaped elm, between them a round maple -- so the
+#: dims here are the forms the belt mixes, two of each. And a wood's edge is
+#: not a rank at one step: trees stand in groups with daylight between them,
+#: so the near belt is laid as clusters of TREE_CLUSTER trees at TREE_STEP
+#: apart with TREE_CLUSTER_GAP between the groups. The near edge stands 6 m
+#: off the fence (2.5 before): on 9227's 87 m plate a crown filled an
+#: elevated view's foreground larger than the building.
+TREES = ((8.0, 8.0, 8.0), (11.0, 11.0, 12.0),      # oaks
+         (5.0, 5.0, 7.0), (7.0, 7.0, 10.0),        # maples
+         (4.0, 4.0, 9.0), (6.0, 6.0, 13.0))        # elms
+TREE_BELT = (6.0, 38.0)
+TREE_STEP = (1.5, 3.0)
+TREE_CLUSTER = (4, 9)
+TREE_CLUSTER_GAP = (5.0, 18.0)
 FAR_TREE_BELT = (60.0, 90.0)
 FAR_TREE_STEP = (4.0, 9.0)
-#: the roadside: a thin belt of trees and a few far warehouses
-ROADSIDE_BELT = (2.5, 20.0)
+#: the roadside: a thin belt of trees, in the same clusters, and a few far warehouses
+ROADSIDE_BELT = (4.0, 20.0)
 ROADSIDE_STEP = (2.0, 5.0)
 ROADSIDE_WAREHOUSE_GAP = (20.0, 45.0)
 #: the yaw that turns a module's front (-Y) toward the plate from each side
@@ -210,28 +224,38 @@ def _yards(ground, rng) -> list:
     return out
 
 
-def _trees(ground, rng, side, belt, step, band, start=0) -> list:
+def _trees(ground, rng, side, belt, step, band, start=0, cluster=None) -> list:
+    """A belt of trees along one side: in groups of ``cluster`` (a (lo, hi)
+    count) at ``step`` apart with TREE_CLUSTER_GAP of daylight between the
+    groups (0.110.0), or one run at ``step`` when ``cluster`` is None (the
+    far belt). Each tree draws its dims, and so its form, from TREES."""
     out = []
     s0, s1 = _span(side, ground)
-    t = s0
+    t = s0 + (rng.uniform(0.0, TREE_CLUSTER_GAP[0]) if cluster else 0.0)
     k = start
     while t < s1:
-        w, d, h = TREES[rng.randrange(len(TREES))]
-        # a crown never overhangs the plate: its foot stands at least its
-        # radius beyond the edge, and the fence, whatever the belt's near edge
-        near = max(belt[0], w / 2.0 + 0.25)
-        at = _place(side, t, rng.uniform(near, max(near, belt[1])), ground)
-        out.append(_piece(f"Backdrop_{side}_{band}_{k}", TREE_SPECIES, side, band, at,
-                          rng.choice((0.0, 90.0, 180.0, 270.0)), (w, d, h)))
-        k += 1
-        t += rng.uniform(*step)
+        n = rng.randint(*cluster) if cluster else 1
+        for _ in range(n):
+            if t >= s1:
+                break
+            w, d, h = TREES[rng.randrange(len(TREES))]
+            # a crown never overhangs the plate: its foot stands at least its
+            # radius beyond the edge, and the fence, whatever the belt's near edge
+            near = max(belt[0], w / 2.0 + 0.25)
+            at = _place(side, t, rng.uniform(near, max(near, belt[1])), ground)
+            out.append(_piece(f"Backdrop_{side}_{band}_{k}", TREE_SPECIES, side, band, at,
+                              rng.choice((0.0, 90.0, 180.0, 270.0)), (w, d, h)))
+            k += 1
+            t += rng.uniform(*step)
+        if cluster:
+            t += rng.uniform(*TREE_CLUSTER_GAP)
     return out
 
 
 def _parkland(ground, rng) -> list:
     out = []
     for side in ("S", "N", "W", "E"):
-        out += _trees(ground, rng, side, TREE_BELT, TREE_STEP, 0)
+        out += _trees(ground, rng, side, TREE_BELT, TREE_STEP, 0, cluster=TREE_CLUSTER)
         out += _trees(ground, rng, side, FAR_TREE_BELT, FAR_TREE_STEP, 1)
     return out
 
@@ -239,7 +263,7 @@ def _parkland(ground, rng) -> list:
 def _roadside(ground, rng) -> list:
     out = []
     for side in ("S", "N", "W", "E"):
-        out += _trees(ground, rng, side, ROADSIDE_BELT, ROADSIDE_STEP, 0)
+        out += _trees(ground, rng, side, ROADSIDE_BELT, ROADSIDE_STEP, 0, cluster=TREE_CLUSTER)
         s0, s1 = _span(side, ground)
         near, far = WAREHOUSE_BANDS[1]
         t = s0 + rng.uniform(0.0, 20.0)
