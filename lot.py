@@ -1715,6 +1715,9 @@ def write_site_slots(site_spec, out_path):
         if not sp or not dims or len(dims) < 3:
             continue
         cx, cy = bp["at"][:2]
+        # a piece's `z` (0.109.0) is its foot's height above the plate: a
+        # container stacked on another stands at the lower one's height
+        foot = float(bp.get("z") or 0.0)
         slots.append({
             "slot_id": f"backdrop_{i}", "role": "prop", "size_mod": "full",
             "style": int(bp.get("style") or 1),
@@ -1722,7 +1725,7 @@ def write_site_slots(site_spec, out_path):
             "current_ref": "prop_greybox_01", "kit_axis": "theme",
             "species": sp,
             "transform": {"translation": [round(cx, 4), round(cy, 4),
-                                          round(float(dims[2]) / 2.0, 4)],
+                                          round(foot + float(dims[2]) / 2.0, 4)],
                           "rot_y": float(bp.get("yaw") or 0.0),
                           "scale": [1.0, 1.0, 1.0]},
             "fit": {"dims": [float(dims[0]), float(dims[1]), float(dims[2])],
@@ -1788,8 +1791,10 @@ COVER_MATERIALS = {"box_truck": "metal_painted", "cargo_container": "metal_paint
                    # galvanised steel; the fabric is its own kind in Zoo
                    "chain_link_fence": "metal_bare",
                    # the backdrop beyond the plate's edge (site_backdrop,
-                   # 0.108.0): a painted rowhome and a painted-steel tower
-                   "backdrop_rowhome": "brick", "water_tower": "metal_painted"}
+                   # 0.108.0): a painted rowhome and a painted-steel tower;
+                   # 0.109.0: its tree and its warehouse
+                   "backdrop_rowhome": "brick", "water_tower": "metal_painted",
+                   "backdrop_tree": "wood", "backdrop_warehouse": "concrete"}
 
 
 COVER_DIR = "cover"

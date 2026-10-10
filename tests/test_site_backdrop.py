@@ -29,7 +29,8 @@ def test_the_borough_lays_three_bands_a_side_and_one_tower():
     s = SB.summary(got)
     assert s["towers"] == 1 and 150 <= s["houses"] <= 450
     assert all(s["by_side"][k] > 10 for k in "NSEW")
-    assert s["modules"] <= SB.MODULES_PER_LEVEL
+    # the modules are species at their dims, the tower among them (0.109.0)
+    assert s["modules"] <= SB.MODULES_PER_LEVEL + 1
     bands = {(p["side"], p["band"]) for p in got if p["species"] == SB.SPECIES}
     assert bands == {(sd, b) for sd in "NSEW" for b in range(len(SB.BANDS))}
     for p in got:
@@ -76,10 +77,11 @@ def test_none_lays_nothing_and_no_ground_lays_nothing():
     assert _plan(ground=None)[0] == []
 
 
-def test_a_recipe_without_a_kit_and_an_unknown_one_lay_the_borough_and_say_so():
+def test_a_recipe_with_a_kit_lays_it_and_an_unknown_one_lays_the_borough_and_says_so():
+    # 0.109.0: every recipe has its kit, so parkland lays its trees and says nothing
     got, findings = _plan({"name": "site", "surroundings": "parkland"})
-    assert SB.summary(got)["towers"] == 1
-    assert len(findings) == 1 and findings[0].startswith("LOT_BACKDROP_RECIPE_PENDING")
+    assert SB.summary(got)["towers"] == 0 and findings == []
+    assert set(SB.summary(got)["by_species"]) == {SB.TREE_SPECIES}
     got, findings = _plan({"name": "site", "surroundings": "moon"})
     assert SB.summary(got)["towers"] == 1
     assert len(findings) == 1 and findings[0].startswith("LOT_BACKDROP_RECIPE_UNKNOWN")
