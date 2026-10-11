@@ -212,12 +212,20 @@ def test_a_diagonal_road_its_bands_and_its_paint_lie_along_it(angle, tmp_path):
             off = (dx * road.perp[0] + dy * road.perp[1]) * sign
             assert -SCENE_DIGITS_M <= t <= road.length + SCENE_DIGITS_M, (angle, n, t)
             assert inner - SCENE_DIGITS_M <= off <= outer + SCENE_DIGITS_M, (angle, n, off)
-    # the paint: every marking's length runs along the road
-    marks = [n for n in drawn if n.startswith("mark_")]
-    assert marks
-    for n in marks:
-        ax = drawn[n][1]
-        assert abs(ax[0] - road.along[0]) < 1e-5 and abs(ax[1] - road.along[1]) < 1e-5, (angle, n, ax)
+    # the paint: every marking's length runs along the road -- read off its quads in the
+    # mesh beside the scene (0.114.0), whose first edge is the marking's `along`
+    files = {}
+    lot._outdoor_nodes(spec, files=files)
+    quads = 0
+    for text in files.values():
+        v = [tuple(float(x) for x in l.split()[1:]) for l in text.splitlines() if l.startswith("v ")]
+        for i in range(0, len(v), 4):
+            dx, dz = v[i + 1][0] - v[i][0], v[i + 1][2] - v[i][2]
+            ln = math.hypot(dx, dz)
+            ax = (dx / ln, -dz / ln)
+            assert abs(ax[0] - road.along[0]) < 1e-4 and abs(ax[1] - road.along[1]) < 1e-4, (angle, i, ax)
+            quads += 1
+    assert quads
     # and the step gate reads the road where it is drawn
     p = tmp_path / "road.tscn"
     p.write_text(src, encoding="utf-8")

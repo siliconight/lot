@@ -172,9 +172,13 @@ def test_a_field_is_drawn_declared_walked_on_painted_and_counted():
     site = _site()
     fields = _plan(site)
     spec = _with_fields(site, fields)
-    body, _sub = lot._outdoor_nodes(spec)
+    files = {}
+    body, _sub = lot._outdoor_nodes(spec, files=files)
     assert any(line.startswith('[node name="field_0"') for line in body)
-    assert sum(1 for line in body if line.startswith('[node name="fmark_')) == 2 * (fields[0]["bays"] + 1)
+    # the field's bay lines are quads in the paint meshes beside the road's own (0.114.0)
+    n_quads = sum(sum(1 for l in t.splitlines() if l.startswith("f ")) // 2 for t in files.values())
+    n_road = len(site_streets.markings(site_streets.roads(spec)))
+    assert n_quads - n_road == 2 * (fields[0]["bays"] + 1)
     (slab,) = lot.field_slabs(spec)
     assert slab["family"] == "parking" and abs(slab["top"] - lot.ROAD_THICK) < 1e-9
     assert "field_" in site_steps.WALKABLE_PREFIXES and "parking" in lot.SKIN_FAMILIES

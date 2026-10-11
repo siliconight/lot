@@ -1056,7 +1056,7 @@ def _yaw_quad_node(name, size, center_godot, yaw_deg, color, skin=None,
                                            uv_offset=uv_offset)
 
 
-def _mat_sub(name, color, skin=None, tint=None, uv_offset=None):
+def _mat_sub(name, color, skin=None, tint=None, uv_offset=None, triplanar=True):
     """The one StandardMaterial3D a body's tiles share. `color` alone is the
     flat greybox read; with a `skin` (see `ground_skins`) the material carries
     the Pixelcoat maps, projected in WORLD space so a plate tiled into 8 m
@@ -1077,9 +1077,14 @@ def _mat_sub(name, color, skin=None, tint=None, uv_offset=None):
         if skin.get("nearest"):
             lines.append('texture_filter = 2')      # nearest, with mipmaps
         s = 1.0 / float(skin["meters_per_tile"])
-        lines.append('uv1_triplanar = true')
-        lines.append('uv1_world_triplanar = true')
-        lines.append(f'uv1_scale = Vector3({s:g}, {s:g}, {s:g})')
+        if triplanar:
+            lines.append('uv1_triplanar = true')
+            lines.append('uv1_world_triplanar = true')
+            lines.append(f'uv1_scale = Vector3({s:g}, {s:g}, {s:g})')
+        else:
+            # the mesh carries its own UVs in the pack's tile units
+            # (`_marking_meshes`, 0.114.0): one material for every marking
+            lines.append('uv1_scale = Vector3(1, 1, 1)')
         if uv_offset is not None:
             u, v, w = uv_offset
             lines.append(f'uv1_offset = Vector3({u:.6g}, {v:.6g}, {w:.6g})')
@@ -2202,8 +2207,95 @@ def frontage_slabs(site_spec, street_roads, findings=None):
 PLATE_TOP = -GROUND_SINK
 
 
+def _marking_quad(m):
+    """The four plan corners of marking ``m``, in order round the quad: its
+    `along` runs at its yaw (the first edge, corner 0 to corner 1), its
+    `across` square to it."""
+    along, across = m["size"]
+    r = math.radians(float(m["yaw"]))
+    c, s = math.cos(r), math.sin(r)
+    x, y = float(m["at"][0]), float(m["at"][1])
+    ha, hc = along / 2.0, across / 2.0
+    return [(x + a * ha * c - b * hc * s, y + a * ha * s + b * hc * c)
+            for a, b in ((-1, -1), (1, -1), (1, 1), (-1, 1))]
+
+
+def _marking_key(m):
+    """What a marking IS, for `paint_offset`: its road (or field), kind and
+    plan position -- the key the per-marking materials hashed."""
+    owner = m["road"] if "road" in m else m.get("field")
+    return f"{owner}|{m['kind']}|{m['at'][0]:.3f}|{m['at'][1]:.3f}"
+
+
+def _colour_slug(color):
+    return "_".join(f"{int(round(float(v) * 100)):03d}" for v in tuple(color)[:3])
+
+
+def _marking_meshes(marks, skins):
+    """(body_lines, sub_lines, files) for a site's road paint (0.114.0,
+    roadmap 231): ONE mesh per paint colour, every marking a flat quad in it
+    on the paint's top face, written as an OBJ beside the scene (``files``:
+    file name -> text) and stood by one MeshInstance3D with one material.
+
+    WHY A FILE. Cold run 9233 priced a street at +107 draws a heading median
+    (`docs/findings/street_draws/` in the factory): every marking was its
+    own node and its own material, identical but for the wear offset, 227
+    submissions and 125 materials on one level. A MultiMesh would merge them
+    and is not lightmapped, and the bake is what lights a street at night; a
+    model beside the scene imports through the same pass as the buildings
+    and bakes like them (Level Factory sets the sidecar's lightmap UV). So
+    the quads travel as an OBJ and the engine's importer makes the mesh.
+
+    THE WEAR OFFSET SURVIVES. Each quad's UVs are what the per-marking
+    material's world projection gave it -- plan x and Godot z times the
+    pack's tile scale, plus `paint_offset`'s hash of the marking -- so one
+    material maps by UV1 and every bar still wears its own scuffs
+    (`_mat_sub(..., triplanar=False)`). The greybox (no paint pack) writes
+    the same UVs under a flat colour.
+
+    THE FACE IS DOUBLE-SIDED (`cull_mode = 2`) and carries an up normal, so
+    the winding the importer reads cannot hide a marking; the quad has no
+    collision, as the markings never had.
+    """
+    paint = (skins or {}).get("paint")
+    scale = 1.0 / float(paint["meters_per_tile"]) if paint else 1.0
+    top = MARKING_Y + SURFACE_TIER / 2.0
+    groups = {}
+    for m in marks:
+        groups.setdefault(tuple(float(v) for v in m["color"]), []).append(m)
+    body, sub, files = [], [], {}
+    for color in sorted(groups):
+        name = f"site_marks_{_colour_slug(color)}"
+        verts, uvs, faces = [], [], []
+        for m in groups[color]:
+            off = paint_offset(_marking_key(m)) if paint else (0.0, 0.0, 0.0)
+            base = len(verts)
+            for px, py in _marking_quad(m):
+                gx, gz = px, -py
+                verts.append((gx, top, gz))
+                uvs.append((gx * scale + off[0], gz * scale + off[2]))
+            faces.append((base + 1, base + 2, base + 3))
+            faces.append((base + 1, base + 3, base + 4))
+        lines = [f"# Lot: the site's road paint, colour {_colour_slug(color)}, "
+                 f"{len(groups[color])} marking(s), a quad each", f"o {name}"]
+        # six decimals: a bay tick is 0.3 m long and its direction is read off
+        # its two corners, which four decimals turned by 3e-4 on a diagonal road
+        lines += [f"v {x:.6f} {y:.6f} {z:.6f}" for x, y, z in verts]
+        lines += [f"vt {u:.6f} {v:.6f}" for u, v in uvs]
+        lines.append("vn 0 1 0")
+        lines += [f"f {a}/{a}/1 {b}/{b}/1 {c}/{c}/1" for a, b, c in faces]
+        files[f"{name}.obj"] = "\n".join(lines) + "\n"
+        body += [f'[node name="{name}" type="MeshInstance3D" parent="."]',
+                 f'mesh = ExtResource("{name}")',
+                 f'material_override = SubResource("Mat_{name}")', '']
+        mat = _mat_sub(name, color, paint, tint=color if paint else None, triplanar=False)
+        mat.insert(len(mat) - 1, 'cull_mode = 2')
+        sub += mat
+    return body, sub, files
+
+
 def _outdoor_nodes(site_spec, preview=False, self_flooring=None, skins=None,
-                   cover_refs=None, signs=None, hung_refs=None):
+                   cover_refs=None, signs=None, hung_refs=None, files=None):
     """(body_lines, subres_lines) for all Phase-2 outdoor geometry.
 
     `self_flooring` is the set of building ids whose geometry demonstrably
@@ -2400,32 +2492,20 @@ def _outdoor_nodes(site_spec, preview=False, self_flooring=None, skins=None,
     # its road, kind and plan position -- rather than its index, so a
     # marking added elsewhere on the site does not re-roll every other
     # marking's wear (`paint_offset`).
-    for n, m in enumerate(site_streets.markings(street_roads)):
-        along, across = m["size"]
-        paint = skins.get("paint")
-        offset = (paint_offset(f"{m['road']}|{m['kind']}|{m['at'][0]:.3f}|{m['at'][1]:.3f}")
-                  if paint else None)
-        bl, sr = _yaw_quad_node(f"mark_{n}_{m['kind']}", (along, across),
-                                (m["at"][0], MARKING_Y, -m["at"][1]),
-                                m["yaw"], tuple(m["color"]), skin=paint,
-                                uv_offset=offset)
-        body += bl
-        sub += sr
-
-    # THE FIELDS' BAY LINES (`site_fields`, 0.94.0): the road's paint, the
-    # road's quads, at the road's height -- a field sits at it.
+    # ONE MESH A COLOUR (0.114.0, roadmap 231): the road's paint and the
+    # fields' bay lines (`site_fields`, 0.94.0, at the road's height) as
+    # quads in an OBJ beside the scene, one MeshInstance3D and one material
+    # a colour, the wear offset in the UVs -- `_marking_meshes` says why.
+    # The texts go to `files` for the scene writer; a caller with none
+    # (the tests) gets the nodes and no file.
     import site_fields as _site_fields
-    for n, m in enumerate(_site_fields.markings(site_spec.get("fields") or [], street_roads)):
-        along, across = m["size"]
-        paint = skins.get("paint")
-        offset = (paint_offset(f"{m['field']}|{m['kind']}|{m['at'][0]:.3f}|{m['at'][1]:.3f}")
-                  if paint else None)
-        bl, sr = _yaw_quad_node(f"fmark_{n}_{m['kind']}", (along, across),
-                                (m["at"][0], MARKING_Y, -m["at"][1]),
-                                m["yaw"], tuple(m["color"]), skin=paint,
-                                uv_offset=offset)
-        body += bl
-        sub += sr
+    marks = list(site_streets.markings(street_roads))
+    marks += list(_site_fields.markings(site_spec.get("fields") or [], street_roads))
+    mb, ms, mf = _marking_meshes(marks, skins)
+    body += mb
+    sub += ms
+    if files is not None:
+        files.update(mf)
 
     # THE SHOP SIGNS. A lit cabinet over each door, on the facade that
     # faces the street (`sign_placement`), drawn here rather than as a
@@ -2602,9 +2682,17 @@ def write_godot_scene(site_spec, merged, out_path, glb_dir=".", preview=False,
         print(f"[lot] {code}: {msg}")
     write_responder_vehicles(site_spec, resp_refs, os.path.dirname(os.path.abspath(out_path)))
 
+    marks_files = {}
     outdoor_body, outdoor_sub = _outdoor_nodes(
         site_spec, preview=preview, self_flooring=self_flooring, skins=skins,
-        cover_refs=cover_refs, signs=signs, hung_refs=hung_refs)
+        cover_refs=cover_refs, signs=signs, hung_refs=hung_refs, files=marks_files)
+    # the paint's meshes beside the scene (0.114.0): written here, declared
+    # as the Mesh ext_resources the paint nodes name, imported by the engine
+    for fname, text in sorted(marks_files.items()):
+        with open(os.path.join(os.path.dirname(os.path.abspath(out_path)), fname), "w",
+                  encoding="utf-8", newline="\n") as mf:
+            mf.write(text)
+        res_lines.append(f'[ext_resource type="Mesh" path="{prefix}{fname}" id="{fname[:-4]}"]')
 
     building_body, building_sub = [], []
     if preview:

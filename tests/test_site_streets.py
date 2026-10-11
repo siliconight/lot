@@ -94,19 +94,20 @@ def test_the_paint_is_where_the_model_puts_it():
 
 
 def test_paint_has_no_collision_and_sits_on_the_road():
-    body, sub = lot._outdoor_nodes(_probe())
-    marks = [l for l in body if l.startswith('[node name="mark_')]
-    assert marks and all('type="Node3D"' in l for l in marks)
-    txt = "\n".join(body)
-    assert 'parent="./mark_0_edge_line"]' in txt
-    i = txt.index('name="mark_0_edge_line"')
-    tf = txt[i:].split("\n")[1]
-    assert f", {lot.MARKING_Y:g}, " in tf
+    files = {}
+    body, sub = lot._outdoor_nodes(_probe(), files=files)
+    marks = [l for l in body if l.startswith('[node name="site_marks_')]
+    assert marks and files and all('type="MeshInstance3D"' in l for l in marks)
+    # the paint's quads lie a hair above the road, in the mesh beside the scene (0.114.0)
+    top = lot.MARKING_Y + lot.SURFACE_TIER / 2.0
+    for text in files.values():
+        ys = [float(l.split()[2]) for l in text.splitlines() if l.startswith("v ")]
+        assert ys and all(abs(y - top) < 1e-6 for y in ys)
     assert lot.MARKING_Y > lot.ROAD_THICK
     # no collision shape under any marking
     for l in body:
         if 'type="CollisionShape3D"' in l:
-            assert "/mark_" not in l
+            assert "/site_marks_" not in l and "/mark_" not in l
 
 
 def test_assemble_writes_the_markings_manifest(tmp_path):
@@ -125,4 +126,5 @@ def test_a_spec_without_roads_paints_nothing():
     assert site_streets.roads(spec) == []
     assert site_streets.markings([]) == []
     body, _ = lot._outdoor_nodes(spec)
-    assert not any(l.startswith('[node name="mark_') for l in body)
+    assert not any(l.startswith('[node name="mark_') or l.startswith('[node name="site_marks_')
+                   for l in body)

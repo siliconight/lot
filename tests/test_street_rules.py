@@ -289,11 +289,19 @@ def test_each_marking_wears_its_own_paint_offset_and_keeps_it(tmp_path):
     skins, _f = lot.ground_skins(spec)
 
     def offsets():
-        _body, sub = lot._outdoor_nodes(spec, skins=skins)
-        txt = "\n".join(sub)
-        found = re.findall(r'id="Mat_(mark_\d+_\w+)"\]\n(?:[^\[]*?)uv1_offset = Vector3\(([^)]*)\)',
-                           txt)
-        return dict(found)
+        # 0.114.0: the offset lives in each quad's UVs -- what the first corner's UV is
+        # past its world position times the pack's tile scale
+        files = {}
+        lot._outdoor_nodes(spec, skins=skins, files=files)
+        s = 1.0 / 8.0
+        found = {}
+        for name, text in sorted(files.items()):
+            v = [tuple(float(x) for x in l.split()[1:]) for l in text.splitlines() if l.startswith("v ")]
+            vt = [tuple(float(x) for x in l.split()[1:]) for l in text.splitlines() if l.startswith("vt ")]
+            for i in range(0, len(v), 4):
+                found[f"{name}:{i // 4}"] = (round(vt[i][0] - v[i][0] * s, 4),
+                                            round(vt[i][1] - v[i][2] * s, 4))
+        return found
 
     first = offsets()
     n_marks = len(site_streets.markings(site_streets.roads(spec)))
