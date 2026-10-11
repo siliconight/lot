@@ -35,6 +35,15 @@ import subprocess
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+#: THE CLOCK (0.117.0, factory roadmap 239). The director simulates at Godot's
+#: default clock, which waits on real seconds: cold run 9247's walk tests took
+#: 2.1 to 2.6 minutes, their walkers' 475-480 m at 4 m/s about 120 s of it.
+#: `--fixed-fps` makes each frame one physics step (the project's 60 ticks)
+#: computed as fast as the processor allows; with `lot_navqa_setup.gd`'s map
+#: and region updating synchronously the report is the job's, field for field
+#: (the map's iteration count aside), in about 4 s. 0 restores the waiting
+#: clock.
+FIXED_FPS = 60
 ADDON_SRC = os.path.join(HERE, "godot", "addons", "heist_nav_qa")
 _CANDIDATES = ("godot4", "godot", "godot4-headless", "godot-headless")
 
@@ -144,7 +153,8 @@ def copy_report(report_path, report_dir):
 def run_one(godot, project_dir, scene, timeout=300, report_dir=None):
     name = os.path.basename(scene)
     rel = os.path.relpath(scene, project_dir).replace(os.sep, "/")
-    cmd = [godot, "--headless", "--path", project_dir, f"res://{rel}"]
+    clock = ["--fixed-fps", str(int(FIXED_FPS))] if FIXED_FPS else []
+    cmd = [godot, "--headless", *clock, "--path", project_dir, f"res://{rel}"]
     env = dict(os.environ)
     try:
         sys.path.insert(0, os.path.join(os.path.dirname(HERE), "deli_counter"))

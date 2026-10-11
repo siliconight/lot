@@ -50,6 +50,17 @@ func _bake_nav() -> void:
 		var map: RID = get_world_3d().navigation_map
 		NavigationServer3D.map_set_cell_size(map, nav.navigation_mesh.cell_size)
 		NavigationServer3D.map_set_cell_height(map, nav.navigation_mesh.cell_height)
+		# THE MAP AND THE REGION UPDATE ON THIS THREAD (0.117.0, factory roadmap
+		# 239). Godot 4.7 iterates both on worker threads by default, so when
+		# the bake's update lands is wall time: under walktest.py's `--fixed-fps`
+		# clock the director's ten-second wait passed in milliseconds and read
+		# the map EMPTY on every candidate of cold run 9247. Synchronous, the same
+		# three walk tests read their jobs' reports field for field (the map's
+		# iteration count aside, 2 -> 1) in 4 s against 2 to 2.5 minutes. Set
+		# before the bake: the setters are server commands, applied in order at
+		# the next sync, which the force_update below is.
+		NavigationServer3D.map_set_use_async_iterations(map, false)
+		NavigationServer3D.region_set_use_async_iterations(nav.get_rid(), false)
 		nav.bake_navigation_mesh(false)
 		# region updates are ASYNC on the NavigationServer -- the baked mesh
 		# exists but the map's polygon soup commits on its own schedule.
