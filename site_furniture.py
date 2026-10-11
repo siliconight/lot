@@ -685,8 +685,110 @@ def plan_meters(road, markers=()) -> list:
     return out
 
 
+#: A LANE'S LAMPS (0.116.0). A road without a sidewalk -- the `block`
+#: grammar's service lane, an alley -- stood no furniture at all, its lamps
+#: included: the band loop in `plan_furniture` skips a road with no band. So
+#: cold run 9233's lane read black at dusk between two lit streets, and every
+#: lane since. Measured on cold run 9237's lights manifest: the nearest light
+#: to the lane's centre line was a wall pack 14.4 m off it, over a rear door,
+#: at a 5.5 m reach; the row's rear walls stand 14 m back (a 6 m yard and an
+#: 8 m setback) and the far side is the plate's edge. Wall packs on the rear
+#: walls could not reach it.
+#:
+#: The lamp is the street's own (`streetlight`), on one side, spread evenly
+#: along the lane's slab no farther apart than `LANE_LAMP_SPACING`. That is
+#: further apart than two of the lamp's 14 m reaches (Lux's streetlight), so
+#: one pool ends before the next begins: a lane lit by the odd pole, not a
+#: lit street, with the dark between kept for the quiet way in and out (the
+#: design call of 2026-10-11, recorded under roadmap 231's close).
+LANE_LAMP_SPACING = 40.0
+#: The pole's centre, out from the lane's paved edge: its 0.3 m depth's half
+#: and a hand, so a body on the lane passes the pole, not walks into it.
+LANE_LAMP_OUT = 0.6
+#: How far across the lane a building's centre may stand and still say which
+#: side the lane serves: further than the `block` grammar's yard and setback
+#: (6 + 8 m) plus the deepest shell's half depth this library builds.
+LANE_SIDE_REACH = 45.0
+#: A lane's pole may step further than a street's: there is no kerb-cut
+#: rhythm to keep, and the rear spurs it steps clear of are 2 to 3 m wide.
+LANE_NUDGES = NUDGES + (6.0, -6.0, 8.0, -8.0)
+
+
+def lane_side(road, buildings=()) -> int:
+    """+1 (left of travel) or -1: the side of a lane the buildings it runs
+    behind stand on, by their centres within `LANE_SIDE_REACH` across it and
+    within its length along it. A lane lights the side its rear doors and
+    spurs arrive at; with no building in reach it takes the left."""
+    vote = 0
+    for b in buildings or ():
+        at = b.get("at")
+        if not at:
+            continue
+        dx, dy = float(at[0]) - road.a[0], float(at[1]) - road.a[1]
+        t = dx * road.along[0] + dy * road.along[1]
+        off = dx * road.perp[0] + dy * road.perp[1]
+        if 0.0 <= t <= road.length and 0.0 < abs(off) <= LANE_SIDE_REACH:
+            vote += 1 if off > 0 else -1
+    return -1 if vote < 0 else 1
+
+
+def plan_lane_lamps(road, buildings=(), markers=(), n=0, findings=None, keep_out=()) -> list:
+    """The lamps along a road without a sidewalk, as `plan_furniture`'s
+    records with a ``base`` of ``ground``: as many as its slab carries at
+    `LANE_LAMP_SPACING` (at least one), spread evenly so the first and last
+    stand half a spacing in from the mouths, on the side `lane_side` picks,
+    `LANE_LAMP_OUT` beyond the paved edge. A station steps along the edge by
+    `LANE_NUDGES` until the pole is clear of every ``keep_out`` rect (the
+    path corridors -- a rear spur stops short of the lane's edge, so it never
+    crosses the lane and only its corridor says where it is -- the building
+    footprints, the parking fields) by `CUT_CLEARANCE`, of the crossings at
+    the lane's mouths, of the markers and of the lamps already stood; one
+    that finds no room is said into ``findings`` and stood nowhere. ``n``
+    numbers the first lamp, so the names stay the site's."""
+    from site_streets import Kerb, split_span
+    s0, s1 = road.slab if road.slab[1] > road.slab[0] else (0.0, road.length)
+    span = s1 - s0
+    if span <= 0.0:
+        return []
+    count = max(1, int(round(span / LANE_LAMP_SPACING)))
+    sgn = lane_side(road, buildings)
+    edge = sgn * (road.width / 2.0 + LANE_LAMP_OUT)
+    # the lane's own edge line, cut where a road crosses it at its mouths
+    kerb = Kerb(side="L" if sgn > 0 else "R", sign=sgn, offset=edge,
+                cuts=list(road.crossings),
+                spans=split_span(road.length, list(road.crossings)))
+    w, _d, _h = SPECIES["streetlight"]
+    placed = []
+    for i in range(count):
+        t = s0 + (i + 0.5) * span / count
+        name = f"Lamp_{n + len(placed)}"
+        lamp = None
+        for dt in LANE_NUDGES:
+            s = t + dt
+            if not (s0 < s < s1 and _clear_of_cuts(s, w / 2.0, kerb)
+                    and _free(s, w / 2.0, placed)):
+                continue
+            piece = _piece(name, "streetlight", road, kerb, s, edge)
+            rect = site_cover._grow(_piece_rect(piece), CUT_CLEARANCE)
+            if any(_rects_overlap(rect, k) for k in keep_out):
+                continue
+            if _clear_of_markers(piece, markers):
+                lamp = piece
+                break
+        if lamp is None:
+            if findings is not None:
+                findings.append(f"LOT_LANE_LAMP_SKIPPED: road {road.index}, station "
+                                f"{t:.1f} m: a path, a footprint, a mouth or a marker "
+                                f"at every step")
+            continue
+        lamp["base"] = "ground"
+        lamp["lane"] = True
+        placed.append(lamp)
+    return placed
+
+
 def plan_furniture(roads_list, buildings=(), markers=(), findings=None,
-                   sign_bands=()) -> list:
+                   sign_bands=(), keep_out=()) -> list:
     """Pieces along every sidewalk band, as site-cover-shaped records with a
     ``base`` of ``sidewalk`` (the module stands on the band's top, not the
     plate; the caller resolves the height). ``buildings`` are the spec's,
@@ -695,8 +797,9 @@ def plan_furniture(roads_list, buildings=(), markers=(), findings=None,
     corner piece or a bus stop is skipped); ``findings`` (a list of
     strings) hears about a junction approach whose control could not be
     stood by the rules. ``sign_bands`` (0.106.0) are the shop bands a lamp or
-    a tree keeps out of (`_sign_spans`). Returns the list; the caller
-    extends the spec and the slots."""
+    a tree keeps out of (`_sign_spans`). ``keep_out`` (0.116.0) is the rects
+    a lane's lamp keeps clear of (`plan_lane_lamps`). Returns the list; the
+    caller extends the spec and the slots."""
     out = []
     n = 0
     kept_clear = []          # (piece name, from station, to station) or (name, from, None)
@@ -757,6 +860,12 @@ def plan_furniture(roads_list, buildings=(), markers=(), findings=None,
     for road in roads_list:
         control = controls[road.index]
         if not road.sidewalk:
+            # A LANE LIGHTS ITS OWN LENGTH (0.116.0): no band, so none of the
+            # band's pieces -- only its lamps, on its own edge (`plan_lane_lamps`)
+            lane_lamps = plan_lane_lamps(road, buildings, markers, n, findings,
+                                         keep_out=keep_out)
+            n += len(lane_lamps)
+            out.extend(lane_lamps)
             continue
         species_tree = species_for[road.index]
         for kerb in road.kerbs:

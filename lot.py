@@ -3743,12 +3743,17 @@ def assemble(site_spec_path, out_dir=None, walkable=False, navqa=False,
     import site_streets
     furniture_findings = []
     _furniture_roads = site_streets.roads(site_spec)
+    # a lane's lamps keep clear of what the pylons keep clear of (0.116.0)
+    import site_spawns as _spawns_for_lanes
     furniture = site_furniture.plan_furniture(_furniture_roads,
                                               site_spec.get("buildings") or [],
                                               list(cover_points.values()),
                                               furniture_findings,
                                               sign_bands=sign_bands(site_spec,
-                                                                    _furniture_roads))
+                                                                    _furniture_roads),
+                                              keep_out=site_furniture.path_corridors(site_spec)
+                                              + _spawns_for_lanes.footprints(site_spec, margin=0.5)
+                                              + _field_rects)
     site_spec.setdefault("cover", []).extend(furniture)
     # THE GAS STATION'S PRICE PYLON (site_furniture.plan_pylons): at each
     # forecourt's road frontage, behind the band, facing along the road,
