@@ -2,7 +2,9 @@
 quad a marking at the paint's top face, one MeshInstance3D and one material a colour, the wear
 offset in the UVs; a spec without roads paints nothing."""
 import json
+import math
 import os
+import re
 import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import lot  # noqa: E402
@@ -29,17 +31,20 @@ def test_one_mesh_a_colour_a_quad_a_marking_and_the_nodes():
     body, sub = lot._outdoor_nodes(spec, files=files)
     marks = site_streets.markings(site_streets.roads(spec))
     colours = {tuple(float(v) for v in m["color"]) for m in marks}
-    assert len(files) == len(colours) >= 2
+    assert len(files) >= len(colours) >= 2
+    assert all(re.fullmatch(r"site_marks_\d{3}_\d{3}_\d{3}_c\d{3}_\d{3}\.obj", f)
+               for f in files), sorted(files)
     assert sum(len(_quads(t)) for t in files.values()) == len(marks)
     nodes = [l for l in body if l.startswith('[node name="site_marks_')]
     assert len(nodes) == len(files) and all('type="MeshInstance3D"' in l for l in nodes)
     txt = "\n".join(body)
     for fname in files:
         n = fname[:-4]
-        assert f'mesh = ExtResource("{n}")' in txt and f'material_override = SubResource("Mat_{n}")' in txt
+        assert f'mesh = ExtResource("{n}")' in txt
+        assert f'material_override = SubResource("Mat_{n[:n.index("_c")]}")' in txt
     assert not any(l.startswith('[node name="mark_') or l.startswith('[node name="fmark_') for l in body)
     mats = [l for l in sub if l.startswith('[sub_resource type="StandardMaterial3D" id="Mat_site_marks_')]
-    assert len(mats) == len(files)
+    assert len(mats) == len(colours)            # one material a colour, shared by its cells
     assert "cull_mode = 2" in "\n".join(sub) and "uv1_triplanar" not in "\n".join(sub).split("Mat_site_marks_")[1]
 
 
@@ -88,3 +93,27 @@ def test_a_spec_without_roads_paints_nothing():
     files = {}
     body, _sub = lot._outdoor_nodes(spec, files=files)
     assert files == {} and not any(l.startswith('[node name="site_marks_') for l in body)
+
+
+def test_the_paint_is_cut_into_cells_by_each_markings_centre():
+    """0.115.0: cold run 9236's paired census put one level-wide paint mesh under
+    21 live lights against the engine's cap of 8 -- a mesh whose box is the
+    plate reaches every failing tube behind every storefront. A cell of
+    `PAINT_CELL_M` a colour keeps each piece under the lights within its reach,
+    and the colour's one material is shared by its cells."""
+    spec = _spec()
+    files = {}
+    body, _sub = lot._outdoor_nodes(spec, files=files)
+    cell = lot.PAINT_CELL_M
+    for fname, text in files.items():
+        m = re.fullmatch(r"site_marks_(\d{3}_\d{3}_\d{3})_c(\d{3})_(\d{3})\.obj", fname)
+        assert m, fname
+        cx, cy = int(m.group(2)) - 500, int(m.group(3)) - 500
+        for verts, _uv in _quads(text):
+            px = sum(x for x, _y, _z in verts) / 4.0
+            py = -sum(z for _x, _y, z in verts) / 4.0
+            assert (math.floor(px / cell), math.floor(py / cell)) == (cx, cy), (fname, px, py)
+    colours = {f.split("_c")[0] for f in files}
+    assert len(files) > len(colours)                 # the probe's streets span several cells
+    nodes = [l for l in body if l.startswith('[node name="site_marks_')]
+    assert len(nodes) == len(files)

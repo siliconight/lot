@@ -852,6 +852,51 @@ GROUND_SINK = SURFACE_TIER
 #: the shape, not the mesh.
 MESH_TILE = 8.0
 
+#: The tile where the package BAKES its lights (0.115.0, roadmap 231), taken
+#: when the site spec says so (`mesh_tile`). Godot 4.7's culler pairs no
+#: BAKE_STATIC light with a mesh that has a lightmap
+#: (servers/rendering/renderer_scene_cull.cpp, `_scene_cull`; Level Factory
+#: 0.159.0's paired census), so under the bake the per-mesh cap binds only
+#: through the lights left live -- the failing tubes, the cycling poles and
+#: the spots: cold run 9233 left 29 rigs of 235 live, and its paired census
+#: read 2,895 of 3,966 lightmapped meshes under no light at all, 915 under
+#: one, the worst plate under nine. The 8 m tile above was priced against
+#: LIVE lights and cost that level 521 of its 795 boxes. 32 m is a quarter of
+#: a 128 m plate side; the first package built with it is its proof (the
+#: paired census: no mesh over 8 live lights), and the number moves if the
+#: census says so. Only the PLATE FAMILIES take it -- the ground, the slabs,
+#: the bands, the fields, the pads, the walls; a cover or a blocker is under
+#: 8 m anyway. Zoo's `PLATE_TILE` and Deli Counter's `SLAB_TILE` are the
+#: same law for interiors and have not moved: each is its own decision.
+MESH_TILE_BAKED = 32.0
+
+#: The cell the road paint is cut into, a mesh a colour a cell (0.115.0,
+#: roadmap 231): the same per-mesh cap, measured on the first lever. Cold run
+#: 9236 shipped 0.114.0's one mesh a colour, and its paired census put each
+#: under 21 live lights against the cap of 8 -- a mesh whose box is the whole
+#: plate reaches the failing tube behind every storefront, and the engine
+#: binds the first 8 it finds, so a pole left live over a crosswalk could be
+#: one of the 13 it drops. A cell of the baked tile's size keeps each piece
+#: under the lights within its reach; its proof is the same census on the
+#: first package built with it.
+PAINT_CELL_M = 32.0
+
+
+def mesh_tile(site_spec) -> float:
+    """The tile the site's plate families are cut to: `render.mesh_tile_m`
+    when the spec names one, else MESH_TILE_BAKED when `render.lights_baked`
+    is true (Level Factory 0.178.0 writes it from its export's own default),
+    else MESH_TILE -- a spec that says nothing draws as before, byte for
+    byte. A tile under a metre, or not a number, is refused rather than
+    drawn: a sliver law is a defect, not a setting."""
+    r = (site_spec or {}).get("render") or {}
+    if r.get("mesh_tile_m") is not None:
+        t = float(r["mesh_tile_m"])
+        if not t >= 1.0:
+            raise ValueError(f"render.mesh_tile_m must be >= 1 m, got {r['mesh_tile_m']!r}")
+        return t
+    return MESH_TILE_BAKED if r.get("lights_baked") else MESH_TILE
+
 
 def _mesh_tiles(sx, sz, tile=MESH_TILE):
     """Cut an sx (local x) by sz (local z) mesh footprint into <=tile cells.
@@ -889,15 +934,16 @@ def _mesh_tiles(sx, sz, tile=MESH_TILE):
     return out
 
 
-def _mesh_child_lines(name, size, color, skin=None):
+def _mesh_child_lines(name, size, color, skin=None, tile=None):
     """The MeshInstance3D children and their BoxMesh sub_resources for one
-    StaticBody3D, tiled to MESH_TILE. Shared by `_box_node` and
+    StaticBody3D, tiled to ``tile`` -- the site's `mesh_tile` (0.115.0), None
+    meaning MESH_TILE. Shared by `_box_node` and
     `_yaw_box_node` so the law cannot drift between them. Children sit in the
     body's LOCAL frame, so the yaw'd writer needs no rotation math here --
     the parent's transform carries it."""
     sx, sy, sz = size
     body, sub = [], []
-    for suffix, dx, dz, tx, tz in _mesh_tiles(sx, sz):
+    for suffix, dx, dz, tx, tz in _mesh_tiles(sx, sz, tile or MESH_TILE):
         body.append(f'[node name="mesh{suffix}" type="MeshInstance3D" '
                     f'parent="./{name}"]')
         if suffix:
@@ -923,7 +969,7 @@ def _wall_seen(site_spec) -> bool:
     return not per.get("fenced_runs")
 
 
-def _box_node(name, size, at_xyz, color=None, skin=None, visual=True):
+def _box_node(name, size, at_xyz, color=None, skin=None, visual=True, tile=None):
     """(body_lines, subres_lines) for an axis-aligned StaticBody3D box with a
     BoxMesh + BoxShape3D, at Godot-frame (x, y_height, z). color: optional
     (r,g,b[,a]) -> a StandardMaterial3D override; skin: a `ground_skins`
@@ -933,7 +979,8 @@ def _box_node(name, size, at_xyz, color=None, skin=None, visual=True):
     perimeter wall behind the fence keeps its collision and draws nothing."""
     sx, sy, sz = size
     x, yh, z = at_xyz
-    mesh_body, mesh_sub = _mesh_child_lines(name, size, color, skin) if visual else ([], [])
+    mesh_body, mesh_sub = (_mesh_child_lines(name, size, color, skin, tile=tile)
+                           if visual else ([], []))
     body = [
         f'[node name="{name}" type="StaticBody3D" parent="."]',
         f'transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, {x:g}, {yh:g}, {z:g})',
@@ -974,7 +1021,7 @@ def yaw_basis_text(yaw_deg):
     return f"{c:g}, 0, {s:g}, 0, 1, 0, {-s:g}, 0, {c:g}"
 
 
-def _yaw_box_node(name, size, center_godot, yaw_deg, color=None, skin=None):
+def _yaw_box_node(name, size, center_godot, yaw_deg, color=None, skin=None, tile=None):
     """Like _box_node but yaw'd about Godot-Y (for paths/roads between buildings).
     `yaw_deg` is the plan angle, counterclockwise from +x, that the box's
     local x (`size[0]`) runs along (`yaw_basis_text` says why that is the
@@ -986,7 +1033,7 @@ def _yaw_box_node(name, size, center_godot, yaw_deg, color=None, skin=None):
     sx, sy, sz = size
     x, yh, z = center_godot
     xform = f"{yaw_basis_text(yaw_deg)}, {x:g}, {yh:g}, {z:g}"
-    mesh_body, mesh_sub = _mesh_child_lines(name, size, color, skin)
+    mesh_body, mesh_sub = _mesh_child_lines(name, size, color, skin, tile=tile)
     body = [
         f'[node name="{name}" type="StaticBody3D" parent="."]',
         f'transform = Transform3D({xform})',
@@ -1034,29 +1081,7 @@ def paint_offset(key: str) -> tuple:
     return tuple(int.from_bytes(d[i:i + 4], "big") / 4294967296.0 for i in (0, 4, 8))
 
 
-def _yaw_quad_node(name, size, center_godot, yaw_deg, color, skin=None,
-                   uv_offset=None):
-    """(body_lines, subres_lines) for a flat painted rectangle: a Node3D
-    carrying the tiled meshes `_mesh_child_lines` makes, one shared
-    material, and NO body -- markings have no collision. ``size`` is
-    (along, across) in the plan; the quad is `SURFACE_TIER` thick. With a
-    `paint` skin the quad wears the pack, tinted by the marking's own
-    colour, and the pack's cutout is where the paint has worn through;
-    ``uv_offset`` (see `paint_offset`) shifts that pack's projection.
-    ``yaw_deg`` is the plan angle the quad's `along` runs at, as for
-    `_yaw_box_node`."""
-    along, across = size
-    x, yh, z = center_godot
-    xform = f"{yaw_basis_text(yaw_deg)}, {x:g}, {yh:g}, {z:g}"
-    mesh_body, mesh_sub = _mesh_child_lines(name, (along, SURFACE_TIER, across), color, skin)
-    body = [f'[node name="{name}" type="Node3D" parent="."]',
-            f'transform = Transform3D({xform})', '']
-    body += mesh_body
-    return body, list(mesh_sub) + _mat_sub(name, color, skin, tint=color if skin else None,
-                                           uv_offset=uv_offset)
-
-
-def _mat_sub(name, color, skin=None, tint=None, uv_offset=None, triplanar=True):
+def _mat_sub(name, color, skin=None, tint=None, triplanar=True):
     """The one StandardMaterial3D a body's tiles share. `color` alone is the
     flat greybox read; with a `skin` (see `ground_skins`) the material carries
     the Pixelcoat maps, projected in WORLD space so a plate tiled into 8 m
@@ -1085,9 +1110,6 @@ def _mat_sub(name, color, skin=None, tint=None, uv_offset=None, triplanar=True):
             # the mesh carries its own UVs in the pack's tile units
             # (`_marking_meshes`, 0.114.0): one material for every marking
             lines.append('uv1_scale = Vector3(1, 1, 1)')
-        if uv_offset is not None:
-            u, v, w = uv_offset
-            lines.append(f'uv1_offset = Vector3({u:.6g}, {v:.6g}, {w:.6g})')
         if skin.get("alpha_mode") == "scissor":
             # the pack's alpha is a cutout: tested, never blended, so the
             # quad stays in the opaque pass and needs no sorting
@@ -2233,9 +2255,18 @@ def _colour_slug(color):
 
 def _marking_meshes(marks, skins):
     """(body_lines, sub_lines, files) for a site's road paint (0.114.0,
-    roadmap 231): ONE mesh per paint colour, every marking a flat quad in it
-    on the paint's top face, written as an OBJ beside the scene (``files``:
-    file name -> text) and stood by one MeshInstance3D with one material.
+    roadmap 231): ONE mesh per paint colour PER CELL -- a `PAINT_CELL_M` square
+    of the plan, by each marking's centre (0.115.0) -- every marking a flat
+    quad in it on the paint's top face, written as an OBJ beside the scene
+    (``files``: file name -> text), each stood by a MeshInstance3D sharing
+    the colour's one material.
+
+    WHY A CELL. Cold run 9236 shipped one mesh a colour and its paired light
+    census (Level Factory 0.159.0's) put each under 21 live lights against
+    the engine's cap of 8 a mesh: a mesh whose box is the plate reaches every
+    failing tube behind every storefront, and the engine binds the first 8.
+    A cell keeps each piece under the lights within its reach, and culls as
+    a piece; the draws it adds are the cells in view, a dozen where 227 were.
 
     WHY A FILE. Cold run 9233 priced a street at +107 draws a heading median
     (`docs/findings/street_draws/` in the factory): every marking was its
@@ -2262,12 +2293,19 @@ def _marking_meshes(marks, skins):
     top = MARKING_Y + SURFACE_TIER / 2.0
     groups = {}
     for m in marks:
-        groups.setdefault(tuple(float(v) for v in m["color"]), []).append(m)
+        cell = (int(math.floor(float(m["at"][0]) / PAINT_CELL_M)),
+                int(math.floor(float(m["at"][1]) / PAINT_CELL_M)))
+        groups.setdefault((tuple(float(v) for v in m["color"]),) + cell, []).append(m)
     body, sub, files = [], [], {}
-    for color in sorted(groups):
-        name = f"site_marks_{_colour_slug(color)}"
+    done = set()
+    for key in sorted(groups):
+        color, cx, cy = key
+        slug = _colour_slug(color)
+        # the cell in the name, offset so a westerly or southerly cell
+        # carries no sign: c500_500 holds the origin
+        name = f"site_marks_{slug}_c{cx + 500:03d}_{cy + 500:03d}"
         verts, uvs, faces = [], [], []
-        for m in groups[color]:
+        for m in groups[key]:
             off = paint_offset(_marking_key(m)) if paint else (0.0, 0.0, 0.0)
             base = len(verts)
             for px, py in _marking_quad(m):
@@ -2276,8 +2314,9 @@ def _marking_meshes(marks, skins):
                 uvs.append((gx * scale + off[0], gz * scale + off[2]))
             faces.append((base + 1, base + 2, base + 3))
             faces.append((base + 1, base + 3, base + 4))
-        lines = [f"# Lot: the site's road paint, colour {_colour_slug(color)}, "
-                 f"{len(groups[color])} marking(s), a quad each", f"o {name}"]
+        lines = [f"# Lot: the site's road paint, colour {slug}, cell ({cx}, {cy}) of "
+                 f"{PAINT_CELL_M:g} m, {len(groups[key])} marking(s), a quad each",
+                 f"o {name}"]
         # six decimals: a bay tick is 0.3 m long and its direction is read off
         # its two corners, which four decimals turned by 3e-4 on a diagonal road
         lines += [f"v {x:.6f} {y:.6f} {z:.6f}" for x, y, z in verts]
@@ -2287,10 +2326,14 @@ def _marking_meshes(marks, skins):
         files[f"{name}.obj"] = "\n".join(lines) + "\n"
         body += [f'[node name="{name}" type="MeshInstance3D" parent="."]',
                  f'mesh = ExtResource("{name}")',
-                 f'material_override = SubResource("Mat_{name}")', '']
-        mat = _mat_sub(name, color, paint, tint=color if paint else None, triplanar=False)
-        mat.insert(len(mat) - 1, 'cull_mode = 2')
-        sub += mat
+                 f'material_override = SubResource("Mat_site_marks_{slug}")', '']
+        if slug not in done:
+            # one material a colour, shared by its cells
+            done.add(slug)
+            mat = _mat_sub(f"site_marks_{slug}", color, paint,
+                           tint=color if paint else None, triplanar=False)
+            mat.insert(len(mat) - 1, 'cull_mode = 2')
+            sub += mat
     return body, sub, files
 
 
@@ -2326,6 +2369,12 @@ def _outdoor_nodes(site_spec, preview=False, self_flooring=None, skins=None,
     # solid blocks rather than floored interiors, so the ground stays under
     # them too and the site remains walkable up to the massing.
     floors = set() if self_flooring is None else set(self_flooring)
+    # THE PLATE TILE (0.115.0, roadmap 231): read off the spec's `render`,
+    # MESH_TILE_BAKED where the package bakes its lights, MESH_TILE otherwise.
+    tile = mesh_tile(site_spec)
+    if tile != MESH_TILE:
+        print(f"[lot] plate tile {tile:g} m: the site spec's render says the "
+              f"lights bake (MESH_TILE {MESH_TILE:g} m under live lights)")
 
     import site_extent
     ground = site_extent.resolve(site_spec)
@@ -2351,34 +2400,34 @@ def _outdoor_nodes(site_spec, preview=False, self_flooring=None, skins=None,
                                ((x0 + x1) / 2,
                                 -(GROUND_THICK + GROUND_SINK) / 2,
                                 -(y0 + y1) / 2),
-                               GROUND_COLOR, skin=skins.get("ground"))
+                               GROUND_COLOR, skin=skins.get("ground"), tile=tile)
             body += bl
             sub += sr
 
     # paths and courtyards: `path_slabs` / `courtyard_slabs` hold the geometry
     for s in path_slabs(site_spec):
         bl, sr = _yaw_box_node(s["name"], s["size"], s["centre"], s["yaw_deg"],
-                               PATH_COLOR, skin=skins.get("path"))
+                               PATH_COLOR, skin=skins.get("path"), tile=tile)
         body += bl
         sub += sr
 
     for s in courtyard_slabs(site_spec):
         bl, sr = _box_node(s["name"], s["size"], s["centre"],
-                           COURT_COLOR, skin=skins.get("courtyard"))
+                           COURT_COLOR, skin=skins.get("courtyard"), tile=tile)
         body += bl
         sub += sr
 
     # the parking fields in the gaps (`site_fields`, 0.94.0)
     for s in field_slabs(site_spec):
         bl, sr = _yaw_box_node(s["name"], s["size"], s["centre"], s["yaw_deg"],
-                               FIELD_COLOR, skin=skins.get("parking"))
+                               FIELD_COLOR, skin=skins.get("parking"), tile=tile)
         body += bl
         sub += sr
 
     # the service pads under the dumpsters (`site_yards`, 0.93.0)
     for s in yard_slabs(site_spec):
         bl, sr = _box_node(s["name"], s["size"], s["centre"],
-                           YARD_COLOR, skin=skins.get("yard"))
+                           YARD_COLOR, skin=skins.get("yard"), tile=tile)
         body += bl
         sub += sr
 
@@ -2403,7 +2452,7 @@ def _outdoor_nodes(site_spec, preview=False, self_flooring=None, skins=None,
             ("perim_E", (WALL_THICK, h, gy), (x1, h / 2, -cy)),
             ("perim_W", (WALL_THICK, h, gy), (x0, h / 2, -cy)),
         ]:
-            bl, sr = _box_node(name, size, at_xyz, PERIM_COLOR, visual=seen)
+            bl, sr = _box_node(name, size, at_xyz, PERIM_COLOR, visual=seen, tile=tile)
             body += bl
             sub += sr
 
@@ -2465,7 +2514,8 @@ def _outdoor_nodes(site_spec, preview=False, self_flooring=None, skins=None,
         bl, sr = _yaw_box_node(
             s["name"], s["size"], s["centre"], s["yaw_deg"],
             ROAD_COLOR if s["family"] == "road" else SIDEWALK_COLOR,
-            skin=skins.get("sidewalk" if s["family"] == "sidewalk" else "road"))
+            skin=skins.get("sidewalk" if s["family"] == "sidewalk" else "road"),
+            tile=tile)
         body += bl
         sub += sr
     # THE FRONTAGE: the walk carried on, flush, from a sidewalk's back edge
@@ -2477,7 +2527,7 @@ def _outdoor_nodes(site_spec, preview=False, self_flooring=None, skins=None,
     frontage_findings = []
     for s in frontage_slabs(site_spec, street_roads, frontage_findings):
         bl, sr = _yaw_box_node(s["name"], s["size"], s["centre"], s["yaw_deg"],
-                               SIDEWALK_COLOR, skin=skins.get("sidewalk"))
+                               SIDEWALK_COLOR, skin=skins.get("sidewalk"), tile=tile)
         body += bl
         sub += sr
     for f_ in frontage_findings:
