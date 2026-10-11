@@ -27,7 +27,10 @@ WHAT IS MEASURED, FROM THE DRAWN SITE SPEC ALONE:
   number is a floor on the real gap, and the finding says so;
 - parking and service: the parking fields and their bays, the driveways and the yards with a
   dumpster, against the buildings they serve (the guide: a parking strategy by use and history,
-  never "huge parking lots behind every use").
+  never "huge parking lots behind every use");
+- the service lane (0.113.0): the roads carrying `kind: service_lane` (Level Factory 0.177.0's
+  `block` grammar lays one behind the row between two side streets) and the buildings they
+  `serve`, the guide's connector with an owner and users; the loop it closes is counted above.
 
 NOT MEASURED HERE, and said rather than guessed: landmarks (the spec carries signs, not a
 landmark; the brief does), simultaneous choices at a decision, regrouping room, and any route
@@ -182,6 +185,7 @@ def measures(site):
     total = len(empties) + len(buildings)
     roads = site.get("roads", [])
     junctions, loops = road_graph(roads)
+    lanes = [r for r in roads if str(r.get("kind", "")) == "service_lane"]
     routes = None
     try:
         import site_tactical
@@ -205,6 +209,8 @@ def measures(site):
         "bays": sum(int(f.get("bays", 0) or 0) for f in fields),
         "driveways": len(site.get("driveways") or []),
         "yards": len(site.get("yards") or []),
+        "service_lanes": len(lanes),
+        "lane_serves": sum(len(r.get("serves") or []) for r in lanes),
     }
 
 
@@ -244,4 +250,11 @@ def findings(site):
                                  f"{FOCAL_REACH:.0f} m of the line count, so the real gap is longer){tail}"))
     out.append(("INFO", CODE, f"{m['fields']} parking field(s) with {m['bays']} bay(s), {m['driveways']} "
                              f"driveway(s) and {m['yards']} yard(s) with a dumpster for {n} building(s)"))
+    if m["service_lanes"]:
+        out.append(("INFO", CODE, f"{m['service_lanes']} service lane(s) behind the row serving "
+                                 f"{m['lane_serves']} building(s): the guide's connector with an owner "
+                                 f"and users"))
+    else:
+        out.append(("INFO", CODE, "no service lane: deliveries and refuse share the front street; the "
+                                 "guide's rear passage or service lane is the loop a strip lacks"))
     return out

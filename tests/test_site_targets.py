@@ -77,3 +77,17 @@ def test_a_long_empty_leg_asks_for_a_focal_point():
 def test_the_site_audit_carries_the_targets():
     res = site_audit.audit(_site())
     assert [f[1] for f in res["findings"]].count("S_TARGETS") >= 5
+
+
+def test_a_service_lane_is_counted_as_the_connector_it_is():
+    lane = {"a": [-30.0, 25.0], "b": [60.0, 25.0], "width": 5.0, "sidewalk": 0.0,
+            "kind": "service_lane", "serves": ["b0", "b1", "b2"]}
+    side1 = {"a": [-30.0, -23.0], "b": [-30.0, 50.0], "width": 10.0, "sidewalk": 3.0}
+    side2 = {"a": [60.0, -23.0], "b": [60.0, 50.0], "width": 10.0, "sidewalk": 3.0}
+    s = _site(roads=[MAIN, side1, side2, lane])
+    m = ST.measures(s)
+    assert m["service_lanes"] == 1 and m["lane_serves"] == 3 and m["loops"] == 1
+    text = " | ".join(f[2] for f in ST.findings(s))
+    assert "1 service lane(s) behind the row serving 3 building(s)" in text and "1 loop(s)" in text
+    bare = " | ".join(f[2] for f in ST.findings(_site()))
+    assert "no service lane: deliveries and refuse share the front street" in bare

@@ -369,8 +369,14 @@ def approaches(roads_list) -> list:
             else:
                 minor = rank(road) <= rank(other)
                 other_minor = rank(other) <= rank(road)
-            signalised = ((minor and is_arterial(other))
-                          or (other_minor and is_arterial(road)))
+            # A LANE STOPS (0.113.0): a road without a sidewalk is a service
+            # lane or an alley, and its junction with a street is
+            # stop-controlled, never signalised -- a signal is for a street
+            # meeting an arterial. Level Factory 0.177.0's `block` grammar
+            # ends its lane on two side streets, and the rule as it stood
+            # would have hung a signal at the alley's mouth.
+            signalised = ((minor and is_arterial(other) and bool(road.sidewalk))
+                          or (other_minor and is_arterial(road) and bool(other.sidewalk)))
             lo, hi = crossing_box(c)
             walks = crossing_walks(road, c)
             for travel in (1, -1):
