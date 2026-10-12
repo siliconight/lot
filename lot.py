@@ -2575,6 +2575,19 @@ def _outdoor_nodes(site_spec, preview=False, self_flooring=None, skins=None,
     sub += ms
     if files is not None:
         files.update(mf)
+    # THE WIRES (0.119.0, `site_poles.wire_meshes`, factory roadmap 240):
+    # with the art only -- a themed site, whose cover stands as Zoo's
+    # modules. A candidate's greybox lot, which Laser Tag and the walk test
+    # grade, draws none: a wire is visual, Lot's walk navmeshes parse visual
+    # meshes (`geometry_parsed_geometry_type = 2`), and a grade on these lots
+    # moves with any change to what stands on them (roadmap 242).
+    if cover_refs:
+        import site_poles
+        wb, ws, wf = site_poles.wire_meshes(site_spec.get("cover") or [], SIDEWALK_H)
+        body += wb
+        sub += ws
+        if files is not None:
+            files.update(wf)
 
     # THE SHOP SIGNS. A lit cabinet over each door, on the facade that
     # faces the street (`sign_placement`), drawn here rather than as a

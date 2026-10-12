@@ -368,3 +368,165 @@ def _transformers(road, poles, buildings):
             break
         i = pick(lo, lo + (CAN_EVERY[1] - CAN_EVERY[0]) + 1)
         nxt = lo + (CAN_EVERY[1] - CAN_EVERY[0]) + 1
+
+
+# ---- the wires (0.119.0) ----------------------------------------------------
+#
+# The walker's call, 2026-10-12: the full wire set, no house drops -- three
+# primaries on the crossarm, the neutral, the secondary and two communication
+# cables, along every line and across each junction. Drawn as thin tubes
+# sagging between the poles' attachments (`WIRES`), one mesh a `WIRE_CELL_M`
+# cell of the plan (the paint's partition: a cell culls as a piece), written
+# as an OBJ beside the scene. UNSHADED, casting no shadow and out of the
+# lightmap: a wire is a dark line against the sky by day and a silhouette
+# against a lit facade at night, and unshaded no light ever adds a pass for it
+# (GL Compatibility draws a lit mesh once more for every light that reaches
+# it). No collision: nothing walks a wire.
+
+#: Sag at mid-span, a fraction of the span's length: conductors a few percent,
+#: the messenger-hung cables pulled tighter. Zoo's
+#: `test_the_wires_stack_so_a_span_clears_the_road` holds the lowest cable
+#: over 4.7 m at 2 % of a 36 m span.
+SAG = {"primary": 0.025, "neutral": 0.025, "secondary": 0.03, "comm": 0.02}
+#: The radius each is DRAWN at: about twice a real conductor's, as the fence's
+#: tension wire is (Zoo 1.77.0) -- a real 1 cm wire is under a pixel at any
+#: distance a player reads it from, and a line that comes and goes between
+#: frames is what the walk's shot bot calls jitter.
+WIRE_R = {"primary": 0.012, "neutral": 0.012, "secondary": 0.018, "comm": 0.022}
+WIRE_SEGMENTS = 12
+WIRE_SIDES = 4
+#: A line's end pole is tied across a junction to the nearest pole of another
+#: road's line within this: a side street's line tapping the main line, which
+#: may be a pole in the middle of it rather than its end.
+LINK_MAX = 30.0
+WIRE_CELL_M = 32.0
+WIRE_COLOUR = (0.07, 0.07, 0.07)
+
+
+def _kind(name):
+    return name.split("_")[0]
+
+
+def spans(cover):
+    """``[(a, b)]``: each line's consecutive poles, and each line's end poles
+    tied to the nearest pole of another road's line within `LINK_MAX` --
+    every pair once."""
+    lines = {}
+    for p in cover:
+        if p.get("species") == "utility_pole" and p.get("line"):
+            lines.setdefault(p["line"], []).append(p)
+    out, seen = [], set()
+
+    def add(a, b):
+        key = frozenset((a["name"], b["name"]))
+        if a is not b and key not in seen:
+            seen.add(key)
+            out.append((a, b))
+
+    ordered = {k: sorted(v, key=lambda p: p["line_i"]) for k, v in sorted(lines.items())}
+    for ps in ordered.values():
+        for a, b in zip(ps, ps[1:]):
+            add(a, b)
+    for key, ps in ordered.items():
+        for end in {id(ps[0]): ps[0], id(ps[-1]): ps[-1]}.values():
+            best = None
+            for other, qs in ordered.items():
+                if other == key or qs[0]["road"] == end["road"]:
+                    continue
+                for q in qs:
+                    d = math.hypot(q["at"][0] - end["at"][0], q["at"][1] - end["at"][1])
+                    if d <= LINK_MAX and (best is None or d < best[0]):
+                        best = (d, q)
+            if best is not None:
+                add(end, best[1])
+    return out
+
+
+def wire_path(a, b, name, base):
+    """The points of wire ``name`` from pole ``a`` to pole ``b``: a parabola
+    through both attachments sagging `SAG` of the span at its middle."""
+    x0, y0, z0 = wire_point(a, name, base)
+    x1, y1, z1 = wire_point(b, name, base)
+    span = math.hypot(x1 - x0, y1 - y0)
+    sag = SAG[_kind(name)] * span
+    pts = []
+    for i in range(WIRE_SEGMENTS + 1):
+        s = i / WIRE_SEGMENTS
+        pts.append((x0 + (x1 - x0) * s, y0 + (y1 - y0) * s,
+                    z0 + (z1 - z0) * s - 4.0 * sag * s * (1.0 - s)))
+    return pts
+
+
+def _tube(pts, r):
+    """``(verts, normals, quads)`` of a `WIRE_SIDES`-sided tube along ``pts``,
+    in plan frame (z up); a quad is four indices into ``verts``."""
+    verts, norms, quads = [], [], []
+    n = len(pts)
+    for i, c in enumerate(pts):
+        a, b = pts[max(i - 1, 0)], pts[min(i + 1, n - 1)]
+        tx, ty, tz = b[0] - a[0], b[1] - a[1], b[2] - a[2]
+        tl = math.sqrt(tx * tx + ty * ty + tz * tz) or 1.0
+        tx, ty, tz = tx / tl, ty / tl, tz / tl
+        ux, uy, uz = ty, -tx, 0.0                      # t x up: level, across the wire
+        ul = math.hypot(ux, uy)
+        ux, uy = (ux / ul, uy / ul) if ul > 1e-9 else (1.0, 0.0)
+        wx, wy, wz = uy * tz - uz * ty, uz * tx - ux * tz, ux * ty - uy * tx
+        for k in range(WIRE_SIDES):
+            ang = 2.0 * math.pi * (k + 0.5) / WIRE_SIDES
+            ca, sa = math.cos(ang), math.sin(ang)
+            nx, ny, nz = ux * ca + wx * sa, uy * ca + wy * sa, uz * ca + wz * sa
+            verts.append((c[0] + r * nx, c[1] + r * ny, c[2] + r * nz))
+            norms.append((nx, ny, nz))
+    for i in range(n - 1):
+        for k in range(WIRE_SIDES):
+            k1 = (k + 1) % WIRE_SIDES
+            quads.append((i * WIRE_SIDES + k, i * WIRE_SIDES + k1,
+                          (i + 1) * WIRE_SIDES + k1, (i + 1) * WIRE_SIDES + k))
+    return verts, norms, quads
+
+
+def wire_meshes(cover, base):
+    """``(body_lines, sub_lines, files)`` for the site's wires: every span's
+    `WIRES`, one mesh a `WIRE_CELL_M` cell by the span's middle, each an OBJ
+    beside the scene (``files``: name -> text) stood by a MeshInstance3D that
+    casts no shadow, takes no GI and shares one unshaded material. ``base`` is
+    the height a pole stands on (a sidewalk band's top). Nothing when the site
+    has no line."""
+    cells = {}
+    for a, b in spans(cover):
+        mx = (a["at"][0] + b["at"][0]) / 2.0
+        my = (a["at"][1] + b["at"][1]) / 2.0
+        cell = (int(math.floor(mx / WIRE_CELL_M)), int(math.floor(my / WIRE_CELL_M)))
+        cells.setdefault(cell, []).append((a, b))
+    body, sub, files = [], [], {}
+    for cell in sorted(cells):
+        cx, cy = cell
+        name = f"site_wires_c{cx + 500:03d}_{cy + 500:03d}"
+        verts, norms, faces = [], [], []
+        for a, b in cells[cell]:
+            for wire in sorted(WIRES):
+                v, nrm, q = _tube(wire_path(a, b, wire, base), WIRE_R[_kind(wire)])
+                o = len(verts)
+                verts += v
+                norms += nrm
+                faces += [(o + i0 + 1, o + i1 + 1, o + i2 + 1, o + i3 + 1) for i0, i1, i2, i3 in q]
+        lines = [f"# Lot: the site's overhead wires, cell ({cx}, {cy}) of {WIRE_CELL_M:g} m, "
+                 f"{len(cells[cell])} span(s) of {len(WIRES)} wires", f"o {name}"]
+        # Godot's frame: plan (x, y, z up) is (x, z, -y)
+        lines += [f"v {x:.4f} {z:.4f} {-y:.4f}" for x, y, z in verts]
+        lines += [f"vn {x:.4f} {z:.4f} {-y:.4f}" for x, y, z in norms]
+        for f0, f1, f2, f3 in faces:
+            lines.append(f"f {f0}//{f0} {f1}//{f1} {f2}//{f2}")
+            lines.append(f"f {f0}//{f0} {f2}//{f2} {f3}//{f3}")
+        files[f"{name}.obj"] = "\n".join(lines) + "\n"
+        body += [f'[node name="{name}" type="MeshInstance3D" parent="."]',
+                 f'mesh = ExtResource("{name}")',
+                 'material_override = SubResource("Mat_site_wires")',
+                 "cast_shadow = 0", "gi_mode = 0", ""]
+    if cells:
+        r, g, b = WIRE_COLOUR
+        sub += ['[sub_resource type="StandardMaterial3D" id="Mat_site_wires"]',
+                "shading_mode = 0",
+                f"albedo_color = Color({r:g}, {g:g}, {b:g}, 1)",
+                "cull_mode = 2", ""]
+    return body, sub, files
