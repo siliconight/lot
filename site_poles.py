@@ -585,5 +585,9 @@ def wire_meshes(cover, base):
                 '[sub_resource type="ShaderMaterial" id="Mat_site_wires"]',
                 'shader = SubResource("Shader_site_wires")',
                 f"shader_parameter/colour = Color({cr:g}, {cg:g}, {cb:g}, 1)",
-                f"shader_parameter/min_px = {WIRE_MIN_PX:g}", ""]
+                # A FLOAT LITERAL (0.119.2): Godot reads `min_px = 1` for a float uniform
+                # as no value -- it loads null and a re-save writes `null` -- and the shader
+                # falls back to its own default, so any other WIRE_MIN_PX would be lost
+                # (the factory's docs/findings/pole_line/min_px_resave.gd)
+                f"shader_parameter/min_px = {float(WIRE_MIN_PX)!r}", ""]
     return body, sub, files

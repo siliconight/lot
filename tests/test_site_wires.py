@@ -203,6 +203,25 @@ def test_the_shader_holds_a_wire_to_a_pixel_and_fades_it_by_coverage():
     _roads, cover = _cover()
     _body, sub, _files = site_poles.wire_meshes(cover, lot.SIDEWALK_H)
     assert 'shader = SubResource("Shader_site_wires")' in sub
-    assert "shader_parameter/min_px = %g" % site_poles.WIRE_MIN_PX in sub
+    assert "shader_parameter/min_px = %r" % float(site_poles.WIRE_MIN_PX) in sub
     assert sub.index('[sub_resource type="Shader" id="Shader_site_wires"]') < sub.index(
         '[sub_resource type="ShaderMaterial" id="Mat_site_wires"]')
+
+
+def test_a_float_uniform_is_written_as_a_float():
+    """0.119.2: Godot 4.7 reads an integer literal given to a float uniform as no value -- a scene
+    written `shader_parameter/min_px = 1` loads it null, and a re-save writes `null` (cold run 9264's
+    package; the factory's docs/findings/pole_line/min_px_resave.gd). Every shader parameter Lot
+    writes for a float uniform carries a decimal point, whatever WIRE_MIN_PX is."""
+    _roads, cover = _cover()
+    keep = site_poles.WIRE_MIN_PX
+    try:
+        for value in (1, 2, 1.5):
+            site_poles.WIRE_MIN_PX = value
+            _body, sub, _files = site_poles.wire_meshes(cover, lot.SIDEWALK_H)
+            line = [l for l in sub if l.startswith("shader_parameter/min_px = ")]
+            assert len(line) == 1, sub
+            literal = line[0].split(" = ", 1)[1]
+            assert "." in literal and float(literal) == float(value), line[0]
+    finally:
+        site_poles.WIRE_MIN_PX = keep
