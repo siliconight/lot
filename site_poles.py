@@ -157,13 +157,22 @@ def _runs(road, kerb):
     """``[(t0, t1)]``: the stretches of this kerb a line runs along, broken
     at each ROAD crossing (a junction mouth, which a span crosses between the
     corner poles each side of it) and trimmed back from every cut's edge. A
-    path's or a driveway's cut does not break a run: a pole steps off it."""
+    path's or a driveway's cut does not break a run: a pole steps off it.
+
+    THE KERB'S SPAN, NOT THE CUT'S WIDTH (0.118.1). A cut stands on its kerb
+    as its width and `site_streets.CUT_MARGIN` either side (`split_span`), and
+    `site_furniture._clear_of_cuts` reads that span. 0.118.0 trimmed the runs
+    from the width alone, so every run's first station stood inside the span's
+    clearance and was refused as a cut: cold run 9262's west side street, its
+    span 0.0 to 5.6 for a 10 m crossing at 0, lost its corner pole that way --
+    with the 5 m circle a signal kept refusing every step off it."""
     half = POLE_FOOTPRINT[0] / 2.0
     pad = F.CUT_CLEARANCE + END_GAP + half
+    crossings = [c.t for c in kerb.cuts if c.kind == "road"]
     edges = [0.0]
-    for c in sorted(kerb.cuts, key=lambda c: c.t):
-        if c.kind == "road":
-            edges += [c.t - c.span / 2.0, c.t + c.span / 2.0]
+    for t0, t1, is_cut in kerb.spans:
+        if is_cut and any(t0 - 1e-9 <= ct <= t1 + 1e-9 for ct in crossings):
+            edges += [t0, t1]
     edges.append(road.length)
     runs = []
     for i in range(0, len(edges), 2):
@@ -185,10 +194,14 @@ def _meters_on(road, kerb):
             for b in site_streets.bays(road) if b["side"] == kerb.side]
 
 
-#: A traffic signal's arms reach 5 m over the road one way and 3 m the other
-#: at 6 to 6.5 m up (Zoo `traffic_signal`, 8 m tip to tip); a pole stands
-#: clear of the whole reach, so no cobra-head crosses a mast arm.
-SIGNAL_CLEAR = 5.0
+#: A TRAFFIC SIGNAL KEEPS ITS ARMS' BOX (0.118.1). Its module is 8 m of arm
+#: along its yaw -- 5 m of mast over the road it meets, 3 m of luminaire arm
+#: the other way, at 6 to 6.5 m up -- and 0.62 m across (Zoo `traffic_signal`),
+#: so a pole conflicts with it only inside that box. REFUTED, KEPT: 0.118.0
+#: kept a 5 m circle round the signal's pole, `SIGNAL_CLEAR`. A signal stands
+#: on the furniture line, 1.94 m across the band from the pole line, and the
+#: circle refused a corner pole that would have stood 1.63 m clear of the arms
+#: (cold run 9262's west side street, `Signal_1L_0` at station 8.40).
 
 
 def _room(pole, others):
@@ -199,7 +212,8 @@ def _room(pole, others):
     refused both ends of the kerb probe's widest cut (the first draft: a
     station lost, measured). A piece's plan box (its ``size``) keeps
     `site_furniture.PIECE_GAP`; a tree keeps its CROWN's spread, so no pole
-    stands in a tree; a signal keeps `SIGNAL_CLEAR`."""
+    stands in a tree; a signal keeps its arms' box, grown by the pole's
+    radius and the gap, in its own frame."""
     px, py = pole["at"]
     r = POLE_FOOTPRINT[0] / 2.0
     for o in others:
@@ -210,7 +224,13 @@ def _room(pole, others):
                 return False
             continue
         if sp == "traffic_signal":
-            if math.hypot(px - ox, py - oy) < SIGNAL_CLEAR:
+            w, d = float(o["dims"][0]), float(o["dims"][1])
+            a = math.radians(float(o.get("yaw") or 0.0))
+            dx, dy = px - ox, py - oy
+            lx = dx * math.cos(a) + dy * math.sin(a)
+            ly = -dx * math.sin(a) + dy * math.cos(a)
+            if (abs(lx) < w / 2.0 + r + F.PIECE_GAP
+                    and abs(ly) < d / 2.0 + r + F.PIECE_GAP):
                 return False
             continue
         sx, _h, sy = o["size"]

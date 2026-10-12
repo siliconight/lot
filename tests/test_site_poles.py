@@ -182,3 +182,41 @@ def test_the_line_takes_the_kerb_with_less_to_dodge():
     left, right = road.kerb("L"), road.kerb("R")
     assert len(left.cuts) > len(right.cuts), (len(left.cuts), len(right.cuts))
     assert site_poles.pole_kerb(road) is right
+
+
+#: Cold run 9262's lot (seed_9104): a main road, two side streets off it at a
+#: signalised T each, and a lane between them.
+T_ROADS = [{"a": [-85.5, -21.665], "b": [85.5, -21.665], "width": 10.0, "sidewalk": 3.0},
+           {"a": [-19.9875, -21.665], "b": [-19.9875, 32.0], "width": 10.0, "sidewalk": 3.0},
+           {"a": [75.15, -21.665], "b": [75.15, 32.0], "width": 10.0, "sidewalk": 3.0},
+           {"a": [-19.9875, 27.185], "b": [75.15, 27.185], "width": 5.0, "sidewalk": 0.0}]
+
+
+def test_every_line_stands_its_corner_poles_beside_a_signal():
+    """Cold run 9262's west side street lost the pole at its junction (0.118.1):
+    its runs began a cut's width from the crossing where the kerb's span
+    reaches `CUT_MARGIN` further, so the first station sat in the cut's
+    clearance, and the 5 m circle a signal kept refused every step off it."""
+    roads = site_streets.roads({"name": "t", "roads": T_ROADS, "buildings": []})
+    pieces = site_furniture.plan_furniture(roads, [])
+    signals = [p for p in pieces if p["species"] == "traffic_signal"]
+    assert signals, "the T stands no signal, so this proves nothing"
+    half = site_poles.POLE_FOOTPRINT[0] / 2.0
+    lines = 0
+    for road in roads:
+        poles = sorted((p for p in _poles(pieces) if p["road"] == road.index), key=lambda p: p["t"])
+        if not poles:
+            continue
+        lines += 1
+        kerb = road.kerb(poles[0]["kerb"])
+        assert len(poles) == len(site_poles.stations(road, kerb)), (road.index, [p["t"] for p in poles])
+        for t0, _t1 in site_poles._runs(road, kerb):
+            assert site_furniture._clear_of_cuts(t0, half, kerb), (road.index, t0)
+    assert lines == 3
+    for p in _poles(pieces):
+        assert site_poles._room(p, signals), p["name"]
+    # and a corner pole has room among EVERY road's pieces, not its own kerb's
+    # alone: at a corner two roads' furniture meet
+    others = [q for q in pieces if q["species"] != "utility_pole"]
+    for p in _poles(pieces):
+        assert site_poles._room(p, others), p["name"]

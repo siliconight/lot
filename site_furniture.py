@@ -1009,8 +1009,10 @@ def plan_furniture(roads_list, buildings=(), markers=(), findings=None,
             # everything the band already stands, the meters `plan_meters`
             # will stand and the shop bands, so nothing else has to know
             if kerb is line_kerb:
-                band = [p for p in out if p.get("road") == road.index
-                        and p.get("kerb") == kerb.side]
+                # EVERY PIECE PLANNED SO FAR, not this kerb's alone (0.118.1): a
+                # corner pole stands where two roads' furniture meet, and
+                # `site_poles._room` reads plan boxes, right across roads
+                band = list(out)
                 poles = site_poles.plan_line(road, kerb, band, markers, spans, n,
                                              buildings, kept_clear)
                 n += len(poles)
