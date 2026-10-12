@@ -23,7 +23,10 @@ drawn spec, step by step, two things refused it:
 **What changed.** `_runs` breaks a line at the kerb's own span for each road
 crossing; `_room` asks a signal's box, grown by the pole's radius and the gap,
 in the signal's frame. REFUTED, KEPT in the comment: the 5 m circle,
-`SIGNAL_CLEAR`.
+`SIGNAL_CLEAR`. And the line reads every piece planned so far, every
+road's, not its own kerb's alone (`site_furniture.plan_furniture`): a
+corner pole stands where two roads' furniture meet, and `_room` reads plan
+boxes, right across roads.
 
 **Measured:** On cold run 9262's drawn spec the west side street stands 3 poles where 0.118.0 stood 2, the first at its run's start, 7.05 from the crossing; the east one's corner pole stands there too, where 0.118.0 had stepped it to 7.45 off the cut's clearance. On the four stored site fixtures 8, 9, 9 and 9 poles become 9, 10, 9 and 9 -- a corner pole back on bank_block_001 seed 9256 and club_block_014 seed 9080 -- with 3 cans each as before (the factory's `docs/findings/pole_line/pole_census.py`)
 
