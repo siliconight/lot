@@ -382,6 +382,15 @@ def _transformers(road, poles, buildings):
 # against a lit facade at night, and unshaded no light ever adds a pass for it
 # (GL Compatibility draws a lit mesh once more for every light that reaches
 # it). No collision: nothing walks a wire.
+#
+# ONE PIXEL (0.119.1). A tube a few centimetres across is under a pixel
+# from about 15 m (a primary) to 30 m (a cable) at the player's camera and
+# 900 lines, and the rasteriser keeps or drops it pixel by pixel: cold run
+# 9263's far wires drew as dotted lines. Each vertex carries its wire's
+# drawn radius as its UV's u, and `WIRE_SHADER` finds the wire's centre from
+# it, widens a wire thinner than `WIRE_MIN_PX` pixel to that, and fades it
+# by the share of the widened line the wire really covers: a far wire is a
+# faint continuous line, as in a photograph, and a near one looks as it did.
 
 #: Sag at mid-span, a fraction of the span's length: conductors a few percent,
 #: the messenger-hung cables pulled tighter. Zoo's
@@ -401,6 +410,42 @@ WIRE_SIDES = 4
 LINK_MAX = 30.0
 WIRE_CELL_M = 32.0
 WIRE_COLOUR = (0.07, 0.07, 0.07)
+#: The narrowest a wire is drawn, in pixels (0.119.1): a thinner one is
+#: widened to this and faded by the share of it the wire covers.
+WIRE_MIN_PX = 1.0
+#: The wires' material (0.119.1). A vertex stands at its wire's centre plus
+#: NORMAL times the wire's drawn radius, which its u carries, so the vertex
+#: shader can find the centre and widen the tube about it. Half a pixel at a
+#: vertex is the clip's w over the projection's y scale and the frame's
+#: height -- w is the depth in a perspective view and 1 in an orthographic
+#: one, so the elevated shots hold too -- and a four-sided tube is sqrt(2)
+#: narrower across a face than across its corners, so the clamp is that much
+#: wider. Unshaded: no light adds a pass. Written into the scene as a string,
+#: so no double quote and no backslash.
+WIRE_SHADER = """shader_type spatial;
+render_mode unshaded, cull_back;
+
+// Lot's overhead wires (site_poles.py, 0.119.1): a wire thinner than min_px
+// pixels is drawn that wide and faded by the share of it the wire covers.
+uniform vec4 colour : source_color = vec4(0.07, 0.07, 0.07, 1.0);
+uniform float min_px = 1.0;
+varying float coverage;
+
+void vertex() {
+    float r = UV.x;
+    vec3 centre = VERTEX - NORMAL * r;
+    vec4 clip = PROJECTION_MATRIX * (MODELVIEW_MATRIX * vec4(centre, 1.0));
+    float half_px = abs(clip.w) / (abs(PROJECTION_MATRIX[1][1]) * VIEWPORT_SIZE.y);
+    float drawn = max(r, 1.41421356 * half_px * min_px);
+    coverage = r / drawn;
+    VERTEX = centre + NORMAL * drawn;
+}
+
+void fragment() {
+    ALBEDO = colour.rgb;
+    ALPHA = colour.a * coverage;
+}
+"""
 
 
 def _kind(name):
@@ -489,7 +534,8 @@ def wire_meshes(cover, base):
     """``(body_lines, sub_lines, files)`` for the site's wires: every span's
     `WIRES`, one mesh a `WIRE_CELL_M` cell by the span's middle, each an OBJ
     beside the scene (``files``: name -> text) stood by a MeshInstance3D that
-    casts no shadow, takes no GI and shares one unshaded material. ``base`` is
+    casts no shadow, takes no GI and shares one unshaded material, which holds
+    a wire to a pixel (`WIRE_SHADER`, 0.119.1). ``base`` is
     the height a pole stands on (a sidewalk band's top). Nothing when the site
     has no line."""
     cells = {}
@@ -502,31 +548,42 @@ def wire_meshes(cover, base):
     for cell in sorted(cells):
         cx, cy = cell
         name = f"site_wires_c{cx + 500:03d}_{cy + 500:03d}"
-        verts, norms, faces = [], [], []
+        verts, norms, radii, faces = [], [], [], []
         for a, b in cells[cell]:
             for wire in sorted(WIRES):
-                v, nrm, q = _tube(wire_path(a, b, wire, base), WIRE_R[_kind(wire)])
+                r = WIRE_R[_kind(wire)]
+                v, nrm, q = _tube(wire_path(a, b, wire, base), r)
                 o = len(verts)
                 verts += v
                 norms += nrm
+                radii += [r] * len(v)
                 faces += [(o + i0 + 1, o + i1 + 1, o + i2 + 1, o + i3 + 1) for i0, i1, i2, i3 in q]
         lines = [f"# Lot: the site's overhead wires, cell ({cx}, {cy}) of {WIRE_CELL_M:g} m, "
                  f"{len(cells[cell])} span(s) of {len(WIRES)} wires", f"o {name}"]
-        # Godot's frame: plan (x, y, z up) is (x, z, -y)
+        # Godot's frame: plan (x, y, z up) is (x, z, -y), a rotation, so a
+        # face's winding survives it. Each vertex's u is its wire's drawn
+        # radius, which `WIRE_SHADER` reads (0.119.1).
         lines += [f"v {x:.4f} {z:.4f} {-y:.4f}" for x, y, z in verts]
+        lines += [f"vt {r:.4f} 0" for r in radii]
         lines += [f"vn {x:.4f} {z:.4f} {-y:.4f}" for x, y, z in norms]
+        # `_tube`'s quads run round the ring against the normals; reversed, a
+        # face is counter-clockwise about its outward normal (OBJ's front) and
+        # the material culls the back, so one layer of a wire draws and its
+        # fade is its coverage (0.119.1; 0.119.0 drew both sides)
         for f0, f1, f2, f3 in faces:
-            lines.append(f"f {f0}//{f0} {f1}//{f1} {f2}//{f2}")
-            lines.append(f"f {f0}//{f0} {f2}//{f2} {f3}//{f3}")
+            lines.append(f"f {f0}/{f0}/{f0} {f2}/{f2}/{f2} {f1}/{f1}/{f1}")
+            lines.append(f"f {f0}/{f0}/{f0} {f3}/{f3}/{f3} {f2}/{f2}/{f2}")
         files[f"{name}.obj"] = "\n".join(lines) + "\n"
         body += [f'[node name="{name}" type="MeshInstance3D" parent="."]',
                  f'mesh = ExtResource("{name}")',
                  'material_override = SubResource("Mat_site_wires")',
                  "cast_shadow = 0", "gi_mode = 0", ""]
     if cells:
-        r, g, b = WIRE_COLOUR
-        sub += ['[sub_resource type="StandardMaterial3D" id="Mat_site_wires"]',
-                "shading_mode = 0",
-                f"albedo_color = Color({r:g}, {g:g}, {b:g}, 1)",
-                "cull_mode = 2", ""]
+        cr, cg, cb = WIRE_COLOUR
+        sub += ['[sub_resource type="Shader" id="Shader_site_wires"]',
+                f'code = "{WIRE_SHADER}"', "",
+                '[sub_resource type="ShaderMaterial" id="Mat_site_wires"]',
+                'shader = SubResource("Shader_site_wires")',
+                f"shader_parameter/colour = Color({cr:g}, {cg:g}, {cb:g}, 1)",
+                f"shader_parameter/min_px = {WIRE_MIN_PX:g}", ""]
     return body, sub, files
