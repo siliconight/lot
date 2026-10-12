@@ -12,6 +12,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import lot              # noqa: E402
 import site_furniture   # noqa: E402
+import site_poles       # noqa: E402
 import site_streets     # noqa: E402
 from tests.glb_fixture import write_glb  # noqa: E402
 
@@ -46,16 +47,16 @@ def test_every_piece_stands_on_a_band_clear_of_the_cuts():
                 assert t + half <= t0 + 1e-6 or t - half >= t1 - 1e-6, (p, (t0, t1))
 
 
-def test_lamps_at_the_spacing_and_the_corner_set_at_every_cut():
+def test_the_line_on_one_kerb_and_the_corner_set_at_every_cut():
     roads = site_streets.roads(_probe())
     pieces = site_furniture.plan_furniture(roads)
     by = {}
     for p in pieces:
         by.setdefault(p["species"], []).append(p)
-    lamps = sorted(p["at"][0] for p in by["streetlight"] if p["kerb"] == "L")
-    gaps = [b - a for a, b in zip(lamps, lamps[1:])]
-    assert gaps and all(abs(g - site_furniture.LAMP_SPACING) < 1e-6
-                        or g > site_furniture.LAMP_SPACING for g in gaps)
+    # THE LAMPS ARE ON THE POLES (0.118.0): no steel lamp on a band road,
+    # the line on one kerb (`tests/test_site_poles.py` holds its spacing)
+    assert "streetlight" not in by
+    assert by["utility_pole"] and len({p["kerb"] for p in by["utility_pole"]}) == 1
     (road,) = roads
     cuts = sum(len(k.cuts) for k in road.kerbs)
     # the blade at a corner is a stop sign where the cut is a driveway and
@@ -80,29 +81,34 @@ def test_lamps_at_the_spacing_and_the_corner_set_at_every_cut():
 def test_assemble_writes_the_furniture_as_slots_standing_on_the_kerb(tmp_path):
     lot.assemble(os.path.join(SPECS, "coldrun_kerb_probe.json"), str(tmp_path))
     doc = json.loads((tmp_path / "coldrun_kerb_probe.slots.json").read_text(encoding="utf-8"))
-    lamps = [s for s in doc["slots"] if s["species"] == "streetlight"]
-    assert lamps
-    for s in lamps:
-        assert abs(s["transform"]["translation"][2] - (lot.SIDEWALK_H + 3.0)) < 1e-6
+    # a pole (0.118.0): its module 10.4 m tall, standing on the band's top
+    poles = [s for s in doc["slots"] if s["species"] == "utility_pole"]
+    assert poles
+    for s in poles:
+        assert abs(s["transform"]["translation"][2] - (lot.SIDEWALK_H + 5.2)) < 1e-6
         assert s["fit"]["collision"] == "convex"
     g = json.loads((tmp_path / "coldrun_kerb_probe.site.gameplay.json").read_text(encoding="utf-8"))
     assert g["furniture_plan"]["placed"]
-    # and the box the scene draws for a lamp stands on the band's top (the
-    # kerb line is planned first, so the first lamp is the first slot)
+    # and the box the scene draws for a pole stands on the band's top, at
+    # the pole: no module was built here, so the box is the pole's column
     txt = (tmp_path / "coldrun_kerb_probe.tscn").read_text(encoding="utf-8")
-    first_lamp = next(i for i, s in enumerate(doc["slots"]) if s["species"] == "streetlight")
-    i = txt.index('name="cover_%d"' % first_lamp)
-    assert f", {lot.SIDEWALK_H + 3.0:g}, " in txt[i:].split("\n")[1]
+    first = next(s["slot_id"] for s in doc["slots"] if s["species"] == "utility_pole")
+    i = txt.index('name="%s"' % first)
+    assert f", {lot.SIDEWALK_H + 5.2:g}, " in txt[i:].split("\n")[1]
 
 
-def test_a_tree_stands_between_every_two_lamps_on_the_grates_footprint():
+def test_a_tree_keeps_the_lamps_stations_on_the_grates_footprint():
     roads = site_streets.roads(_probe())
     (road,) = roads
     pieces = site_furniture.plan_furniture(roads)
     species = site_furniture.tree_for(road)
     trees = [p for p in pieces if p["species"] == species]
-    lamps = [p for p in pieces if p["species"] == "streetlight"]
-    assert trees and len(trees) <= len(lamps)
+    # the lamps went onto the poles (0.118.0); the trees kept their stations,
+    # at most one a kerb at each
+    stations = len(range(int(site_furniture.LAMP_START),
+                         int(road.length - site_furniture.LAMP_START),
+                         int(site_furniture.LAMP_SPACING)))
+    assert trees and len(trees) <= 2 * stations
     w, _d, h = site_furniture.SPECIES[species]
     for p in trees:
         assert p["dims"] == list(site_furniture.SPECIES[species])   # the slot is the crown
@@ -155,15 +161,16 @@ def test_a_piece_keeps_clear_of_the_mission_markers():
     piece or a bus stop is skipped."""
     roads = site_streets.roads(_probe())
     bare = site_furniture.plan_furniture(roads)
-    lamp = next(p for p in bare if p["species"] == "streetlight")
-    marker = tuple(lamp["at"])
+    # a pole (0.118.0), the street's lamps being on its poles now
+    pole = next(p for p in bare if p["species"] == "utility_pole")
+    marker = tuple(pole["at"])
     pieces = site_furniture.plan_furniture(roads, markers=[marker])
     for p in pieces:
         assert site_furniture._clear_of_markers(p, [marker]), p
-    # the lamp stepped along its band rather than vanishing
-    moved = [p for p in pieces if p["species"] == "streetlight" and p["kerb"] == lamp["kerb"]
-             and abs(p["t"] - lamp["t"]) <= 4.0 + 1e-6]
-    assert moved and moved[0]["t"] != lamp["t"]
+    # the pole stepped along its band rather than vanishing
+    moved = [p for p in pieces if p["species"] == "utility_pole" and p["kerb"] == pole["kerb"]
+             and abs(p["t"] - pole["t"]) <= max(site_poles.POLE_STEPS) + 1e-6]
+    assert moved and pole["t"] not in [p["t"] for p in moved]
 
 
 def test_a_road_is_planted_with_one_species_and_the_species_is_the_roads():
@@ -613,9 +620,16 @@ def test_every_hydrant_turns_its_pumper_outlet_to_the_road():
     `fire_hydrant_37`)."""
     roads = site_streets.roads(_probe())
     (road,) = roads
-    hydrants = [p for p in site_furniture.plan_furniture(roads)
+    # WITH THE LAMPS ON THE POLES (0.118.0) the probe's first kerb takes
+    # every corner hydrant the site's spacing allows -- its lamps had
+    # refused two of them, which left room on the other kerb -- so the
+    # right kerb's hydrants this test turns are made the way a marker
+    # makes them: one on each left-kerb hydrant skips it
+    left = [tuple(p["at"]) for p in site_furniture.plan_furniture(roads)
+            if p["species"] == "fire_hydrant" and p["kerb"] == "L"]
+    hydrants = [p for p in site_furniture.plan_furniture(roads, markers=left)
                 if p["species"] == "fire_hydrant"]
-    assert {p["kerb"] for p in hydrants} == {"L", "R"}
+    assert "R" in {p["kerb"] for p in hydrants}
     for p in hydrants:
         fx, fy = site_furniture.plate_facing(p["yaw"])
         cx, cy = road.point(p["t"], 0.0)

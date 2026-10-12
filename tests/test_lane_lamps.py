@@ -86,7 +86,10 @@ def test_every_lane_lamp_becomes_a_light_on_its_pole_at_grade():
 def test_the_streets_keep_their_bands_and_the_names_stay_the_sites():
     _lane, _lamps, pieces, _f = _lane_lamps(_spec())
     street = [p for p in pieces if p["road"] != 3]
-    assert street and all(p.get("base") == "sidewalk" for p in street if p["species"] == "streetlight")
+    # a street's lamps are on its poles (0.118.0), and they stand on the band
+    poles = [p for p in street if p["species"] == "utility_pole"]
+    assert street and poles and all(p.get("base") == "sidewalk" for p in poles)
+    assert not [p for p in street if p["species"] == "streetlight"]
     names = [p["name"] for p in pieces]
     assert len(names) == len(set(names))
 

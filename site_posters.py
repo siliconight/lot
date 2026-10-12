@@ -89,7 +89,11 @@ VARIANTS = 4
 #: slot's centre; the sign post a 0.10 m square u-channel, whose CORNERS are
 #: its half-diagonal out (0.0707), not its half-width -- a sleeve at the
 #: half-width would pass through them.
-POLES = {"streetlight": 0.06, "sign_post": 0.0707}
+#: A UTILITY POLE (0.118.0, `site_poles`) is a ten-sided wooden pole 0.30 m
+#: across at grade and 0.19 m at the top: a sleeve at its corners' radius at
+#: grade clears every corner above, the paper a centimetre off the pole at
+#: reach. The classic flyer pole, and on a band road the only pole left.
+POLES = {"streetlight": 0.06, "sign_post": 0.0707, "utility_pole": 0.15}
 #: Zoo `pole_flyers_forms`: a sleeve is `LAYERS` papers `LAYER` apart, the
 #: innermost `AIR` off the pole, so its outer radius is pole + AIR + 3 LAYER.
 #: Pinned against Zoo in tests/test_site_posters.py.

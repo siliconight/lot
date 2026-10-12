@@ -503,9 +503,10 @@ def _streetlight_anchors(site_spec):
       (`LOT_NO_EXTERIOR_LIGHTS`) instead of papering over it with a row,
       because the row is the defect.
     """
+    import site_poles
     anchors = []
     for i, cv in enumerate(site_spec.get("cover") or []):
-        if cv.get("species") != "streetlight":
+        if cv.get("species") not in ("streetlight", "utility_pole"):
             continue
         dims = cv.get("dims") or []
         if len(dims) < 3:
@@ -514,7 +515,14 @@ def _streetlight_anchors(site_spec):
         # the same base `write_site_slots` stands the module on, so the
         # light is placed against the pole as built and not against grade
         base = SIDEWALK_H if cv.get("base") == "sidewalk" else 0.0
-        x, y = cv["at"]
+        if cv.get("species") == "utility_pole":
+            # THE COBRA-HEAD'S LENS (0.118.0, `site_poles`): 2.171 m toward
+            # the road on its arm and 7.401 m up, where Zoo hangs it --
+            # under the lens, as a steel lamp's light is under its own
+            x, y, z = site_poles.lens_point(cv, base)
+        else:
+            x, y = cv["at"]
+            z = base + h - STREETLIGHT_LENS_DROP
         anchors.append({
             # the pole's own name, so an id names a thing in the scene and
             # Lux's every-third-pole ballast buzz keys to a real lamp
@@ -525,8 +533,7 @@ def _streetlight_anchors(site_spec):
             # THE LENS, NOT THE POLE TOP. Lux reads `pos[2]` as the lamp's
             # height above the road to derive its energy, and that is still
             # what this is -- 0.175 m less than it was, which is the head.
-            "pos": [round(float(x), 3), round(float(y), 3),
-                    round(base + h - STREETLIGHT_LENS_DROP, 3)],
+            "pos": [round(float(x), 3), round(float(y), 3), round(float(z), 3)],
             "rot_y": round(float(cv.get("yaw") or 0.0) % 360.0, 3),
             # ONE LAMP, ONE LIGHT. A row cannot describe these: `_nudged`
             # moves a pole clear of a kerb cut or a marker, so the spacing
@@ -1646,7 +1653,9 @@ def write_site_slots(site_spec, out_path):
         dims = cv.get("dims")
         if not sp or not dims or len(dims) < 3:
             continue
-        cx, cy = cv["at"]
+        # A POLE'S MODULE IS NOT CENTRED ON THE POLE (0.118.0): the record's
+        # `at` is the pole a body meets, `module_at` the slot's centre
+        cx, cy = cv.get("module_at") or cv["at"]
         base = SIDEWALK_H if cv.get("base") == "sidewalk" else 0.0
         slots.append({
             "slot_id": f"cover_{i}", "role": "prop", "size_mod": "full",
@@ -1672,6 +1681,10 @@ def write_site_slots(site_spec, out_path):
         # than a greybox.
         if cv.get("blade"):
             slots[-1]["form"] = str(cv["blade"])
+        # A POLE'S CAN (0.118.0): `site_poles` names `transformer` on the
+        # poles that carry one; `auto` is none, as Zoo reads it
+        elif cv.get("form"):
+            slots[-1]["form"] = str(cv["form"])
         # A PIECE'S OWN VARIANT (0.90.0): a dumpster's hauler, which is its
         # paint. Zoo reads the slot's `variant` into the stem as `_n<v>`,
         # non-zero only, so no slot written before this moves.
@@ -1794,6 +1807,9 @@ COVER_MATERIALS = {"box_truck": "metal_painted", "cargo_container": "metal_paint
                    "cruiser": "metal_painted",
                    # the kerb line (site_furniture)
                    "streetlight": "metal", "fire_hydrant": "metal_painted",
+                   # the pole line (site_poles, 0.118.0): Zoo 1.104.0's one
+                   # option, creosoted wood
+                   "utility_pole": "wood",
                    "litter_bin": "metal_painted", "sign_post": "metal_bare",
                    # the waiting places (site_furniture)
                    "bus_shelter": "metal_painted", "bench": "wood",
@@ -2468,7 +2484,10 @@ def _outdoor_nodes(site_spec, preview=False, self_flooring=None, skins=None,
             # stood: same centre, same yaw, its own collision (roadmap 22).
             # The module is centre-pivot at the slot's dims, so its origin
             # is the box's centre.
-            xform = _godot_transform((cx, cy), float(cv.get("yaw") or 0.0),
+            # a pole's module stands at the slot's centre, not the pole's
+            # (0.118.0): the box below, if it is drawn, is the pole
+            mx, my = cv.get("module_at") or (cx, cy)
+            xform = _godot_transform((mx, my), float(cv.get("yaw") or 0.0),
                                      z=base + sy / 2)
             body += [f'[node name="cover_{i}" parent="." '
                      f'instance=ExtResource("{cover_refs[i]}")]',

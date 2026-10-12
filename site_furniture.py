@@ -9,6 +9,13 @@ builds them, the themed site stands the modules where the boxes stood, and
 the honesty rule is kept by construction: every piece is taller than the
 step limit and carries collision.
 
+THE LAMPS ARE ON THE POLES (0.118.0, factory roadmap 240): a road with a
+band stands no steel `streetlight` now. One of its kerbs carries the pole
+line (`site_poles`), every pole a cobra-head, planned last on its band so
+it steps clear of what already stands there; the trees keep the stations
+the lamps' spacing gave them. A lane, which has no band, keeps its own
+lamps (`plan_lane_lamps`).
+
 The waiting places (roadmap 153, third layer): a tree in a grate halfway
 between every two lamps, and one bus stop per road -- a shelter with a
 bench inside it and a stop sign before it -- on the kerb the buildings
@@ -108,6 +115,11 @@ FOOTPRINT["traffic_signal"] = (0.7, 0.7)
 #: `_free`, `_clear_of_cuts` and `along` to the pole, so every station on
 #: every kerb is where 0.73.0 put it and the census does not move.
 FOOTPRINT["sign_post"] = (0.1, 0.1)
+#: THE UTILITY POLE (0.118.0, `site_poles`): its slot is Zoo's module --
+#: the cobra-head's reach and the crossarm's, `site_poles.POLE_DIMS` -- and
+#: what a body meets is the pole.
+SPECIES["utility_pole"] = (0.3, 3.67, 10.4)
+FOOTPRINT["utility_pole"] = (0.3, 0.3)
 
 #: Where the 1990s kit stands, and why.
 #:   traffic_signal: on the corner of a signalised junction (a yielding
@@ -800,6 +812,8 @@ def plan_furniture(roads_list, buildings=(), markers=(), findings=None,
     a tree keeps out of (`_sign_spans`). ``keep_out`` (0.116.0) is the rects
     a lane's lamp keeps clear of (`plan_lane_lamps`). Returns the list; the
     caller extends the spec and the slots."""
+    # the pole line (0.118.0); it imports this module, so it is imported here
+    import site_poles
     out = []
     n = 0
     kept_clear = []          # (piece name, from station, to station) or (name, from, None)
@@ -868,24 +882,21 @@ def plan_furniture(roads_list, buildings=(), markers=(), findings=None,
             out.extend(lane_lamps)
             continue
         species_tree = species_for[road.index]
+        # THE LAMPS ARE ON THE POLES (0.118.0, factory roadmap 240): one kerb
+        # of this road carries the pole line, every pole a cobra-head
+        # (`site_poles`), and neither kerb stands a steel lamp -- the
+        # walker's call of 2026-10-12. The trees keep the lamps' stations.
+        line_kerb = site_poles.pole_kerb(road, sign_bands, roads_list)
         for kerb in road.kerbs:
             # this band's pieces, for `_free`, starting with its control
             placed = [p for p in control if p["kerb"] == kerb.side]
             outer = kerb.offset + kerb.sign * (road.sidewalk / 2.0 - BAND_INSET)
             tree_off = kerb.offset + kerb.sign * (road.sidewalk / 2.0 - TREE_INSET)
-            # lamps at a spacing, skipping the cuts, and a tree between each pair,
-            # each kept out of the shop bands facing this kerb (0.106.0)
+            # a tree halfway between two of the lamps' stations, skipping the
+            # cuts and kept out of the shop bands facing this kerb (0.106.0)
             spans = _sign_spans(road, kerb, sign_bands, roads_list)
             t = LAMP_START
             while t < road.length - LAMP_START:
-                w, d, h = SPECIES["streetlight"]
-                lamp = _nudged(lambda s: _piece(f"Lamp_{n}", "streetlight", road, kerb, s, outer),
-                               t, d / 2.0, kerb, placed, markers, avoid=spans)
-                if spans and not _clear_of_spans(t, d / 2.0, spans) and _clear_of_cuts(t, d / 2.0, kerb):
-                    kept_clear.append((f"Lamp_{n}", t, lamp["t"] if lamp else None))
-                if lamp:
-                    placed.append(lamp)
-                    n += 1
                 tt = t + TREE_OFFSET
                 gw, gd = FOOTPRINT[species_tree]
                 if tt < road.length - LAMP_START:
@@ -994,6 +1005,16 @@ def plan_furniture(roads_list, buildings=(), markers=(), findings=None,
                 # there off stations a marker or a tree had taken.
                 placed.extend(stop)
                 out.extend(_stop_corner(road, kerb, stop, placed, markers))
+            # THE POLE LINE (0.118.0), last on its band: it steps clear of
+            # everything the band already stands, the meters `plan_meters`
+            # will stand and the shop bands, so nothing else has to know
+            if kerb is line_kerb:
+                band = [p for p in out if p.get("road") == road.index
+                        and p.get("kerb") == kerb.side]
+                poles = site_poles.plan_line(road, kerb, band, markers, spans, n,
+                                             buildings, kept_clear)
+                n += len(poles)
+                out.extend(poles)
         # a meter at every bay
         out.extend(plan_meters(road, markers))
     # THE STANDARD IS AN AVERAGE SPACING, AND HALF OF IT IS NOT THE RULE.

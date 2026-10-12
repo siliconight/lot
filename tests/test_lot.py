@@ -846,26 +846,24 @@ def test_lights_stand_on_the_poles_the_site_stands():
     import site_furniture
     import site_streets
     spec = json.load(open(os.path.join(SPECS, "coldrun_kerb_probe.json")))
+    import site_poles
+    # THE LAMPS ARE ON THE POLES (0.118.0): a cobra-head on every utility
+    # pole, its light at the lens -- 2.171 m out on its arm, not on the axis
     poles = [p for p in site_furniture.plan_furniture(site_streets.roads(spec))
-             if p["species"] == "streetlight"]
-    assert poles, "the probe spec stands no lamps, so this proves nothing"
+             if p["species"] == "utility_pole"]
+    assert poles, "the probe spec stands no poles, so this proves nothing"
     spec.setdefault("cover", []).extend(poles)
     m = lot.merge_lights(spec, SPECS)
     lights = [a for a in m["anchors"] if a["type"] == "streetlight"]
 
     # one light per pole, no more and no fewer
     assert len(lights) == len(poles)
+    lenses = [site_poles.lens_point(p, lot.SIDEWALK_H) for p in poles]
     for a in lights:
-        best = min(math.hypot(a["pos"][0] - p["at"][0], a["pos"][1] - p["at"][1])
-                   for p in poles)
-        assert best <= 0.001, (a["id"], best)     # coincident, not merely near
-        # the lamp point is under the lens, which is 0.175 below the module's
-        # top -- a light at the top would be inside the shoebox head
-        # rounded to 3 dp the way every other anchor coordinate is, so the
-        # expected value is rounded too rather than given a tolerance that
-        # would also pass for a light 4 mm into the head
-        assert a["pos"][2] == round(
-            lot.SIDEWALK_H + 6.0 - lot.STREETLIGHT_LENS_DROP, 3)
+        best = min(math.hypot(a["pos"][0] - lx, a["pos"][1] - ly) for lx, ly, _lz in lenses)
+        assert best <= 0.001, (a["id"], best)     # at its lens, not merely near
+        # the lens's own height, rounded as every anchor coordinate is
+        assert a["pos"][2] == round(lot.SIDEWALK_H + site_poles.LENS_AT[1], 3)
         assert a["row"] == {"count": 1, "spacing": 0.0}
         assert a["reacts_to_alarm"] is False
         # the pole is already built by the site kit; Zoo's fixture pass reads
