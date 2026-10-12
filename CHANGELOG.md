@@ -15,7 +15,8 @@ near wires cables; the fix belongs where the pixel is known.
   `WIRE_MIN_PX` (1) pixel is widened to it -- sqrt(2) wider than half a pixel, since a four-sided
   tube is that much narrower across a face than across its corners -- and its alpha is the share
   of the widened line the real wire covers. A far wire is a faint continuous line, as in a
-  photograph; within the distance a wire covers a pixel it is drawn exactly as 0.119.0 drew it.
+  photograph; within the distance a wire covers a pixel it looks as 0.119.0's did (its alpha 1,
+  though it is now drawn one side and in the transparent pass).
 - **Wound outward, one side drawn.** `_tube`'s quads ran round the ring against their normals, and
   0.119.0 drew both sides (`cull_mode = 2`); with a fade, two layers would darken a far wire to
   nearly twice its coverage. The faces are now counter-clockwise about their outward normals,
