@@ -37,7 +37,7 @@ def _roads(rr):
 def _plan(rr):
     roads = _roads(rr)
     cover = site_furniture.plan_furniture(roads, [])
-    return roads, cover, site_drains.plan(roads, cover)
+    return roads, cover, site_drains.plan(roads, cover, site_streets.markings(roads))
 
 
 def _of(pieces, kind):
@@ -85,6 +85,8 @@ def test_no_two_covers_along_a_street_farther_apart_than_the_standard():
 def test_one_inlet_a_corner_in_the_gutter_on_the_block_side_of_the_cut():
     for rr, corners in ((X_ROADS, 4), (T_ROADS, None)):
         roads, _cover, pieces = _plan(rr)
+        painted = [site_drains._paint(m)[0] for m in site_streets.markings(roads)
+                   if m["kind"] not in site_drains.LINES_ALONG]
         inlets = _of(pieces, "inlet")
         assert inlets
         if corners is not None:
@@ -104,15 +106,44 @@ def test_one_inlet_a_corner_in_the_gutter_on_the_block_side_of_the_cut():
             assert math.hypot(p["at"][0] - cx, p["at"][1] - cy) < abs(face)
             # clear of every cut along the kerb
             assert site_furniture._clear_of_cuts(p["t"], site_drains.INLET_L / 2.0, kerb, 0.0)
-            # next to a junction's cut: its near end a hand from the dropped stretch's edge
+            # next to a junction's cut: its near end at least a hand from the dropped stretch's
+            # edge, and exactly a hand from that edge or from the paint -- as near the junction as
+            # both let it stand (0.120.1; a piece's station is kept to the millimetre)
             near = min(min(abs(p["t"] - lo), abs(p["t"] - hi))
                        for lo, hi in (site_drains._cut_span(kerb, c) for c in kerb.cuts if c.kind == "road"))
-            # (a piece's station is kept to the millimetre)
-            assert abs(near - site_drains.INLET_L / 2.0 - site_drains.INLET_CLEAR) < 6e-4, near
+            assert near - site_drains.INLET_L / 2.0 - site_drains.INLET_CLEAR > -6e-4, near
+            grate = site_drains._grate(road, kerb, face, p["t"])
+            paint = min(site_drains._gap(grate, q) for q in painted)
+            assert (abs(near - site_drains.INLET_L / 2.0 - site_drains.INLET_CLEAR) < 6e-4
+                    or abs(paint - site_drains.INLET_CLEAR) < 6e-4), (near, paint)
             junction = min((c for c in kerb.cuts if c.kind == "road"), key=lambda c: abs(p["t"] - c.t))
             key = site_furniture.corner_key(road, junction.t, p["at"])
             assert key not in keys
             keys.add(key)
+
+
+def test_no_grate_stands_in_the_paint():
+    """0.120.1: a grate keeps `INLET_CLEAR` from every marking but the lines along a road. On
+    0.120.0 the through road's grates at a T lay over its crosswalk's bars (cold run 9269: four of
+    eight, 0.155 m^2 each): its crosswalks lie in line with the side street's sidewalks, outside the
+    kerb's dropped stretch the grate was placed against."""
+    for rr in (X_ROADS, T_ROADS):
+        roads, _cover, pieces = _plan(rr)
+        by = {r.index: r for r in roads}
+        painted = [(m, site_drains._paint(m)[0]) for m in site_streets.markings(roads)
+                   if m["kind"] not in site_drains.LINES_ALONG]
+        assert [m for m, _q in painted if m["kind"] == "crosswalk_bar"]
+        assert [m for m, _q in painted if m["kind"] == "stop_bar"]
+        inlets = _of(pieces, "inlet")
+        assert inlets
+        for p in inlets:
+            road = by[p["road"]]
+            kerb = road.kerb(p["kerb"])
+            grate = site_drains._grate(road, kerb, site_drains._face_offset(road, kerb), p["t"])
+            for m, q in painted:
+                # (a piece's station is kept to the millimetre)
+                gap = site_drains._gap(grate, q)
+                assert gap > site_drains.INLET_CLEAR - 6e-4, (p["at"], m["kind"], m["at"], gap)
 
 
 def test_a_sidewalk_lid_a_step_behind_an_inlet_and_only_so_many():

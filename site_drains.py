@@ -15,8 +15,12 @@ THE RULES, READ AT SOURCE (the factory's docs/reference/STREET_DRAINS.md):
   * A storm inlet upstream of a crosswalk and its ramp, so the water is taken before it crosses where
     people walk (TxDOT Hydraulic Design Manual, ch. 10 s. 5): in the gutter against the kerb, on the
     block side of a junction's cut, ONE A CORNER as the hydrant is (`site_furniture.CORNER_ONE_EACH`) --
-    the walker's "only so many". Inlets between corners follow the gutter's spread, which needs the
-    street's grade and a design storm a site has not got: not placed.
+    the walker's "only so many". Upstream of the PAINTED crosswalk too (0.120.1): a through road's
+    crosswalks at a T lie in line with the side street's sidewalks, outside the kerb's dropped
+    stretch, and 0.120.0 stood four of cold run 9269's eight grates over a crosswalk's bar; a grate
+    is stepped along the kerb, away from the junction, until it keeps `INLET_CLEAR` from every
+    marking but the lines along a road (`LINES_ALONG`). Inlets between corners follow the gutter's
+    spread, which needs the street's grade and a design storm a site has not got: not placed.
   * A cover in the sidewalk a step behind an inlet (the walker's photograph), no two nearer than the
     hydrant's site-wide minimum and never under a piece of furniture: the utilities' lids, which no
     standard places, so "only so many" is the hydrant's number, borrowed.
@@ -52,8 +56,18 @@ FRAME_R = 32.1875 * IN / 2.0                # 0.4088 m
 #: a 2 x 3 ft curb inlet grate, its 3 ft along the kerb
 INLET_L = 3 * 0.3048                        # 0.9144 m
 INLET_D = 2 * 0.3048                        # 0.6096 m
-#: from the edge of a junction's cut to the grate's near end: a hand, clear of the ramp
+#: from the edge of a junction's cut to the grate's near end: a hand, clear of the ramp; and the
+#: least a grate keeps from the paint (0.120.1)
 INLET_CLEAR = 0.3
+#: the paint a grate does NOT keep clear of: the lines along a road. A crosswalk is the TxDOT rule's
+#: own subject, and a stop bar and a bay's tick run across the gutter; but on a street too narrow to
+#: park on, the edge line runs in the gutter (`site_streets.has_parking`, `EDGE_INSET`), and clearing
+#: it would place no inlet on that street at all -- the grate is drawn over it
+LINES_ALONG = ("centre_line", "edge_line")
+#: a station stepped to exactly `INLET_CLEAR` from a bar is asked again with this allowed: the step
+#: and the test are two spellings of one distance, and a float a hair short of it would hold the
+#: grate where it stands until the search gave up
+CLEAR_EPS = 1e-6
 #: the sidewalk cover: 18 in square, its centre a step (0.75 m) in from the kerb face
 WALK_COVER = 18 * IN                        # 0.4572 m
 STEP_BEHIND = 0.75
@@ -144,12 +158,87 @@ def _rect_hits(at, half, cover, clear):
     return False
 
 
-def plan(roads_list, cover=()):
+def _paint(m):
+    """A marking's plan rectangle (`site_streets._marking`'s record: ``size`` [along, across] at
+    ``at``, turned by ``yaw`` degrees), its centre, and the radius that holds it."""
+    (cx, cy), (along, across) = m["at"], m["size"]
+    turn = _rot(cx, cy, m["yaw"])
+    poly = [turn(-along / 2.0, -across / 2.0), turn(along / 2.0, -across / 2.0),
+            turn(along / 2.0, across / 2.0), turn(-along / 2.0, across / 2.0)]
+    return poly, (cx, cy), math.hypot(along, across) / 2.0
+
+
+def _grate(road, kerb, face, t):
+    """An inlet's plan footprint at station ``t``: `INLET_L` along the kerb face, `INLET_D` out into
+    the road."""
+    out = face - kerb.sign * INLET_D
+    return [road.point(t - INLET_L / 2.0, face), road.point(t + INLET_L / 2.0, face),
+            road.point(t + INLET_L / 2.0, out), road.point(t - INLET_L / 2.0, out)]
+
+
+def _meet(a, b):
+    """Whether two convex polygons share a point: no edge of either separates them."""
+    for poly in (a, b):
+        for i in range(len(poly)):
+            (x0, y0), (x1, y1) = poly[i - 1], poly[i]
+            nx, ny = y1 - y0, x0 - x1
+            pa = [nx * x + ny * y for x, y in a]
+            pb = [nx * x + ny * y for x, y in b]
+            if max(pa) < min(pb) or max(pb) < min(pa):
+                return False
+    return True
+
+
+def _seg_dist(p, a, b):
+    dx, dy = b[0] - a[0], b[1] - a[1]
+    ll = dx * dx + dy * dy
+    s = 0.0 if ll == 0.0 else max(0.0, min(1.0, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / ll))
+    return math.hypot(p[0] - a[0] - s * dx, p[1] - a[1] - s * dy)
+
+
+def _gap(a, b):
+    """The distance between two convex polygons, 0 where they meet: from a corner to an edge, never
+    a margin added per axis, which is a box and over-reports by up to sqrt(2) times it at a corner."""
+    if _meet(a, b):
+        return 0.0
+    return min(_seg_dist(p, q[i - 1], q[i]) for r, q in ((a, b), (b, a)) for p in r
+               for i in range(len(q)))
+
+
+def _clear_station(road, kerb, face, t, side, paint):
+    """The first station from ``t`` along the kerb, away from the junction (``side``), where the
+    grate keeps `INLET_CLEAR` from all of ``paint`` (`_paint` records): every marking nearer than
+    that is stepped past whole along the road, and the station asked again. None when the road ends
+    first."""
+    reach = math.hypot(INLET_L, INLET_D) / 2.0 + INLET_CLEAR
+    for _ in range(64):
+        if not (0.0 < t - INLET_L / 2.0 and t + INLET_L / 2.0 < road.length):
+            return None
+        grate = _grate(road, kerb, face, t)
+        gx, gy = road.point(t, face - kerb.sign * INLET_D / 2.0)
+        near = [poly for poly, (cx, cy), r in paint
+                if math.hypot(cx - gx, cy - gy) < r + reach
+                and _gap(grate, poly) < INLET_CLEAR - CLEAR_EPS]
+        if not near:
+            return t
+        ts = [(x - road.a[0]) * road.along[0] + (y - road.a[1]) * road.along[1]
+              for poly in near for x, y in poly]
+        if side > 0:
+            t = max(t, max(ts) + INLET_CLEAR + INLET_L / 2.0)
+        else:
+            t = min(t, min(ts) - INLET_CLEAR - INLET_L / 2.0)
+    return None
+
+
+def plan(roads_list, cover, marks):
     """The site's drains: a list of records, each ``kind`` "manhole", "inlet" or "walk_cover", with
     ``at`` (plan), ``yaw`` (degrees, the road's) and ``road``; an inlet also carries ``face`` -- the
     point on the kerb face behind its centre -- and ``toward``, the unit plan vector from the kerb face
-    to the road. ``cover`` is the site's furniture and cover, which a sidewalk lid keeps clear of."""
+    to the road. ``cover`` is the site's furniture and cover, which a sidewalk lid keeps clear of;
+    ``marks`` the paint the site draws (`site_streets.markings` and the fields'), which a grate keeps
+    clear of -- both asked for, so no caller leaves either out unnoticed (0.120.1)."""
     out = []
+    paint = [_paint(m) for m in marks if m.get("kind") not in LINES_ALONG]
     junctions = _junctions(roads_list)
     for key in sorted(junctions):
         x, y = junctions[key]
@@ -182,8 +271,10 @@ def plan(roads_list, cover=()):
                 lo, hi = _cut_span(kerb, c)
                 for side in (-1, 1):
                     edge = hi if side > 0 else lo
-                    t = edge + side * (INLET_CLEAR + INLET_L / 2.0)
-                    if not (0.0 < t - INLET_L / 2.0 and t + INLET_L / 2.0 < road.length):
+                    # a hand past the dropped stretch, and on past any paint (0.120.1)
+                    t = _clear_station(road, kerb, face, edge + side * (INLET_CLEAR + INLET_L / 2.0),
+                                       side, paint)
+                    if t is None:
                         continue
                     if not site_furniture._clear_of_cuts(t, INLET_L / 2.0, kerb, 0.0):
                         continue

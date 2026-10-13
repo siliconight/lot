@@ -2593,9 +2593,10 @@ def _outdoor_nodes(site_spec, preview=False, self_flooring=None, skins=None,
     # at every junction and along a long run, a storm inlet a corner, and the
     # odd lid in the sidewalk behind one -- flush, without collision, and with
     # the art only, as the wires are: a candidate's greybox lot carries none.
+    # A grate keeps clear of the paint drawn above (`marks`, 0.120.1).
     if cover_refs:
         import site_drains
-        drains = site_drains.plan(street_roads, site_spec.get("cover") or [])
+        drains = site_drains.plan(street_roads, site_spec.get("cover") or [], marks)
         db, ds, df = site_drains.meshes(drains, ROAD_THICK,
                                         MARKING_Y + SURFACE_TIER / 2.0, SIDEWALK_H)
         body += db
