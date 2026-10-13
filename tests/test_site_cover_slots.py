@@ -59,11 +59,18 @@ def test_the_yaw_follows_the_line():
 
 
 def test_a_lane_too_tight_for_a_truck_gets_a_car():
-    """Two building footprints leave a 9 m lane across the line: a 6 m truck
-    turned across it needs its footprint plus clearance either side and is
-    refused; the 4.3 m car fits."""
+    """Two building footprints leave a lane across the line: a 6 m truck
+    turned across it needs its length plus the clearance either side and is
+    refused; the 4.3 m car fits.
+
+    The lane is derived from the clearance the plan uses. It was a literal
+    11.0, "4.3 + 2 x 2.7 fits; 6.0 + 2 x 2.7 does not", sized at the
+    fallback's refuted 0.15 m cell: at the contract's 2.5 (Lot 0.120.2) a
+    truck needs exactly 11.0, and stood in it."""
     clear = site_cover.building_clearance(3.0)
-    lane = 11.0        # 4.3 + 2 x 2.7 fits; 6.0 + 2 x 2.7 does not
+    need = {name: depth for name, _w, depth, _h in site_cover.COVER_SPECIES}
+    # midway between what the car needs across the lane and what the truck does
+    lane = (need["simple_car"] + need["box_truck"]) / 2.0 + 2.0 * clear
     # the walls run the WHOLE length of the line, so there is no open ground
     # beside them for the search to slide the piece out to
     rects = [(-70.0, lane / 2, 70.0, 40.0), (-70.0, -40.0, 70.0, -lane / 2)]

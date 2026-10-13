@@ -1276,12 +1276,15 @@ def test_malformed_cover_records_do_not_reach_the_hook():
 def test_passable_gap_is_the_agent_contracts_own_derivation():
     """Not a chosen number. `AGENT_CONTRACT.md` derives min door width as
     `2*ceil(agent_radius/cell_size)*cell_size + 2*cell_size` because navmesh
-    erosion removes whole voxels per side — at the ratified 0.4 m radius and
-    0.15 m cells that is 1.2 m, which is why the ratified door is 1.25. A cover
-    piece beside a wall is a doorway made of street furniture and nothing was
-    applying the rule to it."""
+    erosion removes whole voxels per side — at the contract's 0.4 m radius and
+    0.1 m cells that is 1.0 m. A cover piece beside a wall is a doorway made of
+    street furniture and nothing was applying the rule to it.
+
+    This pinned 1.2 to Lot 0.120.1 -- "0.15 m cells ... which is why the
+    ratified door is 1.25" -- the fallback's cell, which the contract refuted
+    on 2026-07-29 (`tests/test_cover_fallback.py`)."""
     import site_cover as sc
-    assert abs(sc.min_passable_gap() - 1.2) < 1e-9
+    assert abs(sc.min_passable_gap() - 1.0) < 1e-9
     # A coarser bake erodes more, so the gap a lane needs grows with it.
     assert abs(sc.min_passable_gap(
         {"agent_radius_m": 0.4, "cell_size_m": 0.25}) - 1.5) < 1e-9
@@ -1387,7 +1390,7 @@ def test_the_pinch_check_sees_the_site_boundary_not_just_buildings():
     ground = (-100.0, -50.0, 100.0, 50.0)
     walls = sc.perimeter_rects(ground)
     assert len(walls) == 4
-    # 0.8 m of lane to the east wall — under the 1.2 m the bake can carry.
+    # 0.8 m of lane to the east wall — under the 1.0 m the bake can carry.
     tight = _Piece("Cover_edge", 100.0 - 1.5 - 0.8, 0.0)
     assert sc.pinches([tight], walls), "the boundary must be an obstacle"
     assert not sc.pinches([tight], []), "and buildings-only is exactly what missed it"

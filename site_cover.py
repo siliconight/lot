@@ -84,9 +84,18 @@ COVER_SIZE = 3.0
 
 #: Ratified fallbacks, equal to `deli_counter/agent_contract.json`'s
 #: ``nav_bake``. Same rule as every other consumer of that contract: carry the
-#: values so a missing file degrades instead of breaking, and let Level
-#: Factory's `lasertag_contract` report drift.
-_NAV_BAKE_FALLBACK = {"agent_radius_m": 0.4, "cell_size_m": 0.15}
+#: values so a missing file degrades instead of breaking.
+#:
+#: WAS cell_size_m 0.15 (to Lot 0.120.1). That was the contract's cell on the
+#: day this was written, 2026-07-27; on 2026-07-29 the contract moved to 0.1
+#: and its own ``cell_size_derivation`` records why -- 0.15 capped the
+#: connected slope at 45 deg against a stated 55, and eight path proofs failed
+#: as disjoint islands. `lot._AGENT_DEFAULTS` was refreshed the next day and
+#: this copy was not. This comment said Level Factory's `lasertag_contract`
+#: would "report drift"; it checks the opening range and the sight heights
+#: and never reads ``nav_bake``, so nothing compared the two.
+#: `tests/test_cover_fallback.py` does now.
+_NAV_BAKE_FALLBACK = {"agent_radius_m": 0.4, "cell_size_m": 0.1}
 
 
 def min_passable_gap(nav_bake=None) -> float:
@@ -99,8 +108,13 @@ def min_passable_gap(nav_bake=None) -> float:
 
     Navmesh erosion removes whole voxels per side, `ceil(radius/cell)` of them,
     so a gap is either wide enough after erosion or it is not there at all.
-    At the ratified 0.4 m radius and 0.15 m cells that is 1.2 m, which is why
-    the ratified door is 1.25.
+    At the contract's 0.4 m radius and 0.1 m cells that is 1.0 m.
+
+    THIS SAID "0.15 m cells ... 1.2 m, which is why the ratified door is 1.25"
+    to Lot 0.120.1. 0.15 is the cell the contract refuted (see
+    `_NAV_BAKE_FALLBACK`). Its ``clearances.derivation`` still evaluates the
+    formula there, and whether the door follows the bake is a question for
+    the factory's roadmap 197, not for this module.
 
     `AGENT_CONTRACT.md` says door width, agent radius and bake cell size are
     ONE decision rather than three. A cover piece standing beside a wall is a
@@ -298,6 +312,12 @@ class CoverPlan:
     #: baking a lane past it are two different claims, and only the second one
     #: is what a bot walks.
     pinches: list = field(default_factory=list)
+    #: The width those gaps were measured against: `min_passable_gap` of the
+    #: bake `plan_cover` gave `pinches`, so `findings` states the number the
+    #: read-back used (0.120.2). It stated `min_passable_gap()` -- no bake --
+    #: and said 1.2 m above a check made at the contract's 1.0 m. None on a
+    #: plan `plan_cover` did not make, which has no measurement to state.
+    passable_gap: float = None
     #: Stretches of the crew's route left inside an enemy's reach with nothing
     #: to hide behind. Kept apart from `open_lines` because the two mean
     #: opposite things -- that one is "too far and open", this one is "close
@@ -774,6 +794,9 @@ def plan_cover(points: dict, rects, ground, *, opening_range: float,
     short one having spent the allowance.
     """
     plan = CoverPlan()
+    # The narrowest lane, from the bake `pinches` is given at the end: the
+    # number `findings` states is the one the read-back measured against.
+    plan.passable_gap = min_passable_gap(nav_bake)
     # Derived from the agent contract unless a caller overrides it, so the room
     # a piece needs beside a wall follows the bake rather than a constant that
     # was right for one footprint.
@@ -993,6 +1016,11 @@ def findings(plan: CoverPlan, *, opening_range: float) -> list:
                 f"the walls, the markers and the other pieces."),
         })
     if plan.pinches:
+        # THE NUMBER THE CHECK USED (0.120.2), never the fallback's: a plan
+        # that does not carry it has no measurement to state.
+        if plan.passable_gap is None:
+            raise ValueError("CoverPlan.pinches without the passable_gap they were "
+                             "measured against; plan_cover sets both")
         worst = min(gap for _n, _w, gap in plan.pinches)
         where = ", ".join(f"{n} vs {w} ({gap:g} m)" for n, w, gap in plan.pinches[:3])
         out.append({
@@ -1001,7 +1029,7 @@ def findings(plan: CoverPlan, *, opening_range: float) -> list:
             "category": "navigation",
             "message": (
                 f"{len(plan.pinches)} lane(s) were closed by this site's own "
-                f"cover to less than the {min_passable_gap():g} m an agent can "
+                f"cover to less than the {plan.passable_gap:g} m an agent can "
                 f"walk through ({where}; narrowest {worst:g} m). The scene will "
                 f"show a gap and the navmesh will not have one: erosion removes "
                 f"ceil(agent_radius/cell_size) whole voxels per side, so a lane "
