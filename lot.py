@@ -2589,6 +2589,22 @@ def _outdoor_nodes(site_spec, preview=False, self_flooring=None, skins=None,
         if files is not None:
             files.update(wf)
 
+    # THE DRAINS (0.120.0, `site_drains`, factory roadmap 179): a manhole cover
+    # at every junction and along a long run, a storm inlet a corner, and the
+    # odd lid in the sidewalk behind one -- flush, without collision, and with
+    # the art only, as the wires are: a candidate's greybox lot carries none.
+    if cover_refs:
+        import site_drains
+        drains = site_drains.plan(street_roads, site_spec.get("cover") or [])
+        db, ds, df = site_drains.meshes(drains, ROAD_THICK,
+                                        MARKING_Y + SURFACE_TIER / 2.0, SIDEWALK_H)
+        body += db
+        sub += ds
+        if files is not None:
+            files.update(df)
+        print("[lot] drains: %d manhole cover(s), %d inlet(s), %d sidewalk lid(s)" % tuple(
+            sum(1 for d in drains if d["kind"] == k) for k in ("manhole", "inlet", "walk_cover")))
+
     # THE SHOP SIGNS. A lit cabinet over each door, on the facade that
     # faces the street (`sign_placement`), drawn here rather than as a
     # prop slot because it hangs on a wall: it has no footprint on the
