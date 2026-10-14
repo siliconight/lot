@@ -1112,8 +1112,10 @@ def seat_destinations(positions, *, floor: float = GROUND_Z,
                     f"Lot left it where the marker put it. If that height is a "
                     f"storey, the nav hook needs the stair or ladder that "
                     f"reaches it; if it is a prop, the marker's z is wrong. "
-                    f"Laser Tag cannot path to it either way and reports "
-                    f"TRAVERSAL with 0% completion."),
+                    f"Lot cannot tell which offline; the walk test answers "
+                    f"it, walking a crew body to the objective (the factory's "
+                    f"roadmap 245: walked to on 95 of the 96 candidates "
+                    f"that carried this)."),
             })
             continue
         seated[key] = (x, y, floor)

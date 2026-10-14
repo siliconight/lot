@@ -3811,7 +3811,8 @@ def assemble(site_spec_path, out_dir=None, walkable=False, navqa=False,
                                                                     _furniture_roads),
                                               keep_out=site_furniture.path_corridors(site_spec)
                                               + _spawns_for_lanes.footprints(site_spec, margin=0.5)
-                                              + _field_rects)
+                                              + _field_rects,
+                                              urban=site_spec.get("streetscape") == "urban")
     site_spec.setdefault("cover", []).extend(furniture)
     # THE GAS STATION'S PRICE PYLON (site_furniture.plan_pylons): at each
     # forecourt's road frontage, behind the band, facing along the road,

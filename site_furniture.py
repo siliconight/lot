@@ -165,6 +165,14 @@ STOP_PAIR = 1.1           # daylight between two news racks
 LAMP_SPACING = 25.0
 LAMP_START = 5.0
 TREE_OFFSET = LAMP_SPACING / 2.0    # a tree halfway between two lamps
+#: AN URBAN STREET'S TREES (0.123.0, factory roadmap 241): Philadelphia's own
+#: siting guidelines -- PHS / TreeVitalize, "Property Owner Request to Plant a
+#: Street Tree in Philadelphia", 2010, read at source in the factory root's
+#: `docs/reference/STREET_TREES.md` -- say 15 to 30 ft between trees by mature
+#: size, and the five species here are shade trees, so 30 ft; and 30 ft from a
+#: street corner. A strip keeps the lamps' stations (`TREE_OFFSET`).
+URBAN_TREE_SPACING = 30 * 0.3048
+URBAN_TREE_CORNER = 30 * 0.3048
 CUT_CLEARANCE = 0.8       # a piece stays this far from a dropped kerb's span
 BAND_INSET = 0.45         # centre of a piece, in from the band's outer edge
 TREE_INSET = 0.7          # the grate's half plus a hand, so it sits on the band
@@ -799,8 +807,35 @@ def plan_lane_lamps(road, buildings=(), markers=(), n=0, findings=None, keep_out
     return placed
 
 
+def urban_tree_stations(road, kerb) -> list:
+    """An urban street's tree stations along one band, metres along the road
+    (0.123.0, factory roadmap 241).
+
+    The band is split at its ROAD crossings; each run is kept `URBAN_TREE_CORNER`
+    clear of a crossing's dropped kerb and `LAMP_START` of the road's ends, then
+    planted every `URBAN_TREE_SPACING` with the row centred in the run, so a
+    block's trees stand evenly from corner to corner. A run shorter than the
+    spacing holds one tree at its middle. Paths and driveways do not split a run:
+    a tree steps clear of them where it stands (`_nudged`). Pure."""
+    lo, hi = LAMP_START, road.length - LAMP_START
+    corners = sorted((c.t - c.span / 2.0, c.t + c.span / 2.0) for c in kerb.cuts if c.kind == "road")
+    runs, a = [], lo
+    for c0, c1 in corners:
+        if c0 - URBAN_TREE_CORNER > a:
+            runs.append((a, c0 - URBAN_TREE_CORNER))
+        a = max(a, c1 + URBAN_TREE_CORNER)
+    if hi > a:
+        runs.append((a, hi))
+    out = []
+    for a, b in runs:
+        k = int(math.floor((b - a) / URBAN_TREE_SPACING + 1e-9))
+        start = a + ((b - a) - k * URBAN_TREE_SPACING) / 2.0
+        out += [start + i * URBAN_TREE_SPACING for i in range(k + 1)]
+    return out
+
+
 def plan_furniture(roads_list, buildings=(), markers=(), findings=None,
-                   sign_bands=(), keep_out=()) -> list:
+                   sign_bands=(), keep_out=(), urban=False) -> list:
     """Pieces along every sidewalk band, as site-cover-shaped records with a
     ``base`` of ``sidewalk`` (the module stands on the band's top, not the
     plate; the caller resolves the height). ``buildings`` are the spec's,
@@ -810,8 +845,9 @@ def plan_furniture(roads_list, buildings=(), markers=(), findings=None,
     strings) hears about a junction approach whose control could not be
     stood by the rules. ``sign_bands`` (0.106.0) are the shop bands a lamp or
     a tree keeps out of (`_sign_spans`). ``keep_out`` (0.116.0) is the rects
-    a lane's lamp keeps clear of (`plan_lane_lamps`). Returns the list; the
-    caller extends the spec and the slots."""
+    a lane's lamp keeps clear of (`plan_lane_lamps`). ``urban`` (0.123.0) plants
+    a city block's trees (`urban_tree_stations`) in place of the lamps'
+    stations. Returns the list; the caller extends the spec and the slots."""
     # the pole line (0.118.0); it imports this module, so it is imported here
     import site_poles
     out = []
@@ -893,21 +929,29 @@ def plan_furniture(roads_list, buildings=(), markers=(), findings=None,
             outer = kerb.offset + kerb.sign * (road.sidewalk / 2.0 - BAND_INSET)
             tree_off = kerb.offset + kerb.sign * (road.sidewalk / 2.0 - TREE_INSET)
             # a tree halfway between two of the lamps' stations, skipping the
-            # cuts and kept out of the shop bands facing this kerb (0.106.0)
+            # cuts and kept out of the shop bands facing this kerb (0.106.0);
+            # AN URBAN STREET plants a city block's (0.123.0, factory roadmap
+            # 241): every `URBAN_TREE_SPACING`, 30 ft clear of a corner
+            # (`urban_tree_stations`), each stepping clear as a strip's does
             spans = _sign_spans(road, kerb, sign_bands, roads_list)
-            t = LAMP_START
-            while t < road.length - LAMP_START:
-                tt = t + TREE_OFFSET
-                gw, gd = FOOTPRINT[species_tree]
-                if tt < road.length - LAMP_START:
-                    tree = _nudged(lambda s: _piece(f"Tree_{n}", species_tree, road, kerb, s, tree_off),
-                                   tt, gw / 2.0, kerb, placed, markers, avoid=spans)
-                    if spans and not _clear_of_spans(tt, gw / 2.0, spans) and _clear_of_cuts(tt, gw / 2.0, kerb):
-                        kept_clear.append((f"Tree_{n}", tt, tree["t"] if tree else None))
-                    if tree:
-                        placed.append(tree)
-                        n += 1
-                t += LAMP_SPACING
+            gw, gd = FOOTPRINT[species_tree]
+            if urban:
+                stations = urban_tree_stations(road, kerb)
+            else:
+                stations = []
+                t = LAMP_START
+                while t < road.length - LAMP_START:
+                    if t + TREE_OFFSET < road.length - LAMP_START:
+                        stations.append(t + TREE_OFFSET)
+                    t += LAMP_SPACING
+            for tt in stations:
+                tree = _nudged(lambda s: _piece(f"Tree_{n}", species_tree, road, kerb, s, tree_off),
+                               tt, gw / 2.0, kerb, placed, markers, avoid=spans)
+                if spans and not _clear_of_spans(tt, gw / 2.0, spans) and _clear_of_cuts(tt, gw / 2.0, kerb):
+                    kept_clear.append((f"Tree_{n}", tt, tree["t"] if tree else None))
+                if tree:
+                    placed.append(tree)
+                    n += 1
             # per cut: a hydrant past it, a bin before it, a sign at its edge
             for c in sorted(kerb.cuts, key=lambda c: c.t):
                 # a parking field's driveway (0.94.0) is not a crossing:
