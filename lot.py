@@ -3757,12 +3757,21 @@ def assemble(site_spec_path, out_dir=None, walkable=False, navqa=False,
     import site_fields
     import site_streets as _fs
     import site_surfaces as _fsurf
+    # THE EMPTIES STAND (0.121.0, factory roadmap 241). Every planner below
+    # that keeps clear of what already stands -- fields and their cars,
+    # pylons and dumpsters, pads and bags, cover -- keeps clear of the
+    # blockers too. They stood only across the road, where none of these
+    # places anything, until the urban street's near side stood them in the
+    # gaps beside the mission's buildings. Obstacles, as built; never a
+    # building a field or a dumpster serves.
+    import site_spawns as _blk_spawns
+    _blockers = _blk_spawns.blocker_rects(site_spec, margin=0.0)
     _rects_f = {}
     for _b in site_spec.get("buildings", []) or []:
         _r = _fx.rotated_footprint(_b)
         if _r is not None:
             _rects_f[_b["id"]] = _r
-    _standing_f = []
+    _standing_f = list(_blockers)
     for cv in site_spec.get("cover", []) or []:
         sx, _sy, sz = cv.get("size", COVER)
         _standing_f.append((cv["at"][0] - sx / 2.0, cv["at"][1] - sz / 2.0,
@@ -3807,7 +3816,7 @@ def assemble(site_spec_path, out_dir=None, walkable=False, navqa=False,
     # THE GAS STATION'S PRICE PYLON (site_furniture.plan_pylons): at each
     # forecourt's road frontage, behind the band, facing along the road,
     # clear of paths, footprints, what already stands and the markers
-    _standing0 = []
+    _standing0 = list(_blockers)
     for cv in site_spec["cover"]:
         sx, _sy, sz = cv.get("size", COVER)
         _standing0.append((cv["at"][0] - sx / 2.0, cv["at"][1] - sz / 2.0,
@@ -3845,7 +3854,7 @@ def assemble(site_spec_path, out_dir=None, walkable=False, navqa=False,
     import site_surfaces as _yard_surfaces
     import site_yards
     _yard_findings = []
-    _standing_y = []
+    _standing_y = list(_blockers)
     for cv in site_spec["cover"]:
         sx, _sy, sz = cv.get("size", COVER)
         _standing_y.append((cv["at"][0] - sx / 2.0, cv["at"][1] - sz / 2.0,
@@ -3886,7 +3895,7 @@ def assemble(site_spec_path, out_dir=None, walkable=False, navqa=False,
     # rules (docs/STREET_RULES.md) is said, not silently left bare
     for f_ in furniture_findings:
         print(f"[lot] {f_}")
-    standing = []
+    standing = list(_blockers)
     for cv in site_spec["cover"]:
         sx, _sy, sz = cv.get("size", COVER)
         standing.append((cv["at"][0] - sx / 2.0, cv["at"][1] - sz / 2.0,
