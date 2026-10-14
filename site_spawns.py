@@ -256,16 +256,19 @@ def cover_rects(site_spec, margin: float = WALL_MARGIN) -> list:
     return rects
 
 
-def shut_band_rects(site_spec, margin: float = WALL_MARGIN) -> list:
+def shut_band_rects(site_spec, margin: float = WALL_MARGIN, markers=()) -> list:
     """The ground behind every Empty row's front line, grown by ``margin``:
     what the row's fences shut off from the street, by the function
-    `plan_fences` asks (`site_fences.shut_bands`)."""
+    `plan_fences` asks (`site_fences.shut_bands`). A row the fences leave
+    open -- one of ``markers`` behind it -- shuts nothing and is not here
+    (0.122.0)."""
     import site_extent
     import site_fences
     import site_streets
     ground = site_extent.resolve(site_spec).rect
     return [site_extent.grow(b, margin) if margin else b
-            for b in site_fences.shut_bands(site_spec, site_streets.roads(site_spec), ground)]
+            for b in site_fences.shut_bands(site_spec, site_streets.roads(site_spec), ground,
+                                            markers=markers)]
 
 
 def ground_rect(site_spec, margin: float = EDGE_MARGIN):
@@ -941,7 +944,15 @@ def place_enemies(site_spec, positions, *, enemy_count: int = 6,
     # Empties out alone put 9174's seed_9061 Enemy_4 and Enemy_5 behind the
     # row's front line, on ground the row's fences shut off, so the band the
     # fences are planned against is kept out too.
-    rects = solid_rects(site_spec) + shut_band_rects(site_spec)
+    #
+    # NOT BEHIND A ROW THE FENCES SHUT, AND ONLY THEN (0.122.0). The band is
+    # shut where `plan_fences` fences it, and it leaves a row open when one of
+    # the mission's points stands behind it -- these three, the points it is
+    # handed besides the enemies placed here. An urban street's near-side
+    # Empty is such a row, and its band was the mission's own half of the
+    # plate or the street: cold run 9289's seed_9205 dropped all six enemies.
+    mission_points = [tuple(positions[k][:2]) for k in ("spawn", "objective", "extraction")]
+    rects = solid_rects(site_spec) + shut_band_rects(site_spec, markers=mission_points)
     ground = ground_rect(site_spec)
     spawn = route[0]
 

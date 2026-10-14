@@ -1,0 +1,546 @@
+{
+ "_what": "cold run 9289's urban_row_001 seed_9205 as `place_enemies` read it in its lot_assemble job: the site spec at the call (after merge_gameplay, each building's `_footprint`) and the walk positions (site metres, x and y north). Dumped by the factory's docs/findings/urban_street/spawn_filters.py, whose rerun of that job reproduced its Enemy_N transforms and spawn findings.",
+ "positions": {
+  "extraction": [
+   1.85,
+   -15.965,
+   0.0
+  ],
+  "objective": [
+   -42.0,
+   -5.99,
+   3.3
+  ],
+  "spawn": [
+   1.85,
+   -15.965,
+   0.0
+  ]
+ },
+ "site_spec": {
+  "blockers": [
+   {
+    "archetype": "gs_midrise_d",
+    "at": [
+     -74.1,
+     -39.815
+    ],
+    "empty": true,
+    "glb": "buildings/gs_midrise_d.glb",
+    "id": "e0",
+    "rot": 180,
+    "size_x": 16.8,
+    "size_y": 15.3
+   },
+   {
+    "archetype": "gs_midrise_i",
+    "at": [
+     -62.4,
+     -39.815
+    ],
+    "empty": true,
+    "glb": "buildings/gs_midrise_i.glb",
+    "id": "e1",
+    "rot": 180,
+    "size_x": 6.6,
+    "size_y": 15.3
+   },
+   {
+    "archetype": "gs_midrise_f",
+    "at": [
+     -49.2,
+     -39.815
+    ],
+    "empty": true,
+    "glb": "buildings/gs_midrise_f.glb",
+    "id": "e2",
+    "rot": 180,
+    "size_x": 19.8,
+    "size_y": 15.3
+   },
+   {
+    "archetype": "gs_midrise_b",
+    "at": [
+     -30.15,
+     -39.815
+    ],
+    "empty": true,
+    "glb": "buildings/gs_midrise_b.glb",
+    "id": "e3",
+    "rot": 180,
+    "size_x": 18.3,
+    "size_y": 15.3
+   },
+   {
+    "archetype": "gs_midrise_c",
+    "at": [
+     -10.35,
+     -39.815
+    ],
+    "empty": true,
+    "glb": "buildings/gs_midrise_c.glb",
+    "id": "e4",
+    "rot": 180,
+    "size_x": 21.3,
+    "size_y": 15.3
+   },
+   {
+    "archetype": "gs_midrise_h",
+    "at": [
+     5.45,
+     -39.815
+    ],
+    "empty": true,
+    "glb": "buildings/gs_midrise_h.glb",
+    "id": "e5",
+    "rot": 180,
+    "size_x": 10.3,
+    "size_y": 15.3
+   },
+   {
+    "archetype": "gs_midrise_a",
+    "at": [
+     18.25,
+     -39.815
+    ],
+    "empty": true,
+    "glb": "buildings/gs_midrise_a.glb",
+    "id": "e6",
+    "rot": 180,
+    "size_x": 15.3,
+    "size_y": 15.3
+   },
+   {
+    "archetype": "gs_midrise_g",
+    "at": [
+     32.05,
+     -39.815
+    ],
+    "empty": true,
+    "glb": "buildings/gs_midrise_g.glb",
+    "id": "e7",
+    "rot": 180,
+    "size_x": 12.3,
+    "size_y": 15.3
+   },
+   {
+    "archetype": "gs_midrise_e",
+    "at": [
+     50.35,
+     -39.815
+    ],
+    "empty": true,
+    "glb": "buildings/gs_midrise_e.glb",
+    "id": "e8",
+    "rot": 180,
+    "size_x": 24.3,
+    "size_y": 15.3
+   },
+   {
+    "archetype": "gs_midrise_i",
+    "at": [
+     -79.2,
+     -4.515
+    ],
+    "empty": true,
+    "glb": "buildings/gs_midrise_i.glb",
+    "id": "n0",
+    "rot": 0,
+    "size_x": 6.6,
+    "size_y": 15.3
+   }
+  ],
+  "buildings": [
+   {
+    "_footprint": [
+     38.0,
+     28.0
+    ],
+    "archetype": "deli_a03",
+    "at": [
+     -52,
+     2.01
+    ],
+    "front": {
+     "reason": "tagged front",
+     "wall": "S"
+    },
+    "gameplay": "C:\\Projects\\gabagool_studios\\gabagool_factory\\deli_counter\\build\\deli_a03.gameplay.json",
+    "glb": "buildings/deli_a03.glb",
+    "id": "b0",
+    "rot": 0,
+    "street_reach": 14.175
+   },
+   {
+    "_footprint": [
+     26.0,
+     20.0
+    ],
+    "archetype": "pharmacy_a02",
+    "at": [
+     4,
+     -2.01
+    ],
+    "front": {
+     "reason": "tagged front",
+     "wall": "S"
+    },
+    "gameplay": "C:\\Projects\\gabagool_studios\\gabagool_factory\\deli_counter\\build\\pharmacy_a02.gameplay.json",
+    "glb": "buildings/pharmacy_a02.glb",
+    "id": "b1",
+    "rot": 0,
+    "street_reach": 10.15
+   },
+   {
+    "_footprint": [
+     34.0,
+     24.0
+    ],
+    "archetype": "office",
+    "at": [
+     49,
+     -0.01
+    ],
+    "front": {
+     "reason": "tagged front",
+     "wall": "S"
+    },
+    "gameplay": "C:\\Projects\\gabagool_studios\\gabagool_factory\\deli_counter\\build\\office.gameplay.json",
+    "glb": "buildings/office.glb",
+    "id": "b2",
+    "rot": 0,
+    "street_reach": 12.15
+   }
+  ],
+  "candidate_seed": 9205,
+  "cluster_resolved": {
+   "asked": "auto",
+   "got": "C03_station_neighborhood",
+   "known": true,
+   "preferred": [
+    "deli",
+    "cr_deli",
+    "night_deli",
+    "pharmacy",
+    "office",
+    "office_stepped",
+    "bank_tower",
+    "apartment_walkup",
+    "twin"
+   ]
+  },
+  "cover": [
+   {
+    "at": [
+     3.5,
+     -18.515
+    ],
+    "breaks": "bays L14-15 on road 0",
+    "dims": [
+     2.6,
+     6.8,
+     3.05
+    ],
+    "size": [
+     6.8,
+     3.05,
+     2.6
+    ],
+    "source": "getaway_van",
+    "species": "step_van",
+    "style": 1,
+    "yaw": 270.0
+   }
+  ],
+  "crew_size": 4,
+  "extraction": "b1",
+  "ground": {
+   "size_x": 173,
+   "size_y": 103
+  },
+  "mode": "heist",
+  "name": "site",
+  "objective": "b0",
+  "objective_from": "archetype",
+  "pacing": {
+   "target_minutes": [
+    25,
+    35
+   ]
+  },
+  "paths": [
+   {
+    "drawn": false,
+    "from": "b1",
+    "to": "b2",
+    "width": 8.0
+   },
+   {
+    "a": [
+     -62.5,
+     -11.94
+    ],
+    "b": [
+     -62.5,
+     -14.614999999999998
+    ],
+    "building": "b0",
+    "snapped": {
+     "a": "ext_0_S"
+    },
+    "width": 4.0
+   },
+   {
+    "a": [
+     4.0,
+     -11.959999999999999
+    ],
+    "b": [
+     4.0,
+     -14.614999999999998
+    ],
+    "building": "b1",
+    "snapped": {
+     "a": "ext_0_S"
+    },
+    "width": 4.0
+   },
+   {
+    "a": [
+     45.5,
+     -11.959999999999999
+    ],
+    "b": [
+     45.5,
+     -14.614999999999998
+    ],
+    "building": "b2",
+    "snapped": {
+     "a": "ext_0_S"
+    },
+    "width": 4.0
+   },
+   {
+    "a": [
+     -31.825000002980232,
+     2.009999999999999
+    ],
+    "b": [
+     -28.53750000447035,
+     2.009999999999999
+    ],
+    "building": "b0",
+    "drawn": false,
+    "width": 4.0
+   },
+   {
+    "a": [
+     -8.95,
+     -6.01
+    ],
+    "b": [
+     -13.437500004470348,
+     -6.01
+    ],
+    "building": "b1",
+    "snapped": {
+     "a": "ext_0_W"
+    },
+    "width": 4.0
+   },
+   {
+    "a": [
+     67.15000000596046,
+     -0.009999999999999787
+    ],
+    "b": [
+     68.60000000596047,
+     -0.009999999999999787
+    ],
+    "building": "b2",
+    "drawn": false,
+    "width": 4.0
+   },
+   {
+    "a": [
+     -40.5,
+     15.959999999999997
+    ],
+    "b": [
+     -40.5,
+     23.684999997019766
+    ],
+    "building": "b0",
+    "snapped": {
+     "a": "ext_0_N"
+    },
+    "width": 4.0
+   },
+   {
+    "a": [
+     10.5,
+     7.94
+    ],
+    "b": [
+     10.5,
+     23.684999997019766
+    ],
+    "building": "b1",
+    "snapped": {
+     "a": "ext_0_N"
+    },
+    "width": 4.0
+   },
+   {
+    "a": [
+     37.0,
+     11.94
+    ],
+    "b": [
+     37.0,
+     23.684999997019766
+    ],
+    "building": "b2",
+    "snapped": {
+     "a": "ext_0_N"
+    },
+    "width": 4.0
+   },
+   {
+    "a": [
+     52.5,
+     -11.959999999999999
+    ],
+    "b": [
+     52.5,
+     -13.535
+    ],
+    "landing_of": "b2",
+    "wall": "ext_0_S",
+    "width": 2.6
+   },
+   {
+    "a": [
+     32.05,
+     -0.01
+    ],
+    "b": [
+     30.475,
+     -0.01
+    ],
+    "landing_of": "b2",
+    "wall": "ext_0_W",
+    "width": 1.85
+   }
+  ],
+  "perimeter": {
+   "height": 3
+  },
+  "render": {
+   "lights_baked": true
+  },
+  "road_grammar": "block",
+  "road_grammar_resolved": {
+   "asked": "block",
+   "got": "block",
+   "known": true
+  },
+  "roads": [
+   {
+    "a": [
+     -86.5,
+     -22.165
+    ],
+    "b": [
+     86.5,
+     -22.165
+    ],
+    "sidewalk": 3.0,
+    "width": 10.0
+   },
+   {
+    "a": [
+     -20.98750000447035,
+     -22.165
+    ],
+    "b": [
+     -20.98750000447035,
+     31.5
+    ],
+    "sidewalk": 3.0,
+    "width": 10.0
+   },
+   {
+    "a": [
+     76.15000000596046,
+     -22.165
+    ],
+    "b": [
+     76.15000000596046,
+     31.5
+    ],
+    "sidewalk": 3.0,
+    "width": 10.0
+   },
+   {
+    "a": [
+     -20.98750000447035,
+     26.684999997019766
+    ],
+    "b": [
+     76.15000000596046,
+     26.684999997019766
+    ],
+    "kind": "service_lane",
+    "serves": [
+     "b0",
+     "b1",
+     "b2"
+    ],
+    "sidewalk": 0.0,
+    "width": 5.0
+   }
+  ],
+  "route_shape": "linear_push",
+  "schema": "lot.site.v0.18",
+  "site_id": "urban_row_001",
+  "site_markers": [
+   {
+    "at": [
+     1.85,
+     -15.965
+    ],
+    "source": "getaway_van",
+    "type": "crew_spawn"
+   },
+   {
+    "at": [
+     1.85,
+     -15.965
+    ],
+    "getaway": "step_van",
+    "source": "getaway_van",
+    "type": "extraction"
+   }
+  ],
+  "site_shape": "strip",
+  "site_shape_resolved": {
+   "asked": "strip",
+   "degenerates_to": null,
+   "expressible": true,
+   "got": "row",
+   "known": true
+  },
+  "spawn": "b1",
+  "surroundings": "borough",
+  "surroundings_resolved": {
+   "asked": "",
+   "got": "borough",
+   "known": true
+  },
+  "target_minutes": [
+   25,
+   35
+  ]
+ }
+}

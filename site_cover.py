@@ -112,9 +112,10 @@ def min_passable_gap(nav_bake=None) -> float:
 
     THIS SAID "0.15 m cells ... 1.2 m, which is why the ratified door is 1.25"
     to Lot 0.120.1. 0.15 is the cell the contract refuted (see
-    `_NAV_BAKE_FALLBACK`). Its ``clearances.derivation`` still evaluates the
-    formula there, and whether the door follows the bake is a question for
-    the factory's roadmap 197, not for this module.
+    `_NAV_BAKE_FALLBACK`). The contract's ``clearances.derivation`` was first
+    worked there; since Deli Counter 0.214.0 it works the formula at the
+    contract's 0.1 m cell (1.00 m), and the walker kept the door at 1.25 as
+    the width a walkable door is built to (the factory's roadmap 197).
 
     `AGENT_CONTRACT.md` says door width, agent radius and bake cell size are
     ONE decision rather than three. A cover piece standing beside a wall is a

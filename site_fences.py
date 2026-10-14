@@ -151,14 +151,55 @@ def shut_band(axis, front, sign, ground):
     return tuple(band)
 
 
-def shut_bands(site_spec, roads_list, ground) -> list:
-    """`shut_band` for every Empty row on the site; none without a plate."""
+def markers_behind(band, members, markers) -> list:
+    """The mission markers a row's band would shut off: inside the band and in
+    none of the row's own houses.
+
+    A row with any is LEFT OPEN. `plan_fences` will not fence it rather than
+    strand a spawn, objective or enemy nobody can reach, and a row left open
+    shuts nothing, so `shut_bands` leaves its band out (0.122.0). One
+    question, asked by both.
+    """
+    houses = [r for _e, r in members]
+    return [m for m in markers
+            if band[0] < m[0] < band[2] and band[1] < m[1] < band[3]
+            and not any(h[0] <= m[0] <= h[2] and h[1] <= m[1] <= h[3] for h in houses)]
+
+
+def shut_bands(site_spec, roads_list, ground, markers=()) -> list:
+    """`shut_band` for every Empty row on the site the fences shut; none
+    without a plate.
+
+    A ROW LEFT OPEN SHUTS NOTHING (0.122.0). `plan_fences` leaves a row open
+    when a mission marker stands behind it (`markers_behind`), and until
+    0.122.0 this returned that row's band anyway, so `site_spawns.place_enemies`
+    kept every enemy out of ground no fence closed. On a strip level that
+    never happened: of the factory's 276 `lot_assemble` job logs, a row was
+    left open in 3, all on the urban street's near side, where an Empty
+    stands between the mission's buildings as a row of its own and its band
+    runs from its front line to the plate's edge across the plate's whole
+    width. Cold run 9289 (the factory's
+    `docs/findings/urban_street/spawn_filters.py`): on seed_9205 that band and
+    the far row's left only the street, open and inside the opening range,
+    and all six enemies were dropped; on seed_9104 all six stood in the
+    street; on seed_9003, whose near row's front was its far side, the band
+    covered the street and the crew's whole route.
+
+    ``markers`` are the mission's points: `place_enemies` passes its spawn,
+    objective and extraction, and `plan_fences` is handed those and the
+    enemies placed among them -- which never stand in a band those three
+    leave shut, so the two answer alike. Without them every row is shut, as
+    before.
+    """
     if not ground:
         return []
     out = []
     for axis, members in rows(site_spec):
         front, sign = front_line(axis, members, roads_list, ground)
-        out.append(shut_band(axis, front, sign, ground))
+        band = shut_band(axis, front, sign, ground)
+        if markers_behind(band, members, markers):
+            continue
+        out.append(band)
     return out
 
 
@@ -230,11 +271,7 @@ def plan_fences(site_spec, roads_list, ground, body, keep_out=(), markers=(),
         # say so rather than strand it.
         if ground:
             band = shut_band(axis, front, sign, ground)
-            houses = [r for _e, r in members]
-            stranded = [m for m in markers
-                        if band[0] < m[0] < band[2] and band[1] < m[1] < band[3]
-                        and not any(h[0] <= m[0] <= h[2] and h[1] <= m[1] <= h[3]
-                                    for h in houses)]
+            stranded = markers_behind(band, members, markers)
             if stranded:
                 _say(findings, f"LOT_FENCE_SKIPPED: row {r_ix} left open: a mission "
                                f"marker stands behind it at {tuple(stranded[0])}")
