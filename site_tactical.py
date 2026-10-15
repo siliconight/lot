@@ -226,6 +226,10 @@ def analyze(site_spec):
         },
         "intel": {},
         "warnings": [],
+        # STRUCTURED FINDINGS (0.124.0): what Level Factory's Lot adapter
+        # ingests from `tactical.findings` and its pick counts by severity.
+        # Always a list, so a reader never infers "none" from an absent key.
+        "findings": [],
     }
     if not ids:
         return report
@@ -241,6 +245,26 @@ def analyze(site_spec):
         report["warnings"].append(
             f"buildings with no declared path-route from '{root}': "
             f"{', '.join(isolated)}")
+        # THE SAME FACT AS A FINDING (0.124.0, factory roadmap 178). The
+        # warning above fired on 65 of 79 sites before 0.77.0 taught the
+        # graph the street, and on 0 of 320 after; a reading that is zero
+        # across the library may graduate (the factory's item 59). MAJOR,
+        # not a blocker: the pick counts it, so a candidate with a building
+        # nobody can reach loses to one without, and a run whose every
+        # candidate has one still ships, saying so. The four sites on disk
+        # that still read it are a 2026-09-23 experiment whose door paths
+        # predate the `building` key, not a reachable defect.
+        report["findings"].append({
+            "code": "LOT_ISOLATED_BUILDING",
+            "severity": "major",
+            "category": "combat_structure",
+            "message": (
+                f"{len(isolated)} building(s) no declared path or shared "
+                f"street reaches from '{root}': {', '.join(isolated)}. "
+                f"A building nobody can walk to is not part of the level; "
+                f"give it a door path to the sidewalk or a path from a "
+                f"building that has one."),
+        })
 
     # pvp staging intel: attacker/defender site markers (never gates here)
     sm = site_spec.get("site_markers", [])

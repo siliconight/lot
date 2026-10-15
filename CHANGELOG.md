@@ -1,3 +1,25 @@
+## 0.124.0 - an isolated building is a major finding, not a log line
+
+**Factory roadmap 178** ("the instruments report and nothing blocks"). `site_tactical.analyze` has said
+"buildings with no declared path-route from 'b0': ..." in `report["warnings"]` since the graph existed, and
+`lot.py` printed it as a WARNING that nothing downstream read. 0.77.0 fixed the graph the warning read (the
+street joins the buildings on it), and today it reads zero on every site a current Level Factory writes: 0 of
+320 on disk (the factory's `docs/findings/open_items_remeasure/lot_intel_178.py`), the four exceptions a
+2026-09-23 experiment whose door paths predate the `building` key. A reading that is zero across the library
+may graduate (the factory's item 59).
+
+### Added
+- **`LOT_ISOLATED_BUILDING`**, severity `major`, in `report["findings"]` whenever `intel.isolated_buildings`
+  is not empty -- the same fact as the warning, in the shape Level Factory's Lot adapter already ingests from
+  `tactical.findings` and its pick already counts: a candidate with a building no path or street reaches loses
+  the pick to one without, and the finding stands in the report. Not a blocker: a run whose every candidate has
+  one still ships, saying so; graduating it further is a decision for a run of cold runs on today's graph. The
+  warning string and the `[lot] WARNING` line stay. `report["findings"]` is always present now, `[]` when the
+  site is whole, so a reader that wants the list never has to guess from its absence.
+- `tests/test_isolated_finding.py`: a site with no road and no building paths reports every building but the
+  root as isolated, with one major finding naming them; the street-graph fixture reports none and no finding;
+  the finding carries the adapter's four fields.
+
 ## 0.123.0 - an urban street plants a city block's trees: one every 30 ft
 
 **Factory roadmap 241, the urban street.** The comps show "street trees in pits along both sidewalks". Lot already
