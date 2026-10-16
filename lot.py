@@ -160,6 +160,17 @@ _LADDER_POINT_LISTS_3 = (
 _LADDER_POINT_LISTS_2 = (
     ("geometry", "climb_rect"),
 )
+#: Every position in a Deli Counter DECLARED DROP (a `floor_hole` / `hatch`
+#: vertical link carrying `ladder.drop_nav_link`, 0.226.0): the link's two
+#: points, and the cut's rect as two corners. Listed for the same reason as the
+#: ladder's tables, and moved by the same pass.
+_VLINK_POINTS_3 = (
+    ("nav_link", "start_position"),
+    ("nav_link", "end_position"),
+)
+_VLINK_POINT_LISTS_2 = (
+    ("nav_link", "hole"),
+)
 
 
 def _dig(rec, path):
@@ -176,8 +187,11 @@ def _dig(rec, path):
     return cur, path[-1]
 
 
-def _ladder_to_site(lad, placement):
-    """A ladder record with every position moved into site space.
+def _ladder_to_site(lad, placement, points3=_LADDER_POINTS_3,
+                    lists3=_LADDER_POINT_LISTS_3, lists2=_LADDER_POINT_LISTS_2,
+                    what="ladder"):
+    """A ladder record with every position moved into site space -- or, with
+    its own tables, a declared drop's (`_VLINK_POINTS_3`, 0.125.0).
 
     Deep-copied, so the building's own gameplay.json is untouched -- it is read
     again by other passes and a shared nested dict would put site coordinates
@@ -187,7 +201,7 @@ def _ladder_to_site(lad, placement):
 
     out = _copy.deepcopy(lad)
     seen = set()
-    for path in _LADDER_POINTS_3:
+    for path in points3:
         owner, key = _dig(out, path)
         if owner is None:
             continue
@@ -195,7 +209,7 @@ def _ladder_to_site(lad, placement):
         if isinstance(p, (list, tuple)) and len(p) == 3:
             owner[key] = _place_point(p[0], p[1], p[2], placement)
             seen.add("/".join(path))
-    for path in _LADDER_POINT_LISTS_3:
+    for path in lists3:
         owner, key = _dig(out, path)
         if owner is None:
             continue
@@ -205,7 +219,7 @@ def _ladder_to_site(lad, placement):
                           if isinstance(p, (list, tuple)) and len(p) == 3
                           else p for p in pts]
             seen.add("/".join(path))
-    for path in _LADDER_POINT_LISTS_2:
+    for path in lists2:
         owner, key = _dig(out, path)
         if owner is None:
             continue
@@ -243,10 +257,11 @@ def _ladder_to_site(lad, placement):
     _scan(out, "")
     if missed:
         raise ValueError(
-            "lot: ladder %r carries position(s) this pass does not know how to "
-            "move into site space: %s -- add them to _LADDER_POINTS_* rather "
+            "lot: %s %r carries position(s) this pass does not know how to "
+            "move into site space: %s -- add them to the point tables rather "
             "than shipping them in building coordinates"
-            % (lad.get("id", "?"), ", ".join(sorted(missed))))
+            % (what, lad.get("id", lad.get("kind", "?")),
+               ", ".join(sorted(missed))))
     return out
 
 
@@ -384,9 +399,16 @@ def merge_gameplay(site_spec, base_dir):
 
         # vertical_links / openings: carry through, tag building (positions are
         # descriptive; markers already carry the authoritative world coords)
+        # -- EXCEPT a declared drop's nav link (Deli Counter 0.226.0), whose
+        # two points and `hole` corners an AI and a gate act on: those move
+        # into site space with the building, as a ladder's do (0.125.0).
         for key in ("vertical_links", "openings"):
             for item in gp.get(key, []):
-                wi = dict(item)
+                if key == "vertical_links" and item.get("nav_link"):
+                    wi = _ladder_to_site(item, placement, _VLINK_POINTS_3, (),
+                                         _VLINK_POINT_LISTS_2, "vertical link")
+                else:
+                    wi = dict(item)
                 wi["building"] = bid
                 site[key].append(wi)
 

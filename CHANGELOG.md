@@ -1,3 +1,22 @@
+## 0.125.0 - a declared drop's nav link reaches the site in site space
+
+**Factory roadmap 173, step 3.** Deli Counter 0.226.0 files a one-way off-mesh `nav_link` on every `floor_hole`
+/ `hatch` vertical link (`ladder.drop_nav_link`). This repo carried `vertical_links` through verbatim with a
+building tag -- "positions are descriptive; markers already carry the authoritative world coords" -- which was
+true while the record held only a spec-frame point. A nav link's two positions and the cut's rect are what an AI
+and a gate act on, and in building coordinates they would name the wrong place in every building but the one at
+the site's origin: the seam cold run 9075 found for ladders, one record over.
+
+### Changed
+- `_ladder_to_site` takes its point tables and a label (defaults: the ladder's, byte for byte), so one transform
+  and one refusal serve both records; `_VLINK_POINTS_3` / `_VLINK_POINT_LISTS_2` name a drop link's two points
+  and its `hole` corners.
+- The `vertical_links` carry-through moves a record that carries a `nav_link` with the building; a record
+  without one (a descriptive `stair` link) rides verbatim as before.
+- `tests/test_drop_links_reach_the_site.py` pins `deli_a01`, which declares a floor hole and a hatch, through
+  `merge_gameplay`: the link's points land where `_place_point` puts them, the hole's corners translate, the
+  building's own record is untouched.
+
 ## 0.124.0 - an isolated building is a major finding, not a log line
 
 **Factory roadmap 178** ("the instruments report and nothing blocks"). `site_tactical.analyze` has said
