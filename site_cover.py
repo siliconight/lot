@@ -196,7 +196,10 @@ COVER_SPECIES = (
 #: (`box_truck_forms.FLEETS`); a species not named here has one look and no variant. A Zoo that
 #: cannot draw a variant still builds the plain module, which `cover_module_refs` falls back
 #: to (0.90.0), so this table and Zoo's genome need not land in the same instant.
-COVER_VARIANTS = {"box_truck": 4}
+#: A PAYPHONE (0.126.0, the factory's roadmap 210) is one of Zoo 1.116.0's four booths' worth of somebody else's marks
+#: -- the tags inside it and the stickers on its back panel -- picked the same way, from where it stands. It is street
+#: furniture rather than cover; `site_furniture._stop_corner` asks this table for it.
+COVER_VARIANTS = {"box_truck": 4, "payphone": 4}
 
 
 def footprint(width: float, depth: float, yaw: float):

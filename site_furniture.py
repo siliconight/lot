@@ -1164,11 +1164,22 @@ def _stop_corner(road, kerb, stop, placed, markers=()):
     shelter = stop[0]
     outer = kerb.offset + kerb.sign * (road.sidewalk / 2.0 - BAND_INSET)
     base = shelter["t"] - SPECIES["bus_shelter"][0] / 2.0
+    # EVERY PIECE FACES THE ROAD, from either kerb (0.126.0; the walker's look
+    # review, 2026-10-19: a street phone should "Always face the sidewalk").
+    # Each stands at the band's back edge, so the sidewalk is between it and
+    # the road. The mailbox's door, the news rack's window and the payphone's
+    # open side are all Zoo's -Y, which at the road's angle points -perp: at
+    # the road from the L kerb, at the buildings from the R kerb unless turned
+    # round -- the hydrant's pumper rule (0.72.2). Until 0.126.0 the payphone
+    # was turned on both kerbs and the racks on neither, so an L-kerb phone
+    # faced the storefront behind it (restaurant_row_001's) and an R-kerb
+    # mailbox and rack faced the wall. A half turn keeps every footprint.
+    toward = 0.0 if kerb.sign > 0 else 180.0
     out = []
-    for species, dt, yaw_extra in (("mailbox", -2.6, 0.0),
-                                   ("newspaper_box", -4.0, 0.0),
-                                   ("newspaper_box", -4.0 - STOP_PAIR, 0.0),
-                                   ("payphone", -6.4, 180.0)):
+    for species, dt, yaw_extra in (("mailbox", -2.6, toward),
+                                   ("newspaper_box", -4.0, toward),
+                                   ("newspaper_box", -4.0 - STOP_PAIR, toward),
+                                   ("payphone", -6.4, toward)):
         w, d, h = SPECIES[species]
         t = base + dt
         if not 0.5 < t < road.length - 0.5:
@@ -1181,6 +1192,16 @@ def _stop_corner(road, kerb, stop, placed, markers=()):
                 kerb, s, outer, yaw_extra, breaks=f"stop@{shelter['t']:.1f}"),
             t, max(w, d) / 2.0, kerb, placed, markers)
         if piece is not None:
+            # A STREET PHONE WEARS ITS OWN BOOTH (0.126.0): the walker's look
+            # review, 2026-10-19, found every booth's graffiti "too
+            # similar/uniform". Zoo 1.116.0 draws four; the one a phone wears
+            # comes from where it stands (`site_cover.cover_variant`), so a
+            # re-run of a site stands the same booth in the same place. 0 is
+            # the plain stem, the booth every level had before.
+            if species == "payphone":
+                v = site_cover.cover_variant(species, piece["at"])
+                if v:
+                    piece["variant"] = v
             placed.append(piece)
             out.append(piece)
     return out

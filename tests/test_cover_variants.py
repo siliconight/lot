@@ -24,9 +24,11 @@ def _truck(spawn, enemy):
 
 
 def test_a_truck_has_four_looks_and_nothing_else_has_one():
-    assert site_cover.COVER_VARIANTS == {"box_truck": 4}
+    # 0.126.0: a payphone has four booths too (Zoo 1.116.0), asked for by `site_furniture._stop_corner`
+    assert site_cover.COVER_VARIANTS == {"box_truck": 4, "payphone": 4}
     for spot in ((0.0, 0.0), (12.5, -3.25), (-80.0, 40.0)):
         assert 0 <= site_cover.cover_variant("box_truck", spot) < 4
+        assert 0 <= site_cover.cover_variant("payphone", spot) < 4
         assert site_cover.cover_variant("cargo_container", spot) == 0
         assert site_cover.cover_variant("simple_car", spot) == 0
 

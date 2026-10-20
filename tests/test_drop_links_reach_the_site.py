@@ -14,8 +14,10 @@ HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, HERE)
 import lot as L  # noqa: E402
 
-#: deli_a01 declares a floor hole (story 1, 8, -4) and a hatch (story 1, -12, 8).
-SHELL = "deli_a01"
+#: deli_a03 declares a floor hole (story 1, 8.5, -4) and a hatch (story 1, -12, 8), and a stair link. Until 0.126.0
+#: this pinned deli_a01, which Deli Counter 0.237.0 made hole-free ("stairs and ladders are primary"): its floor hole
+#: went and this file's first test failed for a reason that was not Lot's.
+SHELL = "deli_a03"
 BUILD = os.path.join(HERE, "..", "deli_counter", "build")
 
 
@@ -30,8 +32,8 @@ def _drops():
 
 def test_the_shell_this_pins_against_declares_drops_with_links():
     drops = _drops()
-    assert drops is not None, "deli_counter/build/deli_a01.gameplay.json is missing: build the library"
-    assert drops, "deli_a01's vertical links carry no nav_link: Deli Counter 0.226.0 not built yet"
+    assert drops is not None, "deli_counter/build/%s.gameplay.json is missing: build the library" % SHELL
+    assert drops, "%s's vertical links carry no nav_link: Deli Counter 0.226.0 not built yet" % SHELL
     assert {v["kind"] for v in drops} == {"floor_hole", "hatch"}
 
 
@@ -86,6 +88,6 @@ def test_the_buildings_own_record_is_not_rewritten():
 def test_a_record_without_a_link_still_rides_verbatim():
     site = _merge((5.0, 5.0))
     plain = [v for v in site["vertical_links"] if not v.get("nav_link")]
-    assert plain, "deli_a01 declares a descriptive stair link; expected it carried verbatim"
+    assert plain, "%s declares a descriptive stair link; expected it carried verbatim" % SHELL
     for v in plain:
         assert v["kind"] == "stair" and v["building"] == "b0"

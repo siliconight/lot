@@ -1,3 +1,44 @@
+## 0.126.0 - every piece at a bus stop faces the road, and a street phone wears its own booth
+
+**The factory's roadmap 210.** The walker's look review, 2026-10-19, on the payphone: a street phone should "Always
+face the sidewalk" -- restaurant_row_001's faced the storefront behind it -- and "the same same graffiti and drawing
+int he phone booth is too similar/uniform".
+
+**The facing.** The mailbox, the two news racks and the payphone stand at the bus stop, each 0.45 m in from the
+band's back edge, so the sidewalk lies between them and the road. Each one's face -- the mailbox's door, the rack's
+window, the phone's open side -- is Zoo's -Y, which at the road's angle points -perp: at the road from the L kerb and
+at the buildings from the R kerb, unless it is turned round. `_stop_corner` turned the payphone round on both kerbs
+and the mailbox and racks on neither. An L-kerb phone faced the wall behind it, and an R-kerb mailbox and its racks
+did the same.
+
+**The booth.** Zoo 1.116.0 draws a payphone in four looks (`module_variants` 4): which tags went up inside the
+enclosure, in which ink, and which stickers made it onto the back panel. A phone's look comes from where it stands,
+as a box truck's fleet does (0.103.0), so a re-run of a site stands the same booth in the same place.
+
+### Fixed
+- `site_furniture._stop_corner`: every stop-corner piece takes the hydrant's pumper rule (0.72.2): no turn on the
+  L kerb, a half turn on the R. A half turn keeps every footprint, so nothing moves along the band and nothing
+  else is placed differently; only these pieces' yaw changes, on the kerb that was wrong for each.
+
+### Added
+- `site_cover.COVER_VARIANTS["payphone"] = 4`, and `_stop_corner` gives each payphone
+  `site_cover.cover_variant("payphone", at)`. A variant of 0 is written as none, the plain stem every level had
+  before; a non-zero one reaches the phone's slot as `variant`, which Zoo spells `_n<variant>` and
+  `cover_module_refs` already resolves, falling back to the plain stem if a Zoo cannot draw it.
+
+### Tests
+- `tests/test_site_furniture.py`:
+  - `test_every_stop_corner_piece_faces_the_road_from_either_kerb` puts a stop on both kerbs of the kerb probe and
+    holds each piece's face, by `plate_facing`, toward the road's centre line. It fails on 0.125.0 at the L kerb's
+    payphone, whose face points away from the road.
+  - `test_a_street_phone_wears_a_booth_picked_by_where_it_stands` walks stops along both kerbs: each phone's variant
+    is `cover_variant` of where it stands, the same on a second plan, and the street wears more than two looks (11
+    phones, all four). It fails on 0.125.0, where no phone carries a variant.
+- `tests/test_cover_variants.py`: the variants table holds the payphone's four looks beside the box truck's.
+- `tests/test_drop_links_reach_the_site.py` pins deli_a03, not deli_a01. Deli Counter 0.237.0 made deli_a01
+  hole-free, and from then this file's first test failed on its own pin, not on Lot: run on 0.125.0 it fails the
+  same way. deli_a03 declares the floor hole, the hatch and the stair link the file asks of a shell.
+
 ## 0.125.0 - a declared drop's nav link reaches the site in site space
 
 **Factory roadmap 173, step 3.** Deli Counter 0.226.0 files a one-way off-mesh `nav_link` on every `floor_hole`

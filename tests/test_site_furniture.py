@@ -11,6 +11,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import lot              # noqa: E402
+import site_cover       # noqa: E402
 import site_furniture   # noqa: E402
 import site_poles       # noqa: E402
 import site_streets     # noqa: E402
@@ -294,6 +295,52 @@ def test_the_stop_corner_stands_at_the_bus_stop():
             assert p["kerb"] == shelter["kerb"]
             assert abs(p["t"] - shelter["t"]) < 12.0, p
             assert p["breaks"].startswith("stop@")
+
+
+def test_every_stop_corner_piece_faces_the_road_from_either_kerb():
+    """The walker's look review, 2026-10-19: a street phone should "Always face
+    the sidewalk". Each stop-corner piece stands at the band's back edge, and
+    its face -- the mailbox's door, the rack's window, the phone's open side,
+    Zoo's -Y, which `plate_facing` reads -- must point across the sidewalk to
+    the road. FAILS ON 0.125.0 on both kerbs: the payphone was turned round on
+    the L kerb, into the storefront behind it, and the mailbox and racks were
+    not turned on the R kerb, so they faced the wall."""
+    (road,) = site_streets.roads(_probe())
+    for side in ("L", "R"):
+        kerb = road.kerb(side)
+        got = site_furniture._stop_corner(road, kerb, [{"t": 60.0}], [])
+        assert sorted(p["species"] for p in got) == ["mailbox", "newspaper_box", "newspaper_box", "payphone"]
+        for p in got:
+            fx, fy = site_furniture.plate_facing(p["yaw"])
+            cx, cy = road.point(p["t"], 0.0)
+            toward = (cx - p["at"][0]) * fx + (cy - p["at"][1]) * fy
+            assert toward > 0, (side, p)
+
+
+def test_a_street_phone_wears_a_booth_picked_by_where_it_stands():
+    """Zoo 1.116.0's four booths (`module_variants` 4): a payphone's `variant`
+    is `site_cover.cover_variant` of where it stands -- the same booth every
+    run of a site, and over a street of stops more than one. A variant of 0 is
+    written as no variant, the plain stem every level had before. FAILS ON
+    0.125.0: no payphone carries a variant."""
+    (road,) = site_streets.roads(_probe())
+    assert site_cover.COVER_VARIANTS["payphone"] == 4
+    seen, placed = set(), 0
+    for side in ("L", "R"):
+        for t in range(20, 200, 15):
+            got = site_furniture._stop_corner(road, road.kerb(side), [{"t": float(t)}], [])
+            phones = [p for p in got if p["species"] == "payphone"]
+            if not phones:
+                continue        # the station fell on a dropped kerb; the stop places what fits
+            placed += 1
+            (p,) = phones
+            want = site_cover.cover_variant("payphone", p["at"])
+            assert p.get("variant", 0) == want and p.get("variant") != 0
+            seen.add(want)
+            again = site_furniture._stop_corner(road, road.kerb(side), [{"t": float(t)}], [])
+            assert [q.get("variant") for q in again] == [q.get("variant") for q in got]
+    # measured on the probe: 11 of the 24 stations place a phone, wearing all four looks
+    assert placed >= 8 and len(seen) >= 3, (placed, seen)
 
 
 def _rects_meet(a, b):
