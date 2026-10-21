@@ -1,3 +1,29 @@
+## 0.126.1 - the contract fallback stops mirroring the NPC the contract stops restating
+
+**The factory's roadmap 292.** Deli Counter 0.253.0 stops restating the player's radius and height under
+`characters.npc_standard`: the contract's NPC is the player until a distinct class ships, and a copy nothing reads is
+the one that rots unseen. `lot._AGENT_DEFAULTS` mirrored those two numbers as the fallback for a missing contract,
+though Lot reads only the player, and `tests/test_cover_fallback.py`'s guard counted them among the 21 keys the
+fallback shares with the contract -- so against 0.253.0's contract it found 19 and failed.
+
+### Changed
+- **`_AGENT_DEFAULTS` carries no `npc_standard`.** Lot reads `characters.player` alone, so a missing contract
+  degrades exactly as it did.
+- **The guard's floor is 19**, the keys the fallback shares with Deli Counter 0.252.0's contract and with 0.253.0's
+  alike.
+
+### Corrected
+- **`site_furniture.urban_tree_stations`' docstring**, and 0.123.0's entry below, said a tree steps clear of a path
+  or a driveway. It does not: `_nudged` returns None before any step when the station stands within `CUT_CLEARANCE`
+  (0.8 m) of a cut, so that tree is dropped; a piece already standing, a marker or a shop band is what steps a tree
+  along its band, by `NUDGES`. Text only, queued on 2026-10-14 to ride the next Lot change.
+
+### Measured
+- The suite in a clone against a fresh 0.126.0 clone, neither beside the factory's other repos (the factory's
+  `patches/lot_npc_fallback/suite_clone_vs_base.out.txt`): against Deli Counter 0.252.0's contract the same results
+  on both sides, the 12 tests that read a built Deli Counter shell failing on both; against 0.253.0's, 0.126.0 fails
+  the guard as well and 0.126.1 does not.
+
 ## 0.126.0 - every piece at a bus stop faces the road, and a street phone wears its own booth
 
 **The factory's roadmap 210.** The walker's look review, 2026-10-19, on the payphone: a street phone should "Always

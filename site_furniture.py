@@ -815,8 +815,11 @@ def urban_tree_stations(road, kerb) -> list:
     clear of a crossing's dropped kerb and `LAMP_START` of the road's ends, then
     planted every `URBAN_TREE_SPACING` with the row centred in the run, so a
     block's trees stand evenly from corner to corner. A run shorter than the
-    spacing holds one tree at its middle. Paths and driveways do not split a run:
-    a tree steps clear of them where it stands (`_nudged`). Pure."""
+    spacing holds one tree at its middle. Paths and driveways do not split a run,
+    and a tree whose station stands within `CUT_CLEARANCE` of one is DROPPED, not
+    stepped: `_nudged` returns None before any step. A piece already standing, a
+    marker or a shop band is what steps a tree along its band, by `NUDGES`
+    (corrected 0.126.1). Pure."""
     lo, hi = LAMP_START, road.length - LAMP_START
     corners = sorted((c.t - c.span / 2.0, c.t + c.span / 2.0) for c in kerb.cuts if c.kind == "road")
     runs, a = [], lo

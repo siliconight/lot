@@ -52,14 +52,16 @@ _AGENT_DEFAULTS = {"nav_bake": {"agent_radius_m": 0.4, "agent_height_m": 1.8,
                                 "agent_max_climb_m": 0.15,
                                 "agent_max_slope_deg": 55.0,
                                 "cell_size_m": 0.10, "cell_height_m": 0.15},
+                   # no `npc_standard` (0.126.1): Lot reads only the
+                   # player, and the contract's NPC states no metric of its
+                   # own -- it is the player's until a distinct class ships
+                   # (Deli Counter 0.253.0, the factory's roadmap 292)
                    "characters": {"player": {"radius_m": 0.35,
                                              "height_m": 1.8,
                                              "eye_height_m": 1.6,
                                              "crouch_height_m": 1.2,
                                              "max_step_up_m": 0.5,
-                                             "walk_speed_mps": 4.0},
-                                  "npc_standard": {"radius_m": 0.35,
-                                                   "height_m": 1.8}},
+                                             "walk_speed_mps": 4.0}},
                    "clearances": {"min_door_width_m": 1.25,
                                   "min_corridor_width_m": 1.1,
                                   "min_headroom_m": 2.0,

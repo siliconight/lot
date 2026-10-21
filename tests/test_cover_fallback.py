@@ -76,10 +76,12 @@ def test_every_fallback_equals_the_ratified_value():
 
 def test_the_shared_keys_are_actually_shared():
     """A guard that compares an empty intersection passes for free. Every key of the cover fallback is
-    in the contract, and the agent defaults share at least the 21 keys they share today."""
+    in the contract, and the agent defaults share at least the 19 keys they share today: 21 until 0.126.1,
+    when the fallback stopped mirroring `npc_standard`'s radius and height, which Lot never read and the
+    contract stopped restating (Deli Counter 0.253.0, the factory's roadmap 292)."""
     (_n1, defaults, whole), (_n2, cover, bake) = _copies(_live())
     assert len(list(_pairs(cover, bake))) == len(cover), sorted(cover)
-    assert len(list(_pairs(defaults, whole))) >= 21, [k for k, _f, _v in _pairs(defaults, whole)]
+    assert len(list(_pairs(defaults, whole))) >= 19, [k for k, _f, _v in _pairs(defaults, whole)]
 
 
 def test_with_no_bake_the_gap_is_the_contracts():
