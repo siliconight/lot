@@ -149,6 +149,47 @@ def test_one_bus_stop_per_road_on_the_kerb_the_buildings_face():
     assert not [p for p in site_furniture.plan_furniture(roads) if p["species"] == "bus_shelter"]
 
 
+def _tee():
+    return {"name": "tee", "ground": {"size_x": 140, "size_y": 120}, "buildings": [],
+            "roads": [{"a": [-60, 0], "b": [60, 0], "width": 10, "sidewalk": 3},
+                      {"a": [0, 0], "b": [0, 50], "width": 10, "sidewalk": 3}]}
+
+
+def test_every_approach_of_a_signalised_junction_is_faced_from_its_far_right():
+    """The walker, walking cold run 9386: "where are the traffic lights for this side of the road?" -- a signal
+    stood only on the yielding leg, facing across it. Every approach of the tee's signalised junction -- the stem and
+    both directions of the through road -- now has a signal whose heads face its driver (Zoo's `right` form: the arm
+    along the yaw, the face the arm turned counter-clockwise), standing on the driver's right, beyond the junction,
+    at least 40 ft past the stop line (MUTCD 4D.14). FAILS ON 0.127.0: one signal, facing across the stem."""
+    import math
+    import site_streets
+    roads = site_streets.roads(_tee())
+    findings = []
+    signals = [p for r in roads for p in site_furniture.plan_traffic_control(r, roads, findings=findings)
+               if p["species"] == "traffic_signal"]
+    aps = [a for a in site_streets.approaches(roads) if a.control == "signal"]
+    assert len(aps) == 3 and len(signals) == 3, (len(aps), [s["name"] for s in signals])
+    assert not [f for f in findings if "NEAR_STOP_LINE" in f], findings
+    by = {r.index: r for r in roads}
+    for ap in aps:
+        road = by[ap.road]
+        t = (ap.travel * road.along[0], ap.travel * road.along[1])
+        stop = road.point(ap.line)
+        faced = []
+        for s in signals:
+            assert s["form"] == "right"
+            yaw = math.radians(s["yaw"])
+            arm = (math.cos(yaw), math.sin(yaw))
+            face = (-arm[1], arm[0])                  # the right form: the arm turned counter-clockwise
+            rel = (s["at"][0] - stop[0], s["at"][1] - stop[1])
+            beyond = rel[0] * t[0] + rel[1] * t[1]
+            right_of = rel[0] * t[1] - rel[1] * t[0]  # > 0 on the driver's right
+            if face[0] * t[0] + face[1] * t[1] < -0.99 and right_of > 0 and beyond > 0:
+                faced.append((s["name"], round(beyond, 2)))
+        assert len(faced) == 1, (ap, faced)
+        assert faced[0][1] >= site_furniture.SIGNAL_MIN_BEYOND, (ap, faced)
+
+
 def test_the_bus_stop_flag_stands_at_the_curb():
     """The flag's plate, turned to face along the road, has its near edge `CURB_SIGN_OFFSET` (2 ft, PennDOT TS 181)
     from the curb face -- the walker, walking cold run 9386: "it sohuld be closer to the road" -- and stands nearer
@@ -254,13 +295,15 @@ def test_the_junction_carries_a_signal_on_an_arterial_and_a_stop_sign_otherwise(
     control = site_furniture.plan_traffic_control(side, [through, side])
     assert [p["species"] for p in control] == ["traffic_signal"]
     (sig,) = control
-    # the pole stands back up the leg from its mouth, on the band
-    assert sig["at"][0] != 0.0 or sig["at"][1] > 0
-    assert abs(sig["at"][1] - (site_furniture.SIGNAL_SETBACK + 8.0)) < 1e-6
+    # the stem is faced from the FAR side (0.128.0): on the through road's band
+    # beyond the junction, in line with the stem's right kerb
+    assert sig["road"] == through.index and sig["at"][1] < 0
     assert sig["size"] == [0.7, 6.5, 0.7]          # the box is the pole
     assert sig["dims"] == [8.0, 0.62, 6.5]         # the slot is the reach
-    # the through road ends on nothing, so it carries no control
-    assert site_furniture.plan_traffic_control(through, [through, side]) == []
+    # the through road's two approaches are faced too (0.128.0), each beyond the box on its right
+    both = site_furniture.plan_traffic_control(through, [through, side])
+    assert [p["species"] for p in both] == ["traffic_signal"] * 2
+    assert all(p["road"] == through.index for p in both)
     # a narrow through road with no parking is not an arterial: a stop sign
     lane = {"name": "lane", "ground": {"size_x": 140, "size_y": 120},
             "buildings": [],

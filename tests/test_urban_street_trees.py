@@ -45,7 +45,16 @@ def test_an_urban_street_plants_a_tree_every_thirty_feet():
     for kerb in roads[0].kerbs:
         row = [p["t"] for p in trees if p["kerb"] == kerb.side]
         stations = site_furniture.urban_tree_stations(roads[0], kerb)
-        assert row == [round(s, 3) for s in stations], (kerb.side, row, stations)   # `_piece` keeps t to 3 places
+        # every tree on its station, or one `NUDGES` step off it clear of a junction's far-side signal pole
+        # (0.128.0: a pole beyond the box stands 1.1 m from the station at 172.296 here, so that tree steps -2 m)
+        signals = [p["t"] for p in urban if p["species"] == "traffic_signal" and p["road"] == roads[0].index
+                   and p["kerb"] == kerb.side]
+        assert len(row) == len(stations), (kerb.side, row, stations)
+        for got, want in zip(row, stations):
+            want = round(want, 3)                  # `_piece` keeps t to 3 places
+            if got != want:
+                assert round(abs(got - want), 3) in site_furniture.NUDGES, (kerb.side, got, want)
+                assert any(abs(s - want) < 2.0 for s in signals), (kerb.side, got, want, signals)
         for a, b in zip(stations, stations[1:]):
             gap = b - a
             assert abs(gap - site_furniture.URBAN_TREE_SPACING) < 1e-6 or gap > site_furniture.URBAN_TREE_SPACING, gap

@@ -221,7 +221,8 @@ def test_cold_run_9049_has_no_stop_sign_at_a_footpath_or_under_its_signal():
     roads = site_streets.roads(spec)
     pieces = site_furniture.plan_furniture(roads, spec["buildings"])
     assert not [p for p in pieces if p["species"] == "stop_sign"]
-    assert [p["species"] for p in pieces if p["species"] == "traffic_signal"] == ["traffic_signal"]
+    # a T under a signal: one far-side signal for each of its three approaches (0.128.0)
+    assert [p["species"] for p in pieces if p["species"] == "traffic_signal"] == ["traffic_signal"] * 3
 
 
 def test_every_leg_of_a_signalised_junction_is_marked():

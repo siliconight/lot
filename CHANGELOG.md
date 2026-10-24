@@ -1,3 +1,35 @@
+## 0.128.0 - a signalised junction faces every approach
+
+**The walker, walking cold run 9386** (the factory's `docs/findings/walk_2026-10-23_9386/`, finding 12): "where are
+the traffic lights for this side of the road?" `plan_traffic_control` stood a signal only on a junction's yielding
+leg, its pole at the leg's mouth and its heads facing ACROSS the leg: measured on 9386's walk copy, both of the
+level's signals faced west, so eastbound traffic on the main road was served and westbound and the side streets' were
+not.
+
+### Changed
+- **One far-side signal for every approach** (`_far_signal`), by MUTCD 2009 4D.14 (FHWA interpretation 4-358): two
+  primary faces at least 8 ft apart, one of them 40 to 180 ft beyond the stop line -- which Zoo's signal carries, its
+  arm's head and its pole's 4.3 m apart. The pole beyond the junction box on the approach's right,
+  `CURB_SIGN_OFFSET` plus the pole's half off the curb face; its arm back over the approach's lanes and its heads
+  facing the driver, by Zoo 1.121.0's `right` form (`form: right` on the slot; a Zoo without it falls back to the
+  plain module). Where the road runs on past the box the pole stands on its own right band; where it ends on the
+  road it meets -- a T's stem -- on THAT road's far band, in line with the stem's right kerb. On a four-way each
+  corner is the far-right corner of one approach, so one post a corner holds.
+- **`plan_furniture` groups the junctions' control by the road each piece stands on**, not the road that asked: a
+  T's stem is faced from the road it ends on.
+- `LOT_SIGNAL_NEAR_STOP_LINE` is said where the far-side pole stands under `SIGNAL_MIN_BEYOND` (40 ft) past the stop
+  line, and `LOT_SIGNAL_NO_FAR_BAND` where there is no band beyond to stand it on.
+
+### Tests
+- `test_every_approach_of_a_signalised_junction_is_faced_from_its_far_right` (new): on a tee, three approaches,
+  three signals, each facing exactly one approach's driver from its right, beyond the junction, at least 40 ft past
+  its stop line. Fails on 0.127.0.
+- `test_the_junction_carries_a_signal_on_an_arterial_and_a_stop_sign_otherwise`: the stem's signal stands on the
+  through road beyond the junction, and the through road's two approaches carry one each.
+- `test_cold_run_9049_has_no_stop_sign_at_a_footpath_or_under_its_signal`: that T's signals are three.
+- `test_an_urban_street_plants_a_tree_every_thirty_feet`: a tree may stand one `NUDGES` step off its station where a
+  far-side signal pole stands beside it (one does: 1.1 m from the station at 172.296, so that tree steps -2 m).
+
 ## 0.127.0 - a bus stop's flag stands at the curb
 
 **The walker, walking cold run 9386** (the factory's `docs/findings/walk_2026-10-23_9386/`, finding 10): a BUS STOP

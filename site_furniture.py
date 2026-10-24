@@ -122,10 +122,11 @@ SPECIES["utility_pole"] = (0.3, 3.67, 10.4)
 FOOTPRINT["utility_pole"] = (0.3, 0.3)
 
 #: Where the 1990s kit stands, and why.
-#:   traffic_signal: on the corner of a signalised junction (a yielding
-#:                   road meets an arterial, `site_streets.approaches`),
-#:                   pole on the yielding leg's right-hand kerb, mast arm
-#:                   over the road it meets
+#:   traffic_signal: ONE PER APPROACH of a signalised junction (a yielding
+#:                   road meets an arterial, `site_streets.approaches`), on
+#:                   the FAR side: its pole beyond the junction on the
+#:                   approach's right, its arm back over the approach's lanes,
+#:                   both heads facing the driver (0.128.0, `_far_signal`)
 #:   stop_sign:      one per stop-controlled approach, placed by
 #:                   docs/STREET_RULES.md (MUTCD): on the kerb to the
 #:                   approaching driver's RIGHT, the plate's near edge at
@@ -160,6 +161,14 @@ STOP_SEARCH_STEP = 0.5    # a blocked station steps back up the leg by this
 #: the near lane, because the arm must cross the setback and the band
 #: before it reaches the carriageway at all.
 SIGNAL_SETBACK = 0.4
+#: A SIGNALISED APPROACH SEES TWO FACES BEYOND THE JUNCTION (0.128.0). MUTCD
+#: 2009 4D.14 (quoted in the Delaware Administrative Code's copy; FHWA
+#: interpretation 4-358): at least two primary faces for an approach's through
+#: movement, at least 8 ft apart, at least one of them no less than 40 ft and
+#: no more than 180 ft beyond the stop line. Zoo's `traffic_signal` carries
+#: two heads 4.3 m apart, the arm's and the pole's, so one far-side signal an
+#: approach is the rule; nearer than this to the stop line is said.
+SIGNAL_MIN_BEYOND = 40 * 0.3048
 METER_INSET = 0.35        # centre of a meter, in from the band's kerb edge
 STOP_PAIR = 1.1           # daylight between two news racks
 LAMP_SPACING = 25.0
@@ -649,20 +658,93 @@ def _stop_sign(name, road, ap, side, markers, placed, findings):
     return None
 
 
+def _far_signal(road, ap, roads_list, name, findings):
+    """THE FAR-SIDE SIGNAL for approach ``ap`` (0.128.0), or None (and a
+    finding).
+
+    The walker, walking cold run 9386: "where are the traffic lights for this
+    side of the road?" Until this a signal stood only on a junction's
+    yielding leg, its pole at the leg's mouth and its heads facing ACROSS
+    the leg -- one direction of the road it meets was served, the yielding
+    driver and the other direction were not (measured on 9386's walk copy:
+    both signals' heads faced west).
+
+    Every approach now gets its own, by `SIGNAL_MIN_BEYOND`'s rule: the pole
+    beyond the junction box on the approach's RIGHT, `CURB_SIGN_OFFSET` plus
+    the pole's half off the curb face, its arm turned back over the
+    approach's lanes and its heads facing the driver -- Zoo's `right` form,
+    whose heads face the arm turned counter-clockwise. Where the road runs
+    on past the box the pole stands on its own right band; where it ends on
+    the road it meets (a T's stem) it stands on THAT road's far band, in
+    line with the approach's right kerb. On a four-way each corner is the
+    far-right corner of one approach, so one post a corner holds."""
+    import site_streets
+    by = {r.index: r for r in roads_list}
+    crosser = by.get(ap.crosser)
+    cut = next((c for c in road.crossings if c.kind == "road" and c.crosser == ap.crosser
+                and abs(c.t - ap.station) < 1e-6), None)
+    if crosser is None or cut is None:
+        return None
+    lo, hi = site_streets.crossing_box(cut)
+    far = (hi if ap.travel > 0 else lo) + ap.travel * SIGNAL_SETBACK
+    tx, ty = ap.travel * road.along[0], ap.travel * road.along[1]
+    arm = (-ty, tx)                   # the driver's left: back over the lanes
+    inset = CURB_SIGN_OFFSET + FOOTPRINT["traffic_signal"][0] / 2.0
+    who = (f"road {road.index}'s {'+t' if ap.travel > 0 else '-t'} approach to "
+           f"road {ap.crosser}")
+    if road.sidewalk and road.slab[0] + 0.5 < far < road.slab[1] - 0.5:
+        host = road
+        kerb = road.kerb(site_streets.right_side(ap.travel))
+        t = far
+    else:
+        if not crosser.sidewalk:
+            _say(findings,
+                 f"LOT_SIGNAL_NO_FAR_BAND: {who} ends on road {ap.crosser}, which has no "
+                 f"sidewalk band beyond it to stand its signal on; nothing is placed.")
+            return None
+        px, py = road.point(ap.station)
+        s0 = (px - crosser.a[0]) * crosser.along[0] + (py - crosser.a[1]) * crosser.along[1]
+        right = (ty, -tx)
+        t = s0 + (road.width / 2.0 + inset) * (right[0] * crosser.along[0] + right[1] * crosser.along[1])
+        across = tx * crosser.perp[0] + ty * crosser.perp[1]
+        host = crosser
+        kerb = crosser.kerb("L" if across > 0 else "R")
+        if not (crosser.slab[0] + 0.5 < t < crosser.slab[1] - 0.5):
+            _say(findings,
+                 f"LOT_SIGNAL_NO_FAR_BAND: {who}'s far-side signal would stand at "
+                 f"{t:.2f} m along road {ap.crosser}, off its slab; nothing is placed.")
+            return None
+    offset = kerb.offset - kerb.sign * (host.sidewalk / 2.0 - inset)
+    yaw_extra = math.degrees(math.atan2(arm[1], arm[0])) - host.angle_deg
+    piece = _piece(name, "traffic_signal", host, kerb, t, offset, yaw_extra,
+                   breaks=f"junction@{ap.station:.1f}")
+    piece["form"] = "right"
+    sx, sy = road.point(ap.line)
+    beyond = (piece["at"][0] - sx) * tx + (piece["at"][1] - sy) * ty
+    if beyond < SIGNAL_MIN_BEYOND - 1e-6:
+        _say(findings,
+             f"LOT_SIGNAL_NEAR_STOP_LINE: {who}'s signal stands {beyond:.2f} m beyond "
+             f"its stop line, under the {SIGNAL_MIN_BEYOND:.2f} m (40 ft) the MUTCD asks "
+             f"of one of its two faces.")
+    return piece
+
+
 def plan_traffic_control(road, roads_list, markers=(), findings=None,
                          placed=()) -> list:
     """The signal or the stop signs on every approach ``road`` makes to a
     junction (`site_streets.approaches`). ``placed`` are pieces already
     standing, which a stop sign keeps clear of; ``findings`` (a list of
     strings) hears about an approach whose control could not be stood by
-    the rules."""
+    the rules. A signal may stand on ANOTHER road's band (`_far_signal`: a
+    T's stem is faced from the road it ends on), and says so in its own
+    ``road`` and ``kerb``."""
     import site_streets
     out = []
     mine = [ap for ap in site_streets.approaches(roads_list) if ap.road == road.index]
     for j, ap in enumerate(mine):
-        if ap.control == "through" or (ap.control == "signal" and not ap.minor):
-            # the through road keeps its right of way; at a signal, the
-            # pole on the yielding leg's corner carries the arm over it
+        if ap.control == "through":
+            # the through road of a stop-controlled junction keeps its right
+            # of way; at a signal every approach is faced (0.128.0)
             continue
         side = site_streets.right_side(ap.travel)
         tag = "" if len(mine) == 1 else f"_{j}"
@@ -673,19 +755,13 @@ def plan_traffic_control(road, roads_list, markers=(), findings=None,
                  f"{ap.crosser} is under a {ap.control} and has no sidewalk "
                  f"band to stand it on; nothing is placed.")
             continue
-        kerb = road.kerb(side)
         if ap.control == "signal":
-            # the pole on the corner, the mast arm reaching over the road
-            # it meets -- which is the direction of the mouth
-            pole_t = ap.mouth - ap.travel * SIGNAL_SETBACK
-            offset = kerb.offset + kerb.sign * (road.sidewalk / 2.0 - BAND_INSET)
-            yaw_extra = 0.0 if ap.travel > 0 else 180.0
-            piece = _piece(f"Signal_{road.index}{side}{tag}", "traffic_signal", road,
-                           kerb, pole_t, offset, yaw_extra,
-                           breaks=f"junction@{ap.station:.1f}")
-            if _clear_of_markers(piece, markers):
+            piece = _far_signal(road, ap, roads_list, f"Signal_{road.index}{side}{tag}",
+                                findings)
+            if piece is not None and _clear_of_markers(piece, markers):
                 out.append(piece)
             continue
+        kerb = road.kerb(side)
         # a stop: the right-hand sign, and a left-hand one on a multi-lane
         # approach, where a driver in the far lane could miss the right
         sides = [side]
@@ -918,9 +994,12 @@ def plan_furniture(roads_list, buildings=(), markers=(), findings=None,
     # and per-road ordering decided which of the two won by their index.
     controls, every_control = {}, []
     for road in roads_list:
-        controls[road.index] = plan_traffic_control(road, roads_list, markers,
-                                                    findings, every_control)
-        every_control.extend(controls[road.index])
+        every_control.extend(plan_traffic_control(road, roads_list, markers,
+                                                  findings, every_control))
+    # BY THE ROAD EACH STANDS ON, not the road that asked for it: a T's stem
+    # is faced by a signal on the road it ends on (0.128.0, `_far_signal`)
+    for road in roads_list:
+        controls[road.index] = [p for p in every_control if p["road"] == road.index]
     for road in roads_list:
         for p in controls[road.index]:
             station = _junction_station(road, p)
