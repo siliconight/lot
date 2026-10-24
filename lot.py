@@ -638,7 +638,16 @@ def merge_lights(site_spec, base_dir):
     """Merge every building's <name>.lights.json into one site-level lighting
     manifest: each anchor offset to world space and id-namespaced by building
     (mirrors merge_gameplay), plus the exterior streetlights Lot derives.
-    Deterministic. Consumed by Lux's light-anchor loader."""
+    Deterministic. Consumed by Lux's light-anchor loader.
+
+    ONE SIGN A BUILDING (0.129.0). The walker, walking cold run 9386, of a
+    pharmacy with its band along the parapet and a lit box over its door: "in
+    real life this would be 1 sign". A building the spec deals a band
+    (`signs`, which `sign_placement` hangs on any building with a footprint)
+    keeps the band, centred on its street face, and its door box's lamp -- a
+    `sign` anchor -- is left out here; Level Factory 0.241.0 builds that shell's
+    fixtures without the box. A building with no band keeps its box as its one
+    sign. Counted in ``door_signs_dropped``."""
     site = {
         # STAMPED FROM THE FILES BEING MERGED, not a literal (roadmap 95).
         # This was "1.0.0" written by hand while Deli Counter's lights.py
@@ -657,6 +666,8 @@ def merge_lights(site_spec, base_dir):
         "anchors": [],
     }
     merged_versions = []
+    banded = set((site_spec.get("signs") or {}).keys())
+    site["door_signs_dropped"] = []
     for b in site_spec["buildings"]:
         bid = b["id"]
         placement = {"at": b["at"], "rot": b.get("rot", 0)}
@@ -672,6 +683,9 @@ def merge_lights(site_spec, base_dir):
         # definition -- that was the only contract when the field was absent.
         merged_versions.append(str(lm.get("light_manifest_version") or "1.0.0"))
         for a in lm.get("anchors", []):
+            if bid in banded and a.get("type") == "sign":
+                site["door_signs_dropped"].append(f"{bid}/{a.get('id', 'light')}")
+                continue
             wa = dict(a)
             wa["id"] = f"{bid}/{a.get('id', 'light')}"
             wa["building"] = bid

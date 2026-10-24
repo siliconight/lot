@@ -1,3 +1,22 @@
+## 0.129.0 - one sign a building: no door-box lamp under a band
+
+**The walker, walking cold run 9386** (the factory's `docs/findings/walk_2026-10-23_9386/`, finding 1), of
+pharmacy_a01's street face -- its band "DOC'S DISCOUNT DRUGS" along the parapet and, under it at its west end, a lit
+box "PHARMACY" over the door: "still doensn't look irght to have 2 signs on top of each other like this and not
+centered... in real life this would be 1 sign". Roadmap 187 (2026-10-06, option A) made the two agree on one name;
+they were still two signs.
+
+### Changed
+- **A building the spec deals a band loses its door box's lamp** (`merge_lights`): its `sign` anchors are left out of
+  the site's lights and listed in `door_signs_dropped`. The band stays -- centred on the street face, the size of a
+  fascia, the sign a strip shop actually carries -- and Level Factory 0.241.0 builds that shell's fixtures without the
+  box (Zoo 1.123.0). A building dealt no band keeps its box as its one sign. `sign_placement` hangs a dealt band on any
+  building with a footprint, so "dealt" is "hung".
+
+### Tests
+- `tests/test_one_sign.py` (new): a banded building loses its door box's lamp and keeps the rest, an unbanded one
+  keeps its box; no bands drops nothing. Fails on 0.128.0.
+
 ## 0.128.0 - a signalised junction faces every approach
 
 **The walker, walking cold run 9386** (the factory's `docs/findings/walk_2026-10-23_9386/`, finding 12): "where are
