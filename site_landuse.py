@@ -14,7 +14,8 @@ ONE BOUNDARY: the resolved ground plate (`site_extent.resolve`), on a grid of
 geometry holds its centre:
 
   * ``building``  -- a building's rotated footprint (`site_extent.
-    rotated_footprint`);
+    rotated_footprint`), and an EMPTY's: a `blockers` entry, its `size_x` by
+    `size_y` (0.130.0);
   * the drawn ground, from `site_surfaces.tops` -- the same slabs Lot draws,
     by family: ``road``, ``kerbcut``, ``sidewalk``, ``frontage``, ``path``
     (a walk or a landing), ``courtyard``, ``yard`` (a service pad,
@@ -151,6 +152,22 @@ def census(site_spec, merged=None):
         r = site_extent.rotated_footprint(b)
         if r is not None:
             buildings[b["id"]] = r
+            _paint(grid, rect, r, lambda x, y: True, "building")
+    # AN EMPTY IS BUILT LAND (0.130.0). The walker, walking cold run 9386, of
+    # broad ground round restaurant_row_001: "this empty space goes against
+    # the doc i sent you about the value of urban land". Measuring it found
+    # this census wrong first: a street's Empties are the spec's `blockers`,
+    # never painted, so a row of 26 rowhomes read as remainder -- 58.4 %
+    # where 47.7 % is unclaimed (the factory's
+    # `docs/findings/walk_2026-10-23_9386/landuse/`). Painted as building
+    # land here, after the buildings and before the ground, so a cell takes
+    # its first use as before. Not in `buildings`: separation and the
+    # building line stay about the buildings a mission enters, as before.
+    for bl in site_spec.get("blockers", []) or []:
+        if "size_x" not in bl or "size_y" not in bl:
+            continue
+        r = site_extent.rotated_footprint(dict(bl, footprint=[bl["size_x"], bl["size_y"]]))
+        if r is not None:
             _paint(grid, rect, r, lambda x, y: True, "building")
     slabs = [s for s in site_surfaces.tops(site_spec, ground=ext) if s["family"] != "ground"]
     for use in USES[1:-1]:

@@ -1,3 +1,23 @@
+## 0.130.0 - the land-use census counts a street's Empties as built land
+
+**The walker, walking cold run 9386** (the factory's `docs/findings/walk_2026-10-23_9386/`, finding 7), of broad ground
+round restaurant_row_001: "this empty space goes against the doc i sent you about the value of urban land", and "its
+ok for levels to have open areas but it should be with intention and to support gameplay not just because we forgot to
+put something there". Measuring where that ground is found this census wrong first: it painted `buildings` only, and a
+street's Empties are the spec's `blockers`, so restaurant_row_001's row of 26 rowhomes read as remainder -- 58.4 % of
+the plate where 47.7 % is unclaimed (cold run 9391's site, the factory's
+`docs/findings/walk_2026-10-23_9386/landuse/remainder_map.py`).
+
+### Changed
+- **`site_landuse.census`** paints each `blockers` entry's footprint (`size_x` by `size_y`, turned by its `rot`) as
+  `building`, after the buildings and before the ground. Not added to `buildings`: separation and the building line
+  stay about the buildings a mission enters. Every land-use figure since 0.93.0 overstated the remainder on a site
+  with an Empty row; the census is a measurement and gates nothing, so no site changes.
+
+### Tests
+- `tests/test_landuse_blockers.py` (new): an Empty's land is building land, measured as a building of its footprint
+  is, turned or not; it is not a building a mission enters. The first two fail on 0.129.0.
+
 ## 0.129.0 - one sign a building: no door-box lamp under a band
 
 **The walker, walking cold run 9386** (the factory's `docs/findings/walk_2026-10-23_9386/`, finding 1), of
