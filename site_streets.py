@@ -86,7 +86,8 @@ def bays(road) -> list:
     """Every parking bay on ``road``: dicts of side, index, t0, t1 (along)
     and offset (across, to the lane's centre). Bays step from the road's
     start; a stretch within `CROSSING_SETBACK` of a centre-line crossing, or
-    over a kerb cut, holds none."""
+    over a kerb cut, holds none -- nor one a ``road.no_parking`` zone
+    overlaps on its side (0.131.0, a bus stop): no car, no meter, no paint."""
     if not has_parking(road):
         return []
     out = []
@@ -98,6 +99,9 @@ def bays(road) -> list:
         for i in range(int(road.length // BAY_LENGTH)):
             t0, t1 = i * BAY_LENGTH, (i + 1) * BAY_LENGTH
             if any(not (t1 <= a or t0 >= b) for a, b in keep_out + cuts):
+                continue
+            if any(side == kerb.side and not (t1 <= a or t0 >= b)
+                   for side, a, b in road.no_parking):
                 continue
             out.append({"side": kerb.side, "index": i, "t0": t0, "t1": t1,
                         "offset": offset})
@@ -153,6 +157,11 @@ class Road:
     #: box's edges and resume past them. Without this two slabs and two
     #: dropped kerbs lay coplanar over every X.
     gaps: list = field(default_factory=list)
+    #: Stretches of a kerb's parking lane no car may use (0.131.0): ``(side, t0,
+    #: t1)``, a bus stop's zone (`site_furniture.BUS_ZONE_M`). Set by
+    #: `plan_furniture` as it stands a stop, and by `roads` from the spec's
+    #: ``bus_zones`` after it, so every reader of `bays` sees the same lane.
+    no_parking: list = field(default_factory=list)
 
     @property
     def centre(self):
@@ -472,6 +481,9 @@ def roads(site_spec, findings=None) -> list:
                                       off * sgn, length, sw, findings)
                 road.kerbs.append(Kerb(side=side, sign=sgn, offset=off * sgn,
                                        cuts=cuts, spans=split_span(length, cuts)))
+        # a bus stop's zone, as `plan_furniture` stood it (0.131.0)
+        road.no_parking = [(z["side"], float(z["t0"]), float(z["t1"]))
+                           for z in site_spec.get("bus_zones", []) or [] if z.get("road") == i]
         out.append(road)
     for road in out:
         road.slab = _slab(road, out)

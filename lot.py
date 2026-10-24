@@ -3852,6 +3852,24 @@ def assemble(site_spec_path, out_dir=None, walkable=False, navqa=False,
                                               + _field_rects,
                                               urban=site_spec.get("streetscape") == "urban")
     site_spec.setdefault("cover", []).extend(furniture)
+    # NO PARKING WHERE THE BUS PULLS IN (0.131.0): the stops' zones go into the
+    # spec, so the parking and the paint, which read the roads afresh, keep the
+    # same lanes clear (`site_furniture.BUS_ZONE_M`)
+    site_spec["bus_zones"] = site_furniture.bus_zones(_furniture_roads)
+    if site_spec["bus_zones"]:
+        print(f"[lot] LOT_BUS_ZONES: {len(site_spec['bus_zones'])} stop(s), "
+              f"{site_furniture.BUS_ZONE_M} m of kerb each kept clear of parking")
+    # the getaway van was stood before the stops: say so if it stands in a zone
+    if getaway is not None:
+        _van = getaway["van"]
+        for _z in site_spec["bus_zones"]:
+            _r = _furniture_roads[_z["road"]]
+            _t = ((_van["at"][0] - _r.a[0]) * _r.along[0] + (_van["at"][1] - _r.a[1]) * _r.along[1])
+            _s = (_van["at"][0] - _r.a[0]) * _r.perp[0] + (_van["at"][1] - _r.a[1]) * _r.perp[1]
+            if _z["t0"] <= _t <= _z["t1"] and (_s > 0) == (_z["side"] == "L") \
+                    and abs(_s) <= _r.width / 2.0 + 1e-6:
+                print(f"[lot] LOT_GETAWAY_IN_BUS_ZONE: the getaway van stands in road "
+                      f"{_z['road']}'s stop zone ({_z['side']} {_z['t0']}..{_z['t1']})")
     # THE GAS STATION'S PRICE PYLON (site_furniture.plan_pylons): at each
     # forecourt's road frontage, behind the band, facing along the road,
     # clear of paths, footprints, what already stands and the markers

@@ -516,6 +516,23 @@ def _facing_kerb(road, buildings):
     return next((k for k in road.kerbs if k.sign == sign), None)
 
 
+#: NO PARKING WHERE THE BUS PULLS IN (0.131.0). The walker, walking cold run
+#: 9386, of the stop's flag: "bus stop sign is for cars/buses so there is no
+#: parking ther". NACTO's minimum length for a 40 ft bus's curbside stop,
+#: midblock -- the bus and its merge in and out -- is 120 ft; Lot stands a stop
+#: at the middle of a kerb's longest free stretch, so midblock
+#: (`docs/STREET_RULES.md`, "Bus stops", at the factory root). The zone is
+#: centred on the shelter, and no bay it overlaps holds a car, a meter or paint.
+BUS_ZONE_M = round(120 * 0.3048, 4)
+
+
+def bus_zones(roads_list) -> list:
+    """The stops' zones `plan_furniture` stood on ``roads_list``, as the spec
+    keeps them: ``{"road", "side", "t0", "t1"}``."""
+    return [{"road": r.index, "side": s, "t0": round(a, 3), "t1": round(b, 3)}
+            for r in roads_list for s, a, b in r.no_parking]
+
+
 def _bus_stop(road, kerb, placed, n, markers=()):
     """The stop as a set -- shelter, bench inside it, its flag before it at
     the curb -- at the midpoint of the longest free stretch of ``kerb`` that
@@ -1147,6 +1164,11 @@ def plan_furniture(roads_list, buildings=(), markers=(), findings=None,
                 # there off stations a marker or a tree had taken.
                 placed.extend(stop)
                 out.extend(_stop_corner(road, kerb, stop, placed, markers))
+                # its zone, before the poles and the meters read the bays
+                if stop:
+                    t = stop[0]["t"]
+                    road.no_parking.append((kerb.side, t - BUS_ZONE_M / 2.0,
+                                            t + BUS_ZONE_M / 2.0))
             # THE POLE LINE (0.118.0), last on its band: it steps clear of
             # everything the band already stands, the meters `plan_meters`
             # will stand and the shop bands, so nothing else has to know

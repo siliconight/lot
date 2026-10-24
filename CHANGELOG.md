@@ -1,3 +1,28 @@
+## 0.131.0 - no parking where the bus pulls in
+
+**The walker, walking cold run 9386** (the factory's `docs/findings/walk_2026-10-23_9386/`, finding 10): "bus stop sign
+is for cars/buses so there is no parking ther...so it sohuld be closer to the road". 0.127.0 stood the flag at the curb;
+this is the second half. NACTO's minimum length of a 40 ft bus's curbside stop, midblock -- the bus and its merge in and
+out of traffic -- is 120 ft (the factory's `docs/STREET_RULES.md`, "Bus stops", with the sources).
+
+### Changed
+- **A stop's zone, `site_furniture.BUS_ZONE_M` (36.576 m), centred on its shelter**, goes onto its road as
+  `Road.no_parking` the moment `plan_furniture` stands it -- before the poles and the meters read the bays -- and into
+  the spec as `bus_zones` (`bus_zones`), which `site_streets.roads` reads back, so the parking and the paint, which build
+  their roads afresh, keep the same lane clear. `site_streets.bays` holds no bay a zone overlaps on its side: no car, no
+  meter, no bay paint there. Said as `LOT_BUS_ZONES`.
+- **The getaway van is stood before the stops**; if it stands in a zone that is said, `LOT_GETAWAY_IN_BUS_ZONE`, not
+  moved.
+
+### Measured, cold run 9391's themed site assembled by 0.130.0 and by this
+- 3 stops; parked cars 26 -> 20, meters 46 -> 33, bay ticks 56 -> 41; inside a zone, 6 cars, 12 meters and 14 ticks ->
+  none (a bay straddling a zone's end goes whole, with its meter); the van in no zone (the factory's
+  `patches/lot_bus_zone/zone_check.py`, `zone_check.out.txt`).
+
+### Tests
+- `tests/test_bus_zone.py` (new): a zone empties the bays it overlaps on its side only; the zone is NACTO's midblock
+  length; furniture records a stop's zone and stands no meter in it. All three fail on 0.130.0.
+
 ## 0.130.0 - the land-use census counts a street's Empties as built land
 
 **The walker, walking cold run 9386** (the factory's `docs/findings/walk_2026-10-23_9386/`, finding 7), of broad ground
