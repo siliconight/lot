@@ -179,6 +179,14 @@ TREE_INSET = 0.7          # the grate's half plus a hand, so it sits on the band
 SHELTER_INSET = 0.85      # the shelter's half depth plus a hand
 BENCH_TOWARD_BACK = 0.35  # the bench's centre, from the shelter's, toward its back
 SIGN_BEFORE_SHELTER = 1.0
+#: A SIGN ON A CURBED STREET STANDS 2 FT FROM THE CURB FACE to its nearest edge:
+#: PennDOT LTAP Tech Sheet 181, the urban lateral offset (1 ft where space is
+#: limited), the MUTCD's curbed-street minimum. A bus stop's flag speaks to the
+#: bus and to whoever would park there, so it stands at the curb and not at the
+#: back of the walk (0.127.0; the walker, walking cold run 9386: "it sohuld be
+#: closer to the road"). The stop signs answer the walker's 6 ft rule
+#: (`STOP_LATERAL_MIN`) instead, which `docs/STREET_RULES.md` records.
+CURB_SIGN_OFFSET = 2 * 0.3048
 PIECE_GAP = 0.3           # daylight between two pieces along the band
 NUDGES = (0.0, 2.0, -2.0, 4.0, -4.0)   # a lamp or a tree steps along its band
 #: A SHOP BAND IS NOT BEHIND A POLE (0.106.0). Cold run 9222's frame of
@@ -500,13 +508,21 @@ def _facing_kerb(road, buildings):
 
 
 def _bus_stop(road, kerb, placed, n, markers=()):
-    """The stop as a set -- shelter, bench inside it, sign before it -- at
-    the midpoint of the longest free stretch of ``kerb`` that holds it clear
-    of the cuts and of what already stands; nudged along in 3 m steps when
-    a lamp or a tree is in the way. Returns the pieces (possibly none)."""
+    """The stop as a set -- shelter, bench inside it, its flag before it at
+    the curb -- at the midpoint of the longest free stretch of ``kerb`` that
+    holds it clear of the cuts and of what already stands; nudged along in 3
+    m steps when a lamp or a tree is in the way. Returns the pieces (possibly
+    none).
+
+    THE FLAG AT THE CURB (0.127.0): turned to face along the road, its
+    plate's width runs across the walk, so its post stands
+    `CURB_SIGN_OFFSET` plus half that width in from the curb face. It stood
+    `BAND_INSET` in from the band's BACK edge until then, beside the
+    buildings' walls and doors."""
     sw, sd, _sh = SPECIES["bus_shelter"]
     sign_w, sign_d, _ = SPECIES["sign_post"]
-    outer = kerb.offset + kerb.sign * (road.sidewalk / 2.0 - BAND_INSET)
+    flag_off = kerb.offset - kerb.sign * (road.sidewalk / 2.0 - CURB_SIGN_OFFSET
+                                          - BLADE_DIMS[BLADE_AT_BUS_STOP][0] / 2.0)
     shelter_off = kerb.offset + kerb.sign * (road.sidewalk / 2.0 - SHELTER_INSET)
     bench_off = shelter_off + kerb.sign * BENCH_TOWARD_BACK
     # the shelter's back (+y in its frame) toward the buildings: +perp on
@@ -538,7 +554,7 @@ def _bus_stop(road, kerb, placed, n, markers=()):
                       # stop, which is exactly the kind of name that gets read
                       # back as evidence of traffic control it is not
                       _piece(f"StopFlag_{n + 2}", "sign_post", road, kerb, sign_t,
-                             outer, 90.0, breaks=tag, blade=BLADE_AT_BUS_STOP)]
+                             flag_off, 90.0, breaks=tag, blade=BLADE_AT_BUS_STOP)]
             if all(_clear_of_markers(p, markers) for p in pieces):
                 return pieces
     return []

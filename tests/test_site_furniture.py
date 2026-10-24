@@ -149,6 +149,24 @@ def test_one_bus_stop_per_road_on_the_kerb_the_buildings_face():
     assert not [p for p in site_furniture.plan_furniture(roads) if p["species"] == "bus_shelter"]
 
 
+def test_the_bus_stop_flag_stands_at_the_curb():
+    """The flag's plate, turned to face along the road, has its near edge `CURB_SIGN_OFFSET` (2 ft, PennDOT TS 181)
+    from the curb face -- the walker, walking cold run 9386: "it sohuld be closer to the road" -- and stands nearer
+    the road than the shelter."""
+    assert abs(site_furniture.CURB_SIGN_OFFSET - 0.6096) < 1e-9
+    spec = _probe()
+    roads = site_streets.roads(spec)
+    pieces = site_furniture.plan_furniture(roads, spec["buildings"])
+    (flag,) = [p for p in pieces if p["species"] == "sign_post" and p["breaks"].startswith("stop@")]
+    (shelter,) = [p for p in pieces if p["species"] == "bus_shelter"]
+    road = roads[0]
+    plate_w = site_furniture.BLADE_DIMS[site_furniture.BLADE_AT_BUS_STOP][0]
+    curb = road.width / 2.0
+    near_edge = abs(flag["at"][1]) - plate_w / 2.0 - curb
+    assert abs(near_edge - site_furniture.CURB_SIGN_OFFSET) < 1e-3, (flag["at"], curb)
+    assert abs(flag["at"][1]) < abs(shelter["at"][1])
+
+
 def test_the_facing_kerb_is_read_from_the_buildings_side():
     (road,) = site_streets.roads(_probe())
     assert site_furniture._facing_kerb(road, [{"at": [0, 30]}]).side == "L"

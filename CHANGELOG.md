@@ -1,3 +1,30 @@
+## 0.127.0 - a bus stop's flag stands at the curb
+
+**The walker, walking cold run 9386** (the factory's `docs/findings/walk_2026-10-23_9386/`, finding 10): a BUS STOP
+flag at the back of the sidewalk beside a building's wall and door -- "bus stop sign is for cars/buses so there is no
+parking ther...so it sohuld be closer to the road". `_bus_stop` stood the flag `BAND_INSET` in from the sidewalk
+band's BACK edge, the same line as the shelter's.
+
+### Changed
+- **The flag stands at the curb**: its plate, turned to face along the road, has its near edge `CURB_SIGN_OFFSET`
+  (2 ft, 0.6096 m) from the curb face -- PennDOT LTAP Tech Sheet 181's urban lateral offset where a curb exists, the
+  MUTCD's curbed-street minimum -- so its post stands 0.762 m in. On the probe street, 7.55 m from the centre line
+  to 5.76 m, the curb at 5.0. The shelter and bench keep their place at the back of the walk.
+
+### Not changed, and why
+- **The stop signs keep the walker's 6 ft rule** (`STOP_LATERAL_MIN`, `docs/STREET_RULES.md`). The MUTCD's 6 ft is
+  its offset where there is no curb; the factory's street rules record the walker's figure, and a reference fills a
+  blank rather than overriding a rule the walker gave. Said in `CURB_SIGN_OFFSET`'s comment.
+- **Parking bays still run past a stop.** The walker's reason for the rule -- no parking where the bus pulls in --
+  asks `site_streets.bays` to leave the stop's length free, and `bays(road)` is computed from the road alone by five
+  modules (meters, parked cars, the getaway van, poles) while the stop is placed later against what already stands.
+  Filed with the finding as its second half.
+
+### Tests
+- `tests/test_site_furniture.py::test_the_bus_stop_flag_stands_at_the_curb` (new): the plate's near edge 2 ft from
+  the curb face, nearer the road than the shelter. It fails on 0.126.1 on behaviour (the flag at 7.55 m, the curb at
+  5.0 m).
+
 ## 0.126.1 - the contract fallback stops mirroring the NPC the contract stops restating
 
 **The factory's roadmap 292.** Deli Counter 0.253.0 stops restating the player's radius and height under
