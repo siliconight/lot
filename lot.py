@@ -1888,6 +1888,17 @@ COVER_MATERIALS = {"box_truck": "metal_painted", "cargo_container": "metal_paint
                    "parking_meter": "metal_painted", "payphone": "metal_painted",
                    # the gas station's price pylon (site_furniture.plan_pylons)
                    "price_pylon": "metal_painted",
+                   # A BANK'S OUTSIDE (0.132.0, 0.133.0), each its genome's
+                   # default (0.134.0). Without a row a piece asked for
+                   # `metal_painted`, Zoo built it under `_mmetal_painted` --
+                   # a material not its species' own is another build -- and
+                   # the resolver, asking the untagged name, found nothing: on
+                   # the bank level both drive-up pieces stood as greybox
+                   # (LOT_COVER_MODULE_MISSING) and the night drop would hang
+                   # nothing. `tests/test_bank_outside_materials.py` holds
+                   # each row to its genome.
+                   "drive_up_canopy": "metal", "drive_up_tube": "metal",
+                   "night_drop": "metal",
                    # the dumpster at a building's service side (site_dumpsters)
                    "dumpster": "metal_painted",
                    # the bags beside it (site_dumpsters.plan_bags, 0.104.0):

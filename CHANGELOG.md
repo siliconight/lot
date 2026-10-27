@@ -1,3 +1,22 @@
+## 0.134.0 - the bank's outside pieces ask Zoo for their own material
+
+**Found by the first frames of the bank's outside** (the factory's `docs/findings/bank_interior/`, frames 11-12, the bank
+level on Zoo 1.138.0 and Lot 0.132.0): the drive-up's canopy and station stood as green greybox boxes.
+
+### Fixed
+- **`COVER_MATERIALS` rows for `drive_up_canopy`, `drive_up_tube` and `night_drop`**, each its genome's default,
+  `metal`.
+  - Without a row a piece asked for `metal_painted`, Zoo built it under `_mmetal_painted` (a material not its species'
+    own is another build), and the resolver, asking the untagged name, found nothing.
+  - The themed site assembly said so: `LOT_COVER_MODULE_MISSING: cover_7 (drive_up_canopy)` and `cover_8
+    (drive_up_tube)`, each "the box stays", while the site kit job had built both and passed them.
+  - The night drop, a hung slot reading the same table, would have hung nothing.
+  - The time-and-temperature sign had its row (`price_pylon`, the gas pylon's) and resolved.
+
+### Tests
+- `tests/test_bank_outside_materials.py` (new): every bank outside piece has a row, and each row is its genome's default
+  when Zoo is beside the repo. Fails on 0.133.0.
+
 ## 0.133.0 - a bank's night depository beside its door
 
 **The walker's bank list, outside** (the factory's `docs/reference/BANK_INTERIOR_COMPS.md`, researched): "a night
