@@ -1,3 +1,33 @@
+## 0.133.0 - a bank's night depository beside its door
+
+**The walker's bank list, outside** (the factory's `docs/reference/BANK_INTERIOR_COMPS.md`, researched): "a night
+depository is a slot in the wall for after-hours deposits". Zoo 1.138.0 draws it (`night_drop`); this hangs it, the last
+of the list's three outside pieces.
+
+### Added
+- **`site_night_drop`: a bank's night depository on its storefront.**
+  - It goes on the facade its door sign is over (`lot.bank_fronts`), beside the door nearest the sign.
+    `site_posters.OPENING_KEEP` keeps it clear of that door and of every other storey-0 opening (a storefront's
+    windows), and `site_posters.CORNER_KEEP` from the corners.
+  - The door's two sides are tried first, then the free span nearest the door that holds the 0.6 m plate.
+  - **Hung, as a poster run is** (`site_posters`): its own list, never cover, a slot all the same, no collision. Its
+    back sits `site_posters.AIR` off the wall's face, its front turned out (`facing_yaw`), its centre 1.1 m up so the
+    chute is about a metre off the ground.
+  - Refused and said, never forced: `LOT_NIGHT_DROP_NO_DOOR`, `LOT_NIGHT_DROP_NO_ROOM`.
+  - Why not Zoo's fixture pass, which stands the door sign: that is the light-anchor pipeline, its rows choosing what
+    Lux lights, and a night drop is not a light.
+
+### Measured, the bank level (bank_block_001, seed 9082) assembled by this
+- `LOT_NIGHT_DROP: b0 on its S facade at +1.60 m from its door`: at (-61.40, -18.05), yaw 0 (facing the street),
+  1.1 m up.
+- The drive-up and the bank's sign are where 0.132.0 put them.
+
+### Tests
+- `tests/test_site_night_drop.py` (new; fails on 0.132.0):
+  - it hangs beside the door, clear of it, facing the street;
+  - a window beside the door moves it to the other side, or to the nearest free span;
+  - a facade with no room, or no door, hangs none and says so.
+
 ## 0.132.0 - a bank's drive-up lane and its time-and-temperature sign
 
 **The walker's bank list, outside** (the factory's `docs/reference/BANK_INTERIOR_COMPS.md`, researched): a drive-up lane

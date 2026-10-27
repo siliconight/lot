@@ -4228,6 +4228,14 @@ def assemble(site_spec_path, out_dir=None, walkable=False, navqa=False,
     merged["poster_plan"] = {"placed": site_spec["hung"]}
     for f_ in poster_findings:
         print(f"[lot] {f_}")
+    # A BANK'S NIGHT DEPOSITORY (site_night_drop, Zoo 1.138.0): beside the
+    # door its sign is over, clear of the facade's openings; hung, as a
+    # poster run is, so never cover
+    import site_night_drop
+    _nd_findings = []
+    site_spec["hung"] += site_night_drop.plan(site_spec, merged, _banks_du, _rects_f, _nd_findings)
+    for f_ in _nd_findings:
+        print(f"[lot] {f_}")
 
     tscn_out = os.path.join(out_dir, f"{site_spec['name']}.tscn")
     write_godot_scene(site_spec, merged, tscn_out, preview=preview,
