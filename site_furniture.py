@@ -32,6 +32,8 @@ Frame: spec/Blender Z-up plan coordinates, like `site_streets`. Pure.
 from __future__ import annotations
 
 import math
+import re
+import zlib
 
 import site_cover
 
@@ -428,9 +430,10 @@ def _clear_of_markers(piece, markers) -> bool:
 
 
 def _piece(name, species, road, kerb, t, offset, yaw_extra=0.0, breaks="",
-           blade=None):
-    w, d, h = SPECIES[species]
-    fw, fd = FOOTPRINT.get(species, (w, d))
+           blade=None, dims=None):
+    w, d, h = dims or SPECIES[species]
+    # a piece sized by its caller (a bank's sign, `plan_pylons`) is its own footprint
+    fw, fd = (w, d) if dims else FOOTPRINT.get(species, (w, d))
     # A BLADE HAS ITS OWN BOX (0.74.0). `dims` is the slot Zoo builds to and
     # `size`/`along` are what the greybox draws and the spacing reads, so
     # only the first of them takes the blade: the module grows to the sign
@@ -1389,12 +1392,45 @@ def path_corridors(site_spec, step=0.5):
     return out
 
 
-def plan_pylons(roads_list, forecourts, markers=(), standing=(), keep_out=(), findings=None):
+#: A BANK'S TIME-AND-TEMPERATURE SIGN (Zoo 1.138.0, `price_pylon` form
+#: `bank`): the walker's bank list, outside. The gas pylon's frame, smaller --
+#: a branch's street sign, not a highway's -- placed by this same planner at
+#: the bank's frontage, the door sign standing for the canopy. Its variant is
+#: the door sign's (`bank_sign_variant`).
+BANK_PYLON_DIMS = (2.4, 0.6, 6.5)
+#: Its stations reach past the building's ends: a branch sits close behind its sidewalk (bank_branch_a02 2.2 m, under
+#: the 2.4 m face), so no station across its own frontage is clear, and a bank's sign stands at the corner of its lot.
+BANK_PYLON_STEPS = tuple([0.0] + [s * k for k in range(2, 26, 2) for s in (1.0, -1.0)])
+#: The words Zoo's `storefront_names` reads a bank's door from, and its four
+#: names in the pylon's four colourways: the variant mirror Deli Counter keeps
+#: (`level_design.bank_teller_variant`), since neither reads Zoo.
+BANK_SIGN_WORDS = ("bank", "credit", "savings")
+_BANK_NAMES = 4
+_SIGN_COLOURWAYS = 4
+
+
+def is_bank_business(business):
+    words = set(w for w in re.split(r"[^a-z]+", str(business or "").lower()) if w)
+    return bool(words & set(BANK_SIGN_WORDS))
+
+
+def bank_sign_variant(business):
+    """The `price_pylon` form `bank` variant naming the bank its door sign
+    does: ``names[k % 4]`` in ``COLOURWAYS[(k // 7) % 4]``, ``k`` the crc32 of
+    the sign's `business` (Zoo's `teller_line_forms.variant_for`)."""
+    k = zlib.crc32(str(business or "").encode("utf-8")) & 0xFFFFFFFF
+    return k % _BANK_NAMES + _BANK_NAMES * ((k // 7) % _SIGN_COLOURWAYS)
+
+
+def plan_pylons(roads_list, forecourts, markers=(), standing=(), keep_out=(), findings=None,
+                dims=None, dress=None, label="forecourt", steps=PYLON_STEPS):
     """One `price_pylon` per forecourt: ``forecourts`` is ``[(building id,
     (x, y) canopy centre)]``. Returns the pieces placed; a forecourt with no
-    road band, or no clear station, is said into ``findings``."""
+    road band, or no clear station, is said into ``findings``. ``dims``,
+    ``dress`` (building id -> the piece's `form` and `variant`) and ``label``
+    are a bank's sign's (`BANK_PYLON_DIMS`): a frontage is a forecourt."""
     placed = []
-    w, d, _h = SPECIES[PYLON_SPECIES]
+    w, d, _h = dims or SPECIES[PYLON_SPECIES]
     for bid, (cx, cy) in forecourts:
         best = None
         for road in roads_list:
@@ -1406,7 +1442,7 @@ def plan_pylons(roads_list, forecourts, markers=(), standing=(), keep_out=(), fi
             if best is None or dist < best[0]:
                 best = (dist, road, t)
         if best is None:
-            _say(findings, f"LOT_PYLON_NO_FRONTAGE: no road with a sidewalk for {bid}'s forecourt")
+            _say(findings, f"LOT_PYLON_NO_FRONTAGE: no road with a sidewalk for {bid}'s {label}")
             continue
         _dist, road, t0 = best
         side = (cx - road.a[0]) * road.perp[0] + (cy - road.a[1]) * road.perp[1]
@@ -1417,12 +1453,15 @@ def plan_pylons(roads_list, forecourts, markers=(), standing=(), keep_out=(), fi
         offset = kerb.sign * (road.width / 2.0 + road.sidewalk + PYLON_SETBACK + w / 2.0)
         lo, hi = road.slab if road.slab != (0.0, 0.0) else (0.0, road.length)
         piece = None
-        for dt in PYLON_STEPS:
+        for dt in steps:
             s = t0 + dt
             if s - d / 2.0 < lo or s + d / 2.0 > hi or not _clear_of_cuts(s, d / 2.0, kerb):
                 continue
             cand = _piece(f"Pylon_{bid}", PYLON_SPECIES, road, kerb, s, offset, 90.0,
-                          breaks=f"forecourt {bid}")
+                          breaks=f"{label} {bid}", dims=dims)
+            for k, v in ((dress or {}).get(bid) or {}).items():
+                if v:
+                    cand[k] = v
             # it stands BEHIND the band, on the ground, not on the sidewalk
             cand["base"] = "plate"
             r = _piece_rect(cand)
@@ -1436,7 +1475,7 @@ def plan_pylons(roads_list, forecourts, markers=(), standing=(), keep_out=(), fi
             break
         if piece is None:
             _say(findings, f"LOT_PYLON_NO_ROOM: no clear station for {bid}'s pylon within "
-                           f"{max(PYLON_STEPS):.0f} m of its forecourt on road {road.index}")
+                           f"{max(steps):.0f} m of its {label} on road {road.index}")
             continue
         placed.append(piece)
     return placed

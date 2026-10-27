@@ -602,6 +602,33 @@ def forecourts(site_spec, base_dir):
     return out
 
 
+def bank_fronts(site_spec, base_dir):
+    """``[(building id, (x, y), business)]``: every building whose door sign
+    reads as a bank's (`site_furniture.is_bank_business`, the words Zoo's
+    sign reads one from), with that sign's anchor in site space -- where its
+    time-and-temperature sign looks for frontage, as a gas station's pylon
+    looks from its canopy (`forecourts`)."""
+    import site_furniture
+    out = []
+    for b in site_spec.get("buildings") or []:
+        ref = _lights_ref_for(b)
+        if not ref:
+            continue
+        lp = os.path.join(base_dir, ref)
+        if not os.path.exists(lp):
+            continue
+        with open(lp, encoding="utf-8") as f:
+            lm = json.load(f)
+        placement = {"at": b["at"], "rot": b.get("rot", 0)}
+        for a in lm.get("anchors", []):
+            if a.get("type") == "sign" and site_furniture.is_bank_business(a.get("business")):
+                x, y, z = a.get("pos", [0.0, 0.0, 0.0])
+                wx, wy, _wz = _place_point(x, y, z, placement)
+                out.append((b["id"], (round(wx, 4), round(wy, 4)), str(a["business"])))
+                break
+    return out
+
+
 #: Every POINT a light anchor carries, each moved into site space with its
 #: building (0.99.1, roadmap 207). `target` is the stage light's aim, Deli
 #: Counter's club rig. Copied verbatim it stayed in the building's frame,
@@ -2206,7 +2233,9 @@ def yard_slabs(site_spec):
 
 def field_slabs(site_spec):
     """One slab per parking field (`site_fields`, 0.94.0), `field_<i>`, top
-    at FIELD_THICK, turned to its road: local x runs along the road."""
+    at FIELD_THICK, turned to its road: local x runs along the road. And one
+    per bank's drive-up (`site_driveup`), `driveup_<i>`: the same asphalt at
+    the same height, so every reader of the drawn surfaces sees it."""
     out = []
     for i, f in enumerate(site_spec.get("fields", []) or []):
         cx, cy = f["at"]
@@ -2215,6 +2244,13 @@ def field_slabs(site_spec):
                                  (sx, FIELD_THICK + GROUND_SINK, sy),
                                  (cx, (FIELD_THICK - GROUND_SINK) / 2, -cy),
                                  f["yaw_deg"], FIELD_THICK))
+    for i, d in enumerate(site_spec.get("driveups", []) or []):
+        cx, cy = d["at"]
+        sx, sy = d["size"]
+        out.append(_surface_slab(f"driveup_{i}", "parking",
+                                 (sx, FIELD_THICK + GROUND_SINK, sy),
+                                 (cx, (FIELD_THICK - GROUND_SINK) / 2, -cy),
+                                 d["yaw_deg"], FIELD_THICK))
     return out
 
 
@@ -3814,11 +3850,26 @@ def assemble(site_spec_path, out_dir=None, walkable=False, navqa=False,
         sx, _sy, sz = cv.get("size", COVER)
         _standing_f.append((cv["at"][0] - sx / 2.0, cv["at"][1] - sz / 2.0,
                             cv["at"][0] + sx / 2.0, cv["at"][1] + sz / 2.0))
+    # A BANK'S DRIVE-UP (site_driveup, Zoo 1.138.0), BEFORE the fields: a
+    # bank's own lane claims its side before a gap is offered to parking, and
+    # the fields keep off it as they keep off what stands
+    import site_driveup
+    import site_furniture as _sf_bank
+    _banks_du = bank_fronts(site_spec, base_dir)
+    driveups, driveup_pieces = site_driveup.plan_driveups(
+        _banks_du, _fs.roads(site_spec), _fsurf.tops(site_spec, ground=extent), _rects_f,
+        standing=_standing_f, ground=extent.rect, markers=list(cover_points.values()),
+        variants={bid: _sf_bank.bank_sign_variant(bus) for bid, _at, bus in _banks_du})
+    site_spec["driveups"] = driveups
+    _standing_f = _standing_f + [tuple(d["rect"]) for d in driveups]
+    for _d in driveups:
+        print(f"[lot] LOT_DRIVEUP_PLACED: {_d['name']} on road {_d['road']} kerb {_d['side']}, "
+              f"served lane runs {_d['served_travel']} the road")
     fields = site_fields.plan_fields(site_spec, _fs.roads(site_spec),
                                      _fsurf.tops(site_spec, ground=extent), _rects_f,
                                      standing=_standing_f, ground=extent.rect)
     site_spec["fields"] = fields
-    site_spec["driveways"] = [f["driveway"] for f in fields]
+    site_spec["driveways"] = [f["driveway"] for f in fields] + [d["driveway"] for d in driveups]
     _aps = [ap for rows in _fe._approach_points(site_spec, merged).values() for (_e, ap, _w) in rows]
     field_cars = site_fields.plan_cars(fields, _fs.roads(site_spec), list(cover_points.values()),
                                        _aps, standing=_standing_f,
@@ -3833,7 +3884,9 @@ def assemble(site_spec_path, out_dir=None, walkable=False, navqa=False,
     for _f in fields:
         print(f"[lot] LOT_FIELD_PLACED: {_f['name']} on road {_f['road']} kerb {_f['side']}, "
               f"{_f['bays']} bay(s) a side, {sum(1 for c in field_cars if c['field'] == _f['name'])} car(s)")
-    _field_rects = [tuple(f["rect"]) for f in fields]
+    # the drive-up's canopy and station stand as pieces; its block is kept off as a field's is
+    site_spec["cover"].extend(driveup_pieces)
+    _field_rects = [tuple(f["rect"]) for f in fields] + [tuple(d["rect"]) for d in driveups]
     import site_furniture
     import site_parking
     import site_streets
@@ -3885,6 +3938,18 @@ def assemble(site_spec_path, out_dir=None, walkable=False, navqa=False,
         keep_out=site_furniture.path_corridors(site_spec) + _site_spawns.footprints(site_spec, margin=0.5)
         + _field_rects,
         findings=furniture_findings)
+    # ...AND A BANK'S TIME-AND-TEMPERATURE SIGN (Zoo 1.138.0): the same
+    # planner at the bank's frontage, after the gas pylons so it yields to
+    # them, dressed in the door sign's name and colours
+    _banks = bank_fronts(site_spec, base_dir)
+    pylons = pylons + site_furniture.plan_pylons(
+        site_streets.roads(site_spec), [(bid, at) for bid, at, _b in _banks],
+        list(cover_points.values()), standing=_standing0 + [site_furniture._piece_rect(_p) for _p in pylons],
+        keep_out=site_furniture.path_corridors(site_spec) + _site_spawns.footprints(site_spec, margin=0.5)
+        + _field_rects,
+        findings=furniture_findings, dims=site_furniture.BANK_PYLON_DIMS, steps=site_furniture.BANK_PYLON_STEPS,
+        dress={bid: {"form": "bank", "variant": site_furniture.bank_sign_variant(bus)} for bid, _at, bus in _banks},
+        label="frontage")
     site_spec["cover"].extend(pylons)
     furniture = furniture + pylons
     # A DUMPSTER AT EACH BUILDING'S SERVICE SIDE (site_dumpsters, 0.90.0):

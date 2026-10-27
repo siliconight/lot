@@ -1,3 +1,64 @@
+## 0.132.0 - a bank's drive-up lane and its time-and-temperature sign
+
+**The walker's bank list, outside** (the factory's `docs/reference/BANK_INTERIOR_COMPS.md`, researched): a drive-up lane
+with a pneumatic tube, and a street sign that flashed the time and the temperature. Then "do the drive-up lane next".
+Zoo 1.138.0 draws the pieces: `price_pylon` form `bank`, `drive_up_tube` and `drive_up_canopy`.
+
+### Added
+- **A bank's time-and-temperature sign** (`site_furniture.plan_pylons`, the gas pylon's own planner).
+  - At the bank's frontage, the door sign standing for the canopy (`lot.bank_fronts`: every building whose door
+    sign's `business` reads as a bank's, by the words Zoo's sign reads one from -- bank, credit, savings).
+  - `BANK_PYLON_DIMS` 2.4 x 0.6 x 6.5 m, a branch's sign rather than a highway's, planned after the gas pylons so it
+    yields to them.
+  - Dressed form `bank` in `bank_sign_variant(business)`, the variant whose name and colours Zoo's door sign picks
+    (crc32 of the business, a mirror of Zoo's `teller_line_forms.variant_for` and Deli Counter's
+    `bank_teller_variant`).
+  - Its stations reach `BANK_PYLON_STEPS`, +/-24 m, past the building's ends. A branch sits close behind its sidewalk
+    (bank_branch_a02 2.2 m, under the 2.4 m face), so no station across its own frontage is clear. On the bank level
+    all thirteen of the gas pylon's +/-12 m stations met the building's footprint, grown 0.5 m (`LOT_PYLON_NO_ROOM`), and the sign
+    now stands at the lot's corner, in the 5 m gap beside the bank.
+  - `plan_pylons` takes `dims`, `dress`, `label` and `steps`. A gas pylon is the pylon it was.
+- **`site_driveup`: a bank's drive-up lane beside its wall.**
+  - From the back of its frontage's sidewalk, across from the wall: the served lane (4.0 m), the island (1.2 m) and the
+    passing lane (4.0 m).
+  - Entered and left by one `driveway` through the kerb, a parking field's own (the kerb dropped, nothing a crossing
+    gets).
+  - Paved as a field is (`lot.field_slabs` draws `driveup_<i>`, so every reader of the drawn surfaces sees it).
+  - Over the served lane, off the wall, Zoo's `drive_up_canopy` in the bank's variant. On the island under it, Zoo's
+    `drive_up_tube`, its receptacle toward the served lane and its tube risen to the canopy's run.
+  - **The island is on the driver's left**, where a US driver's window is. Which way the served lane runs is computed
+    from which side of the building the block is on (`served_travel`), and recorded.
+  - **A lane runs from the street to the first thing on its wall, and stops short of it**, no shorter than
+    `MIN_DEPTH` (the canopy's 6 m and 2 m to pull in). The bank level's bank has a door's landing on both side walls:
+    run full depth, both ends were refused; now its west lane is 12.2 m and stops at the landing.
+  - **The tighter end first.** A 9.2 m block fits where a 20.3 m parking field cannot, and the end with more room is
+    the one a field can use. On the bank level, field_0 east of the bank keeps its place.
+  - **The canopy's record is a column** (a pole's rule, `module_at`): Lot draws a cover record's greybox box and reads
+    its sightline break from `at` and `size`. A 4.9 x 6 m record 4.3 m tall would have stood a block across the served
+    lane, which the canopy -- two columns and a roof -- is not.
+  - Planned before the parking fields, so a bank's own lane claims its side before a gap is offered to parking; the
+    fields, pylons, dumpsters and pads keep off it.
+  - Refused and said, never forced: `LOT_DRIVEUP_NO_ROOM` names each end and the test that refused it, and
+    `LOT_DRIVEUP_ON_A_MARKER` covers an island within a marker's clearance.
+  - Not yet: a curb the island's length, lane arrows, and a light under the canopy.
+
+### Measured, the bank level (bank_block_001, seed 9082) assembled by this
+- `LOT_DRIVEUP_PLACED: driveup_b0 on road 0 kerb L, served lane runs away the road`.
+  - The block is x -84.2..-75.0, y -20.13..-7.97.
+  - The canopy's module is at (-77.40, -14.05), yaw 180, variant 11; the station is at (-79.60, -14.05), yaw 90.
+- `LOT_PYLON_PLACED: Pylon_b0 at (-43.0, -18.63)`, form `bank`, variant 11: the bank its door, its teller line and its
+  canopy name.
+- field_0 and field_1 are unmoved.
+
+### Tests
+- `tests/test_bank_sign.py` and `tests/test_site_driveup.py` (new). Both fail on 0.131.0.
+  - The variant is the one Zoo's door sign picks, and Lot's copied measures are Zoo's recipe's, when Zoo is beside the
+    repo.
+  - A drive-up stands beside the bank, its pieces facing the served lane, the island on the driver's left.
+  - An end that does not fit is passed, and neither is said. A landing shortens a lane. A marker on the island refuses
+    it.
+  - `field_slabs` draws the block.
+
 ## 0.131.0 - no parking where the bus pulls in
 
 **The walker, walking cold run 9386** (the factory's `docs/findings/walk_2026-10-23_9386/`, finding 10): "bus stop sign
