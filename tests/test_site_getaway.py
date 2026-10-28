@@ -180,3 +180,27 @@ def test_enemies_spread_along_one_leg_of_a_there_and_back_route():
         assert -60.0 + site_spawns.MIN_STANDOFF - 1e-6 <= ex <= 40.0 + 1e-6, (ex, ey)
         assert math.hypot(ex + 60.0, ey) >= site_spawns.MIN_STANDOFF - 1e-6
         assert abs(ey) <= 10.0, ("shoved off the route", ex, ey)
+
+
+def test_the_extraction_states_its_end_zone():
+    """0.136.0 (the factory's roadmap 323): the getaway's extraction carries
+    `zone_radius`, the spawn point to the van body's kerb side plus the
+    contract's player radius -- 1.40 + 0.35 -- so the zone reaches the van.
+    FAILS ON 0.135.0, whose extraction has no extent."""
+    spec = _probe()
+    g = site_getaway.plan(spec, lot.merge_gameplay(spec, SPECS), [], body_radius=0.35)
+    spawn, extr = g["markers"]
+    assert extr["zone_radius"] == 1.75 and "zone_radius" not in spawn
+    van = _rect(g["van"])
+    x, y = extr["at"]
+    gap = math.hypot(max(van[0] - x, 0.0, x - van[2]), max(van[1] - y, 0.0, y - van[3]))
+    assert gap < extr["zone_radius"], (gap, extr["zone_radius"])
+    assert "zone_radius" not in _plan()["markers"][1]
+
+
+def test_an_assembled_site_writes_the_zone_from_the_contract(tmp_path):
+    lot.assemble(PROBE, str(tmp_path))
+    g = json.loads((tmp_path / "coldrun_kerb_probe.site.gameplay.json").read_text(encoding="utf-8"))
+    extr = [m for m in g["site_markers"] if m.get("source") == "getaway_van" and m["type"] == "extraction"]
+    want = round(site_getaway.ZONE_TO_BODY + lot._agent()["characters"]["player"]["radius_m"], 3)
+    assert len(extr) == 1 and extr[0]["zone_radius"] == want

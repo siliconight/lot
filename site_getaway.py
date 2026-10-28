@@ -63,6 +63,10 @@ MAX_REACH = 30.0
 #: A door faces a road when its outward normal and the way to the road agree
 #: by at least this much.
 FACING_DOT = 0.5
+#: The crew's spawn to the van body's kerb side, in plan: in from the kerb
+#: line, then the body's gap off it. The extraction's zone reaches this far
+#: plus a body's radius, so a crew member with a hand on the van is in it.
+ZONE_TO_BODY = SPAWN_OFF_KERB + KERB_GAP
 
 
 def _doors(site_spec, merged, bid):
@@ -114,14 +118,20 @@ def _candidate(road, sign, pair):
     return record, (round(spawn[0], 3), round(spawn[1], 3))
 
 
-def plan(site_spec, merged=None, findings=None):
+def plan(site_spec, merged=None, findings=None, body_radius=None):
     """The getaway van and its markers for ``site_spec``, or None.
 
     Returns ``{"van": cover record, "markers": [crew_spawn, extraction],
     "door": the spawn building's door it serves, "reach": metres from that
     door to the crew's spawn}``. ``merged`` is `lot.merge_gameplay`'s, for the
     spawn building's doors; without it the van serves the building's centre.
-    ``findings`` (a list of strings) hears why there is no van."""
+    ``findings`` (a list of strings) hears why there is no van.
+
+    With ``body_radius`` (the contract's player radius, metres) the
+    extraction marker carries ``zone_radius``: the extent of the end zone a
+    game may send `zone.extraction` from (0.136.0, the factory's roadmap
+    323), `ZONE_TO_BODY` plus that radius. Lot only states it; whether a
+    game uses it, and for how long a crew must stand in it, are the game's."""
     say = findings.append if findings is not None else (lambda _m: None)
     mode = site_spec.get("mode", "heist")
     if mode != "heist":
@@ -169,6 +179,8 @@ def plan(site_spec, merged=None, findings=None):
     at = [spawn[0], spawn[1]]
     return {"van": record,
             "markers": [{"type": "crew_spawn", "at": list(at), "source": "getaway_van"},
-                        {"type": "extraction", "at": list(at), "source": "getaway_van",
-                         "getaway": VAN[0]}],
+                        dict({"type": "extraction", "at": list(at), "source": "getaway_van",
+                              "getaway": VAN[0]},
+                             **({"zone_radius": round(ZONE_TO_BODY + float(body_radius), 3)}
+                                if body_radius is not None else {}))],
             "door": [round(door[0], 3), round(door[1], 3)], "reach": round(reach, 3)}

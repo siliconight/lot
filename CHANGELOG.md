@@ -1,3 +1,13 @@
+## 0.136.0 - the getaway's end zone has an extent
+
+The factory's roadmap 323; the walker, of the zones a crew stands in at the end of a job: "we just have the event that
+we send (without spamming/rate limiting)". The getaway van's extraction marker now carries `zone_radius`: the crew's
+spawn point to the van body's kerb side (`site_getaway.ZONE_TO_BODY`, `SPAWN_OFF_KERB` 1.2 + `KERB_GAP` 0.20) plus the
+agent contract's player radius (0.35) -- 1.75 m, so a crew member with a hand on the van is inside it. Level Factory
+stages it as the extraction's `zone.extraction` event (Dispatch 0.7.0) when a level's gameplay events are on. Lot only
+states it: how long a crew stands in it, and what that ends, are the game's. Nothing else moves; a site with no van has
+no zone. Tests: tests/test_site_getaway.py, the extraction states its end zone, from the contract (fails on 0.135.0).
+
 ## 0.135.0 - the drive-up lane as the research drew it
 
 The walker, of the bank's outside frames: "fix those three", one of them the drive-up reading as a canopy in a parking

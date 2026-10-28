@@ -3746,7 +3746,8 @@ def assemble(site_spec_path, out_dir=None, walkable=False, navqa=False,
     # cover. The walker: "you spawn, do the job, then return to the car".
     import site_getaway
     getaway_findings = []
-    getaway = site_getaway.plan(site_spec, merged, getaway_findings)
+    getaway = site_getaway.plan(site_spec, merged, getaway_findings,
+                                body_radius=_agent()["characters"]["player"]["radius_m"])
     if getaway is not None:
         site_spec.setdefault("cover", []).append(getaway["van"])
         declared = site_spec.setdefault("site_markers", [])
