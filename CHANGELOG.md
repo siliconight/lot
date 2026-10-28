@@ -1,3 +1,42 @@
+## 0.135.0 - the drive-up lane as the research drew it
+
+The walker, of the bank's outside frames: "fix those three", one of them the drive-up reading as a canopy in a parking
+lot, then "do some more research, make it look better". A bank drive-up plan details a clearance "headache bar" at the
+lane's entry (Albuquerque, 2022); a traffic review asks a bank's drive-up for a pavement arrow and its lanes kept apart
+from the lot's traffic (Albuquerque; Madison).
+
+### Added
+- **`site_driveup.lane_pieces`: a clearance bar and two bollards a drive-up.**
+  - Zoo 1.139.0's `clearance_bar` stands across the served lane, `CLEARANCE_IN` (1 m) into the block from its entry
+    end, its plate facing the car coming in. Its posts are 3 cm in from the wall and the island, the bar `LANE` - 0.06
+    wide.
+  - Its record is a post, a pole's rule (`module_at`), so no box stands across the lane in greybox or in the sightline
+    count.
+  - Two of Zoo's `bollard`s guard the station on the island line, `BOLLARD_OFF` (1 m) either side of it.
+- **`site_driveup.markings`: the lanes' paint.**
+  - The island is painted safety yellow, the block's length less a metre each end.
+  - Each lane carries an arrow (a shaft and two heads) the way it runs: the served lane's away from the road or
+    toward it, by `served_travel`, and the passing lane's the other.
+  - Drawn in the site's paint with the fields' bay lines, and carried in `<site>.markings.json`.
+
+### Changed
+- **The bank's outside pieces ask for Zoo 1.139.0's materials**: the canopy, station and clearance bar
+  `metal_painted`, the night drop `metal_bare`, the bollard its own `metal_painted`. delco_1997's `metal` is street
+  rust, and the canopy's navy fascia read near black on it. `tests/test_bank_outside_materials.py` holds each row to
+  its genome.
+
+### Measured, the bank level (bank_block_001, seed 9082) assembled by this
+- The clearance bar is at (-78.87, -19.13), yaw 0, 1 m inside the served lane's entry and facing the road.
+- The bollards are at (-79.60, -15.05) and (-79.60, -13.05), either side of the station.
+- The paint is the island and two arrows, 7 strokes.
+
+### Tests
+- `tests/test_driveup_lane.py` (new; fails on 0.134.0):
+  - the clearance bar spans the served lane at its entry, facing the car, its record a post;
+  - two bollards are on the island line either side of the station;
+  - the paint is a yellow island and an arrow each lane the way it runs;
+  - the markings manifest carries it.
+
 ## 0.134.0 - the bank's outside pieces ask Zoo for their own material
 
 **Found by the first frames of the bank's outside** (the factory's `docs/findings/bank_interior/`, frames 11-12, the bank

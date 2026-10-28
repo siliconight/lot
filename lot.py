@@ -1897,8 +1897,12 @@ COVER_MATERIALS = {"box_truck": "metal_painted", "cargo_container": "metal_paint
                    # (LOT_COVER_MODULE_MISSING) and the night drop would hang
                    # nothing. `tests/test_bank_outside_materials.py` holds
                    # each row to its genome.
-                   "drive_up_canopy": "metal", "drive_up_tube": "metal",
-                   "night_drop": "metal",
+                   "drive_up_canopy": "metal_painted", "drive_up_tube": "metal_painted",
+                   "night_drop": "metal_bare",
+                   # ...on their own surfaces (0.135.0, Zoo 1.139.0): delco_1997's `metal` is
+                   # `metal_rusted_street`, and the canopy's navy fascia read near black on it;
+                   # and the lane's clearance bar and the bollards at its station
+                   "clearance_bar": "metal_painted", "bollard": "metal_painted",
                    # the dumpster at a building's service side (site_dumpsters)
                    "dumpster": "metal_painted",
                    # the bags beside it (site_dumpsters.plan_bags, 0.104.0):
@@ -2655,6 +2659,9 @@ def _outdoor_nodes(site_spec, preview=False, self_flooring=None, skins=None,
     import site_fields as _site_fields
     marks = list(site_streets.markings(street_roads))
     marks += list(_site_fields.markings(site_spec.get("fields") or [], street_roads))
+    # ...and a drive-up's: its island in safety yellow, an arrow on each lane (0.135.0)
+    import site_driveup as _site_driveup
+    marks += list(_site_driveup.markings(site_spec.get("driveups") or [], street_roads))
     mb, ms, mf = _marking_meshes(marks, skins)
     body += mb
     sub += ms
@@ -3896,6 +3903,10 @@ def assemble(site_spec_path, out_dir=None, walkable=False, navqa=False,
         print(f"[lot] LOT_FIELD_PLACED: {_f['name']} on road {_f['road']} kerb {_f['side']}, "
               f"{_f['bays']} bay(s) a side, {sum(1 for c in field_cars if c['field'] == _f['name'])} car(s)")
     # the drive-up's canopy and station stand as pieces; its block is kept off as a field's is
+    # ...and each lane's clearance bar and the station's bollards (0.135.0)
+    _du_roads = {r.index: r for r in _fs.roads(site_spec)}
+    for _d in driveups:
+        driveup_pieces += site_driveup.lane_pieces(_d, _du_roads[_d["road"]])
     site_spec["cover"].extend(driveup_pieces)
     _field_rects = [tuple(f["rect"]) for f in fields] + [tuple(d["rect"]) for d in driveups]
     import site_furniture

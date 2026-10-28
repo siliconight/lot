@@ -815,6 +815,11 @@ def _field_markings(site_spec, rl):
     return site_fields.markings(site_spec.get("fields") or [], rl)
 
 
+def _driveup_markings(site_spec, rl):
+    import site_driveup
+    return site_driveup.markings(site_spec.get("driveups") or [], rl)
+
+
 def manifest(site_spec, roads_list=None, findings=None) -> dict:
     """`<site>.markings.json`: the roads and their paint, in spec space."""
     rl = roads_list if roads_list is not None else roads(site_spec, findings)
@@ -833,7 +838,7 @@ def manifest(site_spec, roads_list=None, findings=None) -> dict:
                                        for c in k.cuts]} for k in r.kerbs]}
                   for r in rl],
         # the road's paint, then the parking fields' bay lines (0.94.0)
-        "markings": markings(rl) + _field_markings(site_spec, rl),
+        "markings": markings(rl) + _field_markings(site_spec, rl) + _driveup_markings(site_spec, rl),
         "frontages": [{"road": f.road, "side": f.side, "building": f.building,
                        "t": [round(f.t0, 4), round(f.t1, 4)],
                        "depth": round(f.depth, 4),

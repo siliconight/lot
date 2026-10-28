@@ -13,7 +13,7 @@ sys.path.insert(0, HERE)
 import lot  # noqa: E402
 
 ZOO = os.environ.get("LOT_ZOO_ROOT") or os.path.join(os.path.dirname(HERE), "zoo")
-SPECIES = ("drive_up_canopy", "drive_up_tube", "night_drop", "price_pylon")
+SPECIES = ("drive_up_canopy", "drive_up_tube", "night_drop", "price_pylon", "clearance_bar", "bollard")
 
 
 def test_every_bank_outside_piece_has_a_row():
