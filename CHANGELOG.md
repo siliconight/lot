@@ -1,3 +1,20 @@
+## 0.137.0 - what stands outside a shop's door
+
+The factory's roadmap 324; the walker, 2026-10-29, of the game's vertical slice: "Things still look simple, and
+computer made... handcrafted, bespoke, varied", and of the target, "detail of set dressing". The street's furniture
+was spaced by rule and nothing on it said what any building was. `site_frontage.plan_frontage` stands a shop's
+group against its street face beside its way in -- a soda machine nearest the door, a stack of milk crates, a news
+box, each Zoo's genome at its default -- on the building's `front` wall when one is decided, to one side of the door
+the id picks, each piece stepping along the wall until it is clear of the door's approach point, the paths and walks,
+the road bands, the other buildings, what already stands and the mission's markers; its front faces out. A shop is a
+building whose ARCHETYPE carries a shop's word (gas, convenience, deli, pizza, card, video, pharmacy, store, ...); a
+bank, an Empty or a house is not, and keeps a clear front. A shop where nothing fits is said
+(`LOT_FRONTAGE_NO_ROOM`). The material table gains `vending_machine` (metal_painted) and `milk_crate_stack` (plastic).
+On the slice (the factory's `docs/findings/slice_look/`, slice 6): the gas station's shop and the card shop each
+carry the group; priced against slice 5, draws median +0, largest +24. The first slice-6 build placed nothing: the
+draft read a building's `id`, which is the site's `b0`, and its tests, naming buildings by archetype, passed --
+retracted in the module, and the tests now hold Lot's own record shape. Tests: tests/test_site_frontage.py.
+
 ## 0.136.0 - the getaway's end zone has an extent
 
 The factory's roadmap 323; the walker, of the zones a crew stands in at the end of a job: "we just have the event that

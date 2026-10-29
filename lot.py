@@ -1905,6 +1905,8 @@ COVER_MATERIALS = {"box_truck": "metal_painted", "cargo_container": "metal_paint
                    "clearance_bar": "metal_painted", "bollard": "metal_painted",
                    # the dumpster at a building's service side (site_dumpsters)
                    "dumpster": "metal_painted",
+                   # what stands outside a shop's door (site_frontage, 0.137.0), each its genome's default
+                   "vending_machine": "metal_painted", "milk_crate_stack": "plastic",
                    # the bags beside it (site_dumpsters.plan_bags, 0.104.0):
                    # Zoo 1.93.0's one option, each bag's colour in its Wear
                    "trash_bags": "plastic",
@@ -4032,6 +4034,21 @@ def assemble(site_spec_path, out_dir=None, walkable=False, navqa=False,
         print(f"[lot] LOT_BAGS_PLACED: {_p['name']} at ({_p['at'][0]}, {_p['at'][1]}) "
               f"yaw {_p['yaw']} beside {_p['dumpster']}, heap {_p['variant']}, "
               + ("on its pad" if _p["on_pad"] else "off its pad"))
+    # WHAT STANDS OUTSIDE A SHOP'S DOOR (site_frontage, 0.137.0): a soda machine, a stack of milk crates and a
+    # news box against a shop's street face beside its way in -- the life a 1990s shop keeps outside, which the
+    # rule-spaced kerb furniture never said. After the bags, so it sees them standing; before the parking and the
+    # cover planner, so both see it.
+    import site_frontage
+    _standing_f = list(_standing_y) + [site_furniture._piece_rect(_p) for _p in bags]
+    frontage = site_frontage.plan_frontage(
+        site_spec, merged, site_streets.roads(site_spec), list(cover_points.values()), standing=_standing_f,
+        keep_out=site_furniture.path_corridors(site_spec) + _field_rects,
+        ground=extent.rect, findings=furniture_findings)
+    site_spec["cover"].extend(frontage)
+    furniture = furniture + frontage
+    for _p in frontage:
+        print(f"[lot] LOT_FRONTAGE_PLACED: {_p['name']} {_p['species']} at ({_p['at'][0]}, {_p['at'][1]}) "
+              f"yaw {_p['yaw']} outside {_p['building']}'s {_p['wall']} door")
     for _p in pylons:
         print(f"[lot] LOT_PYLON_PLACED: {_p['name']} at ({_p['at'][0]}, {_p['at'][1]}) "
               f"yaw {_p['yaw']} on road {_p['road']} kerb {_p['kerb']}")
