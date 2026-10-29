@@ -1,3 +1,22 @@
+## 0.138.0 - where the street was dug up
+
+The factory's roadmap 324; the walker, 2026-10-29, of the game's vertical slice: "Things still look simple, and
+computer made", and of the target, "detail and placement of hard surfaces". The avenue is the largest surface in
+every street frame and it was one even field of the road pack. `site_patches` cuts a patch of newer asphalt where
+each building's services were trenched in: from `PAST_MAIN` beyond the main under the centre line to the kerb face
+on the building's side, `TRENCH_W` along the road (a 24 in trench and a 6 in T-cut each side), at the building's
+frontage centre moved by a seeded fraction of it -- two laterals, its water and its sewer, `LATERAL_GAP` apart on a
+frontage of `TWO_LATERALS_M` or more. A building is served by its nearest street however far back it stands (a gas
+station across its forecourt still is); a site with no street takes none. A patch runs across the lines along the
+road, as a real one does, and keeps `PATCH_CLEAR` from every other marking and every drain, on the road's own slab
+and out of every junction's box and gap, stepping along the road to the nearest clear station. Drawn as the paint
+is: the road's own pack turned a quarter, offset and tinted `PATCH_TINT` (0.42 -- a fresh cap near black against
+weathered grey), one OBJ a 32 m cell, lightmapped, no shadow, no collision, `PROUD` over the paint. RETRACTED, KEPT in
+the module: the first slice-9 build drew a 0.62 tint with a 4 in sealant band round each patch; the body could not be
+told from the road and the band, under a pixel at the street's distances, broke into dashed black lines. With the art and the road's pack only: a candidate's greybox lot carries none.
+On the slice (the factory's `docs/findings/slice_look/`, slice 9b): 8 patches, two a building across the avenue's
+near lanes; priced against slice 8, draws median +0, largest +4. Tests: tests/test_site_patches.py.
+
 ## 0.137.0 - what stands outside a shop's door
 
 The factory's roadmap 324; the walker, 2026-10-29, of the game's vertical slice: "Things still look simple, and

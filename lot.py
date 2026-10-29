@@ -2700,6 +2700,19 @@ def _outdoor_nodes(site_spec, preview=False, self_flooring=None, skins=None,
         print("[lot] drains: %d manhole cover(s), %d inlet(s), %d sidewalk lid(s)" % tuple(
             sum(1 for d in drains if d["kind"] == k) for k in ("manhole", "inlet", "walk_cover")))
 
+        # THE UTILITY CUTS (0.138.0, `site_patches`, the factory's roadmap 324): a patch of newer
+        # asphalt where each building's services were trenched in from the main, its joints sealed;
+        # the road's own pack retinted, so a greybox road (no pack) carries none.
+        import site_patches
+        patches = site_patches.plan(site_spec, street_roads, marks, drains)
+        pb, ps, pf = site_patches.meshes(patches, MARKING_Y + SURFACE_TIER / 2.0, skins.get("road"),
+                                         paint_offset, _mat_sub)
+        body += pb
+        sub += ps
+        if files is not None:
+            files.update(pf)
+        print(f"[lot] utility cuts: {len(patches) if pb else 0} patch(es)")
+
     # THE SHOP SIGNS. A lit cabinet over each door, on the facade that
     # faces the street (`sign_placement`), drawn here rather than as a
     # prop slot because it hangs on a wall: it has no footprint on the
