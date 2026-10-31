@@ -2349,6 +2349,30 @@ def _marking_quad(m):
             for a, b in ((-1, -1), (1, -1), (1, 1), (-1, 1))]
 
 
+def _marking_quads(m):
+    """The quads marking ``m`` is painted as (0.139.0): one, `_marking_quad`'s, or -- where `site_streets.wheel_gaps`
+    wore it through (``gaps``, its worn spans across it from its centre, left +) -- one a painted piece between them,
+    each in `_marking_quad`'s corner order."""
+    gaps = sorted(tuple(g) for g in m.get("gaps") or ())
+    if not gaps:
+        return [_marking_quad(m)]
+    along, across = m["size"]
+    r = math.radians(float(m["yaw"]))
+    c, s = math.cos(r), math.sin(r)
+    x, y = float(m["at"][0]), float(m["at"][1])
+    ha, hc = along / 2.0, across / 2.0
+    pieces, cursor = [], -hc
+    for g0, g1 in gaps:
+        if g0 > cursor:
+            pieces.append((cursor, g0))
+        cursor = max(cursor, g1)
+    if cursor < hc:
+        pieces.append((cursor, hc))
+    return [[(x + a * ha * c - b * s, y + a * ha * s + b * c)
+             for a, b in ((-1, b0), (1, b0), (1, b1), (-1, b1))]
+            for b0, b1 in pieces if b1 - b0 > 1e-6]
+
+
 def _marking_key(m):
     """What a marking IS, for `paint_offset`: its road (or field), kind and
     plan position -- the key the per-marking materials hashed."""
@@ -2414,15 +2438,17 @@ def _marking_meshes(marks, skins):
         verts, uvs, faces = [], [], []
         for m in groups[key]:
             off = paint_offset(_marking_key(m)) if paint else (0.0, 0.0, 0.0)
-            base = len(verts)
-            for px, py in _marking_quad(m):
-                gx, gz = px, -py
-                verts.append((gx, top, gz))
-                uvs.append((gx * scale + off[0], gz * scale + off[2]))
-            faces.append((base + 1, base + 2, base + 3))
-            faces.append((base + 1, base + 3, base + 4))
+            # a quad a painted piece: a bar the wheels wore through is several (0.139.0)
+            for quad in _marking_quads(m):
+                base = len(verts)
+                for px, py in quad:
+                    gx, gz = px, -py
+                    verts.append((gx, top, gz))
+                    uvs.append((gx * scale + off[0], gz * scale + off[2]))
+                faces.append((base + 1, base + 2, base + 3))
+                faces.append((base + 1, base + 3, base + 4))
         lines = [f"# Lot: the site's road paint, colour {slug}, cell ({cx}, {cy}) of "
-                 f"{PAINT_CELL_M:g} m, {len(groups[key])} marking(s), a quad each",
+                 f"{PAINT_CELL_M:g} m, {len(groups[key])} marking(s), a quad a painted piece",
                  f"o {name}"]
         # six decimals: a bay tick is 0.3 m long and its direction is read off
         # its two corners, which four decimals turned by 3e-4 on a diagonal road

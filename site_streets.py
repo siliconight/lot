@@ -18,6 +18,7 @@ Pure: dicts in, records out. No Godot, no Blender, stdlib only.
 from __future__ import annotations
 
 import math
+import zlib
 from dataclasses import dataclass, field
 
 #: A crossing's dropped kerb is widened by this on each side so a body
@@ -684,6 +685,50 @@ def _turn_corners(frs, roads_list, rects, others_of):
             fa.t0, fa.t1 = t0, t1
 
 
+#: WHERE TYRES WEAR THE PAINT (0.139.0). The walker, of the vertical slice: "keep getting us closer to that amazing
+#: vertical slice look". Paint a car drives across wears where its wheels run: a crosswalk's bars and a stop bar go in
+#: two bands a lane, and the slice's were whole. Each driving lane (`approach_lanes`, the carriageway less its parking)
+#: carries two wheel paths, its centre plus and minus half a car's `TRACK_M`; where one crosses a bar, `WHEEL_WORN` of
+#: the time (seeded per bar and path, so a rebuild wears the same street) the bar is worn through `WHEEL_PATH_M` wide.
+#: The marking stays ONE marking -- the street-control probe and the manifest count bars -- carrying `gaps`, its worn
+#: spans across it from its centre (left +); Lot's mesh writer lays a quad a painted piece. Edge and centre lines run
+#: along the wheel paths, not across them, and wear as the paint pack wears them.
+TRACK_M = 1.55
+WHEEL_PATH_M = (0.3, 0.5)
+WHEEL_WORN = 0.7
+
+
+def wheel_offsets(road) -> list:
+    """Offsets across ``road`` (left +) of every wheel path: two a driving lane, at its centre plus and minus half
+    `TRACK_M`, the lanes `approach_lanes` counts in each driving half."""
+    half = road.width / 2.0 - (LANE_DEPTH if has_parking(road) else 0.0)
+    n = approach_lanes(road)
+    w = half / n
+    out = []
+    for sgn in (1, -1):
+        for i in range(n):
+            c = sgn * (i + 0.5) * w
+            out += [c - TRACK_M / 2.0, c + TRACK_M / 2.0]
+    return sorted(out)
+
+
+def wheel_gaps(road, offset: float, across: float, key: str) -> list:
+    """[[a0, a1]] the wheel paths wear through a bar centred ``offset`` across ``road`` and ``across`` wide, from its
+    centre (left +), seeded by ``key``; a path whose band would reach the bar's end is left painted."""
+    out = []
+    for k, w in enumerate(wheel_offsets(road)):
+        h = zlib.crc32(f"{key}|{k}".encode("utf-8"))
+        if (h % 1000) / 1000.0 >= WHEEL_WORN:
+            continue
+        width = WHEEL_PATH_M[0] + (WHEEL_PATH_M[1] - WHEEL_PATH_M[0]) * ((h // 1000) % 1000) / 999.0
+        u = w - offset
+        a0, a1 = u - width / 2.0, u + width / 2.0
+        if a0 <= -across / 2.0 or a1 >= across / 2.0:
+            continue
+        out.append([round(a0, 4), round(a1, 4)])
+    return out
+
+
 def _marking(kind, road, t, offset, along, across, color, **extra):
     x, y = road.point(t, offset)
     m = {"kind": kind, "road": road.index, "at": [round(x, 4), round(y, 4)],
@@ -772,9 +817,12 @@ def markings(roads_list) -> list:
                 start = walk_paint(t_c, w_c)[0]
                 for j in range(n):
                     tb = start + j * (BAR_WIDTH + BAR_GAP) + BAR_WIDTH / 2.0
+                    span = road.width - 2.0 * EDGE_INSET
+                    # worn where the wheels cross it (0.139.0)
+                    gaps = wheel_gaps(road, 0.0, span, f"{road.index}|bar|{tb:.3f}")
                     out.append(_marking("crosswalk_bar", road, tb, 0.0, BAR_WIDTH,
-                                        road.width - 2.0 * EDGE_INSET, WHITE,
-                                        station=station))
+                                        span, WHITE, station=station,
+                                        **({"gaps": gaps} if gaps else {})))
             if not stops:
                 continue
             # a stop bar on the approach lane each way. Traffic keeps right
@@ -787,12 +835,17 @@ def markings(roads_list) -> list:
             t_lo = lo - STOP_BAR_SETBACK - STOP_BAR_DEPTH / 2.0
             t_hi = hi + STOP_BAR_SETBACK + STOP_BAR_DEPTH / 2.0
             sgn_in = {s: (1.0 if right_side(s) == "L" else -1.0) for s in (1, -1)}
+            # each worn where its lane's wheels cross it (0.139.0)
             if t_lo - STOP_BAR_DEPTH / 2.0 > road.slab[0]:
+                gaps = wheel_gaps(road, sgn_in[1] * lane / 2.0, lane, f"{road.index}|stop|{t_lo:.3f}")
                 out.append(_marking("stop_bar", road, t_lo, sgn_in[1] * lane / 2.0,
-                                    STOP_BAR_DEPTH, lane, WHITE, station=station))
+                                    STOP_BAR_DEPTH, lane, WHITE, station=station,
+                                    **({"gaps": gaps} if gaps else {})))
             if t_hi + STOP_BAR_DEPTH / 2.0 < road.slab[1]:
+                gaps = wheel_gaps(road, sgn_in[-1] * lane / 2.0, lane, f"{road.index}|stop|{t_hi:.3f}")
                 out.append(_marking("stop_bar", road, t_hi, sgn_in[-1] * lane / 2.0,
-                                    STOP_BAR_DEPTH, lane, WHITE, station=station))
+                                    STOP_BAR_DEPTH, lane, WHITE, station=station,
+                                    **({"gaps": gaps} if gaps else {})))
     return out
 
 

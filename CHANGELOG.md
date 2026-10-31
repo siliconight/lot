@@ -1,3 +1,19 @@
+## 0.139.0 - where tyres wear the paint
+
+The factory's roadmap 324; the walker, of the vertical slice: "keep getting us closer to that amazing vertical slice
+look". Paint a car drives across wears where its wheels run, and every crosswalk bar and stop bar was whole. Each
+driving lane (`site_streets.approach_lanes`, the carriageway less its parking) carries two wheel paths
+(`wheel_offsets`: its centre plus and minus half a car's `TRACK_M`, 1.55 m); where one crosses a crosswalk bar or a
+stop bar, `WHEEL_WORN` (70 %) of the time -- seeded per bar and path, so a rebuild wears the same street -- the bar
+is worn through `WHEEL_PATH_M` (0.3-0.5 m) wide (`wheel_gaps`). The marking stays one marking, carrying `gaps`, so the
+street-control probe and the manifest still count bars; `lot._marking_quads` lays a quad a painted piece, each
+sharing its marking's scuff offset and its cell. Edge and centre lines run along the wheel paths and are left as the
+paint pack wears them. Built and held from 2026-10-30 until a level had a junction to wear: the slice's side streets
+(Level Factory 0.275.0).
+
+Tests: tests/test_wheel_wear.py (fails on 0.138.0); tests/test_marking_meshes.py and tests/test_street_rules.py count
+a quad a painted piece.
+
 ## 0.138.0 - where the street was dug up
 
 The factory's roadmap 324; the walker, 2026-10-29, of the game's vertical slice: "Things still look simple, and

@@ -305,8 +305,10 @@ def test_each_marking_wears_its_own_paint_offset_and_keeps_it(tmp_path):
         return found
 
     first = offsets()
-    n_marks = len(site_streets.markings(site_streets.roads(spec)))
-    assert len(first) == n_marks > 10
+    marks = site_streets.markings(site_streets.roads(spec))
+    n_marks = len(marks)
+    # a quad a painted piece; a worn bar's pieces share their marking's offset (0.139.0)
+    assert len(first) == sum(len(lot._marking_quads(m)) for m in marks) and n_marks > 10
     assert len(set(first.values())) == n_marks            # no two markings share one
     assert offsets() == first                             # stable within a process
     # and across processes, whose str hash is salted differently

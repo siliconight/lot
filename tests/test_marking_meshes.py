@@ -25,6 +25,11 @@ def _quads(text):
     return [(v[i:i + 4], vt[i:i + 4]) for i in range(0, len(v), 4)]
 
 
+def _centre(quad):
+    """A quad's plan corners' mean, in the OBJ's (x, -y) frame, rounded."""
+    return (round(sum(x for x, _y in quad) / 4.0, 3), round(-sum(y for _x, y in quad) / 4.0, 3))
+
+
 def test_one_mesh_a_colour_a_quad_a_marking_and_the_nodes():
     spec = _spec()
     files = {}
@@ -34,7 +39,9 @@ def test_one_mesh_a_colour_a_quad_a_marking_and_the_nodes():
     assert len(files) >= len(colours) >= 2
     assert all(re.fullmatch(r"site_marks_\d{3}_\d{3}_\d{3}_c\d{3}_\d{3}\.obj", f)
                for f in files), sorted(files)
-    assert sum(len(_quads(t)) for t in files.values()) == len(marks)
+    # a quad a painted piece: one a marking, more where the wheels wore a bar through (0.139.0)
+    pieces = sum(len(lot._marking_quads(m)) for m in marks)
+    assert sum(len(_quads(t)) for t in files.values()) == pieces > len(marks)
     nodes = [l for l in body if l.startswith('[node name="site_marks_')]
     assert len(nodes) == len(files) and all('type="MeshInstance3D"' in l for l in nodes)
     txt = "\n".join(body)
@@ -53,7 +60,7 @@ def test_the_quads_lie_where_the_markings_are_at_the_paint_height():
     files = {}
     lot._outdoor_nodes(spec, files=files)
     marks = site_streets.markings(site_streets.roads(spec))
-    want = {(round(m["at"][0], 3), round(-m["at"][1], 3)) for m in marks}
+    want = {_centre(q) for m in marks for q in lot._marking_quads(m)}
     got = set()
     top = lot.MARKING_Y + lot.SURFACE_TIER / 2.0
     for text in files.values():
@@ -82,7 +89,9 @@ def test_each_marking_keeps_its_wear_offset_in_its_uvs_under_a_paint_pack(tmp_pa
     for text in files.values():
         for verts, uvs in _quads(text):
             offsets.append((round(uvs[0][0] - verts[0][0] * s, 4), round(uvs[0][1] - verts[0][2] * s, 4)))
-    assert len(offsets) == len(marks) and len(set(offsets)) == len(marks)   # each its own scuffs
+    # each marking its own scuffs, shared by its pieces where the wheels wore it through (0.139.0)
+    assert len(offsets) == sum(len(lot._marking_quads(m)) for m in marks)
+    assert len(set(offsets)) == len(marks)
     txt = "\n".join(sub)
     m = txt[txt.index('id="Mat_site_marks_'):]
     assert 'albedo_texture = ExtResource(' in m and "uv1_triplanar" not in m and "uv1_scale = Vector3(1, 1, 1)" in m
@@ -105,14 +114,20 @@ def test_the_paint_is_cut_into_cells_by_each_markings_centre():
     files = {}
     body, _sub = lot._outdoor_nodes(spec, files=files)
     cell = lot.PAINT_CELL_M
+    # each piece in its MARKING's cell -- the cut is by a marking's centre, and the pieces of a worn bar stay with it
+    marks = site_streets.markings(site_streets.roads(spec))
+    home = {}
+    for mk in marks:
+        c = (math.floor(float(mk["at"][0]) / cell), math.floor(float(mk["at"][1]) / cell))
+        for q in lot._marking_quads(mk):
+            home.setdefault(_centre(q), set()).add(c)
     for fname, text in files.items():
         m = re.fullmatch(r"site_marks_(\d{3}_\d{3}_\d{3})_c(\d{3})_(\d{3})\.obj", fname)
         assert m, fname
         cx, cy = int(m.group(2)) - 500, int(m.group(3)) - 500
         for verts, _uv in _quads(text):
-            px = sum(x for x, _y, _z in verts) / 4.0
-            py = -sum(z for _x, _y, z in verts) / 4.0
-            assert (math.floor(px / cell), math.floor(py / cell)) == (cx, cy), (fname, px, py)
+            key = (round(sum(x for x, _y, _z in verts) / 4.0, 3), round(sum(z for _x, _y, z in verts) / 4.0, 3))
+            assert (cx, cy) in home.get(key, ()), (fname, key)
     colours = {f.split("_c")[0] for f in files}
     assert len(files) > len(colours)                 # the probe's streets span several cells
     nodes = [l for l in body if l.startswith('[node name="site_marks_')]
