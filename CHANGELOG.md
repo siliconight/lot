@@ -1,3 +1,19 @@
+## 0.140.0 - a utility cut has an age
+
+The factory's roadmap 324 (the vertical slice). Every patch `site_patches` cuts wore one tint, `PATCH_TINT` (0.42 of
+the road's pack), so every cut on a 1999 avenue read as laid last week; in the slice's sodium pools, once Pixelcoat
+0.66.0 lifted the road to a weathered albedo, each was a near-black bar across the lane, read as a painted shadow
+(the factory's docs/findings/slice_look/, slices 27 and 28). A street's cuts are of every age, and a cap weathers
+toward the road round it: each patch now draws a seeded `age` in [0, 1) (by its building and lateral) and wears
+`PATCH_TINT` fresh to `OLDEST_TINT` (0.84, 0.84, 0.85) old, linearly (`tint_of`). The age rides in the mesh's vertex
+colour (`v x y z r g b`, which Godot 4.7's OBJ importer keeps -- probed) on the one material, whose tint is
+`OLDEST_TINT`, with `vertex_color_use_as_albedo` and `vertex_color_is_srgb`: colour-only variation is never a new
+material, so no draw is added. On the slice (seed 9205): 8 patches, ages 0.03 to 0.98; draws +0 median, +0.5 largest
+against slice 27.
+
+Tests: tests/test_patch_age.py (fails on 0.139.0); tests/test_site_patches.py reads the oldest tint and the vertex
+colour flags.
+
 ## 0.139.0 - where tyres wear the paint
 
 The factory's roadmap 324; the walker, of the vertical slice: "keep getting us closer to that amazing vertical slice

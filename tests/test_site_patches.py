@@ -105,7 +105,9 @@ def test_the_meshes_are_the_road_pack_retinted_proud_of_the_paint_and_no_sealant
     assert names and all("_asphalt_" in n for n in names)
     text = "\n".join(sub)
     assert 'albedo_texture = ExtResource("road_pack_albedo")' in text
-    assert "albedo_color = Color(0.42, 0.42, 0.44, 1)" in text
+    # the material wears the oldest tint; each patch's age darkens it in its vertex colour (0.140.0)
+    assert "albedo_color = Color(0.84, 0.84, 0.85, 1)" in text
+    assert "vertex_color_use_as_albedo = true" in text and "vertex_color_is_srgb = true" in text
     assert "cast_shadow = 0" in "\n".join(body)
     ys = {n: {float(ln.split()[2]) for ln in files[n].splitlines() if ln.startswith("v ")} for n in names}
     for n, y in ys.items():

@@ -67,6 +67,15 @@ LINES_ALONG = site_drains.LINES_ALONG
 #: newer asphalt over the road's pack: much darker, a little cooler -- a fresh cap is near black against
 #: weathered grey (0.62, the first build's, could not be told from the road at the street's stations)
 PATCH_TINT = (0.42, 0.42, 0.44)
+#: A CUT HAS AN AGE (0.140.0). Every patch wore `PATCH_TINT`, so every cut on a 1999 avenue read as laid last
+#: week: in the slice's sodium pools, once Pixelcoat 0.66.0 lifted the road to a weathered albedo, each was a
+#: near-black bar across the lane, read as a painted shadow (the factory's docs/findings/slice_look/, slice 27). A
+#: street's cuts are of every age, and a cap weathers toward the road round it. Each patch draws a seeded ``age``
+#: in [0, 1) and wears `PATCH_TINT` at 0 to `OLDEST_TINT` at 1, linearly, so a few stand out fresh and most have
+#: nearly gone back to the road. The age rides in the mesh's vertex colour on the one material, whose tint is
+#: `OLDEST_TINT` -- colour-only variation is never a new material (the factory's CLAUDE.md, "Draw calls are the
+#: budget"), so the draw count is the one it was.
+OLDEST_TINT = (0.84, 0.84, 0.85)
 PROUD = site_drains.PROUD
 PATCH_CELL_M = 32.0
 #: how far a station is stepped, and how many times, before it is given up
@@ -145,6 +154,12 @@ def _clear_station(road, t, o0, o1, obstacles, blocked):
     return None
 
 
+def tint_of(age):
+    """The tint a patch of ``age`` (0 fresh, 1 oldest) wears: `PATCH_TINT` to `OLDEST_TINT`, linearly."""
+    a = min(max(float(age), 0.0), 1.0)
+    return tuple(f + (o - f) * a for f, o in zip(PATCH_TINT, OLDEST_TINT))
+
+
 def _drain_poly(d):
     """A drain's plan footprint as a square that holds it, its centre and radius."""
     cx, cy = d["at"]
@@ -157,8 +172,8 @@ def _drain_poly(d):
 
 def plan(site_spec, roads_list, marks, drains):
     """The site's utility cuts: records with ``kind`` "service", ``building``, ``road``, ``t``, the
-    patch's ``at`` (plan centre), ``yaw`` (the road's, degrees), ``size`` [along, across] and
-    ``corners`` (plan polygon). ``marks`` is the paint the site draws and ``drains`` its drains
+    patch's ``at`` (plan centre), ``yaw`` (the road's, degrees), ``size`` [along, across],
+    ``corners`` (plan polygon) and ``age`` (0 fresh to 1 oldest, seeded by building and lateral; `tint_of`). ``marks`` is the paint the site draws and ``drains`` its drains
     (`site_drains.plan`), both asked for so no caller leaves either out unnoticed."""
     import site_spawns
     obstacles = [site_drains._paint(m) for m in marks if m.get("kind") not in LINES_ALONG]
@@ -187,24 +202,33 @@ def plan(site_spec, roads_list, marks, drains):
             out.append({"kind": "service", "building": bid, "lateral": n, "road": road.index,
                         "t": round(tt, 3), "at": [round(x, 4), round(y, 4)],
                         "yaw": round(road.angle_deg, 4), "size": [round(TRENCH_W, 4), round(hi - lo, 4)],
-                        "corners": [[round(px, 4), round(py, 4)] for px, py in poly]})
+                        "corners": [[round(px, 4), round(py, 4)] for px, py in poly],
+                        "age": round(_unit(f"{bid}|{n}|age"), 3)})
             # the next lateral keeps clear of this one
             obstacles.append((poly, (x, y), math.hypot(TRENCH_W, hi - lo) / 2.0))
     return out
 
 
-def _obj(name, quads, comment, uv):
+def _obj(name, quads, comment, uv, colours=None):
+    """An OBJ of ``quads`` [(plan corners, height)]; ``colours``, one (r, g, b) a quad, rides on its
+    vertices (``v x y z r g b``, which Godot's OBJ importer keeps -- probed on 4.7, 2026-10-31)."""
     lines = [f"# Lot: {comment}", f"o {name}"]
-    vs, vt, fs = [], [], []
-    for quad, y in quads:
+    vs, vt, fs, vc = [], [], [], []
+    for i, (quad, y) in enumerate(quads):
         k = len(vs)
         for px, py in quad:
             gx, gz = px, -py
             vs.append((gx, y, gz))
             vt.append(uv(gx, gz))
+            if colours is not None:
+                vc.append(colours[i])
         fs.append((k + 1, k + 2, k + 3))
         fs.append((k + 1, k + 3, k + 4))
-    lines += [f"v {x:.6f} {y:.6f} {z:.6f}" for x, y, z in vs]
+    if colours is None:
+        lines += [f"v {x:.6f} {y:.6f} {z:.6f}" for x, y, z in vs]
+    else:
+        lines += [f"v {x:.6f} {y:.6f} {z:.6f} {r:.4f} {g:.4f} {b:.4f}"
+                  for (x, y, z), (r, g, b) in zip(vs, vc)]
     lines += [f"vt {u:.6f} {v:.6f}" for u, v in vt]
     lines.append("vn 0 1 0")
     lines += [f"f {a}/{a}/1 {b}/{b}/1 {c}/{c}/1" for a, b, c in fs]
@@ -231,15 +255,20 @@ def meshes(patches, paint_top, road_skin, paint_offset, mat_sub):
         # the patch: the road's pack turned a quarter and offset, so its cracks are its own
         off = paint_offset(f"patches|{tag}")
         name = f"site_patches_asphalt_{tag}"
+        # each patch's age as its share of the oldest tint, the material's (0.140.0)
         files[f"{name}.obj"] = _obj(
             name, [([tuple(c) for c in p["corners"]], patch_y) for p in group],
             f"the site's utility cuts (asphalt), cell ({cx}, {cy}) of {PATCH_CELL_M:g} m, {len(group)} patch(es)",
-            lambda gx, gz: (gz * scale + off[0], -gx * scale + off[2]))
+            lambda gx, gz: (gz * scale + off[0], -gx * scale + off[2]),
+            colours=[tuple(t / o for t, o in zip(tint_of(p.get("age", 0.0)), OLDEST_TINT)) for p in group])
         body += [f'[node name="{name}" type="MeshInstance3D" parent="."]',
                  f'mesh = ExtResource("{name}")',
                  'material_override = SubResource("Mat_site_patches_asphalt")',
                  "cast_shadow = 0", ""]
-    mat = mat_sub("site_patches_asphalt", None, road_skin, tint=PATCH_TINT, triplanar=False)
+    mat = mat_sub("site_patches_asphalt", None, road_skin, tint=OLDEST_TINT, triplanar=False)
     mat.insert(len(mat) - 1, "cull_mode = 2")
+    # the age: the vertex colour multiplies the tint, read as sRGB as the tint is (0.140.0)
+    mat.insert(len(mat) - 1, "vertex_color_use_as_albedo = true")
+    mat.insert(len(mat) - 1, "vertex_color_is_srgb = true")
     sub += mat
     return body, sub, files
