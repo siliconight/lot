@@ -1,3 +1,26 @@
+## 0.141.0 - a shop sign hangs where its building has room for one
+
+The walker, 2026-10-31: "store signage still looks...wrong ... placement, size of font", with three photographs (the
+factory's `docs/reference/STORE_SIGNAGE_COMPS.md`): a shop's name runs across the fascia between the head of its shop
+front and the eave or the windows above, or, on a low box with no fascia, stands on its roof edge. The band hung at
+`SIGN_Z` (3.6 m) on every building and stopped at `SIGN_MAX_W` (9 m): on the slice's self-storage, wall to 3.1 m and
+roof edge 3.4 m, it stood 2.85 to 4.35 m, most of it in the air over the roof; on a 36 m front it was a plaque.
+
+### Added
+- **`facade_frame`**: each face's highest storey-0 opening head, lowest storey-1 sill, storey-0 wall top and top
+  (walls, parapet, roof), from Deli Counter's gameplay record and the slot manifest beside it; `merge_gameplay` notes
+  it on the building's site entry (`_facade`), as it notes the footprint.
+- **`sign_band`**: the FASCIA where there is one -- `SIGN_GAP` (0.2 m) above the shop front's heads to `SIGN_GAP` under
+  the storey above's sills, or `SIGN_OVER_FLOOR` over a blank upper storey's floor line, or the one storey's top less
+  `SIGN_COPING` -- `SIGN_FILL` of it, at most `SIGN_MAX_H` (2.2 m); a fascia under `SIGN_MIN_H` (0.6 m) puts the sign
+  on the ROOF EDGE, its foot on the face's top, its height from the frontage. `SIGN_ASPECT` wide, to `SIGN_SPAN_MAX` of
+  the facade and `SIGN_MAX_W_FRAMED` (16 m). The scene's band and `sign_bands` (the span poles keep out of) both read
+  it. A building with no record keeps the old band. On the slice: the banks and the card shop on their fascias across
+  the floor line (2.5-4.2 m), the self-storage on its roof edge (3.4-5.6 m, 13.2 m wide), the gas station's store on
+  its roof edge, the 50 m fronts 13 m wide.
+
+Tests: tests/test_sign_band.py (fails on 0.140.0: no `facade_frame` or `sign_band`).
+
 ## 0.140.0 - a utility cut has an age
 
 The factory's roadmap 324 (the vertical slice). Every patch `site_patches` cuts wore one tint, `PATCH_TINT` (0.42 of

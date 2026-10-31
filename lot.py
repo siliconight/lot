@@ -357,6 +357,14 @@ def merge_gameplay(site_spec, base_dir):
             # building seals its basement stairwell -- Phase 1 site walktests
             # proved basements bake as disjoint islands otherwise)
             b["_footprint"] = gp.get("footprint")
+        # ITS FACADES' FRAME (0.141.0): where each face's openings and top are, for the sign over its shop front
+        # (`sign_band`), from the gameplay record and the slot manifest Deli Counter writes beside it
+        slots_path = gp_path[:-len(".gameplay.json")] + ".slots.json" if gp_path.endswith(".gameplay.json") else None
+        if slots_path and os.path.exists(slots_path):
+            with open(slots_path, encoding="utf-8") as f:
+                frame = facade_frame(gp, json.load(f))
+            if frame:
+                b["_facade"] = frame
         site["buildings"].append(record)
 
         def ns(name):
@@ -1229,6 +1237,109 @@ def sign_size(facade_w: float):
     w = max(SIGN_MIN_W, min(SIGN_MAX_W, facade_w * SIGN_SPAN))
     return w, w / SIGN_ASPECT
 
+
+#: A SHOP SIGN HANGS WHERE ITS BUILDING HAS ROOM FOR ONE (0.141.0). The walker, 2026-10-31: "store signage still
+#: looks...wrong ... placement, size of font", with three photographs (the factory's
+#: docs/reference/STORE_SIGNAGE_COMPS.md): a shop's name runs across the fascia between the head of its shop front
+#: and the eave or the windows above, or -- on a low box with no fascia -- stands on its roof edge. The band hung at
+#: `SIGN_Z` (3.6 m) whatever the building: on the slice's self-storage, whose wall stops at 3.1 m and roof edge at
+#: 3.4 m, it stood 2.85 to 4.35 m, most of it in the air over the roof; and it stopped at `SIGN_MAX_W` (9 m) on a
+#: 36 m front. Where the building's own record says where its openings and its wall's top are (`facade_frame`), the
+#: band takes the FASCIA: `SIGN_GAP` above the highest shop-front head to `SIGN_GAP` under the lowest sill of the
+#: storey above -- or, a storey above with no window on this face, `SIGN_OVER_FLOOR` over the floor line; or the
+#: wall's top less `SIGN_COPING` on one storey -- `SIGN_FILL` of it high, at most `SIGN_MAX_H`. A fascia under
+#: `SIGN_MIN_H` puts the sign on the ROOF EDGE, its foot on the wall's top, its height from the frontage
+#: (`SIGN_ROOF_PER_M`). Either way it is `SIGN_ASPECT` wide, to `SIGN_SPAN_MAX` of the facade and `SIGN_MAX_W_FRAMED`;
+#: a frontage too short for the width takes the height down with it. A building with no record keeps the old band.
+SIGN_GAP = 0.2
+SIGN_COPING = 0.1
+SIGN_OVER_FLOOR = 1.0
+SIGN_MIN_H = 0.6
+SIGN_MAX_H = 2.2
+SIGN_FILL = 0.85
+SIGN_SPAN_MAX = 0.85
+SIGN_MAX_W_FRAMED = 16.0
+SIGN_ROOF_PER_M = 1.0 / 14.0
+SIGN_ROOF_H = (0.9, 2.2)
+
+
+def facade_frame(gameplay, slots):
+    """``{side: {"head", "sill1", "top0", "top"}}`` of a building, in its own frame (metres above its floor):
+    the highest storey-0 exterior opening's head, the lowest storey-1 exterior opening's sill (None when the storey
+    above has no opening on that side), the storey-0 wall's top, and the face's top (its walls, its parapet, the
+    roof). From Deli Counter's gameplay record (its ``openings``) and its slot manifest (each wall, window and
+    doorway slot's ``facing``, ``story`` and box)."""
+    out = {}
+
+    def side(s):
+        return out.setdefault(s, {"head": None, "sill1": None, "top0": None, "top": None})
+
+    for o in (gameplay or {}).get("openings") or []:
+        wall = str(o.get("wall") or "")
+        if not wall.startswith("ext_") or wall[-1:] not in "NSEW":
+            continue
+        st = int(o.get("story", 0))
+        z, h = float(o.get("z", 0.0)), float(o.get("height") or 0.0)
+        f = side(wall[-1])
+        if st == 0:
+            f["head"] = max(f["head"] or 0.0, z + h / 2.0)
+        elif st == 1:
+            f["sill1"] = z - h / 2.0 if f["sill1"] is None else min(f["sill1"], z - h / 2.0)
+    roof = None
+    for s in (slots or {}).get("slots") or []:
+        tr, fit = s.get("transform") or {}, s.get("fit") or {}
+        if "translation" not in tr or "dims" not in fit:
+            continue
+        top = float(tr["translation"][2]) + float(fit["dims"][2]) / 2.0
+        if s.get("role") == "roof":
+            roof = top if roof is None else max(roof, top)
+            continue
+        fc = s.get("facing")
+        if fc not in ("N", "S", "E", "W") or s.get("role") not in ("wall", "window", "doorway"):
+            continue
+        st = int(s.get("story") or 0)
+        if st < 0:
+            continue
+        f = side(fc)
+        f["top"] = max(f["top"] or 0.0, top)
+        if st == 0:
+            f["top0"] = max(f["top0"] or 0.0, top)
+    for f in out.values():
+        if roof is not None and f["top"] is not None:
+            f["top"] = max(f["top"], roof)
+    return {k: v for k, v in out.items() if v["head"] is not None and v["top0"] is not None}
+
+
+#: plan yaw of a facade's outward normal -> the side it is
+_YAW_SIDE = {0: "E", 90: "N", 180: "W", 270: "S"}
+
+
+def sign_band(bdef, yaw: float, facade_w: float):
+    """``(z, (w, h), mount)`` for a building's sign on the facade facing plan ``yaw``: the band's centre above grade,
+    its size, and "fascia", "roof" or "legacy" (no frame: `SIGN_Z` and `sign_size`, as before)."""
+    frame = bdef.get("_facade") or {}
+    local = _YAW_SIDE.get(int(round(float(yaw) - float(bdef.get("rot", 0) or 0))) % 360)
+    f = frame.get(local)
+    if not f:
+        return SIGN_Z, sign_size(facade_w), "legacy"
+    lo = f["head"] + SIGN_GAP
+    if f["sill1"] is not None:
+        hi = f["sill1"] - SIGN_GAP
+    elif f["top"] > f["top0"] + 0.5:
+        hi = f["top0"] + SIGN_OVER_FLOOR
+    else:
+        hi = f["top"] - SIGN_COPING
+    w_cap = min(SIGN_MAX_W_FRAMED, max(SIGN_MIN_W, facade_w * SIGN_SPAN_MAX))
+    if hi - lo >= SIGN_MIN_H:
+        h = min(SIGN_MAX_H, (hi - lo) * SIGN_FILL)
+        w = min(h * SIGN_ASPECT, w_cap)
+        h = w / SIGN_ASPECT
+        return (lo + hi) / 2.0, (w, h), "fascia"
+    h = max(SIGN_ROOF_H[0], min(SIGN_ROOF_H[1], facade_w * SIGN_ROOF_PER_M))
+    w = min(h * SIGN_ASPECT, w_cap)
+    h = w / SIGN_ASPECT
+    return f["top"] + h / 2.0, (w, h), "roof"
+
 #: Outdoor families a site spec may skin, and the ext_resource id stem each
 #: gets. The spec names a Pixelcoat PACK DIRECTORY per family
 #: (`"ground_skins": {"ground": "<dir>", "path": "<dir>", "courtyard": "<dir>"}`);
@@ -1498,7 +1609,7 @@ def sign_bands(site_spec, roads_list, signs=None):
         if spot is None:
             continue
         x, y, yaw, facade = spot
-        w, _h = sign_size(facade)
+        _z, (w, _h), _mount = sign_band(b, yaw, facade)
         out.append({"building": b["id"], "at": (x, y), "half": w / 2.0,
                     "axis": "x" if int(round(yaw)) % 180 == 90 else "y"})
     return out
@@ -2755,8 +2866,10 @@ def _outdoor_nodes(site_spec, preview=False, self_flooring=None, skins=None,
         if spot is None:
             continue
         sx, sy, yaw, facade = spot
-        bl, sr = _sign_node(f"sign_{b['id']}", (sx, SIGN_Z, -sy),
-                            sign_facing(yaw), sign, sign_size(facade))
+        # where the building has room for it (0.141.0, `sign_band`)
+        sz, ssize, _mount = sign_band(b, yaw, facade)
+        bl, sr = _sign_node(f"sign_{b['id']}", (sx, sz, -sy),
+                            sign_facing(yaw), sign, ssize)
         body += bl
         sub += sr
 
