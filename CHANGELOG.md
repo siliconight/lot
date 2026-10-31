@@ -1,3 +1,23 @@
+## 0.142.0 - a hidden door state is not navigation
+
+The walker, of the vertical slice: "the vault door should be opened so we can see whats inside it", then "open enough
+to get inside (human/enemies colision)". Deli Counter (>= 0.298.0) shows the vault door's open state and hides the shut
+one, its collision off. But Godot's navmesh parse takes every MeshInstance3D under the region, visible or not
+(`MeshInstance3D::navmesh_parse_source_geometry` checks no visibility), so the hidden shut door was still a disc across
+the vault's mouth in the bake: the crew walked in on physics and the enemies' navmesh said the vault was shut. The
+same held the other way round in every shut vault, where the hidden open leaf baked a wall into the floor inside.
+
+### Fixed
+- **A hidden interactive state is kept out of the bake** (`lot_navqa_setup.gd` and `lot_site_walk.gd`,
+  `_park_hidden_states` / `_unpark_states`): every hidden node under the region carrying `metadata/interactive_state`
+  -- the composer's mark on a parked state -- is set aside for the bake and put back at its own index after it (the
+  walk copy's threaded bake puts them back on `bake_finished`). The navqa bake prints how many it kept out. The
+  function stands in both scripts because Level Factory copies each by name (`localize._QA_HARNESS_FILES`,
+  `_WALK_CHROME_FILES`); a third file would not travel.
+
+Tests: tests/test_hidden_states_not_nav.py -- a real headless bake, with a control showing Godot's own bake has the hole
+(fails on 0.141.0).
+
 ## 0.141.0 - a shop sign hangs where its building has room for one
 
 The walker, 2026-10-31: "store signage still looks...wrong ... placement, size of font", with three photographs (the

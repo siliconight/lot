@@ -83,6 +83,10 @@ func _bake_nav() -> void:
 		# When there is no walker, the right amount of baking is none.
 		print("[lot] site_walk: headless — the evaluation runner owns the navmesh bake")
 		return
+	# the bake runs on a thread: the hidden states come back when it is done
+	var parked := _park_hidden_states(nav)
+	if not parked.is_empty():
+		nav.bake_finished.connect(func() -> void: _unpark_states(parked), CONNECT_ONE_SHOT)
 	nav.bake_navigation_mesh()
 
 
@@ -128,3 +132,34 @@ func _hud() -> void:
 	lbl.add_theme_color_override("font_color", Color(1, 1, 1))
 	lbl.add_theme_font_size_override("font_size", 18)
 	layer.add_child(lbl)
+
+
+## HIDDEN STATES ARE NOT NAVIGATION (Lot 0.142.0). Godot's navmesh parse takes every MeshInstance3D under the region,
+## visible or not -- `MeshInstance3D::navmesh_parse_source_geometry` checks no visibility -- and a composed building
+## parks each interactive's other states HIDDEN at the same transform (Deli Counter's `themed_tscn`). So a shut vault
+## door hidden behind a shown open one was a disc across the vault's mouth in the bake, and a hidden open leaf a wall
+## in every shut vault. Every hidden node carrying `metadata/interactive_state` is set aside for the bake and put back
+## where it was, at its own index. Returns what was set aside, for `_unpark_states`.
+static func _park_hidden_states(root: Node) -> Array:
+	var parked: Array = []
+	var stack: Array = [root]
+	while not stack.is_empty():
+		var nd: Node = stack.pop_back()
+		var n3 := nd as Node3D
+		if n3 != null and n3.has_meta("interactive_state") and not n3.visible:
+			parked.append([nd.get_parent(), nd, nd.get_index()])
+			continue
+		for c in nd.get_children():
+			stack.append(c)
+	for entry in parked:
+		(entry[0] as Node).remove_child(entry[1] as Node)
+	return parked
+
+
+static func _unpark_states(parked: Array) -> void:
+	parked.sort_custom(func(a: Array, b: Array) -> bool: return int(a[2]) < int(b[2]))
+	for entry in parked:
+		var parent := entry[0] as Node
+		var nd := entry[1] as Node
+		parent.add_child(nd)
+		parent.move_child(nd, int(entry[2]))

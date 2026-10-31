@@ -61,7 +61,10 @@ func _bake_nav() -> void:
 		# the next sync, which the force_update below is.
 		NavigationServer3D.map_set_use_async_iterations(map, false)
 		NavigationServer3D.region_set_use_async_iterations(nav.get_rid(), false)
+		var parked := _park_hidden_states(nav)
 		nav.bake_navigation_mesh(false)
+		_unpark_states(parked)
+		print("[navqa-setup] %d hidden interactive state(s) kept out of the bake" % parked.size())
 		# region updates are ASYNC on the NavigationServer -- the baked mesh
 		# exists but the map's polygon soup commits on its own schedule.
 		# Force the commit so the first queries see the real mesh.
@@ -117,3 +120,34 @@ func _start_director(director: Node3D) -> void:
 	director.global_position = crew_home
 	if director.has_method("start_qa_run"):
 		director.call("start_qa_run")
+
+
+## HIDDEN STATES ARE NOT NAVIGATION (Lot 0.142.0). Godot's navmesh parse takes every MeshInstance3D under the region,
+## visible or not -- `MeshInstance3D::navmesh_parse_source_geometry` checks no visibility -- and a composed building
+## parks each interactive's other states HIDDEN at the same transform (Deli Counter's `themed_tscn`). So a shut vault
+## door hidden behind a shown open one was a disc across the vault's mouth in the bake, and a hidden open leaf a wall
+## in every shut vault. Every hidden node carrying `metadata/interactive_state` is set aside for the bake and put back
+## where it was, at its own index. Returns what was set aside, for `_unpark_states`.
+static func _park_hidden_states(root: Node) -> Array:
+	var parked: Array = []
+	var stack: Array = [root]
+	while not stack.is_empty():
+		var nd: Node = stack.pop_back()
+		var n3 := nd as Node3D
+		if n3 != null and n3.has_meta("interactive_state") and not n3.visible:
+			parked.append([nd.get_parent(), nd, nd.get_index()])
+			continue
+		for c in nd.get_children():
+			stack.append(c)
+	for entry in parked:
+		(entry[0] as Node).remove_child(entry[1] as Node)
+	return parked
+
+
+static func _unpark_states(parked: Array) -> void:
+	parked.sort_custom(func(a: Array, b: Array) -> bool: return int(a[2]) < int(b[2]))
+	for entry in parked:
+		var parent := entry[0] as Node
+		var nd := entry[1] as Node
+		parent.add_child(nd)
+		parent.move_child(nd, int(entry[2]))
